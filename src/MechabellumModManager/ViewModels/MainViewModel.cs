@@ -1,0 +1,548 @@
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using MechabellumModManager.Models;
+using MechabellumModManager.Services;
+
+namespace MechabellumModManager.ViewModels;
+
+public sealed partial class MainViewModel : ObservableObject
+{
+    static readonly JsonSerializerOptions PackageJsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    readonly PathsService _paths;
+    readonly JsonStore _store;
+    readonly GameDetector _detector;
+    readonly ModLibraryService _library;
+    readonly ProfileService _profiles;
+    readonly DeployService _deploy;
+    readonly GameLauncher _launcher;
+    readonly RiskGate _riskGate;
+    readonly Func<string, bool> _confirmHighRisk;
+    readonly Func<string?>? _browseFolder;
+    readonly Func<string?>? _openDll;
+    readonly Func<string?>? _openZip;
+    readonly Func<string, string?>? _promptText;
+
+    public MainViewModel(
+        PathsService paths,
+        JsonStore store,
+        GameDetector detector,
+        ModLibraryService library,
+        ProfileService profiles,
+        DeployService deploy,
+        GameLauncher launcher,
+        RiskGate riskGate,
+        Func<string, bool>? confirmHighRisk = null,
+        Func<string?>? browseFolder = null,
+        Func<string?>? openDll = null,
+        Func<string?>? openZip = null,
+        Func<string, string?>? promptText = null)
+    {
+        _paths = paths;
+        _store = store;
+        _detector = detector;
+        _library = library;
+        _profiles = profiles;
+        _deploy = deploy;
+        _launcher = launcher;
+        _riskGate = riskGate;
+        _confirmHighRisk = confirmHighRisk ?? (_ => true);
+        _browseFolder = browseFolder;
+        _openDll = openDll;
+        _openZip = openZip;
+        _promptText = promptText;
+
+        Profiles = new ObservableCollection<ProfileItemViewModel>();
+        Mods = new ObservableCollection<ModItemViewModel>();
+        RiskBanner = RiskGate.BannerText;
+
+        _paths.EnsureCreated();
+        _profiles.EnsureDefaults();
+
+        var config = LoadConfig();
+        _gamePath = config.GamePath;
+        _launchMode = config.LaunchMode;
+        _usePortableDataRoot = IsPortableRoot(config.DataRoot);
+
+        ReloadProfiles(selectId: config.ActiveProfileId);
+        RefreshStatus();
+        ReloadMods();
+        RecomputeDirty();
+        UpdateLoaderVersionWarning();
+    }
+
+    public ObservableCollection<ProfileItemViewModel> Profiles { get; }
+    public ObservableCollection<ModItemViewModel> Mods { get; }
+
+    [ObservableProperty] private GameStatus? _gameStatus;
+    [ObservableProperty] private ProfileItemViewModel? _selectedProfile;
+    [ObservableProperty] private string _logText = "";
+    [ObservableProperty] private bool _isDirty;
+    [ObservableProperty] private string _riskBanner = "";
+    [ObservableProperty] private string _loaderVersionWarning = "";
+    [ObservableProperty] private string _gamePath = "";
+    [ObservableProperty] private LaunchMode _launchMode;
+    [ObservableProperty] private bool _usePortableDataRoot;
+
+    partial void OnGamePathChanged(string value)
+    {
+        var config = LoadConfig();
+        config.GamePath = value ?? "";
+        SaveConfig(config);
+        RefreshStatus();
+        RecomputeDirty();
+        UpdateLoaderVersionWarning();
+    }
+
+    partial void OnLaunchModeChanged(LaunchMode value)
+    {
+        var config = LoadConfig();
+        config.LaunchMode = value;
+        SaveConfig(config);
+    }
+
+    partial void OnUsePortableDataRootChanged(bool value)
+    {
+        var config = LoadConfig();
+        config.DataRoot = value
+            ? Path.Combine(AppContext.BaseDirectory, "data")
+            : null;
+        SaveConfig(config);
+        AppendLog(value
+            ? $"已选择便携数据根（需重启生效）：{config.DataRoot}"
+            : "已选择 AppData 数据根（需重启生效）。");
+    }
+
+    partial void OnSelectedProfileChanged(ProfileItemViewModel? value)
+    {
+        if (value is null) return;
+        var config = LoadConfig();
+        if (!string.Equals(config.ActiveProfileId, value.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            config.ActiveProfileId = value.Id;
+            SaveConfig(config);
+        }
+
+        ReloadMods();
+        RecomputeDirty();
+        UpdateLoaderVersionWarning();
+    }
+
+    [RelayCommand]
+    void RefreshStatus()
+    {
+        GameStatus = _detector.Detect(GamePath);
+        UpdateLoaderVersionWarning();
+        AppendLog(GameStatus.Message);
+    }
+
+    [RelayCommand]
+    void BrowseGamePath()
+    {
+        var picked = _browseFolder?.Invoke();
+        if (string.IsNullOrWhiteSpace(picked)) return;
+        GamePath = picked;
+    }
+
+    [RelayCommand]
+    void ImportDll()
+    {
+        var path = _openDll?.Invoke();
+        if (string.IsNullOrWhiteSpace(path)) return;
+        try
+        {
+            var pkg = _library.ImportDll(path);
+            AppendLog($"已导入 DLL：{pkg.DisplayName} ({pkg.Id})");
+            ReloadMods();
+            UpdateLoaderVersionWarning();
+            RecomputeDirty();
+        }
+        catch (ImportNeedsTypeException ex)
+        {
+            AppendLog($"需要手动指定类型：{ex.StagingPath}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"导入 DLL 失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void ImportZip()
+    {
+        var path = _openZip?.Invoke();
+        if (string.IsNullOrWhiteSpace(path)) return;
+        try
+        {
+            var pkgs = _library.ImportZip(path);
+            AppendLog($"已导入 Zip：{pkgs.Count} 个包");
+            ReloadMods();
+            UpdateLoaderVersionWarning();
+            RecomputeDirty();
+        }
+        catch (ImportNeedsTypeException ex)
+        {
+            AppendLog($"需要手动指定类型：{ex.StagingPath}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"导入 Zip 失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void ApplyProfile()
+    {
+        if (SelectedProfile is null)
+        {
+            AppendLog("未选择方案。");
+            return;
+        }
+
+        RefreshStatus();
+        if (GameStatus?.Kind != GameStatusKind.Ready)
+        {
+            AppendLog(GameStatus?.Message ?? "游戏状态未就绪，无法部署。");
+            return;
+        }
+
+        try
+        {
+            var profile = _profiles.Get(SelectedProfile.Id);
+            var packages = _library.List().ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+            var result = _deploy.Apply(profile, packages, GamePath, allowOverwriteUnmanaged: false);
+            AppendLog(result.Message);
+            if (!result.Success) return;
+
+            RecomputeDirty();
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"部署失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void ApplyAndLaunch()
+    {
+        ApplyProfile();
+        if (IsDirty) return;
+
+        var config = LoadConfig();
+        config.GamePath = GamePath;
+        config.LaunchMode = LaunchMode;
+        var launch = _launcher.Launch(config);
+        if (!launch.Success)
+            AppendLog(launch.Message);
+        else
+            AppendLog("已请求启动游戏。");
+    }
+
+    [RelayCommand]
+    void CreateProfile()
+    {
+        var name = _promptText?.Invoke("新方案名称") ?? "新方案";
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            var created = _profiles.Create(name);
+            ReloadProfiles(selectId: created.Id);
+            AppendLog($"已创建方案：{created.Name}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"创建方案失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void DeleteProfile()
+    {
+        if (SelectedProfile is null) return;
+        try
+        {
+            var id = SelectedProfile.Id;
+            _profiles.Delete(id);
+            var config = LoadConfig();
+            ReloadProfiles(selectId: config.ActiveProfileId);
+            AppendLog($"已删除方案：{id}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"删除方案失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void SelectProfile(ProfileItemViewModel? profile)
+    {
+        if (profile is null) return;
+        SelectedProfile = profile;
+    }
+
+    [RelayCommand]
+    void ToggleHighRisk(ModItemViewModel? mod)
+    {
+        if (mod is null) return;
+        mod.Package.HighRisk = !mod.Package.HighRisk;
+        try
+        {
+            PersistPackageMeta(mod.Package);
+            ReloadMods();
+            AppendLog($"{mod.DisplayName} 高风险标记：{(mod.Package.HighRisk ? "是" : "否")}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"更新高风险标记失败：{ex.Message}");
+        }
+    }
+
+    public void OnModEnabledChanged(ModItemViewModel item, bool enabled)
+    {
+        if (SelectedProfile is null) return;
+
+        if (enabled && !_riskGate.CanEnable(item.Package.HighRisk, _confirmHighRisk))
+        {
+            item.SetEnabledSilent(false);
+            AppendLog("已取消启用高风险 Mod。");
+            return;
+        }
+
+        try
+        {
+            _profiles.SetEnabled(SelectedProfile.Id, item.Package.Id, enabled);
+            IsDirty = true;
+            UpdateLoaderVersionWarning();
+            AppendLog($"{(enabled ? "启用" : "禁用")}：{item.DisplayName}");
+        }
+        catch (Exception ex)
+        {
+            item.SetEnabledSilent(!enabled);
+            AppendLog($"更新启用状态失败：{ex.Message}");
+        }
+    }
+
+    void ReloadProfiles(string? selectId)
+    {
+        Profiles.Clear();
+        ProfileItemViewModel? selected = null;
+        foreach (var profile in _profiles.List())
+        {
+            var item = new ProfileItemViewModel(profile);
+            Profiles.Add(item);
+            if (selectId is not null &&
+                string.Equals(profile.Id, selectId, StringComparison.OrdinalIgnoreCase))
+                selected = item;
+        }
+
+        SelectedProfile = selected ?? Profiles.FirstOrDefault();
+    }
+
+    void ReloadMods()
+    {
+        var enabled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (SelectedProfile is not null)
+        {
+            try
+            {
+                foreach (var id in _profiles.Get(SelectedProfile.Id).EnabledPackageIds)
+                    enabled.Add(id);
+            }
+            catch
+            {
+                // profile missing
+            }
+        }
+
+        Mods.Clear();
+        foreach (var pkg in _library.List().OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase))
+            Mods.Add(new ModItemViewModel(this, pkg, enabled.Contains(pkg.Id)));
+    }
+
+    void RecomputeDirty()
+    {
+        if (SelectedProfile is null)
+        {
+            IsDirty = false;
+            return;
+        }
+
+        Profile profile;
+        try
+        {
+            profile = _profiles.Get(SelectedProfile.Id);
+        }
+        catch
+        {
+            IsDirty = true;
+            return;
+        }
+
+        var packages = _library.List().ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+        var desired = BuildDesiredEntries(profile, packages);
+        var manifest = _store.LoadOrDefault(_paths.DeployManifestPath, () => new DeployManifest());
+
+        if (!string.Equals(manifest.ProfileId, profile.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            IsDirty = desired.Count > 0 || manifest.Files.Count > 0;
+            return;
+        }
+
+        if (!PathsEqual(manifest.GamePath, GamePath))
+        {
+            IsDirty = true;
+            return;
+        }
+
+        var actual = manifest.Files
+            .Select(f => (Normalize(f.RelativePath), f.PackageId, f.Sha256 ?? ""))
+            .OrderBy(x => x.Item1, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.PackageId, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        IsDirty = !desired.SequenceEqual(actual);
+    }
+
+    static List<(string Rel, string PackageId, string Sha)> BuildDesiredEntries(
+        Profile profile,
+        IReadOnlyDictionary<string, ModPackage> packages)
+    {
+        var list = new List<(string, string, string)>();
+        foreach (var packageId in profile.EnabledPackageIds)
+        {
+            if (!packages.TryGetValue(packageId, out var package))
+                continue;
+
+            foreach (var file in package.Files)
+            {
+                var rel = MapRelativeGamePath(package.Type, file.RelativePathInPackage);
+                list.Add((Normalize(rel), package.Id, file.Sha256 ?? ""));
+            }
+        }
+
+        return list
+            .OrderBy(x => x.Item1, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.Item2, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    static string MapRelativeGamePath(ModPackageType type, string relativeInPackage) =>
+        type switch
+        {
+            ModPackageType.MelonMod =>
+                Path.Combine("Mods", Path.GetFileName(relativeInPackage)),
+            ModPackageType.MelonPlugin =>
+                Path.Combine("Plugins", Path.GetFileName(relativeInPackage)),
+            ModPackageType.MelonUserLibs =>
+                Path.Combine("UserLibs", Path.GetFileName(relativeInPackage)),
+            ModPackageType.MelonUserData =>
+                Path.Combine("UserData", relativeInPackage),
+            _ => Path.Combine("Mods", Path.GetFileName(relativeInPackage))
+        };
+
+    void UpdateLoaderVersionWarning()
+    {
+        var loader = GameStatus?.MelonLoaderVersion;
+        if (string.IsNullOrWhiteSpace(loader))
+        {
+            LoaderVersionWarning = "";
+            return;
+        }
+
+        var mismatches = Mods
+            .Where(m => !string.IsNullOrWhiteSpace(m.RequiredMelonLoaderVersion)
+                        && !VersionMatches(m.RequiredMelonLoaderVersion!, loader))
+            .Select(m => $"{m.DisplayName} 需要 {m.RequiredMelonLoaderVersion}")
+            .ToList();
+
+        LoaderVersionWarning = mismatches.Count == 0
+            ? ""
+            : $"MelonLoader 版本可能不匹配（当前 {loader}）：{string.Join("；", mismatches)}";
+    }
+
+    static bool VersionMatches(string required, string actual)
+    {
+        static string Norm(string v)
+        {
+            var s = v.Trim();
+            // FileVersion often has 4 parts; compare by prefix ignoring trailing .0
+            while (s.EndsWith(".0", StringComparison.Ordinal)) s = s[..^2];
+            return s;
+        }
+
+        return string.Equals(Norm(required), Norm(actual), StringComparison.OrdinalIgnoreCase)
+               || actual.StartsWith(required, StringComparison.OrdinalIgnoreCase)
+               || required.StartsWith(actual, StringComparison.OrdinalIgnoreCase);
+    }
+
+    void PersistPackageMeta(ModPackage pkg)
+    {
+        var meta = new
+        {
+            id = pkg.Id,
+            displayName = pkg.DisplayName,
+            version = pkg.Version,
+            author = pkg.Author,
+            type = pkg.Type switch
+            {
+                ModPackageType.MelonMod => "melon_mod",
+                ModPackageType.MelonPlugin => "melon_plugin",
+                ModPackageType.MelonUserLibs => "melon_userlibs",
+                ModPackageType.MelonUserData => "melon_userdata",
+                _ => "melon_mod"
+            },
+            highRisk = pkg.HighRisk,
+            requiredMelonLoaderVersion = pkg.RequiredMelonLoaderVersion,
+            files = pkg.Files
+        };
+        var json = JsonSerializer.Serialize(meta, PackageJsonOptions);
+        File.WriteAllText(Path.Combine(pkg.PackageDirectory, "package.json"), json);
+    }
+
+    AppConfig LoadConfig() =>
+        _store.LoadOrDefault(_paths.ConfigPath, () => new AppConfig());
+
+    void SaveConfig(AppConfig config) => _store.Save(_paths.ConfigPath, config);
+
+    void AppendLog(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        LogText = string.IsNullOrEmpty(LogText) ? line : LogText + Environment.NewLine + line;
+    }
+
+    static bool IsPortableRoot(string? dataRoot)
+    {
+        if (string.IsNullOrWhiteSpace(dataRoot)) return false;
+        var portable = Path.Combine(AppContext.BaseDirectory, "data");
+        return PathsEqual(dataRoot, portable);
+    }
+
+    static string Normalize(string relativePath) =>
+        relativePath.Replace('\\', '/').Trim('/');
+
+    static bool PathsEqual(string? a, string? b)
+    {
+        if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b))
+            return string.Equals(a?.Trim(), b?.Trim(), StringComparison.OrdinalIgnoreCase);
+
+        try
+        {
+            return string.Equals(
+                Path.GetFullPath(a.Trim()),
+                Path.GetFullPath(b.Trim()),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+    }
+}
