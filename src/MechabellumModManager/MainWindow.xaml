@@ -1,0 +1,88 @@
+﻿<Window x:Class="MechabellumModManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="钢铁指挥官 Mod 管理器"
+        Height="640"
+        Width="1100"
+        MinHeight="480"
+        MinWidth="800"
+        Background="{StaticResource WindowBackgroundBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource AppFontFamily}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="28" />
+        </Grid.RowDefinitions>
+
+        <!-- Header shell -->
+        <Border Grid.Row="0"
+                Background="{StaticResource HeaderBarBrush}"
+                BorderBrush="{StaticResource SteelEdgeBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="20,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Style="{StaticResource AccentBarStyle}"
+                            Height="28"
+                            Margin="0,0,12,0" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="钢铁指挥官"
+                                   Style="{StaticResource ShellTitleStyle}" />
+                        <TextBlock Text="Mod 管理器 · Mechabellum"
+                                   Style="{StaticResource ShellSubtitleStyle}"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock Grid.Column="2"
+                           Text="支架界面 · 资源令牌就绪"
+                           Foreground="{StaticResource AccentAmberBrush}"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Content placeholder -->
+        <Border Grid.Row="1"
+                Margin="20"
+                Background="{StaticResource BgPanelBrush}"
+                BorderBrush="{StaticResource SteelEdgeBrush}"
+                BorderThickness="1"
+                CornerRadius="2"
+                Padding="24">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="核心模型与路径服务已就位"
+                           Style="{StaticResource ShellTitleStyle}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="此窗口为 Task 1 审美地基；完整功能将在后续任务接入。"
+                           Style="{StaticResource ShellSubtitleStyle}"
+                           Margin="0,10,0,0"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Status strip -->
+        <Border Grid.Row="2"
+                Background="{StaticResource BgDeepBrush}"
+                BorderBrush="{StaticResource SteelEdgeBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="16,0">
+            <TextBlock Text="就绪 · 深色工业风主题令牌已加载"
+                       Style="{StaticResource ShellSubtitleStyle}"
+                       VerticalAlignment="Center" />
+        </Border>
+    </Grid>
+</Window>
