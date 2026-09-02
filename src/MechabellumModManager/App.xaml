@@ -31,19 +31,54 @@
             <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource WarnColor}" />
 
             <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#FF0A0C0E" Offset="0" />
-                <GradientStop Color="#FF141A20" Offset="0.45" />
-                <GradientStop Color="#FF0F1318" Offset="1" />
+                <GradientStop Color="#FF07090B" Offset="0" />
+                <GradientStop Color="#FF12181F" Offset="0.42" />
+                <GradientStop Color="#FF0C1015" Offset="1" />
             </LinearGradientBrush>
 
             <LinearGradientBrush x:Key="HeaderBarBrush" StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Color="#FF1A222A" Offset="0" />
-                <GradientStop Color="#FF12171C" Offset="1" />
+                <GradientStop Color="#FF222B35" Offset="0" />
+                <GradientStop Color="#FF141A21" Offset="1" />
             </LinearGradientBrush>
+
+            <RadialGradientBrush x:Key="AtmosphereGlowBrush" Center="0.12,0" GradientOrigin="0.1,-0.05" RadiusX="0.75" RadiusY="0.55">
+                <GradientStop Color="#33C8892E" Offset="0" />
+                <GradientStop Color="#00000000" Offset="1" />
+            </RadialGradientBrush>
+
+            <RadialGradientBrush x:Key="VignetteBrush" Center="0.5,0.45" GradientOrigin="0.5,0.45" RadiusX="0.95" RadiusY="0.9">
+                <GradientStop Color="#00000000" Offset="0.55" />
+                <GradientStop Color="#99000000" Offset="1" />
+            </RadialGradientBrush>
+
+            <DrawingBrush x:Key="GridOverlayBrush"
+                          TileMode="Tile"
+                          Viewport="0,0,28,28"
+                          ViewportUnits="Absolute"
+                          Opacity="0.22">
+                <DrawingBrush.Drawing>
+                    <GeometryDrawing>
+                        <GeometryDrawing.Pen>
+                            <Pen Brush="#FF2A343F" Thickness="1" />
+                        </GeometryDrawing.Pen>
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <LineGeometry StartPoint="0,0" EndPoint="0,28" />
+                                <LineGeometry StartPoint="0,0" EndPoint="28,0" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingBrush.Drawing>
+            </DrawingBrush>
 
             <LinearGradientBrush x:Key="RiskBannerBrush" StartPoint="0,0" EndPoint="1,0">
                 <GradientStop Color="#FF2A1A16" Offset="0" />
                 <GradientStop Color="#FF1E1614" Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="PanelSheenBrush" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#FF1B232C" Offset="0" />
+                <GradientStop Color="#FF151B22" Offset="1" />
             </LinearGradientBrush>
 
             <FontFamily x:Key="AppFontFamily">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI, sans-serif</FontFamily>
@@ -60,7 +95,7 @@
 
             <Style x:Key="ShellTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource AppDisplayFontFamily}" />
-                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontSize" Value="20" />
                 <Setter Property="FontWeight" Value="SemiBold" />
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             </Style>
@@ -85,12 +120,20 @@
                 <Setter Property="CornerRadius" Value="1" />
             </Style>
 
+            <Style x:Key="PanelChromeStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource PanelSheenBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="3" />
+                <Setter Property="Padding" Value="14" />
+            </Style>
+
             <Style TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource BgElevatedBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                 <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="Padding" Value="12,6" />
+                <Setter Property="Padding" Value="12,7" />
                 <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Cursor" Value="Hand" />
@@ -102,7 +145,7 @@
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
                                     Padding="{TemplateBinding Padding}"
-                                    CornerRadius="2"
+                                    CornerRadius="3"
                                     SnapsToDevicePixels="True">
                                 <ContentPresenter HorizontalAlignment="Center"
                                                   VerticalAlignment="Center" />
@@ -129,6 +172,18 @@
                 <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
                 <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                <Setter Property="Background" Value="#FF3A2E18" />
+                <Setter Property="BorderBrush" Value="{StaticResource AccentAmberHotBrush}" />
+                <Setter Property="Padding" Value="14,8" />
+            </Style>
+
+            <Style x:Key="GhostButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
             </Style>
 
             <Style TargetType="TextBox">

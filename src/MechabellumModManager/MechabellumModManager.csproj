@@ -11,11 +11,18 @@
     <AssemblyTitle>钢铁指挥官 Mod 管理器</AssemblyTitle>
     <Description>Mechabellum MelonLoader Mod 管理器</Description>
     <Version>1.0.0</Version>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\brand.png" />
+    <Resource Include="Assets\brand-256.png" />
   </ItemGroup>
 
 </Project>

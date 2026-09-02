@@ -6,10 +6,11 @@
         xmlns:conv="clr-namespace:MechabellumModManager.Converters"
         mc:Ignorable="d"
         Title="钢铁指挥官 Mod 管理器"
-        Height="720"
-        Width="1180"
-        MinHeight="560"
-        MinWidth="900"
+        Icon="pack://application:,,,/Assets/app.ico"
+        Height="740"
+        Width="1200"
+        MinHeight="580"
+        MinWidth="940"
         Background="{StaticResource WindowBackgroundBrush}"
         Foreground="{StaticResource TextPrimaryBrush}"
         FontFamily="{StaticResource AppFontFamily}">
@@ -18,451 +19,459 @@
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="150" MinHeight="100" />
-        </Grid.RowDefinitions>
+        <!-- Atmosphere (non-interactive) -->
+        <Grid IsHitTestVisible="False">
+            <Rectangle Fill="{StaticResource WindowBackgroundBrush}" />
+            <Rectangle Fill="{StaticResource AtmosphereGlowBrush}" />
+            <Rectangle Fill="{StaticResource GridOverlayBrush}" Opacity="0.35" />
+            <Rectangle Fill="{StaticResource VignetteBrush}" />
+        </Grid>
 
-        <!-- Top: brand + status + profile + actions -->
-        <Border Grid.Row="0"
-                Background="{StaticResource HeaderBarBrush}"
-                BorderBrush="{StaticResource SteelEdgeBrush}"
-                BorderThickness="0,0,0,1"
-                Padding="18,10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="156" MinHeight="110" />
+            </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Style="{StaticResource AccentBarStyle}"
-                            Height="32"
-                            Margin="0,0,12,0" />
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="钢铁指挥官"
-                                   Style="{StaticResource ShellTitleStyle}" />
-                        <TextBlock Text="Mod 管理器 · Mechabellum"
-                                   Style="{StaticResource ShellSubtitleStyle}"
-                                   Margin="0,1,0,0" />
-                    </StackPanel>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center"
-                            Margin="28,0,16,0">
-                    <Border Background="{StaticResource BgElevatedBrush}"
-                            BorderThickness="1"
-                            CornerRadius="2"
-                            Padding="10,6"
-                            Margin="0,0,12,0"
-                            MaxWidth="420">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsReady}" Value="False">
-                                        <Setter Property="BorderBrush" Value="{StaticResource WarnBrush}" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding IsReady}" Value="True">
-                                        <Setter Property="BorderBrush" Value="{StaticResource AccentTealBrush}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding StatusKindLabel}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,8,0"
-                                       VerticalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsReady}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                            <TextBlock Text="{Binding GameStatus.Message}"
-                                       TextTrimming="CharacterEllipsis"
-                                       Foreground="{StaticResource TextMutedBrush}"
-                                       VerticalAlignment="Center"
-                                       ToolTip="{Binding GameStatus.Message}" />
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Text="当前方案"
-                               VerticalAlignment="Center"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               Margin="0,0,8,0" />
-                    <ComboBox Width="180"
-                              ItemsSource="{Binding Profiles}"
-                              SelectedItem="{Binding SelectedProfile}"
-                              DisplayMemberPath="Name"
-                              VerticalAlignment="Center" />
-                </StackPanel>
-
-                <StackPanel Grid.Column="2"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center">
-                    <Button Content="{Binding InstallMelonLoaderButtonText}"
-                            Command="{Binding InstallMelonLoaderCommand}"
-                            Visibility="{Binding ShowInstallMelonLoaderButton, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource AccentButtonStyle}"
-                            Margin="0,0,8,0"
-                            MinWidth="160"
-                            ToolTip="从 GitHub 下载最新正式版 MelonLoader.x64.zip 并解压到游戏目录" />
-                    <Button Content="应用方案"
-                            Command="{Binding ApplyProfileCommand}"
-                            IsEnabled="{Binding IsReady}"
-                            Style="{StaticResource AccentButtonStyle}"
-                            Margin="0,0,8,0"
-                            MinWidth="96" />
-                    <Button Content="应用并启动"
-                            Command="{Binding ApplyAndLaunchCommand}"
-                            IsEnabled="{Binding IsReady}"
-                            Margin="0,0,8,0"
-                            MinWidth="96" />
-                    <Button Content="设置"
-                            Command="{Binding ToggleSettingsCommand}"
-                            MinWidth="72" />
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- MelonLoader install progress -->
-        <Border Grid.Row="1"
-                Background="{StaticResource BgPanelBrush}"
-                BorderBrush="{StaticResource SteelEdgeBrush}"
-                BorderThickness="0,0,0,1"
-                Padding="18,10"
-                Visibility="{Binding ShowInstallProgress, Converter={StaticResource BoolToVis}}">
-            <DockPanel>
-                <TextBlock Text="{Binding InstallProgressText}"
-                           DockPanel.Dock="Top"
-                           Margin="0,0,0,8"
-                           Foreground="{StaticResource TextPrimaryBrush}"
-                           TextTrimming="CharacterEllipsis"
-                           ToolTip="{Binding InstallProgressText}" />
-                <ProgressBar Height="14"
-                             Minimum="0"
-                             Maximum="100"
-                             Value="{Binding InstallProgressPercent}"
-                             IsIndeterminate="{Binding InstallProgressIsIndeterminate}"
-                             Foreground="{StaticResource AccentAmberBrush}"
-                             Background="{StaticResource BgDeepBrush}"
-                             BorderBrush="{StaticResource SteelEdgeBrush}"
-                             BorderThickness="1" />
-            </DockPanel>
-        </Border>
-
-        <!-- Settings strip -->
-        <Border Grid.Row="2"
-                Background="{StaticResource BgPanelBrush}"
-                BorderBrush="{StaticResource SteelEdgeBrush}"
-                BorderThickness="0,0,0,1"
-                Padding="18,12"
-                Visibility="{Binding SettingsExpanded, Converter={StaticResource BoolToVis}}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="220" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.ColumnSpan="3"
-                           Text="设置"
-                           Style="{StaticResource SectionLabelStyle}" />
-
-                <DockPanel Grid.Row="1" Margin="0,0,16,0">
-                    <TextBlock Text="游戏路径"
-                               Width="64"
-                               VerticalAlignment="Center"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               DockPanel.Dock="Left" />
-                    <Button Content="浏览…"
-                            Command="{Binding BrowseGamePathCommand}"
-                            DockPanel.Dock="Right"
-                            Margin="8,0,0,0"
-                            MinWidth="72" />
-                    <TextBox Text="{Binding GamePath, UpdateSourceTrigger=PropertyChanged}"
-                             VerticalAlignment="Center" />
-                </DockPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-                    <TextBlock Text="启动方式"
-                               VerticalAlignment="Center"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               Margin="0,0,8,0" />
-                    <ComboBox Width="150"
-                              ItemsSource="{Binding LaunchModeOptions}"
-                              SelectedValue="{Binding LaunchMode}"
-                              SelectedValuePath="Mode"
-                              DisplayMemberPath="Label" />
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">
-                    <CheckBox Content="便携数据根（程序目录/data，需重启生效）"
-                              IsChecked="{Binding UsePortableDataRoot}" />
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Body: profiles | library -->
-        <Grid Grid.Row="3" Margin="16,12,16,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="248" MinWidth="200" />
-                <ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" MinWidth="420" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Left: profiles -->
-            <Border Grid.Column="0"
-                    Background="{StaticResource BgPanelBrush}"
+            <!-- Top: brand + status + profile + actions -->
+            <Border Grid.Row="0"
+                    Background="{StaticResource HeaderBarBrush}"
                     BorderBrush="{StaticResource SteelEdgeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="2"
-                    Padding="12">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+                    BorderThickness="0,0,0,1"
+                    Padding="18,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="40"
+                                Height="40"
+                                CornerRadius="4"
+                                BorderBrush="{StaticResource SteelEdgeBrush}"
+                                BorderThickness="1"
+                                Background="#FF0C1014"
+                                Margin="0,0,12,0"
+                                SnapsToDevicePixels="True">
+                            <Image Source="pack://application:,,,/Assets/brand.png"
+                                   Stretch="Uniform"
+                                   Margin="3"
+                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Border>
                         <Border Style="{StaticResource AccentBarStyle}"
-                                Height="14"
-                                Margin="0,0,8,0"
-                                VerticalAlignment="Center" />
-                        <TextBlock Text="方案"
-                                   Style="{StaticResource SectionLabelStyle}"
-                                   Margin="0"
-                                   VerticalAlignment="Center" />
+                                Height="34"
+                                Margin="0,0,12,0" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="钢铁指挥官"
+                                       Style="{StaticResource ShellTitleStyle}" />
+                            <TextBlock Text="Mod 管理器 · Mechabellum"
+                                       Style="{StaticResource ShellSubtitleStyle}"
+                                       Margin="0,2,0,0" />
+                        </StackPanel>
                     </StackPanel>
-                    <UniformGrid Rows="2" Columns="2"
-                                 DockPanel.Dock="Bottom"
-                                 Margin="0,10,0,0">
-                        <Button Content="新建"
-                                Command="{Binding CreateProfileCommand}"
-                                Margin="0,0,4,4" />
-                        <Button Content="重命名"
-                                Command="{Binding RenameProfileCommand}"
-                                Margin="4,0,0,4" />
-                        <Button Content="复制"
-                                Command="{Binding DuplicateProfileCommand}"
-                                Margin="0,4,4,0" />
-                        <Button Content="删除"
-                                Command="{Binding DeleteProfileCommand}"
-                                Margin="4,4,0,0" />
-                    </UniformGrid>
-                    <ListBox ItemsSource="{Binding Profiles}"
-                             SelectedItem="{Binding SelectedProfile}"
-                             DisplayMemberPath="Name" />
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Margin="24,0,16,0">
+                        <Border Background="#CC1E262E"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Padding="12,7"
+                                Margin="0,0,14,0"
+                                MaxWidth="440">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsReady}" Value="False">
+                                            <Setter Property="BorderBrush" Value="{StaticResource WarnBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsReady}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource AccentTealBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StatusKindLabel}"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,8,0"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsReady}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding GameStatus.Message}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center"
+                                           ToolTip="{Binding GameStatus.Message}" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="当前方案"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,8,0" />
+                        <ComboBox Width="180"
+                                  ItemsSource="{Binding Profiles}"
+                                  SelectedItem="{Binding SelectedProfile}"
+                                  DisplayMemberPath="Name"
+                                  VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button Content="{Binding InstallMelonLoaderButtonText}"
+                                Command="{Binding InstallMelonLoaderCommand}"
+                                Visibility="{Binding ShowInstallMelonLoaderButton, Converter={StaticResource BoolToVis}}"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Margin="0,0,8,0"
+                                MinWidth="150"
+                                ToolTip="从 GitHub 下载最新正式版 MelonLoader.x64.zip 并解压到游戏目录" />
+                        <Button Content="应用方案"
+                                Command="{Binding ApplyProfileCommand}"
+                                IsEnabled="{Binding IsReady}"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Margin="0,0,8,0"
+                                MinWidth="96" />
+                        <Button Content="应用并启动"
+                                Command="{Binding ApplyAndLaunchCommand}"
+                                IsEnabled="{Binding IsReady}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Margin="0,0,8,0"
+                                MinWidth="108" />
+                        <Button Content="设置"
+                                Command="{Binding ToggleSettingsCommand}"
+                                Style="{StaticResource GhostButtonStyle}"
+                                MinWidth="72" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- MelonLoader install progress -->
+            <Border Grid.Row="1"
+                    Background="#E0161B20"
+                    BorderBrush="{StaticResource SteelEdgeBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="18,10"
+                    Visibility="{Binding ShowInstallProgress, Converter={StaticResource BoolToVis}}">
+                <DockPanel>
+                    <TextBlock Text="{Binding InstallProgressText}"
+                               DockPanel.Dock="Top"
+                               Margin="0,0,0,8"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding InstallProgressText}" />
+                    <ProgressBar Height="14"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="{Binding InstallProgressPercent}"
+                                 IsIndeterminate="{Binding InstallProgressIsIndeterminate}"
+                                 Foreground="{StaticResource AccentAmberBrush}"
+                                 Background="{StaticResource BgDeepBrush}"
+                                 BorderBrush="{StaticResource SteelEdgeBrush}"
+                                 BorderThickness="1" />
                 </DockPanel>
             </Border>
 
-            <GridSplitter Grid.Column="1"
-                          Width="8"
-                          HorizontalAlignment="Stretch"
-                          Background="Transparent"
-                          ResizeBehavior="PreviousAndNext" />
-
-            <!-- Center: mod library -->
-            <Border Grid.Column="2"
-                    Background="{StaticResource BgPanelBrush}"
+            <!-- Settings strip -->
+            <Border Grid.Row="2"
+                    Background="#E0161B20"
                     BorderBrush="{StaticResource SteelEdgeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="2"
-                    Padding="12">
-                <DockPanel>
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    BorderThickness="0,0,0,1"
+                    Padding="18,12"
+                    Visibility="{Binding SettingsExpanded, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.ColumnSpan="3"
+                               Text="设置"
+                               Style="{StaticResource SectionLabelStyle}" />
+
+                    <DockPanel Grid.Row="1" Margin="0,0,16,0">
+                        <TextBlock Text="游戏路径"
+                                   Width="64"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   DockPanel.Dock="Left" />
+                        <Button Content="浏览…"
+                                Command="{Binding BrowseGamePathCommand}"
+                                DockPanel.Dock="Right"
+                                Margin="8,0,0,0"
+                                MinWidth="72" />
+                        <TextBox Text="{Binding GamePath, UpdateSourceTrigger=PropertyChanged}"
+                                 VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                        <TextBlock Text="启动方式"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,8,0" />
+                        <ComboBox Width="150"
+                                  ItemsSource="{Binding LaunchModeOptions}"
+                                  SelectedValue="{Binding LaunchMode}"
+                                  SelectedValuePath="Mode"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">
+                        <CheckBox Content="便携数据根（程序目录/data，需重启生效）"
+                                  IsChecked="{Binding UsePortableDataRoot}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Body: profiles | library -->
+            <Grid Grid.Row="3" Margin="18,14,18,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="252" MinWidth="200" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" MinWidth="420" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource PanelChromeStyle}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
                             <Border Style="{StaticResource AccentBarStyle}"
                                     Height="14"
                                     Margin="0,0,8,0"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="Mod 库"
+                            <TextBlock Text="方案"
                                        Style="{StaticResource SectionLabelStyle}"
-                                       VerticalAlignment="Center"
-                                       Margin="0" />
+                                       Margin="0"
+                                       VerticalAlignment="Center" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal"
-                                    HorizontalAlignment="Right"
-                                    DockPanel.Dock="Right">
-                            <Button Content="导入 DLL"
-                                    Command="{Binding ImportDllCommand}"
-                                    Margin="0,0,8,0"
-                                    MinWidth="88" />
-                            <Button Content="导入 Zip"
-                                    Command="{Binding ImportZipCommand}"
-                                    MinWidth="88" />
-                            <Button Content="导入 文件夹"
-                                    Command="{Binding ImportFolderCommand}"
-                                    Margin="8,0,0,0"
-                                    MinWidth="88" />
-                        </StackPanel>
+                        <UniformGrid Rows="2" Columns="2"
+                                     DockPanel.Dock="Bottom"
+                                     Margin="0,12,0,0">
+                            <Button Content="新建"
+                                    Command="{Binding CreateProfileCommand}"
+                                    Margin="0,0,4,4" />
+                            <Button Content="重命名"
+                                    Command="{Binding RenameProfileCommand}"
+                                    Margin="4,0,0,4" />
+                            <Button Content="复制"
+                                    Command="{Binding DuplicateProfileCommand}"
+                                    Margin="0,4,4,0" />
+                            <Button Content="删除"
+                                    Command="{Binding DeleteProfileCommand}"
+                                    Margin="4,4,0,0" />
+                        </UniformGrid>
+                        <ListBox ItemsSource="{Binding Profiles}"
+                                 SelectedItem="{Binding SelectedProfile}"
+                                 DisplayMemberPath="Name" />
                     </DockPanel>
+                </Border>
 
-                    <Border DockPanel.Dock="Bottom"
-                            Margin="0,10,0,0"
-                            Padding="0,8,0,0"
-                            BorderBrush="{StaticResource SteelEdgeBrush}"
-                            BorderThickness="0,1,0,0">
-                        <TextBlock Margin="0,8,0,0"
-                                   Text="{Binding DirtyHint}"
-                                   Foreground="{StaticResource AccentTealBrush}"
-                                   FontSize="12" />
-                    </Border>
+                <GridSplitter Grid.Column="1"
+                              Width="10"
+                              HorizontalAlignment="Stretch"
+                              Background="Transparent"
+                              ResizeBehavior="PreviousAndNext" />
 
-                    <DataGrid ItemsSource="{Binding Mods}"
-                              IsReadOnly="False"
-                              HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="启用" Width="56">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="名称"
-                                                Binding="{Binding DisplayName}"
-                                                IsReadOnly="True"
-                                                Width="*"
-                                                MinWidth="140" />
-                            <DataGridTextColumn Header="类型"
-                                                Binding="{Binding TypeLabel}"
-                                                IsReadOnly="True"
-                                                Width="90" />
-                            <DataGridTextColumn Header="版本"
-                                                Binding="{Binding Version}"
-                                                IsReadOnly="True"
-                                                Width="80" />
-                            <DataGridTemplateColumn Header="风险" Width="88">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="{Binding HighRiskLabel}"
-                                                Command="{Binding DataContext.ToggleHighRiskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}"
-                                                Padding="6,2"
-                                                FontSize="11"
-                                                ToolTip="点击切换高风险标记" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="加载器" Width="100">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding RequiredMelonLoaderVersion}"
-                                                   Foreground="{StaticResource WarnBrush}"
-                                                   ToolTip="{Binding VersionWarningHint}"
-                                                   VerticalAlignment="Center" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="" Width="64">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="删除"
-                                                Command="{Binding DataContext.DeleteModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}"
-                                                Padding="6,2"
-                                                FontSize="11"
-                                                ToolTip="从库中删除此包" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                <Border Grid.Column="2" Style="{StaticResource PanelChromeStyle}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Style="{StaticResource AccentBarStyle}"
+                                        Height="14"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center" />
+                                <TextBlock Text="Mod 库"
+                                           Style="{StaticResource SectionLabelStyle}"
+                                           VerticalAlignment="Center"
+                                           Margin="0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        DockPanel.Dock="Right">
+                                <Button Content="导入 DLL"
+                                        Command="{Binding ImportDllCommand}"
+                                        Margin="0,0,8,0"
+                                        MinWidth="88" />
+                                <Button Content="导入 Zip"
+                                        Command="{Binding ImportZipCommand}"
+                                        MinWidth="88" />
+                                <Button Content="导入 文件夹"
+                                        Command="{Binding ImportFolderCommand}"
+                                        Margin="8,0,0,0"
+                                        MinWidth="88" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <Border DockPanel.Dock="Bottom"
+                                Margin="0,12,0,0"
+                                Padding="0,10,0,0"
+                                BorderBrush="{StaticResource SteelEdgeBrush}"
+                                BorderThickness="0,1,0,0">
+                            <TextBlock Margin="0,8,0,0"
+                                       Text="{Binding DirtyHint}"
+                                       Foreground="{StaticResource AccentTealBrush}"
+                                       FontSize="12" />
+                        </Border>
+
+                        <DataGrid ItemsSource="{Binding Mods}"
+                                  IsReadOnly="False"
+                                  HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="启用" Width="56">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="名称"
+                                                    Binding="{Binding DisplayName}"
+                                                    IsReadOnly="True"
+                                                    Width="*"
+                                                    MinWidth="140" />
+                                <DataGridTextColumn Header="类型"
+                                                    Binding="{Binding TypeLabel}"
+                                                    IsReadOnly="True"
+                                                    Width="90" />
+                                <DataGridTextColumn Header="版本"
+                                                    Binding="{Binding Version}"
+                                                    IsReadOnly="True"
+                                                    Width="80" />
+                                <DataGridTemplateColumn Header="风险" Width="88">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding HighRiskLabel}"
+                                                    Command="{Binding DataContext.ToggleHighRiskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="6,2"
+                                                    FontSize="11"
+                                                    ToolTip="点击临时切换；刷新后按名称关键词重算" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="加载器" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding RequiredMelonLoaderVersion}"
+                                                       Foreground="{StaticResource WarnBrush}"
+                                                       ToolTip="{Binding VersionWarningHint}"
+                                                       VerticalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="" Width="64">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="删除"
+                                                    Command="{Binding DataContext.DeleteModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="6,2"
+                                                    FontSize="11"
+                                                    ToolTip="从库中删除此包" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <StackPanel Grid.Row="4" Margin="18,0,18,8">
+                <Border Background="#FF241C12"
+                        BorderBrush="{StaticResource DangerBrush}"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="12,8"
+                        Margin="0,0,0,8"
+                        Visibility="{Binding MissingEnabledPackagesWarning, Converter={StaticResource NonEmptyVis}}">
+                    <TextBlock Text="{Binding MissingEnabledPackagesWarning}"
+                               Foreground="{StaticResource AccentAmberHotBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="12" />
+                </Border>
+                <Border Background="#FF241C12"
+                        BorderBrush="{StaticResource WarnBrush}"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="12,8"
+                        Visibility="{Binding LoaderVersionWarning, Converter={StaticResource NonEmptyVis}}">
+                    <TextBlock Text="{Binding LoaderVersionWarning}"
+                               Foreground="{StaticResource AccentAmberHotBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="12" />
+                </Border>
+            </StackPanel>
+
+            <Border Grid.Row="5"
+                    Margin="18,0,18,8"
+                    Background="{StaticResource RiskBannerBrush}"
+                    BorderBrush="{StaticResource DangerBrush}"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="12,10">
+                <DockPanel>
+                    <Border Style="{StaticResource AccentBarStyle}"
+                            Background="{StaticResource DangerBrush}"
+                            Height="Auto"
+                            MinHeight="20"
+                            Margin="0,0,10,0"
+                            DockPanel.Dock="Left" />
+                    <TextBlock Text="{Binding RiskBanner}"
+                               TextWrapping="Wrap"
+                               Foreground="#FFE8C8C0"
+                               FontSize="12"
+                               VerticalAlignment="Center" />
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Row="6"
+                    Margin="18,0,18,14"
+                    Style="{StaticResource PanelChromeStyle}"
+                    Background="#EE0E1114"
+                    Padding="14">
+                <DockPanel>
+                    <TextBlock Text="同步日志"
+                               Style="{StaticResource SectionLabelStyle}"
+                               DockPanel.Dock="Top" />
+                    <TextBox Text="{Binding LogText, Mode=OneWay}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             FontFamily="Consolas, Cascadia Mono, Microsoft YaHei UI"
+                             FontSize="12"
+                             Foreground="{StaticResource TextMutedBrush}" />
                 </DockPanel>
             </Border>
         </Grid>
-
-        <!-- Missing enabled packages / Loader version warning -->
-        <StackPanel Grid.Row="4" Margin="16,0,16,8">
-            <Border Background="#FF241C12"
-                    BorderBrush="{StaticResource DangerBrush}"
-                    BorderThickness="1"
-                    CornerRadius="2"
-                    Padding="12,8"
-                    Margin="0,0,0,8"
-                    Visibility="{Binding MissingEnabledPackagesWarning, Converter={StaticResource NonEmptyVis}}">
-                <TextBlock Text="{Binding MissingEnabledPackagesWarning}"
-                           Foreground="{StaticResource AccentAmberHotBrush}"
-                           TextWrapping="Wrap"
-                           FontSize="12" />
-            </Border>
-            <Border Background="#FF241C12"
-                    BorderBrush="{StaticResource WarnBrush}"
-                    BorderThickness="1"
-                    CornerRadius="2"
-                    Padding="12,8"
-                    Visibility="{Binding LoaderVersionWarning, Converter={StaticResource NonEmptyVis}}">
-                <TextBlock Text="{Binding LoaderVersionWarning}"
-                           Foreground="{StaticResource AccentAmberHotBrush}"
-                           TextWrapping="Wrap"
-                           FontSize="12" />
-            </Border>
-        </StackPanel>
-
-        <!-- Risk banner — always visible -->
-        <Border Grid.Row="5"
-                Margin="16,0,16,8"
-                Background="{StaticResource RiskBannerBrush}"
-                BorderBrush="{StaticResource DangerBrush}"
-                BorderThickness="1"
-                CornerRadius="2"
-                Padding="12,10">
-            <DockPanel>
-                <Border Style="{StaticResource AccentBarStyle}"
-                        Background="{StaticResource DangerBrush}"
-                        Height="Auto"
-                        MinHeight="20"
-                        Margin="0,0,10,0"
-                        DockPanel.Dock="Left" />
-                <TextBlock Text="{Binding RiskBanner}"
-                           TextWrapping="Wrap"
-                           Foreground="#FFE8C8C0"
-                           FontSize="12"
-                           VerticalAlignment="Center" />
-            </DockPanel>
-        </Border>
-
-        <!-- Log -->
-        <Border Grid.Row="6"
-                Margin="16,0,16,12"
-                Background="{StaticResource BgDeepBrush}"
-                BorderBrush="{StaticResource SteelEdgeBrush}"
-                BorderThickness="1"
-                CornerRadius="2"
-                Padding="12">
-            <DockPanel>
-                <TextBlock Text="同步日志"
-                           Style="{StaticResource SectionLabelStyle}"
-                           DockPanel.Dock="Top" />
-                <TextBox Text="{Binding LogText, Mode=OneWay}"
-                         IsReadOnly="True"
-                         TextWrapping="Wrap"
-                         AcceptsReturn="True"
-                         VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Disabled"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         FontFamily="Consolas, Cascadia Mono, Microsoft YaHei UI"
-                         FontSize="12"
-                         Foreground="{StaticResource TextMutedBrush}" />
-            </DockPanel>
-        </Border>
     </Grid>
 </Window>
