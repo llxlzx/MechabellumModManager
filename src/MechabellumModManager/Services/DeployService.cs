@@ -115,7 +115,11 @@ public sealed class DeployService
     {
         try
         {
-            if (prev.Files.Count > 0)
+            // Stale GamePath: treat as empty-prev — do not resync old-root files into the new root
+            // or restore the old-path manifest as active (forensics prev file already saved).
+            var prevUsable = prev.Files.Count > 0 && PathsEqual(prev.GamePath, gamePath);
+
+            if (prevUsable)
             {
                 var prevKeys = new HashSet<string>(
                     prev.Files.Select(f => NormalizeRelative(f.RelativePath)),
@@ -162,6 +166,24 @@ public sealed class DeployService
         catch
         {
             // Spec §7.5.4: keep prev + logs; do not pretend success
+        }
+    }
+
+    private static bool PathsEqual(string a, string b)
+    {
+        if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b))
+            return string.Equals(a?.Trim(), b?.Trim(), StringComparison.OrdinalIgnoreCase);
+
+        try
+        {
+            return string.Equals(
+                Path.GetFullPath(a.Trim()),
+                Path.GetFullPath(b.Trim()),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception)
+        {
+            return string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
         }
     }
 

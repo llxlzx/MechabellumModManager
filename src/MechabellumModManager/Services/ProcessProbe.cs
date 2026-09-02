@@ -6,6 +6,15 @@ public sealed class ProcessProbe
 {
     public bool IsGameRunning()
     {
-        return Process.GetProcessesByName("Mechabellum").Length > 0;
+        var processes = Process.GetProcessesByName("Mechabellum");
+        try
+        {
+            return processes.Length > 0;
+        }
+        finally
+        {
+            foreach (var process in processes)
+                process.Dispose();
+        }
     }
 }
