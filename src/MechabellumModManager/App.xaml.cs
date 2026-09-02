@@ -44,6 +44,7 @@ public partial class App : Application
             launcher,
             riskGate,
             confirmHighRisk: msg => Confirm(owner, msg, "高风险确认", MessageBoxImage.Warning),
+            confirm: msg => Confirm(owner, msg, "确认", MessageBoxImage.Question),
             browseFolder: () => BrowseFolder(owner),
             openDll: () => OpenFile(owner, "Melon Mod DLL|*.dll|所有文件|*.*"),
             openZip: () => OpenFile(owner, "Mod 压缩包|*.zip|所有文件|*.*"),

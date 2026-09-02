@@ -25,6 +25,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly GameLauncher _launcher;
     readonly RiskGate _riskGate;
     readonly Func<string, bool> _confirmHighRisk;
+    readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
     readonly Func<string?>? _openDll;
     readonly Func<string?>? _openZip;
@@ -42,6 +43,7 @@ public sealed partial class MainViewModel : ObservableObject
         GameLauncher launcher,
         RiskGate riskGate,
         Func<string, bool>? confirmHighRisk = null,
+        Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
         Func<string?>? openDll = null,
         Func<string?>? openZip = null,
@@ -55,8 +57,9 @@ public sealed partial class MainViewModel : ObservableObject
         _deploy = deploy;
         _launcher = launcher;
         _riskGate = riskGate;
-        // Default deny: UI must wire a confirmation dialog.
+        // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
+        _confirm = confirm ?? (_ => false);
         _browseFolder = browseFolder;
         _openDll = openDll;
         _openZip = openZip;
@@ -253,6 +256,27 @@ public sealed partial class MainViewModel : ObservableObject
             var profile = _profiles.Get(SelectedProfile.Id);
             var packages = _library.List().ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
             var result = _deploy.Apply(profile, packages, GamePath, allowOverwriteUnmanaged: false);
+
+            if (!result.Success &&
+                result.Plan.ConflictsUnmanaged.Count > 0 &&
+                result.Plan.IntraProfileNameCollisions.Count == 0)
+            {
+                var sample = string.Join("\n", result.Plan.ConflictsUnmanaged.Take(8).Select(Path.GetFileName));
+                var more = result.Plan.ConflictsUnmanaged.Count > 8
+                    ? $"\n…共 {result.Plan.ConflictsUnmanaged.Count} 个"
+                    : "";
+                var prompt =
+                    "检测到游戏目录中已有非本管理器托管的同名文件。\n" +
+                    "确认覆盖并接管这些文件？\n\n" + sample + more;
+                if (_confirm(prompt))
+                    result = _deploy.Apply(profile, packages, GamePath, allowOverwriteUnmanaged: true);
+                else
+                {
+                    AppendLog("已取消覆盖非托管文件。");
+                    return false;
+                }
+            }
+
             AppendLog(result.Message);
             if (!result.Success) return false;
 
@@ -342,6 +366,8 @@ public sealed partial class MainViewModel : ObservableObject
     void DeleteProfile()
     {
         if (SelectedProfile is null) return;
+        if (!_confirm($"确定删除方案「{SelectedProfile.Name}」？此操作不可撤销。"))
+            return;
         try
         {
             var id = SelectedProfile.Id;
@@ -354,6 +380,26 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppendLog($"删除方案失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void DeleteMod(ModItemViewModel? mod)
+    {
+        if (mod is null) return;
+        if (!_confirm($"确定从库中删除「{mod.DisplayName}」？将同时从所有方案中移除。"))
+            return;
+        try
+        {
+            _library.Delete(mod.Package.Id);
+            ReloadMods();
+            RecomputeDirty();
+            UpdateLoaderVersionWarning();
+            AppendLog($"已删除 Mod：{mod.DisplayName}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"删除 Mod 失败：{ex.Message}");
         }
     }
 
