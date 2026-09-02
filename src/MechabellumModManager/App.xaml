@@ -341,7 +341,7 @@
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="RowBackground" Value="Transparent" />
                 <Setter Property="AlternatingRowBackground" Value="#FF12171C" />
-                <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource SteelColor}" />
+                <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource SteelBrush}" />
                 <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
                 <Setter Property="GridLinesVisibility" Value="Horizontal" />
                 <Setter Property="HeadersVisibility" Value="Column" />
