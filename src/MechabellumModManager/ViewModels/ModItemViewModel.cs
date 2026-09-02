@@ -19,9 +19,21 @@ public sealed partial class ModItemViewModel : ObservableObject
 
     public string DisplayName => Package.DisplayName;
     public string? Version => Package.Version;
-    public string TypeLabel => Package.Type.ToString();
+    public string TypeLabel => Package.Type switch
+    {
+        ModPackageType.MelonMod => "Mod",
+        ModPackageType.MelonPlugin => "插件",
+        ModPackageType.MelonUserLibs => "UserLibs",
+        ModPackageType.MelonUserData => "UserData",
+        _ => Package.Type.ToString()
+    };
     public bool HighRisk => Package.HighRisk;
+    public string HighRiskLabel => HighRisk ? "高风险" : "—";
     public string? RequiredMelonLoaderVersion => Package.RequiredMelonLoaderVersion;
+    public string VersionWarningHint =>
+        string.IsNullOrWhiteSpace(RequiredMelonLoaderVersion)
+            ? ""
+            : $"需要 MelonLoader {RequiredMelonLoaderVersion}";
 
     [ObservableProperty]
     private bool _isEnabled;

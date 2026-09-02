@@ -61,11 +61,17 @@ public sealed partial class MainViewModel : ObservableObject
         _openDll = openDll;
         _openZip = openZip;
         _promptText = promptText;
-        ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile());
+        ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => IsReady);
 
         Profiles = new ObservableCollection<ProfileItemViewModel>();
         Mods = new ObservableCollection<ModItemViewModel>();
         RiskBanner = RiskGate.BannerText;
+        LaunchModeOptions = new[]
+        {
+            new LaunchModeOption(LaunchMode.SteamThenExe, "Steam 优先，失败则直启"),
+            new LaunchModeOption(LaunchMode.SteamOnly, "仅 Steam"),
+            new LaunchModeOption(LaunchMode.ExeOnly, "仅直启 exe")
+        };
 
         _paths.EnsureCreated();
         _profiles.EnsureDefaults();
@@ -84,6 +90,20 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ObservableCollection<ProfileItemViewModel> Profiles { get; }
     public ObservableCollection<ModItemViewModel> Mods { get; }
+    public IReadOnlyList<LaunchModeOption> LaunchModeOptions { get; }
+
+    public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
+
+    public string StatusKindLabel => GameStatus?.Kind switch
+    {
+        GameStatusKind.Ready => "就绪",
+        GameStatusKind.GameOkLoaderMissing => "缺少 Loader",
+        GameStatusKind.LoaderPartial => "Loader 不完整",
+        GameStatusKind.GameMissing => "未找到游戏",
+        _ => "未知"
+    };
+
+    public string DirtyHint => IsDirty ? "方案已改，游戏目录未同步 — 请点击「应用方案」" : "已与游戏目录同步";
 
     [ObservableProperty] private GameStatus? _gameStatus;
     [ObservableProperty] private ProfileItemViewModel? _selectedProfile;
@@ -94,6 +114,17 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _gamePath = "";
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
+    [ObservableProperty] private bool _settingsExpanded;
+
+    partial void OnGameStatusChanged(GameStatus? value)
+    {
+        OnPropertyChanged(nameof(IsReady));
+        OnPropertyChanged(nameof(StatusKindLabel));
+        ApplyProfileCommand.NotifyCanExecuteChanged();
+        ApplyAndLaunchCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsDirtyChanged(bool value) => OnPropertyChanged(nameof(DirtyHint));
 
     partial void OnGamePathChanged(string value)
     {
@@ -235,7 +266,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(IsReady))]
     void ApplyAndLaunch()
     {
         if (!ApplyProfile()) return;
@@ -252,9 +283,12 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    void ToggleSettings() => SettingsExpanded = !SettingsExpanded;
+
+    [RelayCommand]
     void CreateProfile()
     {
-        var name = _promptText?.Invoke("新方案名称") ?? "新方案";
+        var name = _promptText?.Invoke("新方案名称");
         if (string.IsNullOrWhiteSpace(name)) return;
         try
         {
@@ -269,16 +303,53 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    void RenameProfile()
+    {
+        if (SelectedProfile is null) return;
+        var name = _promptText?.Invoke("重命名方案");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            _profiles.Rename(SelectedProfile.Id, name);
+            ReloadProfiles(selectId: SelectedProfile.Id);
+            AppendLog($"已重命名方案：{name.Trim()}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"重命名方案失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void DuplicateProfile()
+    {
+        if (SelectedProfile is null) return;
+        var name = _promptText?.Invoke("复制为新方案");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            var copy = _profiles.Duplicate(SelectedProfile.Id, name);
+            ReloadProfiles(selectId: copy.Id);
+            AppendLog($"已复制方案：{copy.Name}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"复制方案失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
     void DeleteProfile()
     {
         if (SelectedProfile is null) return;
         try
         {
             var id = SelectedProfile.Id;
+            var name = SelectedProfile.Name;
             _profiles.Delete(id);
             var config = LoadConfig();
             ReloadProfiles(selectId: config.ActiveProfileId);
-            AppendLog($"已删除方案：{id}");
+            AppendLog($"已删除方案：{name}");
         }
         catch (Exception ex)
         {

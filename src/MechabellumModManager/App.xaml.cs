@@ -1,13 +1,94 @@
-﻿using System.Configuration;
-using System.Data;
+﻿using System.IO;
 using System.Windows;
+using MechabellumModManager.Dialogs;
+using MechabellumModManager.Models;
+using MechabellumModManager.Services;
+using MechabellumModManager.ViewModels;
+using Microsoft.Win32;
 
 namespace MechabellumModManager;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
-}
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
 
+        var window = new MainWindow();
+        window.DataContext = ComposeMainViewModel(window);
+        MainWindow = window;
+        window.Show();
+    }
+
+    static MainViewModel ComposeMainViewModel(Window owner)
+    {
+        var store = new JsonStore();
+        var paths = ResolvePaths(store);
+        var detector = new GameDetector();
+        var profiles = new ProfileService(paths, store);
+        var inspector = new AssemblyInspector();
+        var library = new ModLibraryService(paths, inspector, store, profiles);
+        var planner = new DeployPlanner();
+        var probe = new ProcessProbe();
+        var deploy = new DeployService(paths, store, planner, detector, probe);
+        var launcher = new GameLauncher(new ShellProcessStarter(), probe);
+        var riskGate = new RiskGate();
+
+        return new MainViewModel(
+            paths,
+            store,
+            detector,
+            library,
+            profiles,
+            deploy,
+            launcher,
+            riskGate,
+            confirmHighRisk: msg => Confirm(owner, msg, "高风险确认", MessageBoxImage.Warning),
+            browseFolder: () => BrowseFolder(owner),
+            openDll: () => OpenFile(owner, "Melon Mod DLL|*.dll|所有文件|*.*"),
+            openZip: () => OpenFile(owner, "Mod 压缩包|*.zip|所有文件|*.*"),
+            promptText: title => Prompt(owner, title));
+    }
+
+    static PathsService ResolvePaths(JsonStore store)
+    {
+        var appData = new PathsService();
+        var config = store.LoadOrDefault(appData.ConfigPath, () => new AppConfig());
+        if (!string.IsNullOrWhiteSpace(config.DataRoot))
+            return new PathsService(config.DataRoot);
+        return appData;
+    }
+
+    static bool Confirm(Window owner, string message, string title, MessageBoxImage icon) =>
+        MessageBox.Show(owner, message, title, MessageBoxButton.YesNo, icon) == MessageBoxResult.Yes;
+
+    static string? BrowseFolder(Window owner)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "选择 Mechabellum 游戏目录"
+        };
+        return dialog.ShowDialog(owner) == true ? dialog.FolderName : null;
+    }
+
+    static string? OpenFile(Window owner, string filter)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = filter,
+            CheckFileExists = true,
+            Multiselect = false
+        };
+        return dialog.ShowDialog(owner) == true ? dialog.FileName : null;
+    }
+
+    static string? Prompt(Window owner, string title)
+    {
+        var dialog = new PromptDialog(title)
+        {
+            Owner = owner,
+            Title = title
+        };
+        return dialog.ShowDialog() == true ? dialog.Result : null;
+    }
+}
