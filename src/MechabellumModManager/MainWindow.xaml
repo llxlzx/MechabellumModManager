@@ -6,7 +6,6 @@
         xmlns:conv="clr-namespace:MechabellumModManager.Converters"
         mc:Ignorable="d"
         Title="钢铁指挥官 Mod 管理器"
-        Icon="pack://application:,,,/Assets/app.ico"
         Height="740"
         Width="1200"
         MinHeight="580"
@@ -60,7 +59,7 @@
                                 Background="#FF0C1014"
                                 Margin="0,0,12,0"
                                 SnapsToDevicePixels="True">
-                            <Image Source="pack://application:,,,/Assets/brand.png"
+                            <Image x:Name="BrandImage"
                                    Stretch="Uniform"
                                    Margin="3"
                                    RenderOptions.BitmapScalingMode="HighQuality" />

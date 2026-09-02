@@ -27,6 +27,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly MelonLoaderInstaller _melonInstaller;
     readonly MelonLoaderConfigOptimizer _melonOptimizer;
     readonly RiskHeuristic _riskHeuristic;
+    readonly SteamGameLocator _steamLocator;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
@@ -51,6 +52,7 @@ public sealed partial class MainViewModel : ObservableObject
         MelonLoaderInstaller? melonInstaller = null,
         MelonLoaderConfigOptimizer? melonOptimizer = null,
         RiskHeuristic? riskHeuristic = null,
+        SteamGameLocator? steamLocator = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
@@ -71,6 +73,7 @@ public sealed partial class MainViewModel : ObservableObject
         _melonInstaller = melonInstaller ?? new MelonLoaderInstaller();
         _melonOptimizer = melonOptimizer ?? new MelonLoaderConfigOptimizer();
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
+        _steamLocator = steamLocator ?? new SteamGameLocator();
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -96,15 +99,41 @@ public sealed partial class MainViewModel : ObservableObject
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
-        _gamePath = config.GamePath;
+        _gamePath = ResolveInitialGamePath(config.GamePath);
         _launchMode = config.LaunchMode;
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
+
+        if (!string.Equals(config.GamePath ?? "", _gamePath, StringComparison.OrdinalIgnoreCase))
+        {
+            config.GamePath = _gamePath;
+            SaveConfig(config);
+        }
 
         ReloadProfiles(selectId: config.ActiveProfileId);
         RefreshStatus();
         ReloadMods();
         RecomputeDirty();
         UpdateLoaderVersionWarning();
+
+        if (string.IsNullOrWhiteSpace(_gamePath))
+            AppendLog("未自动找到游戏目录。请在「设置」中浏览选择 Mechabellum 安装路径。");
+        else if (!SteamGameLocator.LooksLikeGameRoot(_gamePath))
+            AppendLog("当前游戏路径无效。请在「设置」中重新选择包含 Mechabellum.exe 的目录。");
+    }
+
+    string ResolveInitialGamePath(string? configured)
+    {
+        if (SteamGameLocator.LooksLikeGameRoot(configured))
+            return Path.GetFullPath(configured!);
+
+        var found = _steamLocator.TryFind();
+        if (!string.IsNullOrWhiteSpace(found))
+        {
+            AppendLog($"已自动定位游戏目录：{found}");
+            return found;
+        }
+
+        return configured?.Trim() ?? "";
     }
 
     public ObservableCollection<ProfileItemViewModel> Profiles { get; }
