@@ -24,7 +24,6 @@ public sealed partial class MainViewModel : ObservableObject
     readonly DeployService _deploy;
     readonly GameLauncher _launcher;
     readonly RiskGate _riskGate;
-    readonly MelonLoaderInstaller _melonInstaller;
     readonly MelonLoaderConfigOptimizer _melonOptimizer;
     readonly RiskHeuristic _riskHeuristic;
     readonly SteamGameLocator _steamLocator;
@@ -49,7 +48,6 @@ public sealed partial class MainViewModel : ObservableObject
         DeployService deploy,
         GameLauncher launcher,
         RiskGate riskGate,
-        MelonLoaderInstaller? melonInstaller = null,
         MelonLoaderConfigOptimizer? melonOptimizer = null,
         RiskHeuristic? riskHeuristic = null,
         SteamGameLocator? steamLocator = null,
@@ -70,7 +68,6 @@ public sealed partial class MainViewModel : ObservableObject
         _deploy = deploy;
         _launcher = launcher;
         _riskGate = riskGate;
-        _melonInstaller = melonInstaller ?? new MelonLoaderInstaller();
         _melonOptimizer = melonOptimizer ?? new MelonLoaderConfigOptimizer();
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         _steamLocator = steamLocator ?? new SteamGameLocator();
@@ -142,15 +139,6 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
-    public bool ShowInstallMelonLoaderButton =>
-        GameStatus is not null && GameStatus.Kind != GameStatusKind.GameMissing;
-
-    public string InstallMelonLoaderButtonText => GameStatus?.Kind switch
-    {
-        GameStatusKind.Ready => "重新安装 / 更新 MelonLoader",
-        _ => "一键安装 MelonLoader"
-    };
-
     public string StatusKindLabel => GameStatus?.Kind switch
     {
         GameStatusKind.Ready => "就绪",
@@ -173,34 +161,13 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _settingsExpanded;
-    [ObservableProperty] private bool _isInstallingLoader;
-    [ObservableProperty] private double _installProgressPercent;
-    [ObservableProperty] private bool _installProgressIsIndeterminate;
-    [ObservableProperty] private string _installProgressText = "";
-
-    public bool ShowInstallProgress => IsInstallingLoader;
 
     partial void OnGameStatusChanged(GameStatus? value)
     {
         OnPropertyChanged(nameof(IsReady));
         OnPropertyChanged(nameof(StatusKindLabel));
-        OnPropertyChanged(nameof(ShowInstallMelonLoaderButton));
-        OnPropertyChanged(nameof(InstallMelonLoaderButtonText));
         ApplyProfileCommand.NotifyCanExecuteChanged();
         ApplyAndLaunchCommand.NotifyCanExecuteChanged();
-        InstallMelonLoaderCommand.NotifyCanExecuteChanged();
-    }
-
-    partial void OnIsInstallingLoaderChanged(bool value)
-    {
-        InstallMelonLoaderCommand.NotifyCanExecuteChanged();
-        OnPropertyChanged(nameof(ShowInstallProgress));
-        if (!value)
-        {
-            InstallProgressPercent = 0;
-            InstallProgressIsIndeterminate = false;
-            InstallProgressText = "";
-        }
     }
 
     partial void OnIsDirtyChanged(bool value) => OnPropertyChanged(nameof(DirtyHint));
@@ -275,81 +242,6 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppendLog($"MelonLoader 优化配置失败：{ex.Message}");
-        }
-    }
-
-    bool CanInstallMelonLoader() =>
-        !IsInstallingLoader &&
-        GameStatus is not null &&
-        GameStatus.Kind != GameStatusKind.GameMissing;
-
-    [RelayCommand(CanExecute = nameof(CanInstallMelonLoader))]
-    async Task InstallMelonLoaderAsync()
-    {
-        var ready = GameStatus?.Kind == GameStatusKind.Ready;
-        var confirmMsg = ready
-            ? "将从 GitHub 下载最新正式版 MelonLoader 并覆盖安装到当前游戏目录。\n请确认游戏已关闭且可以联网。是否继续？"
-            : "将从 GitHub 下载最新正式版 MelonLoader 并安装到当前游戏目录。\n请确认游戏已关闭且可以联网。是否继续？";
-        if (!_confirm(confirmMsg))
-        {
-            AppendLog("已取消 MelonLoader 安装。");
-            return;
-        }
-
-        IsInstallingLoader = true;
-        InstallProgressIsIndeterminate = true;
-        InstallProgressPercent = 0;
-        InstallProgressText = "准备安装…";
-        var lastLogged = "";
-        var lastLogBucket = -1;
-        try
-        {
-            var progress = new Progress<MelonLoaderProgress>(p =>
-            {
-                InstallProgressText = p.Message;
-                if (p.Percent is double pct)
-                {
-                    InstallProgressIsIndeterminate = false;
-                    InstallProgressPercent = Math.Clamp(pct, 0, 100);
-                }
-                else
-                {
-                    InstallProgressIsIndeterminate = true;
-                }
-
-                // Log non-download stages always; during download log about every 10%.
-                var isDownload = p.Message.Contains("正在下载", StringComparison.Ordinal);
-                if (!isDownload)
-                {
-                    if (p.Message != lastLogged)
-                    {
-                        AppendLog(p.Message);
-                        lastLogged = p.Message;
-                    }
-
-                    return;
-                }
-
-                var bucket = p.Percent is double d ? (int)(d / 10) : lastLogBucket;
-                if (bucket != lastLogBucket || p.Percent is >= 100)
-                {
-                    AppendLog(p.Message);
-                    lastLogged = p.Message;
-                    lastLogBucket = bucket;
-                }
-            });
-            var result = await _melonInstaller.InstallAsync(GamePath, progress).ConfigureAwait(true);
-            AppendLog(result.Message);
-            RefreshStatus();
-        }
-        catch (Exception ex)
-        {
-            AppendLog($"MelonLoader 安装异常：{ex.Message}");
-            RefreshStatus();
-        }
-        finally
-        {
-            IsInstallingLoader = false;
         }
     }
 

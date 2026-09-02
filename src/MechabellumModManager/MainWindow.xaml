@@ -30,7 +30,6 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -137,13 +136,6 @@
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
-                        <Button Content="{Binding InstallMelonLoaderButtonText}"
-                                Command="{Binding InstallMelonLoaderCommand}"
-                                Visibility="{Binding ShowInstallMelonLoaderButton, Converter={StaticResource BoolToVis}}"
-                                Style="{StaticResource GhostButtonStyle}"
-                                Margin="0,0,8,0"
-                                MinWidth="150"
-                                ToolTip="从 GitHub 下载最新正式版 MelonLoader.x64.zip 并解压到游戏目录" />
                         <Button Content="应用方案"
                                 Command="{Binding ApplyProfileCommand}"
                                 IsEnabled="{Binding IsReady}"
@@ -164,34 +156,8 @@
                 </Grid>
             </Border>
 
-            <!-- MelonLoader install progress -->
-            <Border Grid.Row="1"
-                    Background="#E0161B20"
-                    BorderBrush="{StaticResource SteelEdgeBrush}"
-                    BorderThickness="0,0,0,1"
-                    Padding="18,10"
-                    Visibility="{Binding ShowInstallProgress, Converter={StaticResource BoolToVis}}">
-                <DockPanel>
-                    <TextBlock Text="{Binding InstallProgressText}"
-                               DockPanel.Dock="Top"
-                               Margin="0,0,0,8"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               TextTrimming="CharacterEllipsis"
-                               ToolTip="{Binding InstallProgressText}" />
-                    <ProgressBar Height="14"
-                                 Minimum="0"
-                                 Maximum="100"
-                                 Value="{Binding InstallProgressPercent}"
-                                 IsIndeterminate="{Binding InstallProgressIsIndeterminate}"
-                                 Foreground="{StaticResource AccentAmberBrush}"
-                                 Background="{StaticResource BgDeepBrush}"
-                                 BorderBrush="{StaticResource SteelEdgeBrush}"
-                                 BorderThickness="1" />
-                </DockPanel>
-            </Border>
-
             <!-- Settings strip -->
-            <Border Grid.Row="2"
+            <Border Grid.Row="1"
                     Background="#E0161B20"
                     BorderBrush="{StaticResource SteelEdgeBrush}"
                     BorderThickness="0,0,0,1"
@@ -247,7 +213,7 @@
             </Border>
 
             <!-- Body: profiles | library -->
-            <Grid Grid.Row="3" Margin="18,14,18,10">
+            <Grid Grid.Row="2" Margin="18,14,18,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="252" MinWidth="200" />
                     <ColumnDefinition Width="10" />
@@ -401,7 +367,7 @@
                 </Border>
             </Grid>
 
-            <StackPanel Grid.Row="4" Margin="18,0,18,8">
+            <StackPanel Grid.Row="3" Margin="18,0,18,8">
                 <Border Background="#FF241C12"
                         BorderBrush="{StaticResource DangerBrush}"
                         BorderThickness="1"
@@ -427,7 +393,7 @@
                 </Border>
             </StackPanel>
 
-            <Border Grid.Row="5"
+            <Border Grid.Row="4"
                     Margin="18,0,18,8"
                     Background="{StaticResource RiskBannerBrush}"
                     BorderBrush="{StaticResource DangerBrush}"
@@ -449,7 +415,7 @@
                 </DockPanel>
             </Border>
 
-            <Border Grid.Row="6"
+            <Border Grid.Row="5"
                     Margin="18,0,18,14"
                     Style="{StaticResource PanelChromeStyle}"
                     Background="#EE0E1114"

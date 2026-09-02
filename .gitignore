@@ -3,3 +3,12 @@ obj/
 .vs/
 *.user
 .superpowers/
+dist/
+publish/
+发布/
+分发/
+*.pdb
+installer/redist/**/*.exe
+installer/redist/**/*.zip
+!installer/redist/**/.gitkeep
+!installer/redist/**/README.md

@@ -1,36 +1,36 @@
 # 钢铁指挥官 Mod 管理器 — 使用说明
 
+## 安装（推荐）
+
+1. 运行 `钢铁指挥官Mod管理器_Setup_v*.exe`（需管理员权限）
+2. 选择管理器安装目录
+3. 选择游戏路径（含 `Mechabellum.exe` 的目录；可自动探测）
+4. 组件建议保持默认：
+   - .NET 8 Desktop Runtime（管理器）
+   - .NET 6 Desktop Runtime（MelonLoader）
+   - MelonLoader（默认可取消）
+5. 完成安装后启动管理器
+
+若本机已装对应 Runtime，安装程序会自动跳过。
+
+离线环境：把官方安装包放入制作安装包时的 `installer/redist/`（见该目录 README），重新编译 Setup。
+
 ## 系统要求
 
-- Windows 10/11 **64 位**
-- 已安装 [.NET 8 桌面运行时（Desktop Runtime x64）](https://dotnet.microsoft.com/download/dotnet/8.0)
-- 已通过 Steam 安装 **Mechabellum（钢铁指挥官）**
+- Windows 10/11 64 位
+- Steam 版 Mechabellum（钢铁指挥官）
 
-首次双击若提示缺少运行时：安装上述 Desktop Runtime 后重试。
+## 使用
 
-## 快速开始
+导入 Mod → 勾选进方案 →「应用方案」或「应用并启动」。
 
-1. 解压本压缩包到任意目录（无需安装）
-2. 双击 `钢铁指挥官Mod管理器.exe`
-3. 若未自动找到游戏：点 **设置 → 浏览…**，选择含 `Mechabellum.exe` 的游戏目录  
-   （常见路径：`…\Steam\steamapps\common\Mechabellum`）
-4. 若提示缺少 MelonLoader：点 **一键安装 MelonLoader**（需能访问 GitHub）
-5. 导入 Mod（DLL / Zip / 文件夹）→ 勾选进方案 → **应用方案** 或 **应用并启动**
+数据默认在 `%AppData%\MechabellumModManager\`（空库，不含第三方 Mod）。
 
-## 数据位置
+## MelonLoader
 
-默认配置与 Mod 库保存在：
+请在**安装包**中勾选安装。管理器内不再提供一键安装。  
+缺少 Loader 时请重新运行 Setup 并勾选 MelonLoader，或手动安装。
 
-`%AppData%\MechabellumModManager\`
+## 风险
 
-与解压目录分离，换电脑不会带走你的库；可在设置中勾选「便携数据根」改用程序旁 `data\` 文件夹（需重启）。
-
-## 注意
-
-- 仅建议用于客户端 QoL Mod；修改战斗逻辑可能导致 Data Error / 处罚，风险自负
-- 名称关键词会自动标「高风险」，可能误报或漏报
-- 本分发包**不含**任何第三方 Mod 文件
-
-## 版本
-
-原版管理器（空库），不含本机调试用 Mod。
+仅建议 QoL Mod；修改战斗逻辑可能导致 Data Error / 处罚，风险自负。
