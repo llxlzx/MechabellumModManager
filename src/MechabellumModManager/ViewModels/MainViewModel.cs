@@ -26,6 +26,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly RiskGate _riskGate;
     readonly MelonLoaderInstaller _melonInstaller;
     readonly MelonLoaderConfigOptimizer _melonOptimizer;
+    readonly RiskHeuristic _riskHeuristic;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
@@ -49,6 +50,7 @@ public sealed partial class MainViewModel : ObservableObject
         RiskGate riskGate,
         MelonLoaderInstaller? melonInstaller = null,
         MelonLoaderConfigOptimizer? melonOptimizer = null,
+        RiskHeuristic? riskHeuristic = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
@@ -68,6 +70,7 @@ public sealed partial class MainViewModel : ObservableObject
         _riskGate = riskGate;
         _melonInstaller = melonInstaller ?? new MelonLoaderInstaller();
         _melonOptimizer = melonOptimizer ?? new MelonLoaderConfigOptimizer();
+        _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -647,13 +650,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     void ToggleHighRisk(ModItemViewModel? mod)
     {
-        if (mod is null) return;
+        if (mod is null || mod.IsMissing) return;
         mod.Package.HighRisk = !mod.Package.HighRisk;
         try
         {
             PersistPackageMeta(mod.Package);
-            ReloadMods();
-            AppendLog($"{mod.DisplayName} 高风险标记：{(mod.Package.HighRisk ? "是" : "否")}");
+            mod.NotifyRiskChanged();
+            AppendLog($"{mod.DisplayName} 高风险标记（临时）：{(mod.Package.HighRisk ? "是" : "否")}；刷新列表后将按名称关键词重新判定。");
         }
         catch (Exception ex)
         {
@@ -719,6 +722,25 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var library = _library.List().ToList();
+        foreach (var pkg in library)
+        {
+            var risk = _riskHeuristic.Evaluate(pkg);
+            if (pkg.HighRisk == risk.HighRisk) continue;
+
+            pkg.HighRisk = risk.HighRisk;
+            try
+            {
+                PersistPackageMeta(pkg);
+                AppendLog(risk.HighRisk
+                    ? $"{pkg.DisplayName} 因关键词「{risk.MatchedKeyword}」自动标为高风险"
+                    : $"{pkg.DisplayName} 未命中风险关键词，已取消高风险标记");
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"更新 {pkg.DisplayName} 高风险标记失败：{ex.Message}");
+            }
+        }
+
         var libraryIds = new HashSet<string>(library.Select(p => p.Id), StringComparer.OrdinalIgnoreCase);
 
         Mods.Clear();

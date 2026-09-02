@@ -52,6 +52,12 @@ public sealed partial class ModItemViewModel : ObservableObject
             ? ""
             : $"需要 MelonLoader {RequiredMelonLoaderVersion}";
 
+    public void NotifyRiskChanged()
+    {
+        OnPropertyChanged(nameof(HighRisk));
+        OnPropertyChanged(nameof(HighRiskLabel));
+    }
+
     [ObservableProperty]
     private bool _isEnabled;
 

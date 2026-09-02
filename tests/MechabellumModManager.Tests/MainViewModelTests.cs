@@ -166,22 +166,25 @@ public class MainViewModelTests
             CreateReadyGame(gameRoot);
 
             var fx = new Fixture(dataRoot, gameRoot);
-            var pkgDir = Path.Combine(fx._paths.LibraryRoot, "mods", "cam-aaaaaaaa");
+            var pkgId = highRisk ? "cheat-aaaaaaaa" : "cam-aaaaaaaa";
+            var displayName = highRisk ? "CheatCam" : "Cam";
+            var dllName = highRisk ? "CheatCam.dll" : "Cam.dll";
+            var pkgDir = Path.Combine(fx._paths.LibraryRoot, "mods", pkgId);
             Directory.CreateDirectory(pkgDir);
-            File.WriteAllBytes(Path.Combine(pkgDir, "Cam.dll"), new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
+            File.WriteAllBytes(Path.Combine(pkgDir, dllName), new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
             var highRiskJson = highRisk ? "true" : "false";
             File.WriteAllText(
                 Path.Combine(pkgDir, "package.json"),
                 $$"""
                 {
-                  "id": "cam-aaaaaaaa",
-                  "displayName": "Cam",
+                  "id": "{{pkgId}}",
+                  "displayName": "{{displayName}}",
                   "type": "melon_mod",
                   "highRisk": {{highRiskJson}},
-                  "files": [ { "relativePathInPackage": "Cam.dll", "sha256": "aabbccdd" } ]
+                  "files": [ { "relativePathInPackage": "{{dllName}}", "sha256": "aabbccdd" } ]
                 }
                 """);
-            fx._store.Save(Path.Combine(fx._paths.LibraryRoot, "index.json"), new { packageIds = new[] { "cam-aaaaaaaa" } });
+            fx._store.Save(Path.Combine(fx._paths.LibraryRoot, "index.json"), new { packageIds = new[] { pkgId } });
             fx._store.Save(fx._paths.ConfigPath, new AppConfig
             {
                 GamePath = gameRoot,

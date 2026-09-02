@@ -35,13 +35,15 @@ public sealed class ModLibraryService
     readonly AssemblyInspector _inspector;
     readonly JsonStore _store;
     readonly ProfileService _profiles;
+    readonly RiskHeuristic _riskHeuristic;
 
-    public ModLibraryService(PathsService paths, AssemblyInspector inspector, JsonStore store, ProfileService profiles)
+    public ModLibraryService(PathsService paths, AssemblyInspector inspector, JsonStore store, ProfileService profiles, RiskHeuristic? riskHeuristic = null)
     {
         _paths = paths;
         _inspector = inspector;
         _store = store;
         _profiles = profiles;
+        _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
     }
 
     string IndexPath => Path.Combine(_paths.LibraryRoot, "index.json");
@@ -351,6 +353,9 @@ public sealed class ModLibraryService
             Files = files,
             PackageDirectory = packageDir
         };
+
+        var risk = _riskHeuristic.Evaluate(pkg);
+        pkg.HighRisk = risk.HighRisk;
 
         WritePackageJson(pkg);
         var index = LoadIndex();
