@@ -2,18 +2,43 @@
 
 Windows 桌面工具：外部 Mod 库 + 方案（Profile）勾选，一键同步部署到游戏目录（拍平到 `Mods/` / `Plugins/` / `UserLibs/` 等根目录）。不代装 MelonLoader。
 
+## MelonLoader
+
+- 状态为「缺少 Loader / 不完整」时，可点 **「一键安装 MelonLoader」**：从 GitHub 下载**最新正式版** `MelonLoader.x64.zip` 并解压到游戏目录。
+- 已就绪时可 **「重新安装 / 更新 MelonLoader」**。
+- 安装前请关闭游戏并保证可访问 GitHub；不代装 .NET 6 Desktop Runtime（若安装后仍异常，请自行安装）。
+
 ## 前置条件
 
 - **.NET 8 SDK**（构建/运行）
 - **MelonLoader** 已由用户自行安装到游戏目录（本工具只检测 Ready，不代装）
 - 已安装 **Mechabellum（钢铁指挥官）**
 
-## 构建与运行
+## 启动（推荐）
+
+双击项目根目录（或 `发布` 文件夹）里的：
+
+**`钢铁指挥官Mod管理器.exe`**
+
+这是常规 Windows 程序（`.exe`），不是 bat。
+
+> 本机需已安装 [.NET 8 桌面运行时（Desktop Runtime x64）](https://dotnet.microsoft.com/download/dotnet/8.0)。  
+> 若提示缺少运行时，安装后重新双击即可。  
+> 修改代码后若要更新 exe，运行根目录的 `发布为exe.bat`。
+
+## 构建与运行（开发用）
 
 ```powershell
 cd "D:\gongzuo\钢铁指挥官mod管理器开发"
 dotnet build
 dotnet run --project src\MechabellumModManager
+```
+
+发布 exe：
+
+```powershell
+dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o 发布
+copy 发布\钢铁指挥官Mod管理器.exe .
 ```
 
 测试：

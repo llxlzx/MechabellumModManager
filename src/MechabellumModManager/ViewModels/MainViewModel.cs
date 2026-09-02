@@ -24,6 +24,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly DeployService _deploy;
     readonly GameLauncher _launcher;
     readonly RiskGate _riskGate;
+    readonly MelonLoaderInstaller _melonInstaller;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
@@ -44,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject
         DeployService deploy,
         GameLauncher launcher,
         RiskGate riskGate,
+        MelonLoaderInstaller? melonInstaller = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
@@ -61,6 +63,7 @@ public sealed partial class MainViewModel : ObservableObject
         _deploy = deploy;
         _launcher = launcher;
         _riskGate = riskGate;
+        _melonInstaller = melonInstaller ?? new MelonLoaderInstaller();
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -103,6 +106,15 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
+    public bool ShowInstallMelonLoaderButton =>
+        GameStatus is not null && GameStatus.Kind != GameStatusKind.GameMissing;
+
+    public string InstallMelonLoaderButtonText => GameStatus?.Kind switch
+    {
+        GameStatusKind.Ready => "重新安装 / 更新 MelonLoader",
+        _ => "一键安装 MelonLoader"
+    };
+
     public string StatusKindLabel => GameStatus?.Kind switch
     {
         GameStatusKind.Ready => "就绪",
@@ -125,14 +137,21 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _settingsExpanded;
+    [ObservableProperty] private bool _isInstallingLoader;
 
     partial void OnGameStatusChanged(GameStatus? value)
     {
         OnPropertyChanged(nameof(IsReady));
         OnPropertyChanged(nameof(StatusKindLabel));
+        OnPropertyChanged(nameof(ShowInstallMelonLoaderButton));
+        OnPropertyChanged(nameof(InstallMelonLoaderButtonText));
         ApplyProfileCommand.NotifyCanExecuteChanged();
         ApplyAndLaunchCommand.NotifyCanExecuteChanged();
+        InstallMelonLoaderCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnIsInstallingLoaderChanged(bool value) =>
+        InstallMelonLoaderCommand.NotifyCanExecuteChanged();
 
     partial void OnIsDirtyChanged(bool value) => OnPropertyChanged(nameof(DirtyHint));
 
@@ -186,6 +205,43 @@ public sealed partial class MainViewModel : ObservableObject
         GameStatus = _detector.Detect(GamePath);
         UpdateLoaderVersionWarning();
         AppendLog(GameStatus.Message);
+    }
+
+    bool CanInstallMelonLoader() =>
+        !IsInstallingLoader &&
+        GameStatus is not null &&
+        GameStatus.Kind != GameStatusKind.GameMissing;
+
+    [RelayCommand(CanExecute = nameof(CanInstallMelonLoader))]
+    async Task InstallMelonLoaderAsync()
+    {
+        var ready = GameStatus?.Kind == GameStatusKind.Ready;
+        var confirmMsg = ready
+            ? "将从 GitHub 下载最新正式版 MelonLoader 并覆盖安装到当前游戏目录。\n请确认游戏已关闭且可以联网。是否继续？"
+            : "将从 GitHub 下载最新正式版 MelonLoader 并安装到当前游戏目录。\n请确认游戏已关闭且可以联网。是否继续？";
+        if (!_confirm(confirmMsg))
+        {
+            AppendLog("已取消 MelonLoader 安装。");
+            return;
+        }
+
+        IsInstallingLoader = true;
+        try
+        {
+            var progress = new Progress<string>(msg => AppendLog(msg));
+            var result = await _melonInstaller.InstallAsync(GamePath, progress).ConfigureAwait(true);
+            AppendLog(result.Message);
+            RefreshStatus();
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"MelonLoader 安装异常：{ex.Message}");
+            RefreshStatus();
+        }
+        finally
+        {
+            IsInstallingLoader = false;
+        }
     }
 
     [RelayCommand]

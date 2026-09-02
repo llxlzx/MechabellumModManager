@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using MechabellumModManager.Dialogs;
 using MechabellumModManager.Models;
@@ -33,6 +33,7 @@ public partial class App : Application
         var deploy = new DeployService(paths, store, planner, detector, probe);
         var launcher = new GameLauncher(new ShellProcessStarter(), probe);
         var riskGate = new RiskGate();
+        var melonInstaller = new MelonLoaderInstaller(probe: probe);
 
         return new MainViewModel(
             paths,
@@ -43,6 +44,7 @@ public partial class App : Application
             deploy,
             launcher,
             riskGate,
+            melonInstaller,
             confirmHighRisk: msg => Confirm(owner, msg, "高风险确认", MessageBoxImage.Warning),
             confirm: msg => Confirm(owner, msg, "确认", MessageBoxImage.Question),
             browseFolder: () => BrowseFolder(owner),

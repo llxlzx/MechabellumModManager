@@ -6,6 +6,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <AssemblyName>钢铁指挥官Mod管理器</AssemblyName>
+    <Product>钢铁指挥官 Mod 管理器</Product>
+    <AssemblyTitle>钢铁指挥官 Mod 管理器</AssemblyTitle>
+    <Description>Mechabellum MelonLoader Mod 管理器</Description>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
