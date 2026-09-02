@@ -25,6 +25,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly GameLauncher _launcher;
     readonly RiskGate _riskGate;
     readonly MelonLoaderInstaller _melonInstaller;
+    readonly MelonLoaderConfigOptimizer _melonOptimizer;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
@@ -33,6 +34,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string, string?>? _promptText;
     readonly Func<ModPackageType?>? _pickPackageType;
     readonly Func<string?>? _openFolder;
+    bool _loggedMelonOptimize;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -46,6 +48,7 @@ public sealed partial class MainViewModel : ObservableObject
         GameLauncher launcher,
         RiskGate riskGate,
         MelonLoaderInstaller? melonInstaller = null,
+        MelonLoaderConfigOptimizer? melonOptimizer = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
@@ -64,6 +67,7 @@ public sealed partial class MainViewModel : ObservableObject
         _launcher = launcher;
         _riskGate = riskGate;
         _melonInstaller = melonInstaller ?? new MelonLoaderInstaller();
+        _melonOptimizer = melonOptimizer ?? new MelonLoaderConfigOptimizer();
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -219,6 +223,27 @@ public sealed partial class MainViewModel : ObservableObject
         GameStatus = _detector.Detect(GamePath);
         UpdateLoaderVersionWarning();
         AppendLog(GameStatus.Message);
+        TryOptimizeMelonLoader(logAlways: false);
+    }
+
+    void TryOptimizeMelonLoader(bool logAlways)
+    {
+        if (GameStatus?.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPartial))
+            return;
+
+        try
+        {
+            var result = _melonOptimizer.ApplyRecommendedSettings(GamePath);
+            if (result.Changed || logAlways || !_loggedMelonOptimize)
+            {
+                AppendLog(result.Message);
+                _loggedMelonOptimize = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"MelonLoader 优化配置失败：{ex.Message}");
+        }
     }
 
     bool CanInstallMelonLoader() =>
@@ -499,6 +524,8 @@ public sealed partial class MainViewModel : ObservableObject
         if (!ApplyProfile()) return;
         if (GameStatus?.Kind != GameStatusKind.Ready) return;
 
+        TryOptimizeMelonLoader(logAlways: true);
+
         var config = LoadConfig();
         config.GamePath = GamePath;
         config.LaunchMode = LaunchMode;
@@ -506,7 +533,11 @@ public sealed partial class MainViewModel : ObservableObject
         if (!launch.Success)
             AppendLog(launch.Message);
         else
+        {
             AppendLog("已请求启动游戏。");
+            if (_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
+                AppendLog("首次启动提示：若长时间黑屏/控制台滚动，是 MelonLoader 正在生成程序集，请耐心等待完成。");
+        }
     }
 
     [RelayCommand]

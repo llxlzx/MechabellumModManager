@@ -129,13 +129,20 @@ public sealed class MelonLoaderInstaller
                 };
             }
 
+            var optimize = new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath);
+            var firstLaunchHint =
+                "\n注意：首次启动游戏时 MelonLoader 会生成 IL2CPP 程序集（下载工具 + 分析 GameAssembly），" +
+                "可能卡住 1～2 分钟，属正常现象；完成后再次启动会快很多。";
+
             return new MelonLoaderInstallResult
             {
                 Success = true,
                 VersionTag = tag,
-                Message = tag is null
+                Message = (tag is null
                     ? "MelonLoader 安装成功，状态：就绪。"
-                    : $"MelonLoader {tag} 安装成功，状态：就绪。"
+                    : $"MelonLoader {tag} 安装成功，状态：就绪。")
+                    + (optimize.Changed ? "\n" + optimize.Message : "")
+                    + firstLaunchHint
             };
         }
         finally

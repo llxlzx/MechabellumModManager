@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
@@ -52,11 +51,21 @@ public sealed class GameDetector
 
     static string? TryReadMelonVersion(string gamePath)
     {
-        // Best-effort: MelonLoader/Documentation/MelonLoader.xml or version on MelonLoader.dll if present
-        var dll = Directory.GetFiles(Path.Combine(gamePath, "MelonLoader"), "MelonLoader.dll", SearchOption.AllDirectories)
-            .FirstOrDefault();
-        if (dll is null) return null;
-        try { return FileVersionInfo.GetVersionInfo(dll).FileVersion; }
-        catch { return null; }
+        var melonRoot = Path.Combine(gamePath, "MelonLoader");
+        // Prefer known runtime folders — avoid scanning Il2CppAssemblies / Dependencies.
+        foreach (var candidate in new[]
+                 {
+                     Path.Combine(melonRoot, "net6", "MelonLoader.dll"),
+                     Path.Combine(melonRoot, "net472", "MelonLoader.dll"),
+                     Path.Combine(melonRoot, "net35", "MelonLoader.dll"),
+                     Path.Combine(melonRoot, "MelonLoader.dll")
+                 })
+        {
+            if (!File.Exists(candidate)) continue;
+            try { return FileVersionInfo.GetVersionInfo(candidate).FileVersion; }
+            catch { /* try next */ }
+        }
+
+        return null;
     }
 }
