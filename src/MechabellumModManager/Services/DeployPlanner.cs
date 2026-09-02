@@ -131,11 +131,32 @@ public sealed class DeployPlanner
 
     private static string MapUserDataRelative(string relativePathInPackage)
     {
-        var normalized = NormalizeRelative(relativePathInPackage);
+        if (string.IsNullOrWhiteSpace(relativePathInPackage))
+            throw new InvalidOperationException("UserData relative path is empty.");
+        if (Path.IsPathRooted(relativePathInPackage))
+            throw new InvalidOperationException("UserData rooted paths are not allowed.");
+
+        // Synthetic absolute root so GetFullPath resolves ".." segments.
+        var anchor = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "mmm-userdata-anchor-" + Guid.NewGuid().ToString("N")));
+        var userDataRoot = Path.GetFullPath(Path.Combine(anchor, "UserData"));
+        var combined = Path.GetFullPath(Path.Combine(userDataRoot, relativePathInPackage));
+
+        var rootWithSep = userDataRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                          + Path.DirectorySeparatorChar;
+        if (!combined.StartsWith(rootWithSep, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(combined, userDataRoot, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("UserData path escapes UserData directory.");
+
+        var relativeUnder = Path.GetRelativePath(userDataRoot, combined);
+        if (relativeUnder.StartsWith("..", StringComparison.Ordinal)
+            || Path.IsPathRooted(relativeUnder))
+            throw new InvalidOperationException("UserData path escapes UserData directory.");
+
+        var normalized = relativeUnder.Replace('\\', '/').Trim('/');
         if (string.Equals(normalized, "Loader.cfg", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Deploying UserData/Loader.cfg is not allowed.");
 
-        return Path.Combine("UserData", relativePathInPackage);
+        return Path.Combine("UserData", relativeUnder);
     }
 
     private static string NormalizeRelative(string relativePath) =>

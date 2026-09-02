@@ -98,4 +98,38 @@ public class DeployPlannerTests
         plan.Copies.Should().BeEmpty();
         plan.Deletes.Should().BeEmpty();
     }
+
+    [Fact]
+    public void Rejects_Loader_cfg_via_parent_traversal()
+    {
+        var act = () => DeployPlanner.MapRelativeGamePath(ModPackageType.MelonUserData, @"foo\..\Loader.cfg");
+        act.Should().Throw<InvalidOperationException>();
+
+        var act2 = () => DeployPlanner.MapRelativeGamePath(ModPackageType.MelonUserData, "foo/../Loader.cfg");
+        act2.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Rejects_rooted_UserData_path()
+    {
+        var act = () => DeployPlanner.MapRelativeGamePath(ModPackageType.MelonUserData, @"C:\Windows\Loader.cfg");
+        act.Should().Throw<InvalidOperationException>();
+
+        var act2 = () => DeployPlanner.MapRelativeGamePath(ModPackageType.MelonUserData, "/etc/Loader.cfg");
+        act2.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Rejects_UserData_escape_with_dotdot()
+    {
+        var act = () => DeployPlanner.MapRelativeGamePath(ModPackageType.MelonUserData, @"..\Mods\x.dll");
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Allows_nested_Loader_cfg_under_UserData_subdir()
+    {
+        var path = DeployPlanner.MapRelativeGamePath(ModPackageType.MelonUserData, @"foo\Loader.cfg");
+        path.Replace('\\', '/').Should().Be("UserData/foo/Loader.cfg");
+    }
 }
