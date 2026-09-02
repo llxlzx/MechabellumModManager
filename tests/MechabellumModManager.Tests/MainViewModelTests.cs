@@ -78,6 +78,56 @@ public class MainViewModelTests
         vm.Mods[0].IsEnabled.Should().BeFalse();
     }
 
+[Fact]
+    public void ImportDll_NeedsType_pick_completes_via_CommitStaging()
+    {
+        using var fx = Fixture.CreateReady();
+        var stub = Path.Combine(fx.DataRoot, "mystery.dll");
+        File.WriteAllBytes(stub, new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
+
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            pickPackageType: () => ModPackageType.MelonUserLibs,
+            openDll: () => stub);
+
+        vm.ImportDllCommand.Execute(null);
+
+        fx.Library.List().Should().Contain(p => p.Type == ModPackageType.MelonUserLibs);
+        vm.Mods.Should().Contain(m => m.Package.Type == ModPackageType.MelonUserLibs);
+    }
+
+    [Fact]
+    public void ImportDll_NeedsType_cancel_discards_staging()
+    {
+        using var fx = Fixture.CreateReady();
+        var stub = Path.Combine(fx.DataRoot, "mystery.dll");
+        File.WriteAllBytes(stub, new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
+
+        var before = fx.Library.List().Count;
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            pickPackageType: () => null,
+            openDll: () => stub);
+
+        vm.ImportDllCommand.Execute(null);
+
+        fx.Library.List().Should().HaveCount(before);
+        vm.LogText.Should().Contain("\u5df2\u53d6\u6d88");
+    }
+
+    [Fact]
+    public void Missing_enabled_package_ids_appear_in_warning_and_mods()
+    {
+        using var fx = Fixture.CreateReady();
+        fx.Profiles.SetEnabled("default", "ghost-deadbeef", true);
+
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+
+        vm.MissingEnabledPackagesWarning.Should().Contain("ghost-deadbeef");
+        vm.Mods.Should().Contain(m => m.IsMissing && m.Package.Id == "ghost-deadbeef");
+        vm.LogText.Should().Contain("ghost-deadbeef");
+    }
+
     sealed class RecordingStarter : IProcessStarter
     {
         public List<string> Starts { get; } = new();
@@ -141,7 +191,12 @@ public class MainViewModelTests
             return fx;
         }
 
-        public MainViewModel CreateVm(Func<string, bool>? confirmHighRisk, IProcessStarter? starter = null)
+        public MainViewModel CreateVm(
+            Func<string, bool>? confirmHighRisk,
+            IProcessStarter? starter = null,
+            Func<ModPackageType?>? pickPackageType = null,
+            Func<string?>? openDll = null,
+            Func<string?>? openZip = null)
         {
             var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
             return new MainViewModel(
@@ -153,8 +208,15 @@ public class MainViewModelTests
                 _deploy,
                 launcher,
                 new RiskGate(),
-                confirmHighRisk: confirmHighRisk);
+                confirmHighRisk: confirmHighRisk,
+                pickPackageType: pickPackageType,
+                openDll: openDll,
+                openZip: openZip);
         }
+
+        public ModLibraryService Library => _library;
+        public ProfileService Profiles => _profiles;
+        public PathsService Paths => _paths;
 
         public void Dispose()
         {

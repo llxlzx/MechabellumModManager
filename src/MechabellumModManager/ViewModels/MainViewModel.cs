@@ -30,6 +30,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string?>? _openDll;
     readonly Func<string?>? _openZip;
     readonly Func<string, string?>? _promptText;
+    readonly Func<ModPackageType?>? _pickPackageType;
+    readonly Func<string?>? _openFolder;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -47,7 +49,9 @@ public sealed partial class MainViewModel : ObservableObject
         Func<string?>? browseFolder = null,
         Func<string?>? openDll = null,
         Func<string?>? openZip = null,
-        Func<string, string?>? promptText = null)
+        Func<string, string?>? promptText = null,
+        Func<ModPackageType?>? pickPackageType = null,
+        Func<string?>? openFolder = null)
     {
         _paths = paths;
         _store = store;
@@ -64,6 +68,8 @@ public sealed partial class MainViewModel : ObservableObject
         _openDll = openDll;
         _openZip = openZip;
         _promptText = promptText;
+        _pickPackageType = pickPackageType;
+        _openFolder = openFolder;
         ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => IsReady);
 
         Profiles = new ObservableCollection<ProfileItemViewModel>();
@@ -114,6 +120,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isDirty;
     [ObservableProperty] private string _riskBanner = "";
     [ObservableProperty] private string _loaderVersionWarning = "";
+    [ObservableProperty] private string _missingEnabledPackagesWarning = "";
     [ObservableProperty] private string _gamePath = "";
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
@@ -197,18 +204,38 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var pkg = _library.ImportDll(path);
-            AppendLog($"已导入 DLL：{pkg.DisplayName} ({pkg.Id})");
+            AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
             ReloadMods();
             UpdateLoaderVersionWarning();
             RecomputeDirty();
         }
         catch (ImportNeedsTypeException ex)
         {
-            AppendLog($"需要手动指定类型：{ex.StagingPath}");
+            var picked = _pickPackageType?.Invoke();
+            if (picked is null)
+            {
+                _library.DiscardStaging(ex.StagingPath);
+                AppendLog("\u5df2\u53d6\u6d88\u5bfc\u5165\uff08\u672a\u9009\u62e9\u7c7b\u578b\uff09");
+                return;
+            }
+
+            try
+            {
+                var pkg = _library.CommitStaging(ex.StagingPath, picked.Value);
+                AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
+                ReloadMods();
+                UpdateLoaderVersionWarning();
+                RecomputeDirty();
+            }
+            catch (Exception commitEx)
+            {
+                _library.DiscardStaging(ex.StagingPath);
+                AppendLog($"\u5bfc\u5165 DLL \u5931\u8d25\uff1a{commitEx.Message}");
+            }
         }
         catch (Exception ex)
         {
-            AppendLog($"导入 DLL 失败：{ex.Message}");
+            AppendLog($"\u5bfc\u5165 DLL \u5931\u8d25\uff1a{ex.Message}");
         }
     }
 
@@ -217,21 +244,89 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var path = _openZip?.Invoke();
         if (string.IsNullOrWhiteSpace(path)) return;
+        ImportZipFromPath(path, forceType: null);
+    }
+
+    [RelayCommand]
+    void ImportFolder()
+    {
+        var path = _openFolder?.Invoke();
+        if (string.IsNullOrWhiteSpace(path)) return;
         try
         {
-            var pkgs = _library.ImportZip(path);
-            AppendLog($"已导入 Zip：{pkgs.Count} 个包");
+            var pkgs = _library.ImportFolder(path);
+            AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
             ReloadMods();
             UpdateLoaderVersionWarning();
             RecomputeDirty();
         }
         catch (ImportNeedsTypeException ex)
         {
-            AppendLog($"需要手动指定类型：{ex.StagingPath}");
+            var picked = _pickPackageType?.Invoke();
+            if (picked is null)
+            {
+                _library.DiscardStaging(ex.StagingPath);
+                AppendLog("\u5df2\u53d6\u6d88\u5bfc\u5165\uff08\u672a\u9009\u62e9\u7c7b\u578b\uff09");
+                return;
+            }
+
+            try
+            {
+                _library.DiscardStaging(ex.StagingPath);
+                var pkgs = _library.ImportFolder(path, picked.Value);
+                AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
+                ReloadMods();
+                UpdateLoaderVersionWarning();
+                RecomputeDirty();
+            }
+            catch (Exception retryEx)
+            {
+                AppendLog($"\u5bfc\u5165\u6587\u4ef6\u5939 \u5931\u8d25\uff1a{retryEx.Message}");
+            }
         }
         catch (Exception ex)
         {
-            AppendLog($"导入 Zip 失败：{ex.Message}");
+            AppendLog($"\u5bfc\u5165\u6587\u4ef6\u5939 \u5931\u8d25\uff1a{ex.Message}");
+        }
+    }
+
+    void ImportZipFromPath(string path, ModPackageType? forceType)
+    {
+        try
+        {
+            var pkgs = _library.ImportZip(path, forceType);
+            AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
+            ReloadMods();
+            UpdateLoaderVersionWarning();
+            RecomputeDirty();
+        }
+        catch (ImportNeedsTypeException ex)
+        {
+            var picked = _pickPackageType?.Invoke();
+            if (picked is null)
+            {
+                _library.DiscardStaging(ex.StagingPath);
+                AppendLog("\u5df2\u53d6\u6d88\u5bfc\u5165\uff08\u672a\u9009\u62e9\u7c7b\u578b\uff09");
+                return;
+            }
+
+            try
+            {
+                _library.DiscardStaging(ex.StagingPath);
+                var pkgs = _library.ImportZip(path, picked.Value);
+                AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
+                ReloadMods();
+                UpdateLoaderVersionWarning();
+                RecomputeDirty();
+            }
+            catch (Exception retryEx)
+            {
+                AppendLog($"\u5bfc\u5165 Zip \u5931\u8d25\uff1a{retryEx.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"\u5bfc\u5165 Zip \u5931\u8d25\uff1a{ex.Message}");
         }
     }
 
@@ -484,9 +579,27 @@ public sealed partial class MainViewModel : ObservableObject
             }
         }
 
+        var library = _library.List().ToList();
+        var libraryIds = new HashSet<string>(library.Select(p => p.Id), StringComparer.OrdinalIgnoreCase);
+
         Mods.Clear();
-        foreach (var pkg in _library.List().OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase))
+        foreach (var pkg in library.OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase))
             Mods.Add(new ModItemViewModel(this, pkg, enabled.Contains(pkg.Id)));
+
+        var missing = enabled.Where(id => !libraryIds.Contains(id)).OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToList();
+        foreach (var id in missing)
+            Mods.Add(ModItemViewModel.CreateMissing(this, id));
+
+        if (missing.Count > 0)
+        {
+            var list = string.Join(", ", missing);
+            MissingEnabledPackagesWarning = $"\u65b9\u6848\u4e2d\u6709\u7f3a\u5931\u7684\u5305\uff1a{list}";
+            AppendLog(MissingEnabledPackagesWarning);
+        }
+        else
+        {
+            MissingEnabledPackagesWarning = "";
+        }
     }
 
     void RecomputeDirty()

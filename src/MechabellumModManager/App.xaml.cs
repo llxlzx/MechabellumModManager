@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using MechabellumModManager.Dialogs;
 using MechabellumModManager.Models;
@@ -48,7 +48,9 @@ public partial class App : Application
             browseFolder: () => BrowseFolder(owner),
             openDll: () => OpenFile(owner, "Melon Mod DLL|*.dll|所有文件|*.*"),
             openZip: () => OpenFile(owner, "Mod 压缩包|*.zip|所有文件|*.*"),
-            promptText: title => Prompt(owner, title));
+            promptText: title => Prompt(owner, title),
+            pickPackageType: () => PickPackageType(owner),
+            openFolder: () => BrowseImportFolder(owner));
     }
 
     static PathsService ResolvePaths(JsonStore store)
@@ -72,6 +74,15 @@ public partial class App : Application
         return dialog.ShowDialog(owner) == true ? dialog.FolderName : null;
     }
 
+    static string? BrowseImportFolder(Window owner)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "选择要导入的文件夹"
+        };
+        return dialog.ShowDialog(owner) == true ? dialog.FolderName : null;
+    }
+
     static string? OpenFile(Window owner, string filter)
     {
         var dialog = new OpenFileDialog
@@ -89,6 +100,15 @@ public partial class App : Application
         {
             Owner = owner,
             Title = title
+        };
+        return dialog.ShowDialog() == true ? dialog.Result : null;
+    }
+
+    static ModPackageType? PickPackageType(Window owner)
+    {
+        var dialog = new TypePickDialog
+        {
+            Owner = owner
         };
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }

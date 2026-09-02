@@ -9,17 +9,34 @@ public sealed partial class ModItemViewModel : ObservableObject
     bool _suppressEnabledCallback;
 
     public ModPackage Package { get; }
+    public bool IsMissing { get; }
 
-    public ModItemViewModel(MainViewModel owner, ModPackage package, bool isEnabled)
+    public ModItemViewModel(MainViewModel owner, ModPackage package, bool isEnabled, bool isMissing = false)
     {
         _owner = owner;
         Package = package;
+        IsMissing = isMissing;
         _isEnabled = isEnabled;
     }
 
+    public static ModItemViewModel CreateMissing(MainViewModel owner, string packageId) =>
+        new(
+            owner,
+            new ModPackage
+            {
+                Id = packageId,
+                DisplayName = "(缺失) " + packageId,
+                Type = ModPackageType.MelonMod,
+                PackageDirectory = ""
+            },
+            isEnabled: true,
+            isMissing: true);
+
     public string DisplayName => Package.DisplayName;
     public string? Version => Package.Version;
-    public string TypeLabel => Package.Type switch
+    public string TypeLabel => IsMissing
+        ? "缺失"
+        : Package.Type switch
     {
         ModPackageType.MelonMod => "Mod",
         ModPackageType.MelonPlugin => "插件",
@@ -51,3 +68,4 @@ public sealed partial class ModItemViewModel : ObservableObject
         _suppressEnabledCallback = false;
     }
 }
+

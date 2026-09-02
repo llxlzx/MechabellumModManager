@@ -73,18 +73,69 @@ public sealed class ModLibraryService
         }
     }
 
-    public IReadOnlyList<ModPackage> ImportZip(string zipPath)
+    public IReadOnlyList<ModPackage> ImportZip(string zipPath, ModPackageType? forceType = null)
     {
         if (!File.Exists(zipPath))
             throw new FileNotFoundException("Zip not found", zipPath);
 
         var extractRoot = Path.Combine(Path.GetTempPath(), "mmm-zip-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(extractRoot);
-        var prepared = new List<PreparedImport>();
         try
         {
             ZipFile.ExtractToDirectory(zipPath, extractRoot);
+            return ImportFromExtractRoot(extractRoot, forceType, deleteExtractRoot: true);
+        }
+        catch
+        {
+            TryDeleteDir(extractRoot);
+            throw;
+        }
+    }
 
+    /// <summary>
+    /// Import from a folder tree (same grouping rules as zip). Does not require a zip archive.
+    /// </summary>
+    public IReadOnlyList<ModPackage> ImportFolder(string folderPath, ModPackageType? forceType = null)
+    {
+        if (!Directory.Exists(folderPath))
+            throw new DirectoryNotFoundException($"Folder not found: {folderPath}");
+
+        return ImportFromExtractRoot(folderPath, forceType, deleteExtractRoot: false);
+    }
+
+    /// <summary>
+    /// Commit a preserved staging directory after <see cref="ImportNeedsTypeException"/>.
+    /// Preferred for DLL imports; for zip prefer DiscardStaging + ImportZip(..., forceType).
+    /// </summary>
+    public ModPackage CommitStaging(string stagingPath, ModPackageType type)
+    {
+        if (string.IsNullOrWhiteSpace(stagingPath) || !Directory.Exists(stagingPath))
+            throw new DirectoryNotFoundException($"Staging path not found: {stagingPath}");
+
+        var primaryDll = Directory.GetFiles(stagingPath, "*.dll", SearchOption.AllDirectories).FirstOrDefault();
+        string primaryFileName;
+        if (primaryDll is not null)
+        {
+            primaryFileName = Path.GetFileName(primaryDll);
+        }
+        else
+        {
+            var first = Directory.GetFiles(stagingPath, "*", SearchOption.AllDirectories)
+                .FirstOrDefault(f => !IsSkippedMeta(Path.GetRelativePath(stagingPath, f)))
+                ?? throw new InvalidOperationException("Staging directory has no importable files.");
+            primaryFileName = Path.GetFileName(first);
+        }
+
+        return CommitPackage(stagingPath, type, primaryFileName);
+    }
+
+    public void DiscardStaging(string stagingPath) => TryDeleteDir(stagingPath);
+
+    IReadOnlyList<ModPackage> ImportFromExtractRoot(string extractRoot, ModPackageType? forceType, bool deleteExtractRoot)
+    {
+        var prepared = new List<PreparedImport>();
+        try
+        {
             var groups = GroupExtractedFiles(extractRoot);
             if (groups.Count == 0)
                 throw new InvalidOperationException("Zip 中没有可导入的文件。");
@@ -106,7 +157,7 @@ public sealed class ModLibraryService
                             primaryDll = dest;
                     }
 
-                    var type = ResolveType(staging, primaryDll, group.PathHint, forceType: null);
+                    var type = ResolveType(staging, primaryDll, group.PathHint, forceType);
                     var primaryFileName = primaryDll is null
                         ? Path.GetFileName(group.Files.First(f => !IsSkippedMeta(f.Relative)).Relative)
                         : Path.GetFileName(primaryDll);
@@ -147,10 +198,14 @@ public sealed class ModLibraryService
                 throw;
             }
         }
-        catch (ImportNeedsTypeException)
+        catch (ImportNeedsTypeException ex)
         {
+            // Preserve the ambiguous staging (ex.StagingPath); discard other prepared stages.
             foreach (var item in prepared)
-                TryDeleteDir(item.StagingPath);
+            {
+                if (!string.Equals(item.StagingPath, ex.StagingPath, StringComparison.OrdinalIgnoreCase))
+                    TryDeleteDir(item.StagingPath);
+            }
             throw;
         }
         catch
@@ -161,10 +216,10 @@ public sealed class ModLibraryService
         }
         finally
         {
-            TryDeleteDir(extractRoot);
+            if (deleteExtractRoot)
+                TryDeleteDir(extractRoot);
         }
     }
-
     public IReadOnlyList<ModPackage> List()
     {
         var index = LoadIndex();

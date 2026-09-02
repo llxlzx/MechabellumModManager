@@ -26,6 +26,18 @@ dotnet test
 
 本工具可向游戏目录写入 Mod/插件文件。使用第三方 Mod **可能导致封号、存档损坏或游戏异常**，尤其在联网 / PVP 场景。请自行承担风险；工具内始终显示风险横幅，高风险包启用前需二次确认。本工具**不含作弊功能入口**。
 
+
+## 启动模式
+
+- **SteamThenExe**（默认）：best-effort。先尝试通过 Steam URI（`steam://...`）启动；仅当 `Process.Start` **抛出异常**（例如未注册协议处理器）时才回退到直接启动 `Mechabellum.exe`。
+- 该模式**不会**校验 Steam 是否已安装，也**不会**确认游戏进程是否真正拉起。
+- **SteamOnly** / **ExeOnly**：分别只走 Steam URI 或只走 exe。
+
+## 导入
+
+- UI：导入 DLL / Zip / 文件夹。无法自动识别类型时会弹出类型选择框。
+- 服务层亦提供 `ImportFolder(path, forceType?)`，与 Zip 使用相同的前缀分组与两阶段提交逻辑。
+
 ## 测试
 
 **全量套件（2026-09-02）：** `dotnet test` → **通过 43 / 失败 0 / 跳过 0**（约 426 ms，`MechabellumModManager.Tests`）。

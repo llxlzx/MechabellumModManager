@@ -205,6 +205,104 @@ public class ModLibraryImportTests
         }
     }
 
+[Fact]
+    public void CommitStaging_after_NeedsType_completes_import()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        var stub = Path.Combine(data, "mystery.dll");
+        try
+        {
+            File.WriteAllBytes(stub, new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var ex = Assert.Throws<ImportNeedsTypeException>(() => lib.ImportDll(stub));
+            Directory.Exists(ex.StagingPath).Should().BeTrue();
+
+            var pkg = lib.CommitStaging(ex.StagingPath, ModPackageType.MelonUserLibs);
+            pkg.Type.Should().Be(ModPackageType.MelonUserLibs);
+            pkg.Files.Should().ContainSingle(f =>
+                f.RelativePathInPackage.Equals("mystery.dll", StringComparison.OrdinalIgnoreCase));
+            Directory.Exists(ex.StagingPath).Should().BeFalse();
+            lib.List().Should().ContainSingle(p => p.Id == pkg.Id);
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
+    public void ImportZip_with_forceType_succeeds_for_ambiguous_dll()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        var zipPath = Path.Combine(Path.GetTempPath(), "mmm-zip-" + Guid.NewGuid().ToString("N") + ".zip");
+        try
+        {
+            CreateZip(zipPath, ("mystery.dll", new byte[] { 0x4D, 0x5A, 0x90, 0x00 }));
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var pkgs = lib.ImportZip(zipPath, ModPackageType.MelonPlugin);
+            pkgs.Should().ContainSingle();
+            pkgs[0].Type.Should().Be(ModPackageType.MelonPlugin);
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (File.Exists(zipPath)) File.Delete(zipPath);
+        }
+    }
+
+    [Fact]
+    public void DiscardStaging_removes_directory()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        var stub = Path.Combine(data, "mystery.dll");
+        try
+        {
+            File.WriteAllBytes(stub, new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var ex = Assert.Throws<ImportNeedsTypeException>(() => lib.ImportDll(stub));
+            Directory.Exists(ex.StagingPath).Should().BeTrue();
+            lib.DiscardStaging(ex.StagingPath);
+            Directory.Exists(ex.StagingPath).Should().BeFalse();
+            lib.List().Should().BeEmpty();
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
+    public void ImportFolder_with_Mods_prefix_strips_prefix()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var folder = Path.Combine(Path.GetTempPath(), "mmm-folder-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(folder, "Mods"));
+            File.Copy(SampleDll, Path.Combine(folder, "Mods", "QuickCamera.dll"));
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var pkgs = lib.ImportFolder(folder);
+            pkgs.Should().ContainSingle();
+            pkgs[0].Type.Should().Be(ModPackageType.MelonMod);
+            pkgs[0].Files.Should().ContainSingle(f =>
+                f.RelativePathInPackage.Equals("QuickCamera.dll", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (Directory.Exists(folder)) Directory.Delete(folder, true);
+        }
+    }
+
     static void CreateZip(string zipPath, params (string Entry, byte[] Bytes)[] entries)
     {
         if (File.Exists(zipPath)) File.Delete(zipPath);
