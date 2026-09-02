@@ -110,7 +110,11 @@ public sealed class DeployPlanner
         };
     }
 
-    private static string MapRelativeGamePath(ModPackageType type, string relativePathInPackage)
+    /// <summary>
+    /// Maps a package-relative path to the game-relative deploy path.
+    /// Rejects UserData/Loader.cfg (same rule as live deploy).
+    /// </summary>
+    public static string MapRelativeGamePath(ModPackageType type, string relativePathInPackage)
     {
         return type switch
         {

@@ -30,6 +30,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string?>? _openZip;
     readonly Func<string, string?>? _promptText;
 
+    public IRelayCommand ApplyProfileCommand { get; }
+
     public MainViewModel(
         PathsService paths,
         JsonStore store,
@@ -53,11 +55,13 @@ public sealed partial class MainViewModel : ObservableObject
         _deploy = deploy;
         _launcher = launcher;
         _riskGate = riskGate;
-        _confirmHighRisk = confirmHighRisk ?? (_ => true);
+        // Default deny: UI must wire a confirmation dialog.
+        _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _browseFolder = browseFolder;
         _openDll = openDll;
         _openZip = openZip;
         _promptText = promptText;
+        ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile());
 
         Profiles = new ObservableCollection<ProfileItemViewModel>();
         Mods = new ObservableCollection<ModItemViewModel>();
@@ -197,20 +201,20 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    void ApplyProfile()
+    /// <returns>true if deploy succeeded.</returns>
+    public bool ApplyProfile()
     {
         if (SelectedProfile is null)
         {
             AppendLog("未选择方案。");
-            return;
+            return false;
         }
 
         RefreshStatus();
         if (GameStatus?.Kind != GameStatusKind.Ready)
         {
             AppendLog(GameStatus?.Message ?? "游戏状态未就绪，无法部署。");
-            return;
+            return false;
         }
 
         try
@@ -219,21 +223,23 @@ public sealed partial class MainViewModel : ObservableObject
             var packages = _library.List().ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
             var result = _deploy.Apply(profile, packages, GamePath, allowOverwriteUnmanaged: false);
             AppendLog(result.Message);
-            if (!result.Success) return;
+            if (!result.Success) return false;
 
             RecomputeDirty();
+            return true;
         }
         catch (Exception ex)
         {
             AppendLog($"部署失败：{ex.Message}");
+            return false;
         }
     }
 
     [RelayCommand]
     void ApplyAndLaunch()
     {
-        ApplyProfile();
-        if (IsDirty) return;
+        if (!ApplyProfile()) return;
+        if (GameStatus?.Kind != GameStatusKind.Ready) return;
 
         var config = LoadConfig();
         config.GamePath = GamePath;
@@ -422,7 +428,17 @@ public sealed partial class MainViewModel : ObservableObject
 
             foreach (var file in package.Files)
             {
-                var rel = MapRelativeGamePath(package.Type, file.RelativePathInPackage);
+                string rel;
+                try
+                {
+                    rel = DeployPlanner.MapRelativeGamePath(package.Type, file.RelativePathInPackage);
+                }
+                catch (InvalidOperationException)
+                {
+                    // Match deploy: rejected paths (e.g. UserData/Loader.cfg) are not desired files.
+                    continue;
+                }
+
                 list.Add((Normalize(rel), package.Id, file.Sha256 ?? ""));
             }
         }
@@ -432,20 +448,6 @@ public sealed partial class MainViewModel : ObservableObject
             .ThenBy(x => x.Item2, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
-
-    static string MapRelativeGamePath(ModPackageType type, string relativeInPackage) =>
-        type switch
-        {
-            ModPackageType.MelonMod =>
-                Path.Combine("Mods", Path.GetFileName(relativeInPackage)),
-            ModPackageType.MelonPlugin =>
-                Path.Combine("Plugins", Path.GetFileName(relativeInPackage)),
-            ModPackageType.MelonUserLibs =>
-                Path.Combine("UserLibs", Path.GetFileName(relativeInPackage)),
-            ModPackageType.MelonUserData =>
-                Path.Combine("UserData", relativeInPackage),
-            _ => Path.Combine("Mods", Path.GetFileName(relativeInPackage))
-        };
 
     void UpdateLoaderVersionWarning()
     {
