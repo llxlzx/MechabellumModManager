@@ -18,7 +18,7 @@ public class ModLibraryImportTests
         paths.EnsureCreated();
         try
         {
-            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
             var pkg = lib.ImportDll(SampleDll);
             pkg.Type.Should().Be(ModPackageType.MelonMod);
             pkg.Files.Should().ContainSingle(f =>
@@ -49,7 +49,7 @@ public class ModLibraryImportTests
         {
             CreateZip(zipPath, ("Mods/QuickCamera.dll", File.ReadAllBytes(SampleDll)));
 
-            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
             var pkgs = lib.ImportZip(zipPath);
             pkgs.Should().ContainSingle();
             var pkg = pkgs[0];
@@ -80,7 +80,7 @@ public class ModLibraryImportTests
                 ("Mods/a.dll", File.ReadAllBytes(SampleDll)),
                 ("UserLibs/b.dll", new byte[] { 0x4D, 0x5A })); // stub MZ header
 
-            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
             var pkgs = lib.ImportZip(zipPath);
             pkgs.Should().HaveCount(2);
             pkgs.Should().Contain(p => p.Type == ModPackageType.MelonMod);
@@ -111,7 +111,7 @@ public class ModLibraryImportTests
         try
         {
             File.WriteAllBytes(stub, new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
-            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
             var act = () => lib.ImportDll(stub);
             act.Should().Throw<ImportNeedsTypeException>()
                 .Which.StagingPath.Should().NotBeNullOrWhiteSpace();
@@ -133,7 +133,7 @@ public class ModLibraryImportTests
         {
             CreateZip(zipPath, ("mystery.dll", new byte[] { 0x4D, 0x5A, 0x90, 0x00 }));
 
-            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
             var act = () => lib.ImportZip(zipPath);
             var ex = act.Should().Throw<ImportNeedsTypeException>().Which;
             ex.StagingPath.Should().NotBeNullOrWhiteSpace();
@@ -163,7 +163,7 @@ public class ModLibraryImportTests
                 ("mystery.dll", new byte[] { 0x4D, 0x5A, 0x90, 0x00 }),
                 ("package.json", meta));
 
-            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
             var act = () => lib.ImportZip(zipPath);
             var ex = act.Should().Throw<ImportNeedsTypeException>().Which;
             Directory.Exists(ex.StagingPath).Should().BeTrue();
@@ -173,6 +173,35 @@ public class ModLibraryImportTests
         {
             if (Directory.Exists(data)) Directory.Delete(data, true);
             if (File.Exists(zipPath)) File.Delete(zipPath);
+        }
+    }
+
+    [Fact]
+    public void Delete_removes_package_id_from_profile_EnabledPackageIds()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        var store = new JsonStore();
+        try
+        {
+            var profiles = new ProfileService(paths, store);
+            profiles.EnsureDefaults();
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), store, profiles);
+
+            var pkg = lib.ImportDll(SampleDll);
+            var profileId = profiles.List().Single().Id;
+            profiles.SetEnabled(profileId, pkg.Id, true);
+            profiles.Get(profileId).EnabledPackageIds.Should().Contain(pkg.Id);
+
+            lib.Delete(pkg.Id);
+
+            profiles.Get(profileId).EnabledPackageIds.Should().NotContain(pkg.Id);
+            lib.List().Should().NotContain(p => p.Id == pkg.Id);
+        }
+        finally
+        {
+            Directory.Delete(data, true);
         }
     }
 

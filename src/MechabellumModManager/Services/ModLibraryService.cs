@@ -34,12 +34,14 @@ public sealed class ModLibraryService
     readonly PathsService _paths;
     readonly AssemblyInspector _inspector;
     readonly JsonStore _store;
+    readonly ProfileService _profiles;
 
-    public ModLibraryService(PathsService paths, AssemblyInspector inspector, JsonStore store)
+    public ModLibraryService(PathsService paths, AssemblyInspector inspector, JsonStore store, ProfileService profiles)
     {
         _paths = paths;
         _inspector = inspector;
         _store = store;
+        _profiles = profiles;
     }
 
     string IndexPath => Path.Combine(_paths.LibraryRoot, "index.json");
@@ -185,6 +187,7 @@ public sealed class ModLibraryService
 
         index.PackageIds.RemoveAll(id => string.Equals(id, packageId, StringComparison.OrdinalIgnoreCase));
         SaveIndex(index);
+        _profiles.RemovePackageFromAllProfiles(packageId);
     }
 
     ModPackageType ResolveType(string stagingPath, string? primaryDll, ModPackageType? pathHint, ModPackageType? forceType)
