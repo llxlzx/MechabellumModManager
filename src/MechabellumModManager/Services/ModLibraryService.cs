@@ -24,7 +24,11 @@ public sealed class ModLibraryService
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+        Converters =
+        {
+            new ModPackageTypeSnakeCaseConverter(),
+            new NullableModPackageTypeSnakeCaseConverter()
+        }
     };
 
     readonly PathsService _paths;
@@ -74,6 +78,7 @@ public sealed class ModLibraryService
 
         var extractRoot = Path.Combine(Path.GetTempPath(), "mmm-zip-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(extractRoot);
+        var prepared = new List<PreparedImport>();
         try
         {
             ZipFile.ExtractToDirectory(zipPath, extractRoot);
@@ -82,7 +87,7 @@ public sealed class ModLibraryService
             if (groups.Count == 0)
                 throw new InvalidOperationException("Zip 中没有可导入的文件。");
 
-            var results = new List<ModPackage>();
+            // Phase 1: stage + resolve all groups before any library commit (atomic).
             foreach (var group in groups)
             {
                 var staging = Path.Combine(Path.GetTempPath(), "mmm-stage-" + Guid.NewGuid().ToString("N"));
@@ -100,9 +105,14 @@ public sealed class ModLibraryService
                     }
 
                     var type = ResolveType(staging, primaryDll, group.PathHint, forceType: null);
-                    results.Add(CommitPackage(staging, type, primaryFileName: primaryDll is null
-                        ? Path.GetFileName(group.Files[0].Relative)
-                        : Path.GetFileName(primaryDll)));
+                    var primaryFileName = primaryDll is null
+                        ? Path.GetFileName(group.Files.First(f => !IsSkippedMeta(f.Relative)).Relative)
+                        : Path.GetFileName(primaryDll);
+                    prepared.Add(new PreparedImport(staging, type, primaryFileName));
+                }
+                catch (ImportNeedsTypeException)
+                {
+                    throw; // keep StagingPath; other prepared dirs cleaned below
                 }
                 catch
                 {
@@ -111,7 +121,41 @@ public sealed class ModLibraryService
                 }
             }
 
-            return results;
+            // Phase 2: commit all; roll back already-committed packages on failure.
+            var results = new List<ModPackage>();
+            try
+            {
+                foreach (var item in prepared)
+                {
+                    results.Add(CommitPackage(item.StagingPath, item.Type, item.PrimaryFileName));
+                    item.Committed = true;
+                }
+                return results;
+            }
+            catch
+            {
+                foreach (var pkg in results)
+                {
+                    try { Delete(pkg.Id); }
+                    catch { /* best-effort rollback */ }
+                }
+
+                foreach (var item in prepared.Where(p => !p.Committed))
+                    TryDeleteDir(item.StagingPath);
+                throw;
+            }
+        }
+        catch (ImportNeedsTypeException)
+        {
+            foreach (var item in prepared)
+                TryDeleteDir(item.StagingPath);
+            throw;
+        }
+        catch
+        {
+            foreach (var item in prepared)
+                TryDeleteDir(item.StagingPath);
+            throw;
         }
         finally
         {
@@ -151,8 +195,9 @@ public sealed class ModLibraryService
             try
             {
                 var meta = JsonSerializer.Deserialize<PackageMeta>(File.ReadAllText(packageJsonPath), PackageJsonOptions);
-                if (meta is not null && Enum.IsDefined(typeof(ModPackageType), meta.Type))
-                    return meta.Type;
+                // Only trust type when the JSON property is present (nullable).
+                if (meta?.Type is { } declared && Enum.IsDefined(typeof(ModPackageType), declared))
+                    return declared;
             }
             catch
             {
@@ -286,7 +331,7 @@ public sealed class ModLibraryService
                 continue;
 
             var meta = JsonSerializer.Deserialize<PackageMeta>(File.ReadAllText(metaPath), PackageJsonOptions);
-            if (meta is null)
+            if (meta is null || meta.Type is null)
                 continue;
 
             return new ModPackage
@@ -295,7 +340,7 @@ public sealed class ModLibraryService
                 DisplayName = meta.DisplayName,
                 Version = meta.Version,
                 Author = meta.Author,
-                Type = meta.Type,
+                Type = meta.Type.Value,
                 HighRisk = meta.HighRisk,
                 RequiredMelonLoaderVersion = meta.RequiredMelonLoaderVersion,
                 Files = meta.Files ?? new List<DeployableFile>(),
@@ -328,7 +373,8 @@ public sealed class ModLibraryService
                 var rel = Path.GetRelativePath(extractRoot, abs).Replace('\\', '/');
                 return (Relative: rel, Absolute: abs);
             })
-            .Where(x => !IsSkippedMeta(x.Relative))
+            // Keep package.json for type detection; still excluded from deployable Files later.
+            .Where(x => !IsSkippedImportSource(x.Relative))
             .ToList();
 
         var byHint = new Dictionary<ModPackageType, List<(string Relative, string Absolute)>>();
@@ -388,7 +434,6 @@ public sealed class ModLibraryService
             if (top.Equals("UserData", StringComparison.OrdinalIgnoreCase))
             {
                 hint = ModPackageType.MelonUserData;
-                // UserData keeps relative path under UserData
                 stripped = string.Join('/', parts.Skip(1));
                 return true;
             }
@@ -397,6 +442,15 @@ public sealed class ModLibraryService
         hint = default;
         stripped = relative;
         return false;
+    }
+
+    /// <summary>Entries skipped when building import groups (package.json is kept for type meta).</summary>
+    static bool IsSkippedImportSource(string relativePath)
+    {
+        var name = Path.GetFileName(relativePath);
+        if (name.Equals("package.json", StringComparison.OrdinalIgnoreCase))
+            return false;
+        return IsSkippedMeta(relativePath);
     }
 
     static bool IsSkippedMeta(string relativePath)
@@ -410,7 +464,6 @@ public sealed class ModLibraryService
             return true;
         if (name.StartsWith(".git", StringComparison.OrdinalIgnoreCase))
             return true;
-        // also skip .git directories in path segments
         var parts = relativePath.Replace('\\', '/').Split('/');
         if (parts.Any(p => p.StartsWith(".git", StringComparison.OrdinalIgnoreCase)))
             return true;
@@ -459,7 +512,8 @@ public sealed class ModLibraryService
         public string DisplayName { get; set; } = "";
         public string? Version { get; set; }
         public string? Author { get; set; }
-        public ModPackageType Type { get; set; }
+        /// <summary>Null when package.json omits type — must not default to MelonMod.</summary>
+        public ModPackageType? Type { get; set; }
         public bool HighRisk { get; set; }
         public string? RequiredMelonLoaderVersion { get; set; }
         public List<DeployableFile>? Files { get; set; }
@@ -474,6 +528,75 @@ public sealed class ModLibraryService
         {
             PathHint = pathHint;
             Files = files;
+        }
+    }
+
+    sealed class PreparedImport
+    {
+        public string StagingPath { get; }
+        public ModPackageType Type { get; }
+        public string PrimaryFileName { get; }
+        public bool Committed { get; set; }
+
+        public PreparedImport(string stagingPath, ModPackageType type, string primaryFileName)
+        {
+            StagingPath = stagingPath;
+            Type = type;
+            PrimaryFileName = primaryFileName;
+        }
+    }
+
+    /// <summary>Wire format: melon_mod / melon_plugin / melon_userlibs / melon_userdata.</summary>
+    sealed class ModPackageTypeSnakeCaseConverter : JsonConverter<ModPackageType>
+    {
+        public override ModPackageType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var s = reader.GetString();
+            if (s is null)
+                throw new JsonException("Mod package type string expected.");
+
+            return s switch
+            {
+                "melon_mod" or "melonMod" => ModPackageType.MelonMod,
+                "melon_plugin" or "melonPlugin" => ModPackageType.MelonPlugin,
+                "melon_userlibs" or "melonUserLibs" => ModPackageType.MelonUserLibs,
+                "melon_userdata" or "melonUserData" => ModPackageType.MelonUserData,
+                _ => throw new JsonException($"Unknown mod package type: {s}")
+            };
+        }
+
+        public override void Write(Utf8JsonWriter writer, ModPackageType value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value switch
+            {
+                ModPackageType.MelonMod => "melon_mod",
+                ModPackageType.MelonPlugin => "melon_plugin",
+                ModPackageType.MelonUserLibs => "melon_userlibs",
+                ModPackageType.MelonUserData => "melon_userdata",
+                _ => throw new JsonException($"Unknown mod package type: {value}")
+            });
+        }
+    }
+
+    sealed class NullableModPackageTypeSnakeCaseConverter : JsonConverter<ModPackageType?>
+    {
+        readonly ModPackageTypeSnakeCaseConverter _inner = new();
+
+        public override ModPackageType? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.Null)
+                return null;
+            return _inner.Read(ref reader, typeof(ModPackageType), options);
+        }
+
+        public override void Write(Utf8JsonWriter writer, ModPackageType? value, JsonSerializerOptions options)
+        {
+            if (value is null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
+            _inner.Write(writer, value.Value, options);
         }
     }
 }

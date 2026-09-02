@@ -1,4 +1,6 @@
 using System.IO.Compression;
+using System.Text;
+using System.Text.Json;
 using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
@@ -25,6 +27,10 @@ public class ModLibraryImportTests
             File.Exists(Path.Combine(pkg.PackageDirectory, "package.json")).Should().BeTrue();
             pkg.Id.Should().NotBeNullOrWhiteSpace();
             pkg.Id.Should().Contain("-");
+
+            var json = File.ReadAllText(Path.Combine(pkg.PackageDirectory, "package.json"));
+            using var doc = JsonDocument.Parse(json);
+            doc.RootElement.GetProperty("type").GetString().Should().Be("melon_mod");
         }
         finally
         {
@@ -113,6 +119,60 @@ public class ModLibraryImportTests
         finally
         {
             Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
+    public void Import_unprefixed_ambiguous_zip_keeps_StagingPath()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        var zipPath = Path.Combine(Path.GetTempPath(), "mmm-zip-" + Guid.NewGuid().ToString("N") + ".zip");
+        try
+        {
+            CreateZip(zipPath, ("mystery.dll", new byte[] { 0x4D, 0x5A, 0x90, 0x00 }));
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var act = () => lib.ImportZip(zipPath);
+            var ex = act.Should().Throw<ImportNeedsTypeException>().Which;
+            ex.StagingPath.Should().NotBeNullOrWhiteSpace();
+            Directory.Exists(ex.StagingPath).Should().BeTrue(
+                "ImportNeedsTypeException must preserve staging for UI forceType");
+            File.Exists(Path.Combine(ex.StagingPath, "mystery.dll")).Should().BeTrue();
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (File.Exists(zipPath)) File.Delete(zipPath);
+        }
+    }
+
+    [Fact]
+    public void Import_package_json_without_type_does_not_force_MelonMod()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        var zipPath = Path.Combine(Path.GetTempPath(), "mmm-zip-" + Guid.NewGuid().ToString("N") + ".zip");
+        try
+        {
+            // Typeless / partial package.json must NOT silently become MelonMod.
+            var meta = Encoding.UTF8.GetBytes("""{"displayName":"mystery","version":"1.0"}""");
+            CreateZip(zipPath,
+                ("mystery.dll", new byte[] { 0x4D, 0x5A, 0x90, 0x00 }),
+                ("package.json", meta));
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
+            var act = () => lib.ImportZip(zipPath);
+            var ex = act.Should().Throw<ImportNeedsTypeException>().Which;
+            Directory.Exists(ex.StagingPath).Should().BeTrue();
+            lib.List().Should().BeEmpty("no package should be committed when type is unresolved");
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (File.Exists(zipPath)) File.Delete(zipPath);
         }
     }
 
