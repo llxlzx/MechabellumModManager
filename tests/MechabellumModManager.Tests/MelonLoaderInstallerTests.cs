@@ -20,7 +20,7 @@ public class MelonLoaderInstallerTests
             var installer = new MelonLoaderInstaller(
                 resolveZipUrlAsync: _ => Task.FromResult(new Uri(zip).AbsoluteUri),
                 http: new HttpClient(new FileHttpHandler()),
-                probe: new ProcessProbe());
+                isGameRunning: () => false);
 
             var result = await installer.InstallAsync(game);
             result.Success.Should().BeTrue(result.Message);
@@ -96,6 +96,7 @@ public class MelonLoaderInstallerTests
                 Content = new ByteArrayContent(bytes)
             };
             resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+            resp.Content.Headers.ContentLength = bytes.LongLength;
             return Task.FromResult(resp);
         }
     }

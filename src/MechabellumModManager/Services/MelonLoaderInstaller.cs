@@ -13,6 +13,15 @@ public sealed class MelonLoaderInstallResult
     public string? VersionTag { get; init; }
 }
 
+public sealed class MelonLoaderProgress
+{
+    public string Message { get; init; } = "";
+    /// <summary>0-100 when known; null means indeterminate.</summary>
+    public double? Percent { get; init; }
+    public long? BytesReceived { get; init; }
+    public long? TotalBytes { get; init; }
+}
+
 public sealed class MelonLoaderInstaller
 {
     public const string LatestApiUrl = "https://api.github.com/repos/LavaGang/MelonLoader/releases/latest";
@@ -23,16 +32,18 @@ public sealed class MelonLoaderInstaller
         "https://dotnet.microsoft.com/download/dotnet/6.0";
 
     readonly HttpClient _http;
-    readonly ProcessProbe _probe;
+    readonly Func<bool> _isGameRunning;
     readonly Func<CancellationToken, Task<string>>? _resolveZipUrlAsync;
 
     public MelonLoaderInstaller(
         HttpClient? http = null,
         ProcessProbe? probe = null,
-        Func<CancellationToken, Task<string>>? resolveZipUrlAsync = null)
+        Func<CancellationToken, Task<string>>? resolveZipUrlAsync = null,
+        Func<bool>? isGameRunning = null)
     {
         _http = http ?? CreateDefaultHttpClient();
-        _probe = probe ?? new ProcessProbe();
+        var p = probe ?? new ProcessProbe();
+        _isGameRunning = isGameRunning ?? p.IsGameRunning;
         _resolveZipUrlAsync = resolveZipUrlAsync;
     }
 
@@ -45,7 +56,7 @@ public sealed class MelonLoaderInstaller
 
     public async Task<MelonLoaderInstallResult> InstallAsync(
         string gamePath,
-        IProgress<string>? progress = null,
+        IProgress<MelonLoaderProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(gamePath) ||
@@ -55,7 +66,7 @@ public sealed class MelonLoaderInstaller
             return Fail("游戏路径无效，无法安装 MelonLoader。");
         }
 
-        if (_probe.IsGameRunning())
+        if (_isGameRunning())
             return Fail("检测到 Mechabellum 正在运行，请先关闭游戏后再安装。");
 
         var stagingRoot = Path.Combine(Path.GetTempPath(), "mmm-ml-" + Guid.NewGuid().ToString("N"));
@@ -66,7 +77,7 @@ public sealed class MelonLoaderInstaller
         var written = new List<string>();
         try
         {
-            progress?.Report("正在解析 MelonLoader 最新正式版…");
+            Report(progress, "正在解析 MelonLoader 最新正式版…", percent: null);
             string zipUrl;
             string? tag = null;
             try
@@ -78,21 +89,23 @@ public sealed class MelonLoaderInstaller
                 return Fail($"无法获取 MelonLoader 最新版本：{ex.Message}\n请手动打开：{ReleasesPageUrl}");
             }
 
-            progress?.Report(tag is null ? "正在下载 MelonLoader…" : $"正在下载 MelonLoader {tag}…");
+            Report(progress,
+                tag is null ? "正在下载 MelonLoader…" : $"正在下载 MelonLoader {tag}…",
+                percent: 0);
             Directory.CreateDirectory(stagingRoot);
             try
             {
-                await DownloadFileAsync(zipUrl, zipPath, cancellationToken).ConfigureAwait(false);
+                await DownloadFileAsync(zipUrl, zipPath, progress, tag, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 return Fail($"下载失败：{ex.Message}\n请检查网络或手动下载：{ReleasesPageUrl}");
             }
 
-            progress?.Report("正在解压…");
+            Report(progress, "正在解压…", percent: 100);
             ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: true);
 
-            progress?.Report("正在写入游戏目录…");
+            Report(progress, "正在写入游戏目录…", percent: 100);
             try
             {
                 CopyExtractedPayload(extractDir, gamePath, written);
@@ -170,13 +183,77 @@ public sealed class MelonLoaderInstaller
         return (LatestZipFallbackUrl, null);
     }
 
-    async Task DownloadFileAsync(string url, string destination, CancellationToken ct)
+    async Task DownloadFileAsync(
+        string url,
+        string destination,
+        IProgress<MelonLoaderProgress>? progress,
+        string? tag,
+        CancellationToken ct)
     {
         using var resp = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
+        var total = resp.Content.Headers.ContentLength;
         await using var input = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
         await using var output = File.Create(destination);
-        await input.CopyToAsync(output, ct).ConfigureAwait(false);
+
+        var buffer = new byte[81920];
+        long received = 0;
+        var lastReportedPercent = -1;
+        int read;
+        while ((read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+            received += read;
+
+            double? percent = null;
+            if (total is > 0)
+                percent = Math.Min(100, received * 100.0 / total.Value);
+
+            var percentInt = percent is null ? -1 : (int)percent.Value;
+            // Throttle UI updates: every 1% or every 512KB when size unknown.
+            var shouldReport = total is > 0
+                ? percentInt != lastReportedPercent
+                : received == read || received % (512 * 1024) < read;
+
+            if (shouldReport)
+            {
+                lastReportedPercent = percentInt;
+                var label = tag is null ? "MelonLoader" : $"MelonLoader {tag}";
+                var msg = total is > 0
+                    ? $"正在下载 {label}… {FormatBytes(received)} / {FormatBytes(total.Value)} ({percentInt}%)"
+                    : $"正在下载 {label}… 已下载 {FormatBytes(received)}";
+                Report(progress, msg, percent, received, total);
+            }
+        }
+
+        Report(progress,
+            tag is null ? "下载完成。" : $"MelonLoader {tag} 下载完成。",
+            percent: 100,
+            bytesReceived: received,
+            totalBytes: total ?? received);
+    }
+
+    static void Report(
+        IProgress<MelonLoaderProgress>? progress,
+        string message,
+        double? percent,
+        long? bytesReceived = null,
+        long? totalBytes = null)
+    {
+        progress?.Report(new MelonLoaderProgress
+        {
+            Message = message,
+            Percent = percent,
+            BytesReceived = bytesReceived,
+            TotalBytes = totalBytes
+        });
+    }
+
+    static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:0.#} KB";
+        return $"{bytes / (1024.0 * 1024.0):0.00} MB";
     }
 
     static void CopyExtractedPayload(string extractDir, string gamePath, List<string> written)

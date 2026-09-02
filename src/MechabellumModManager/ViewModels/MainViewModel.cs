@@ -138,6 +138,11 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _settingsExpanded;
     [ObservableProperty] private bool _isInstallingLoader;
+    [ObservableProperty] private double _installProgressPercent;
+    [ObservableProperty] private bool _installProgressIsIndeterminate;
+    [ObservableProperty] private string _installProgressText = "";
+
+    public bool ShowInstallProgress => IsInstallingLoader;
 
     partial void OnGameStatusChanged(GameStatus? value)
     {
@@ -150,8 +155,17 @@ public sealed partial class MainViewModel : ObservableObject
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnIsInstallingLoaderChanged(bool value) =>
+    partial void OnIsInstallingLoaderChanged(bool value)
+    {
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(ShowInstallProgress));
+        if (!value)
+        {
+            InstallProgressPercent = 0;
+            InstallProgressIsIndeterminate = false;
+            InstallProgressText = "";
+        }
+    }
 
     partial void OnIsDirtyChanged(bool value) => OnPropertyChanged(nameof(DirtyHint));
 
@@ -226,9 +240,47 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         IsInstallingLoader = true;
+        InstallProgressIsIndeterminate = true;
+        InstallProgressPercent = 0;
+        InstallProgressText = "准备安装…";
+        var lastLogged = "";
+        var lastLogBucket = -1;
         try
         {
-            var progress = new Progress<string>(msg => AppendLog(msg));
+            var progress = new Progress<MelonLoaderProgress>(p =>
+            {
+                InstallProgressText = p.Message;
+                if (p.Percent is double pct)
+                {
+                    InstallProgressIsIndeterminate = false;
+                    InstallProgressPercent = Math.Clamp(pct, 0, 100);
+                }
+                else
+                {
+                    InstallProgressIsIndeterminate = true;
+                }
+
+                // Log non-download stages always; during download log about every 10%.
+                var isDownload = p.Message.Contains("正在下载", StringComparison.Ordinal);
+                if (!isDownload)
+                {
+                    if (p.Message != lastLogged)
+                    {
+                        AppendLog(p.Message);
+                        lastLogged = p.Message;
+                    }
+
+                    return;
+                }
+
+                var bucket = p.Percent is double d ? (int)(d / 10) : lastLogBucket;
+                if (bucket != lastLogBucket || p.Percent is >= 100)
+                {
+                    AppendLog(p.Message);
+                    lastLogged = p.Message;
+                    lastLogBucket = bucket;
+                }
+            });
             var result = await _melonInstaller.InstallAsync(GamePath, progress).ConfigureAwait(true);
             AppendLog(result.Message);
             RefreshStatus();
