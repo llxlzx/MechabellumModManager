@@ -13,10 +13,10 @@
             BorderBrush="{StaticResource SteelEdgeBrush}"
             BorderThickness="1">
         <StackPanel>
-            <TextBlock x:Name="IntroLabel"
-                       TextWrapping="Wrap"
-                       Margin="0,0,0,4"
-                       Foreground="{StaticResource TextMutedBrush}" />
+            <TextBox x:Name="IntroLabel"
+                     Style="{StaticResource SelectableReadOnlyTextStyle}"
+                     Margin="0,0,0,4"
+                     Foreground="{StaticResource TextMutedBrush}" />
             <TextBlock Margin="0,0,0,14"
                        TextWrapping="Wrap">
                 <Hyperlink x:Name="InboxLink"
@@ -24,17 +24,17 @@
                     <Run x:Name="InboxLinkText" />
                 </Hyperlink>
             </TextBlock>
-            <TextBlock x:Name="BodyText"
-                       TextWrapping="Wrap"
-                       Margin="0,0,0,14" />
-            <TextBlock x:Name="TipText"
-                       TextWrapping="Wrap"
-                       Margin="0,0,0,12"
-                       Foreground="{StaticResource AccentAmberBrush}" />
-            <TextBlock x:Name="WaitNoticeText"
-                       TextWrapping="Wrap"
-                       Margin="0,0,0,16"
-                       Foreground="{StaticResource TextMutedBrush}" />
+            <TextBox x:Name="BodyText"
+                     Style="{StaticResource SelectableReadOnlyTextStyle}"
+                     Margin="0,0,0,14" />
+            <TextBox x:Name="TipText"
+                     Style="{StaticResource SelectableReadOnlyTextStyle}"
+                     Margin="0,0,0,12"
+                     Foreground="{StaticResource AccentAmberBrush}" />
+            <TextBox x:Name="WaitNoticeText"
+                     Style="{StaticResource SelectableReadOnlyTextStyle}"
+                     Margin="0,0,0,16"
+                     Foreground="{StaticResource TextMutedBrush}" />
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right">
                 <Button x:Name="CancelButton"

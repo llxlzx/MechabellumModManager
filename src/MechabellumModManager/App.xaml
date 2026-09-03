@@ -196,6 +196,18 @@
                 <Setter Property="SelectionBrush" Value="{StaticResource AccentTealBrush}" />
             </Style>
 
+            <Style x:Key="SelectableReadOnlyTextStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="AcceptsReturn" Value="True" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="IsTabStop" Value="False" />
+                <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+                <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+            </Style>
+
             <Style TargetType="ComboBox">
                 <Setter Property="Background" Value="{StaticResource BgElevatedBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
