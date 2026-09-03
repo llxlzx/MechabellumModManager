@@ -1,6 +1,1 @@
-{
-  "version": "1.0.5",
-  "notes": "1.0.5: selectable/copyable text in submit guide and credits dialogs. Docs/legal polish - expanded in-app Credits disclaimer; NOTICE.md + MIT LICENSE; email processing-delay notice in submit guide / README / submit.html. Community submit/report remains email to llxmod@foxmail.com (no Fork/PR required).",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.5/MechabellumModManager_Setup_v1.0.5.exe",
-  "publishedAt": "2026-09-03T23:51:23Z"
-}
+{"publishedAt":"2026-09-03T23:58:13Z","version":"1.0.5","setupUrl":"https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.5/MechabellumModManager_Setup_v1.0.5.exe","notes":"1.0.5: region-aware webmail compose (QQ Mail CN / Gmail intl) + clipboard template when no default mail app; selectable submit/credits text; NOTICE/MIT; email processing-delay notice. Community submit/report to llxmod@foxmail.com (no Fork/PR)."}

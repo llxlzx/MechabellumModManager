@@ -24,10 +24,15 @@ SubmitMod	投稿 Mod
 SubmitModConfirm	将打开发送投稿邮件（llxmod@foxmail.com），是否继续？
 SubmitModSuccess	已打开邮件客户端。请填写模板、附加 .dll（可选 preview.png）后发送至 llxmod@foxmail.com。
 SubmitModFailed	无法打开邮件客户端
+SubmitMailOpenedDomestic	已复制主题与正文；已打开 QQ 邮箱网页，请新建邮件粘贴并添加附件后发送至 llxmod@foxmail.com。
+SubmitMailOpenedInternational	Copied subject & body; opened Gmail compose — attach .dll (optional preview.png) and send to llxmod@foxmail.com.
+ReportMailOpenedDomestic	已复制主题与正文；已打开 QQ 邮箱网页，请新建邮件粘贴后发送举报至 llxmod@foxmail.com。
+ReportMailOpenedInternational	Copied subject & body; opened Gmail compose — review and send the report to llxmod@foxmail.com.
+MailOpenFailed	无法打开网页邮箱；主题与正文已复制到剪贴板。请手动发信至 llxmod@foxmail.com 并粘贴。
 SubmitGuideTitle	投稿 / Submit
 SubmitGuideIntro	投稿邮箱 / Inbox
 SubmitGuideBody	邮件主题须以以下前缀之一开头（复制即可）/ Subject must start with one of:\n• [Mod投稿/Submit] 新 Mod\n• [Mod更新/Update] 更新已有\n• [Mod举报/Report] 举报\n• [管理器建议/Feedback] 建议\n一封邮件只办一件事。维护者审核后上传到社区目录，作者无需 Fork/PR。\n（高级用户仍可自行提 PR。）
-SubmitGuideTip	投稿/更新请附加 .dll（可选 preview.png）。附件过大（约 >40MB）请在正文写网盘链接。不要主动发送源码。\nAttach .dll (optional preview.png). If attachments are huge, put a netdisk link in the body.
+SubmitGuideTip	点击下方按钮后，管理器会复制主题与正文，并打开 QQ 邮箱网页（中文界面）或 Gmail 写信页（其他语言）。请粘贴、附加 .dll（可选 preview.png）后发送。附件过大（约 >40MB）请在正文写网盘链接。不要主动发送源码。\nAfter you continue, the manager copies the template and opens QQ Mail (Chinese UI) or Gmail compose (other languages). Paste, attach .dll (optional preview.png), and send. If attachments are huge, put a netdisk link in the body.
 SubmitGuideWaitNotice	维护者将在合理时间内审阅并处理您的来信。受日常生活与个人事务安排影响，处理进度或有短暂延误，敬请谅解并耐心等待。请勿重复发送同一内容。\nThe maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.
 SubmitGuideOpen	打开完整教程 / Open full guide
 SubmitGuideOpenEmail	打开发送投稿邮件 / Open submit email

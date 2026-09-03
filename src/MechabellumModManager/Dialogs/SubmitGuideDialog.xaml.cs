@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Navigation;
 using MechabellumModManager.Services;
@@ -19,13 +18,24 @@ public partial class SubmitGuideDialog : Window
         GuideButton.Content = LocalizationService.T("SubmitGuideOpen");
         OkButton.Content = LocalizationService.T("SubmitGuideOpenEmail");
 
-        InboxLink.NavigateUri = new Uri($"mailto:{GitHubCommunityLinks.Inbox}");
+        // NavigateUri is required for Hyperlink styling; actual open is region webmail in handler.
+        InboxLink.NavigateUri = new Uri(GitHubCommunityLinks.DomesticWebMailUrl);
         InboxLinkText.Text = GitHubCommunityLinks.Inbox;
     }
 
     void InboxLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {
-        TryOpen(e.Uri.AbsoluteUri);
+        GitHubCommunityLinks.TryOpenInboxWebMail(text =>
+        {
+            try
+            {
+                Clipboard.SetText(text);
+            }
+            catch
+            {
+                // Clipboard may be locked.
+            }
+        });
         e.Handled = true;
     }
 
@@ -40,7 +50,7 @@ public partial class SubmitGuideDialog : Window
     {
         try
         {
-            Process.Start(new ProcessStartInfo
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = url,
                 UseShellExecute = true
@@ -48,7 +58,7 @@ public partial class SubmitGuideDialog : Window
         }
         catch
         {
-            // User can still use the primary mailto button or copy the address.
+            // User can still use the primary compose button or copy the address.
         }
     }
 }

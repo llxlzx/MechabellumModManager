@@ -1,14 +1,30 @@
+using System.Diagnostics;
+using System.Globalization;
 using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
 
+public enum MailComposeKind
+{
+    Submit,
+    Update,
+    Report,
+    Feedback
+}
+
+public readonly record struct MailComposePayload(string Subject, string Body, string MailtoUrl);
+
 /// <summary>
-/// Community catalog GitHub coordinates + email (mailto) helpers for submit / update / report / feedback.
+/// Community catalog GitHub coordinates + email compose helpers for submit / update / report / feedback.
 /// Authors do not need Fork/PR; maintainers review mail and publish to MechabellumMods.
+/// Primary path: region-aware webmail + clipboard (mailto is unreliable when no default mail app).
 /// </summary>
 public static class GitHubCommunityLinks
 {
     public const string Inbox = "llxmod@foxmail.com";
+
+    /// <summary>QQ / Foxmail webmail home (CN-friendly).</summary>
+    public static string DomesticWebMailUrl => "https://wx.mail.qq.com/";
 
     public static string Owner => ModCatalogService.Owner;
     public static string Repo => ModCatalogService.Repo;
@@ -25,24 +41,108 @@ public static class GitHubCommunityLinks
     public static string SubmitPageUrl =>
         $"{RepositoryUrl}/blob/main/docs/submit.html";
 
+    /// <summary>
+    /// Prefer QQ webmail when the effective UI language is Chinese
+    /// (includes Follow System when OS UI culture is zh*).
+    /// </summary>
+    public static bool PreferDomesticWebMail()
+    {
+        var culture = CultureInfo.CurrentUICulture;
+        return culture.TwoLetterISOLanguageName.Equals("zh", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static string TruncateForUrl(string? text, int maxBodyChars = 1200)
+    {
+        if (string.IsNullOrEmpty(text))
+            return "";
+        if (text.Length <= maxBodyChars)
+            return text;
+        return text[..maxBodyChars] + "\n…(truncated)";
+    }
+
+    public static string BuildGmailComposeUrl(string subject, string body)
+    {
+        var b = TruncateForUrl(body, maxBodyChars: 1200);
+        return "https://mail.google.com/mail/?view=cm&fs=1&tf=1"
+            + "&to=" + Uri.EscapeDataString(Inbox)
+            + "&su=" + Uri.EscapeDataString(subject ?? "")
+            + "&body=" + Uri.EscapeDataString(b);
+    }
+
+    public static string BuildClipboardPackage(string subject, string body) =>
+        $"To: {Inbox}\r\nSubject: {subject}\r\n\r\n{body}";
+
+    /// <summary>
+    /// 1) Copy clipboard package (always, via <paramref name="setClipboard"/>)
+    /// 2) Domestic: open QQ webmail home; International: open Gmail compose (pre-filled)
+    /// Does not rely on mailto as primary.
+    /// </summary>
+    public static (bool ok, string openedUrl, bool domestic) TryOpenCompose(
+        string subject,
+        string body,
+        Action<string>? setClipboard)
+    {
+        var domestic = PreferDomesticWebMail();
+        var package = BuildClipboardPackage(subject, body);
+        try
+        {
+            setClipboard?.Invoke(package);
+        }
+        catch
+        {
+            // Clipboard may be locked; still attempt to open webmail.
+        }
+
+        var url = domestic
+            ? DomesticWebMailUrl
+            : BuildGmailComposeUrl(subject, body);
+
+        var ok = TryShellOpen(url);
+        return (ok, url, domestic);
+    }
+
+    /// <summary>
+    /// Open region webmail for the inbox address and copy the address to clipboard.
+    /// </summary>
+    public static (bool ok, string openedUrl, bool domestic) TryOpenInboxWebMail(
+        Action<string>? setClipboard = null)
+    {
+        try
+        {
+            setClipboard?.Invoke(Inbox);
+        }
+        catch
+        {
+            // ignore
+        }
+
+        var domestic = PreferDomesticWebMail();
+        var url = domestic
+            ? DomesticWebMailUrl
+            : BuildGmailComposeUrl("", "");
+        return (TryShellOpen(url), url, domestic);
+    }
+
     public static string BuildMailto(string subject, string body) =>
         $"mailto:{Inbox}?subject={Uri.EscapeDataString(subject)}&body={Uri.EscapeDataString(body)}";
 
-    public static string BuildSubmitMailto(string? modName = null)
+    public static MailComposePayload BuildSubmitCompose(string? modName = null)
     {
         var name = DisplayName(modName);
         var subject = $"[Mod投稿/Submit] {name}";
-        return BuildMailto(subject, BuildSubmitBody(name));
+        var body = BuildSubmitBody(name);
+        return new MailComposePayload(subject, body, BuildMailto(subject, body));
     }
 
-    public static string BuildUpdateMailto(string? modName = null)
+    public static MailComposePayload BuildUpdateCompose(string? modName = null)
     {
         var name = DisplayName(modName);
         var subject = $"[Mod更新/Update] {name}";
-        return BuildMailto(subject, BuildUpdateBody(name));
+        var body = BuildUpdateBody(name);
+        return new MailComposePayload(subject, body, BuildMailto(subject, body));
     }
 
-    public static string BuildReportMailto(
+    public static MailComposePayload BuildReportCompose(
         string modId,
         string? modName,
         string? source,
@@ -52,15 +152,35 @@ public static class GitHubCommunityLinks
     {
         var name = DisplayName(modName, fallback: modId);
         var subject = $"[Mod举报/Report] {name}";
-        return BuildMailto(subject, BuildReportBody(modId, name, source, category, notes, appVersion));
+        var body = BuildReportBody(modId, name, source, category, notes, appVersion);
+        return new MailComposePayload(subject, body, BuildMailto(subject, body));
     }
 
-    public static string BuildFeedbackMailto(string? shortTitle = null)
+    public static MailComposePayload BuildFeedbackCompose(string? shortTitle = null)
     {
         var title = string.IsNullOrWhiteSpace(shortTitle) ? "ShortTitle" : shortTitle.Trim();
         var subject = $"[管理器建议/Feedback] {title}";
-        return BuildMailto(subject, BuildFeedbackBody(title));
+        var body = BuildFeedbackBody(title);
+        return new MailComposePayload(subject, body, BuildMailto(subject, body));
     }
+
+    public static string BuildSubmitMailto(string? modName = null) =>
+        BuildSubmitCompose(modName).MailtoUrl;
+
+    public static string BuildUpdateMailto(string? modName = null) =>
+        BuildUpdateCompose(modName).MailtoUrl;
+
+    public static string BuildReportMailto(
+        string modId,
+        string? modName,
+        string? source,
+        ReportCategory category,
+        string? notes,
+        string? appVersion) =>
+        BuildReportCompose(modId, modName, source, category, notes, appVersion).MailtoUrl;
+
+    public static string BuildFeedbackMailto(string? shortTitle = null) =>
+        BuildFeedbackCompose(shortTitle).MailtoUrl;
 
     public static string BuildSubmitBody(string? modName = null)
     {
@@ -117,6 +237,26 @@ public static class GitHubCommunityLinks
             "【详细说明 / Details】\n" +
             "【管理器版本 / App】（可选）\n" +
             "【联系方式 / Contact】（可选）\n";
+    }
+
+    static bool TryShellOpen(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     static string DisplayName(string? modName, string fallback = "ModName") =>

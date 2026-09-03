@@ -96,6 +96,21 @@
   <data name="SubmitModFailed" xml:space="preserve">
     <value>无法打开邮件客户端</value>
   </data>
+  <data name="SubmitMailOpenedDomestic" xml:space="preserve">
+    <value>已复制主题与正文；已打开 QQ 邮箱网页，请新建邮件粘贴并添加附件后发送至 llxmod@foxmail.com。</value>
+  </data>
+  <data name="SubmitMailOpenedInternational" xml:space="preserve">
+    <value>Copied subject &amp; body; opened Gmail compose — attach .dll (optional preview.png) and send to llxmod@foxmail.com.</value>
+  </data>
+  <data name="ReportMailOpenedDomestic" xml:space="preserve">
+    <value>已复制主题与正文；已打开 QQ 邮箱网页，请新建邮件粘贴后发送举报至 llxmod@foxmail.com。</value>
+  </data>
+  <data name="ReportMailOpenedInternational" xml:space="preserve">
+    <value>Copied subject &amp; body; opened Gmail compose — review and send the report to llxmod@foxmail.com.</value>
+  </data>
+  <data name="MailOpenFailed" xml:space="preserve">
+    <value>无法打开网页邮箱；主题与正文已复制到剪贴板。请手动发信至 llxmod@foxmail.com 并粘贴。</value>
+  </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
     <value>投稿 / Submit</value>
   </data>
@@ -112,8 +127,8 @@
 （高级用户仍可自行提 PR。）</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>投稿/更新请附加 .dll（可选 preview.png）。附件过大（约 &gt;40MB）请在正文写网盘链接。不要主动发送源码。
-Attach .dll (optional preview.png). If attachments are huge, put a netdisk link in the body.</value>
+    <value>点击下方按钮后，管理器会复制主题与正文，并打开 QQ 邮箱网页（中文界面）或 Gmail 写信页（其他语言）。请粘贴、附加 .dll（可选 preview.png）后发送。附件过大（约 &gt;40MB）请在正文写网盘链接。不要主动发送源码。
+After you continue, the manager copies the template and opens QQ Mail (Chinese UI) or Gmail compose (other languages). Paste, attach .dll (optional preview.png), and send. If attachments are huge, put a netdisk link in the body.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>打开完整教程 / Open full guide</value>

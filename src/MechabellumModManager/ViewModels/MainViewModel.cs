@@ -672,14 +672,7 @@ public sealed partial class MainViewModel : ObservableObject
                 return Task.CompletedTask;
             }
 
-            var body = GitHubCommunityLinks.BuildReportBody(
-                request.ModId,
-                request.ModName,
-                request.Source,
-                request.Category,
-                request.Notes,
-                request.AppVersion);
-            var url = GitHubCommunityLinks.BuildReportMailto(
+            var compose = GitHubCommunityLinks.BuildReportCompose(
                 request.ModId,
                 request.ModName,
                 request.Source,
@@ -687,17 +680,21 @@ public sealed partial class MainViewModel : ObservableObject
                 request.Notes,
                 request.AppVersion);
 
-            TryCopyText(body);
+            var (ok, _, domestic) = GitHubCommunityLinks.TryOpenCompose(
+                compose.Subject,
+                compose.Body,
+                TryCopyText);
 
-            if (!TryOpenUrl(url))
+            if (!ok)
             {
-                AppendLog($"{Ui.ReportFailed}：{GitHubCommunityLinks.Inbox}");
-                _notify(Ui.ReportFailed);
+                AppendLog($"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
+                _notify(Ui.MailOpenFailed);
                 return Task.CompletedTask;
             }
 
-            AppendLog($"{Ui.ReportSuccess}\n{GitHubCommunityLinks.Inbox}");
-            _notify(Ui.ReportSuccess);
+            var msg = domestic ? Ui.ReportMailOpenedDomestic : Ui.ReportMailOpenedInternational;
+            AppendLog($"{msg}\n{GitHubCommunityLinks.Inbox}");
+            _notify(msg);
         }
         catch (Exception ex)
         {
@@ -725,16 +722,22 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        var url = GitHubCommunityLinks.BuildSubmitMailto();
-        if (!TryOpenUrl(url))
+        var compose = GitHubCommunityLinks.BuildSubmitCompose();
+        var (ok, _, domestic) = GitHubCommunityLinks.TryOpenCompose(
+            compose.Subject,
+            compose.Body,
+            TryCopyText);
+
+        if (!ok)
         {
-            AppendLog($"{Ui.SubmitModFailed}：{GitHubCommunityLinks.Inbox}");
-            _notify(Ui.SubmitModFailed);
+            AppendLog($"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
+            _notify(Ui.MailOpenFailed);
             return;
         }
 
-        AppendLog(Ui.SubmitModSuccess);
-        _notify(Ui.SubmitModSuccess);
+        var msg = domestic ? Ui.SubmitMailOpenedDomestic : Ui.SubmitMailOpenedInternational;
+        AppendLog(msg);
+        _notify(msg);
     }
 
     [RelayCommand]

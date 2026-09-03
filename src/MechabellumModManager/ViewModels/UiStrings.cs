@@ -35,6 +35,11 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SubmitModConfirm => T("SubmitModConfirm");
     public string SubmitModSuccess => T("SubmitModSuccess");
     public string SubmitModFailed => T("SubmitModFailed");
+    public string SubmitMailOpenedDomestic => T("SubmitMailOpenedDomestic");
+    public string SubmitMailOpenedInternational => T("SubmitMailOpenedInternational");
+    public string ReportMailOpenedDomestic => T("ReportMailOpenedDomestic");
+    public string ReportMailOpenedInternational => T("ReportMailOpenedInternational");
+    public string MailOpenFailed => T("MailOpenFailed");
     public string SubmitGuideTitle => T("SubmitGuideTitle");
     public string SubmitGuideIntro => T("SubmitGuideIntro");
     public string SubmitGuideBody => T("SubmitGuideBody");
