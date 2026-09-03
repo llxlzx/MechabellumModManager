@@ -1,3 +1,5 @@
+> **Superseded** by `2026-09-03-cancel-relay-github-direct-design.md` (relay cancelled).
+
 # 设计：多语言、Cloudflare 投稿中转、分类举报、署名声明
 
 日期：2026-09-03  

@@ -10,29 +10,26 @@ CheckUpdates	检查更新
 Language	语言
 LanguageSystem	跟随系统
 CreditsTitle	关于与声明
-CreditsBody	本 Mod 管理器由「院长大人」制作。\n联系方式 QQ：319323959\n衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。\n\n【非盈利声明】\n本管理器不涉及任何盈利项目，无赞助入口，不存在任何收费行为。若有人将本管理器用于盈利，请自觉抵制。\n\n【风险与免责】\n1. 本软件按「现状」提供。作者及关联方不对因使用本管理器，或因通过本管理器获取、安装、启用、管理任何第三方 Mod / 插件 / 相关文件而导致的任何直接或间接损失承担责任，包括但不限于：账号处罚或封禁、存档损坏、游戏或系统异常、数据丢失或泄露、设备损害及其他经济或非经济损失。\n2. 第三方 Mod 与社区投稿内容由提供者自行负责，可能存在不稳定、不兼容、违规或含有恶意代码等风险。下载、安装与使用前请自行判断，风险自负。\n3. 游戏官方通常未必支持第三方修改；修改客户端可能导致违反用户协议、服务条款或竞赛规则，相关后果由使用者自行承担。\n4. 本管理器提供的本地校验、投稿中转与举报等功能仅供辅助，不构成对任何文件之安全性、完整性、合法性或可用性的保证、承诺或背书。\n5. 如发现可疑或不当内容，请使用应用内举报功能。维护者有权拒绝上架、下架或删除相关内容，且无义务对每一份文件进行全面的安全或法律鉴定。\n6. 继续使用本管理器，即视为您已阅读并同意本声明。如不同意，请立即停止使用并卸载本软件。
+CreditsBody	本 Mod 管理器由「院长大人」制作。\n联系方式 QQ：319323959\n衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。\n\n【非盈利声明】\n本管理器不涉及任何盈利项目，无赞助入口，不存在任何收费行为。若有人将本管理器用于盈利，请自觉抵制。\n\n【风险与免责】\n1. 本软件按「现状」提供。作者及关联方不对因使用本管理器，或因通过本管理器获取、安装、启用、管理任何第三方 Mod / 插件 / 相关文件而导致的任何直接或间接损失承担责任，包括但不限于：账号处罚或封禁、存档损坏、游戏或系统异常、数据丢失或泄露、设备损害及其他经济或非经济损失。\n2. 第三方 Mod 与社区投稿内容由提供者自行负责，可能存在不稳定、不兼容、违规或含有恶意代码等风险。下载、安装与使用前请自行判断，风险自负。\n3. 游戏官方通常未必支持第三方修改；修改客户端可能导致违反用户协议、服务条款或竞赛规则，相关后果由使用者自行承担。\n4. 本管理器提供的本地校验与 GitHub 举报等功能仅供辅助，不构成对任何文件之安全性、完整性、合法性或可用性的保证、承诺或背书。\n5. 如发现可疑或不当内容，请使用应用内举报功能。维护者有权拒绝上架、下架或删除相关内容，且无义务对每一份文件进行全面的安全或法律鉴定。\n6. 继续使用本管理器，即视为您已阅读并同意本声明。如不同意，请立即停止使用并卸载本软件。
 Report	举报
-ReportConfirm	确认提交此举报？虚假举报可能影响审核。
+ReportConfirm	将打开 GitHub 举报页，登录后点击 Submit 才会真正提交。虚假举报可能影响审核。是否继续？
 ReportCategoryCheat	作弊
 ReportCategoryVirus	病毒 / 恶意
 ReportCategoryUnrelated	与游戏无关
 ReportCategoryOther	其他
 ReportOtherHint	请说明原因（必填）
-ReportSuccess	举报已提交，感谢反馈。
-ReportFailed	举报提交失败
+ReportSuccess	已打开 GitHub 举报页，Issue 链接已复制到剪贴板。请登录后点击 Submit 完成举报。
+ReportFailed	无法打开举报页
 SubmitMod	投稿 Mod
-SubmitModTitle	投稿 Mod（待审核）
-SubmitModName	名称
-SubmitModAuthor	作者
-SubmitModVersion	版本
-SubmitModSummary	简介
-SubmitModPickDll	选择 DLL…
-SubmitModSuccess	投稿已提交，等待维护者审核。
-SubmitModFailed	投稿失败
-SubmitModNotMelonWarn	该 DLL 看起来不像 Melon Mod。仍要投稿吗？
-SubmitModTooLarge	文件超过 20MB 上限。
-SubmitModInvalidExt	仅支持 .dll 文件。
-RelayNotConfigured	投稿/举报中转未配置。请在配置中设置 RelayBaseUrl（Cloudflare Worker 地址）。
+SubmitModConfirm	将打开 GitHub 仓库投稿说明。请按 README 通过 Fork + Pull Request 提交 Mod，是否继续？
+SubmitModSuccess	已打开投稿说明页。请按 README 通过 Pull Request 提交。
+SubmitModFailed	无法打开投稿页
+SubmitGuideTitle	投稿步骤
+SubmitGuideIntro	请按以下三步向社区仓库投稿（需 GitHub 账号）：
+SubmitGuideStep1	1. Fork 仓库 llxlzx/MechabellumMods
+SubmitGuideStep2	2. 放入 mods/<id>/xxx.dll，并更新 catalog.json
+SubmitGuideStep3	3. 向本仓库提交 Pull Request，等待维护者审核合并
+SubmitGuideOpen	打开 GitHub
 Confirm	确认
 Cancel	取消
 Ok	确定

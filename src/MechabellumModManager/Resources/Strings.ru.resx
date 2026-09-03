@@ -57,7 +57,7 @@
 1. ПО предоставляется «как есть». Автор и связанные стороны не несут ответственности за любые прямые или косвенные убытки из-за использования менеджера либо получения, установки, включения или управления сторонними модами / плагинами / связанными файлами через него, включая (но не ограничиваясь): санкции или блокировку аккаунта, порчу сохранений, сбои игры или системы, потерю или утечку данных, повреждение устройств и иные экономические или неэкономические убытки.
 2. Сторонние моды и материалы сообщества — ответственность их поставщиков; возможны нестабильность, несовместимость, нарушения правил или вредоносный код. Перед загрузкой, установкой и использованием оценивайте риски самостоятельно.
 3. Официальная поддержка сторонних модификаций обычно не гарантируется; изменение клиента может нарушать пользовательское соглашение, условия сервиса или правила соревнований — последствия несёт пользователь.
-4. Локальная проверка, ретрансляция заявок и жалобы в менеджере — лишь вспомогательные функции и не являются гарантией, обещанием или одобрением безопасности, целостности, законности или пригодности любого файла.
+4. Локальные проверки и жалобы через GitHub в менеджере — лишь вспомогательные функции и не являются гарантией, обещанием или одобрением безопасности, целостности, законности или пригодности любого файла.
 5. При подозрительном или недопустимом контенте используйте функцию жалобы в приложении. Сопровождающие вправе отказать в публикации, снять или удалить материалы и не обязаны проводить полную проверку безопасности или юридическую экспертизу каждого файла.
 6. Продолжая пользоваться менеджером, вы подтверждаете, что прочитали и согласны с этим заявлением. Если не согласны — немедленно прекратите использование и удалите ПО.</value>
   </data>
@@ -65,7 +65,7 @@
     <value>Пожаловаться</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>Отправить жалобу? Ложные жалобы вредят проверке.</value>
+    <value>Откроется страница жалобы на GitHub. Войдите и нажмите Submit. Ложные жалобы вредят проверке. Продолжить?</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>Читы</value>
@@ -83,49 +83,40 @@
     <value>Опишите причину (обязательно)</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>Жалоба отправлена. Спасибо.</value>
+    <value>Открыта страница жалобы GitHub; ссылка Issue скопирована. Войдите и нажмите Submit.</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>Ошибка отправки жалобы</value>
+    <value>Не удалось открыть страницу жалобы</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>Отправить мод</value>
   </data>
-  <data name="SubmitModTitle" xml:space="preserve">
-    <value>Отправка мода (на проверку)</value>
-  </data>
-  <data name="SubmitModName" xml:space="preserve">
-    <value>Название</value>
-  </data>
-  <data name="SubmitModAuthor" xml:space="preserve">
-    <value>Автор</value>
-  </data>
-  <data name="SubmitModVersion" xml:space="preserve">
-    <value>Версия</value>
-  </data>
-  <data name="SubmitModSummary" xml:space="preserve">
-    <value>Описание</value>
-  </data>
-  <data name="SubmitModPickDll" xml:space="preserve">
-    <value>Выбрать DLL…</value>
+  <data name="SubmitModConfirm" xml:space="preserve">
+    <value>Откроется руководство по внесению вклада на GitHub. Отправляйте моды через Fork + Pull Request по README. Продолжить?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Отправлено; ожидает проверки.</value>
+    <value>Руководство открыто. Отправьте через Pull Request.</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>Ошибка отправки</value>
+    <value>Не удалось открыть страницу публикации</value>
   </data>
-  <data name="SubmitModNotMelonWarn" xml:space="preserve">
-    <value>DLL не похож на Melon Mod. Всё равно отправить?</value>
+  <data name="SubmitGuideTitle" xml:space="preserve">
+    <value>Как отправить</value>
   </data>
-  <data name="SubmitModTooLarge" xml:space="preserve">
-    <value>Файл больше лимита 20 МБ.</value>
+  <data name="SubmitGuideIntro" xml:space="preserve">
+    <value>Отправьте в сообщество-репозиторий за три шага (нужен аккаунт GitHub):</value>
   </data>
-  <data name="SubmitModInvalidExt" xml:space="preserve">
-    <value>Разрешены только .dll.</value>
+  <data name="SubmitGuideStep1" xml:space="preserve">
+    <value>1. Сделайте Fork репозитория llxlzx/MechabellumMods</value>
   </data>
-  <data name="RelayNotConfigured" xml:space="preserve">
-    <value>Relay не настроен. Укажите RelayBaseUrl (URL Worker).</value>
+  <data name="SubmitGuideStep2" xml:space="preserve">
+    <value>2. Добавьте mods/&lt;id&gt;/xxx.dll и обновите catalog.json</value>
+  </data>
+  <data name="SubmitGuideStep3" xml:space="preserve">
+    <value>3. Откройте Pull Request и дождитесь проверки сопровождающих</value>
+  </data>
+  <data name="SubmitGuideOpen" xml:space="preserve">
+    <value>Открыть GitHub</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Подтвердить</value>

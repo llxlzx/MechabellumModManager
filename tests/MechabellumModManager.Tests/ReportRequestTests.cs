@@ -36,4 +36,18 @@ public class ReportRequestTests
         var request = new ReportRequest { Category = ReportCategory.Virus };
         ReportRequest.TryValidate(request, out _).Should().BeFalse();
     }
+
+    [Fact]
+    public void TryValidate_rejects_notes_over_max_length()
+    {
+        var request = new ReportRequest
+        {
+            ModId = "demo",
+            Category = ReportCategory.Cheat,
+            Notes = new string('n', ReportRequest.MaxNotesLength + 1)
+        };
+
+        ReportRequest.TryValidate(request, out var error).Should().BeFalse();
+        error.Should().Contain("notes");
+    }
 }

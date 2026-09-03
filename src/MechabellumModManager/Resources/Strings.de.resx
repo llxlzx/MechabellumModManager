@@ -57,7 +57,7 @@ Dieser Manager ist kein kommerzielles Projekt: kein Sponsoring-Einstieg und kein
 1. Diese Software wird „wie besehen“ bereitgestellt. Autor und verbundene Parteien haften nicht für direkte oder indirekte Schäden durch Nutzung dieses Managers oder durch Abruf, Installation, Aktivierung oder Verwaltung von Drittanbieter-Mods / Plugins / zugehörigen Dateien darüber, einschließlich (aber nicht beschränkt auf): Kontosanktionen oder Sperren, Speicherbeschädigung, Spiel- oder Systemstörungen, Datenverlust oder -leck, Geräteschäden sowie sonstige wirtschaftliche oder nichtwirtschaftliche Verluste.
 2. Drittanbieter-Mods und Community-Einreichungen liegen in der Verantwortung der Anbieter und können instabil, inkompatibel, regelwidrig oder schädlichen Code enthalten. Beurteilen Sie vor Download, Installation und Nutzung selbst; Sie tragen das Risiko.
 3. Offizielle Spieleunterstützung für Drittänderungen ist in der Regel nicht gegeben; Client-Änderungen können Nutzungsbedingungen, Servicebedingungen oder Wettbewerbsregeln verletzen — Folgen trägt der Nutzer.
-4. Lokale Prüfungen, Einreichungs-Relay und Meldefunktionen dienen nur der Unterstützung und stellen keine Garantie, Zusage oder Empfehlung zur Sicherheit, Integrität, Rechtmäßigkeit oder Nutzbarkeit einer Datei dar.
+4. Lokale Prüfungen und GitHub-Meldefunktionen dienen nur der Unterstützung und stellen keine Garantie, Zusage oder Empfehlung zur Sicherheit, Integrität, Rechtmäßigkeit oder Nutzbarkeit einer Datei dar.
 5. Bei verdächtigen oder unzulässigen Inhalten nutzen Sie bitte die Meldefunktion in der App. Betreuer dürfen Inhalte ablehnen, entfernen oder löschen und sind nicht verpflichtet, jede Datei umfassend sicherheits- oder rechtlich zu prüfen.
 6. Die fortgesetzte Nutzung dieses Managers gilt als Lesen und Zustimmung zu dieser Erklärung. Bei Ablehnung beenden Sie die Nutzung sofort und deinstallieren Sie die Software.</value>
   </data>
@@ -65,7 +65,7 @@ Dieser Manager ist kein kommerzielles Projekt: kein Sponsoring-Einstieg und kein
     <value>Melden</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>Meldung senden? Falsche Meldungen schaden der Prüfung.</value>
+    <value>Öffnet die GitHub-Meldeseite. Nach dem Anmelden Submit klicken. Falsche Meldungen schaden der Prüfung. Fortfahren?</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>Cheat</value>
@@ -83,49 +83,40 @@ Dieser Manager ist kein kommerzielles Projekt: kein Sponsoring-Einstieg und kein
     <value>Bitte Grund angeben (Pflicht)</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>Meldung gesendet. Danke.</value>
+    <value>GitHub-Meldeseite geöffnet; Issue-URL in die Zwischenablage kopiert. Anmelden und Submit klicken.</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>Meldung fehlgeschlagen</value>
+    <value>Meldeseite konnte nicht geöffnet werden</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>Mod einreichen</value>
   </data>
-  <data name="SubmitModTitle" xml:space="preserve">
-    <value>Mod einreichen (Prüfung)</value>
-  </data>
-  <data name="SubmitModName" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="SubmitModAuthor" xml:space="preserve">
-    <value>Autor</value>
-  </data>
-  <data name="SubmitModVersion" xml:space="preserve">
-    <value>Version</value>
-  </data>
-  <data name="SubmitModSummary" xml:space="preserve">
-    <value>Kurzbeschreibung</value>
-  </data>
-  <data name="SubmitModPickDll" xml:space="preserve">
-    <value>DLL wählen…</value>
+  <data name="SubmitModConfirm" xml:space="preserve">
+    <value>Öffnet die GitHub-Beitragsanleitung. Mods per Fork + Pull Request laut README einreichen. Fortfahren?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Eingereicht; wartet auf Prüfung.</value>
+    <value>Beitragsanleitung geöffnet. Bitte per Pull Request einreichen.</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>Einreichung fehlgeschlagen</value>
+    <value>Beitragsseite konnte nicht geöffnet werden</value>
   </data>
-  <data name="SubmitModNotMelonWarn" xml:space="preserve">
-    <value>Diese DLL wirkt nicht wie ein Melon Mod. Trotzdem senden?</value>
+  <data name="SubmitGuideTitle" xml:space="preserve">
+    <value>So einreichen</value>
   </data>
-  <data name="SubmitModTooLarge" xml:space="preserve">
-    <value>Datei überschreitet das 20-MB-Limit.</value>
+  <data name="SubmitGuideIntro" xml:space="preserve">
+    <value>In drei Schritten beim Community-Repo einreichen (GitHub-Konto erforderlich):</value>
   </data>
-  <data name="SubmitModInvalidExt" xml:space="preserve">
-    <value>Nur .dll-Dateien erlaubt.</value>
+  <data name="SubmitGuideStep1" xml:space="preserve">
+    <value>1. Fork von llxlzx/MechabellumMods</value>
   </data>
-  <data name="RelayNotConfigured" xml:space="preserve">
-    <value>Relay nicht konfiguriert. Bitte RelayBaseUrl auf die Worker-URL setzen.</value>
+  <data name="SubmitGuideStep2" xml:space="preserve">
+    <value>2. mods/&lt;id&gt;/xxx.dll hinzufügen und catalog.json aktualisieren</value>
+  </data>
+  <data name="SubmitGuideStep3" xml:space="preserve">
+    <value>3. Pull Request öffnen und auf Review durch Betreuer warten</value>
+  </data>
+  <data name="SubmitGuideOpen" xml:space="preserve">
+    <value>GitHub öffnen</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Bestätigen</value>
