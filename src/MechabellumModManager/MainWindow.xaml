@@ -124,7 +124,7 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="当前方案"
+                        <TextBlock Text="{Binding Ui.CurrentProfile}"
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,8,0" />
@@ -138,24 +138,29 @@
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
-                        <Button Content="应用方案"
+                        <Button Content="{Binding Ui.ApplyProfile}"
                                 Command="{Binding ApplyProfileCommand}"
                                 IsEnabled="{Binding IsReady}"
                                 Style="{StaticResource AccentButtonStyle}"
                                 Margin="0,0,8,0"
                                 MinWidth="96" />
-                        <Button Content="应用并启动"
+                        <Button Content="{Binding Ui.ApplyAndLaunch}"
                                 Command="{Binding ApplyAndLaunchCommand}"
                                 IsEnabled="{Binding IsReady}"
                                 Style="{StaticResource PrimaryButtonStyle}"
                                 Margin="0,0,8,0"
                                 MinWidth="108" />
-                        <Button Content="Mod 浏览"
+                        <Button Content="{Binding Ui.BrowseMods}"
                                 Command="{Binding ToggleCatalogCommand}"
                                 Style="{StaticResource GhostButtonStyle}"
                                 Margin="0,0,8,0"
                                 MinWidth="88" />
-                        <Button Content="设置"
+                        <Button Content="{Binding Ui.SubmitMod}"
+                                Command="{Binding SubmitModCommand}"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Margin="0,0,8,0"
+                                MinWidth="88" />
+                        <Button Content="{Binding Ui.Settings}"
                                 Command="{Binding ToggleSettingsCommand}"
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="72" />
@@ -180,15 +185,17 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.ColumnSpan="3"
-                               Text="设置"
+                               Text="{Binding Ui.Settings}"
                                Style="{StaticResource SectionLabelStyle}" />
 
                     <DockPanel Grid.Row="1" Margin="0,0,16,0">
-                        <TextBlock Text="游戏路径"
-                                   Width="64"
+                        <TextBlock Text="{Binding Ui.GamePath}"
+                                   Width="72"
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    DockPanel.Dock="Left" />
@@ -202,7 +209,7 @@
                     </DockPanel>
 
                     <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-                        <TextBlock Text="启动方式"
+                        <TextBlock Text="{Binding Ui.LaunchMode}"
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,8,0" />
@@ -214,7 +221,7 @@
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">
-                        <CheckBox Content="便携数据根（程序目录/data，需重启生效）"
+                        <CheckBox Content="{Binding Ui.PortableDataRoot}"
                                   IsChecked="{Binding UsePortableDataRoot}" />
                     </StackPanel>
 
@@ -224,23 +231,47 @@
                                    Foreground="{StaticResource TextMutedBrush}"
                                    DockPanel.Dock="Left"
                                    Margin="0,0,12,0" />
-                        <Button Content="检查更新"
+                        <Button Content="{Binding Ui.CheckUpdates}"
                                 Command="{Binding CheckForUpdatesCommand}"
                                 DockPanel.Dock="Left"
                                 MinWidth="88"
                                 Margin="0,0,12,0"
                                 Style="{StaticResource GhostButtonStyle}" />
-                        <Button Content="从游戏导入"
+                        <Button Content="{Binding Ui.ImportFromGame}"
                                 Command="{Binding ImportFromGameCommand}"
                                 DockPanel.Dock="Left"
                                 MinWidth="96"
                                 Margin="0,0,12,0"
                                 Style="{StaticResource GhostButtonStyle}" />
+                        <TextBlock Text="{Binding Ui.Language}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   DockPanel.Dock="Left"
+                                   Margin="0,0,8,0" />
+                        <ComboBox Width="140"
+                                  ItemsSource="{Binding LanguageOptions}"
+                                  SelectedValue="{Binding SelectedUiLanguageCode}"
+                                  SelectedValuePath="Code"
+                                  DisplayMemberPath="Label"
+                                  DockPanel.Dock="Left"
+                                  Margin="0,0,12,0"
+                                  VerticalAlignment="Center" />
                         <TextBlock Text="{Binding UpdateStatus}"
                                    VerticalAlignment="Center"
                                    TextWrapping="Wrap"
                                    Foreground="{StaticResource TextMutedBrush}" />
                     </DockPanel>
+
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,14,0,0">
+                        <TextBlock Text="{Binding Ui.CreditsTitle}"
+                                   Style="{StaticResource SectionLabelStyle}"
+                                   Margin="0,0,0,6" />
+                        <TextBlock Text="{Binding Ui.CreditsBody}"
+                                   TextWrapping="Wrap"
+                                   FontSize="12"
+                                   LineHeight="18"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -258,7 +289,7 @@
                                     Height="14"
                                     Margin="0,0,8,0"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="Mod 浏览"
+                            <TextBlock Text="{Binding Ui.BrowseMods}"
                                        Style="{StaticResource SectionLabelStyle}"
                                        Margin="0"
                                        VerticalAlignment="Center" />
@@ -266,15 +297,20 @@
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right"
                                     DockPanel.Dock="Right">
-                            <Button Content="刷新目录"
+                            <Button Content="{Binding Ui.RefreshCatalog}"
                                     Command="{Binding RefreshCatalogCommand}"
                                     Margin="0,0,8,0"
                                     MinWidth="88"
                                     Style="{StaticResource GhostButtonStyle}" />
-                            <Button Content="加入本地库"
+                            <Button Content="{Binding Ui.AddToLibrary}"
                                     Command="{Binding AddCatalogModToLibraryCommand}"
                                     MinWidth="96"
+                                    Margin="0,0,8,0"
                                     Style="{StaticResource AccentButtonStyle}" />
+                            <Button Content="{Binding Ui.Report}"
+                                    Command="{Binding ReportCatalogModCommand}"
+                                    MinWidth="72"
+                                    Style="{StaticResource GhostButtonStyle}" />
                         </StackPanel>
                     </DockPanel>
 
@@ -367,7 +403,7 @@
                                     Height="14"
                                     Margin="0,0,8,0"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="方案"
+                            <TextBlock Text="{Binding Ui.Profiles}"
                                        Style="{StaticResource SectionLabelStyle}"
                                        Margin="0"
                                        VerticalAlignment="Center" />
@@ -414,7 +450,7 @@
                                         Height="14"
                                         Margin="0,0,8,0"
                                         VerticalAlignment="Center" />
-                                <TextBlock Text="Mod 库"
+                                <TextBlock Text="{Binding Ui.ModLibrary}"
                                            Style="{StaticResource SectionLabelStyle}"
                                            VerticalAlignment="Center"
                                            Margin="0" />
@@ -422,14 +458,14 @@
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="Right"
                                         DockPanel.Dock="Right">
-                                <Button Content="导入 DLL"
+                                <Button Content="{Binding Ui.ImportDll}"
                                         Command="{Binding ImportDllCommand}"
                                         Margin="0,0,8,0"
                                         MinWidth="88" />
-                                <Button Content="导入 Zip"
+                                <Button Content="{Binding Ui.ImportZip}"
                                         Command="{Binding ImportZipCommand}"
                                         MinWidth="88" />
-                                <Button Content="导入 文件夹"
+                                <Button Content="{Binding Ui.ImportFolder}"
                                         Command="{Binding ImportFolderCommand}"
                                         Margin="8,0,0,0"
                                         MinWidth="88" />
@@ -512,15 +548,23 @@
                                 <Border Margin="0,0,0,10"
                                         Visibility="{Binding SelectedLibraryMod, Converter={StaticResource NullToVis}}">
                                     <DockPanel>
-                                        <Button Content="收起介绍"
-                                                Command="{Binding ClearLibraryModSelectionCommand}"
-                                                DockPanel.Dock="Right"
-                                                VerticalAlignment="Top"
-                                                Margin="8,0,0,0"
-                                                MinWidth="72"
-                                                Padding="8,2"
-                                                FontSize="11"
-                                                Style="{StaticResource GhostButtonStyle}" />
+                                        <StackPanel DockPanel.Dock="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="8,0,0,0">
+                                            <Button Content="{Binding Ui.Report}"
+                                                    Command="{Binding ReportLibraryModCommand}"
+                                                    MinWidth="72"
+                                                    Padding="8,2"
+                                                    FontSize="11"
+                                                    Margin="0,0,0,6"
+                                                    Style="{StaticResource GhostButtonStyle}" />
+                                            <Button Content="收起介绍"
+                                                    Command="{Binding ClearLibraryModSelectionCommand}"
+                                                    MinWidth="72"
+                                                    Padding="8,2"
+                                                    FontSize="11"
+                                                    Style="{StaticResource GhostButtonStyle}" />
+                                        </StackPanel>
                                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                                       HorizontalScrollBarVisibility="Disabled"
                                                       MaxHeight="140">
@@ -638,7 +682,7 @@
                     Background="#EE0E1114"
                     Padding="14">
                 <DockPanel>
-                    <TextBlock Text="同步日志"
+                    <TextBlock Text="{Binding Ui.SyncLog}"
                                Style="{StaticResource SectionLabelStyle}"
                                DockPanel.Dock="Top" />
                     <TextBox Text="{Binding LogText, Mode=OneWay}"

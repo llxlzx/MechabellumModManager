@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="BrowseMods" xml:space="preserve"><value>Mod 浏览</value></data>
+  <data name="ImportDll" xml:space="preserve"><value>导入 DLL</value></data>
+  <data name="ImportZip" xml:space="preserve"><value>导入 Zip</value></data>
+  <data name="ImportFolder" xml:space="preserve"><value>导入 文件夹</value></data>
+  <data name="ApplyProfile" xml:space="preserve"><value>应用方案</value></data>
+  <data name="ApplyAndLaunch" xml:space="preserve"><value>应用并启动</value></data>
+  <data name="CheckUpdates" xml:space="preserve"><value>检查更新</value></data>
+  <data name="Language" xml:space="preserve"><value>语言</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>跟随系统</value></data>
+  <data name="CreditsTitle" xml:space="preserve"><value>关于与声明</value></data>
+  <data name="CreditsBody" xml:space="preserve"><value>本 Mod 管理器由「院长大人」制作。
+联系方式 QQ：319323959
+衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。
+本管理器不涉及任何盈利项目，无赞助入口，不存在任何收费行为。若有人将本管理器用于盈利，请自觉抵制。
+社区投稿与第三方 Mod 风险自负；管理器无法保证文件绝对安全（与创意工坊等平台类似），发现异常请使用举报功能。</value></data>
+  <data name="Report" xml:space="preserve"><value>举报</value></data>
+  <data name="ReportConfirm" xml:space="preserve"><value>确认提交此举报？虚假举报可能影响审核。</value></data>
+  <data name="ReportCategoryCheat" xml:space="preserve"><value>作弊</value></data>
+  <data name="ReportCategoryVirus" xml:space="preserve"><value>病毒 / 恶意</value></data>
+  <data name="ReportCategoryUnrelated" xml:space="preserve"><value>与游戏无关</value></data>
+  <data name="ReportCategoryOther" xml:space="preserve"><value>其他</value></data>
+  <data name="ReportOtherHint" xml:space="preserve"><value>请说明原因（必填）</value></data>
+  <data name="ReportSuccess" xml:space="preserve"><value>举报已提交，感谢反馈。</value></data>
+  <data name="ReportFailed" xml:space="preserve"><value>举报提交失败</value></data>
+  <data name="SubmitMod" xml:space="preserve"><value>投稿 Mod</value></data>
+  <data name="SubmitModTitle" xml:space="preserve"><value>投稿 Mod（待审核）</value></data>
+  <data name="SubmitModName" xml:space="preserve"><value>名称</value></data>
+  <data name="SubmitModAuthor" xml:space="preserve"><value>作者</value></data>
+  <data name="SubmitModVersion" xml:space="preserve"><value>版本</value></data>
+  <data name="SubmitModSummary" xml:space="preserve"><value>简介</value></data>
+  <data name="SubmitModPickDll" xml:space="preserve"><value>选择 DLL…</value></data>
+  <data name="SubmitModSuccess" xml:space="preserve"><value>投稿已提交，等待维护者审核。</value></data>
+  <data name="SubmitModFailed" xml:space="preserve"><value>投稿失败</value></data>
+  <data name="SubmitModNotMelonWarn" xml:space="preserve"><value>该 DLL 看起来不像 Melon Mod。仍要投稿吗？</value></data>
+  <data name="SubmitModTooLarge" xml:space="preserve"><value>文件超过 20MB 上限。</value></data>
+  <data name="SubmitModInvalidExt" xml:space="preserve"><value>仅支持 .dll 文件。</value></data>
+  <data name="RelayNotConfigured" xml:space="preserve"><value>投稿/举报中转未配置。请在配置中设置 RelayBaseUrl（Cloudflare Worker 地址）。</value></data>
+  <data name="Confirm" xml:space="preserve"><value>确认</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Ok" xml:space="preserve"><value>确定</value></data>
+  <data name="RefreshCatalog" xml:space="preserve"><value>刷新目录</value></data>
+  <data name="AddToLibrary" xml:space="preserve"><value>加入本地库</value></data>
+  <data name="ImportFromGame" xml:space="preserve"><value>从游戏导入</value></data>
+  <data name="GamePath" xml:space="preserve"><value>游戏路径</value></data>
+  <data name="LaunchMode" xml:space="preserve"><value>启动方式</value></data>
+  <data name="PortableDataRoot" xml:space="preserve"><value>便携数据根（程序目录/data，需重启生效）</value></data>
+  <data name="Profiles" xml:space="preserve"><value>方案</value></data>
+  <data name="ModLibrary" xml:space="preserve"><value>Mod 库</value></data>
+  <data name="SyncLog" xml:space="preserve"><value>同步日志</value></data>
+  <data name="CurrentProfile" xml:space="preserve"><value>当前方案</value></data>
+</root>

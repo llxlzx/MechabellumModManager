@@ -1,0 +1,17 @@
+name = "mechabellum-mod-relay"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "mechabellum-mod-pending"
+
+# Secrets (wrangler secret put):
+#   GITHUB_TOKEN
+# Optional vars:
+#   GITHUB_OWNER = llxlzx
+#   GITHUB_REPO  = MechabellumMods
+[vars]
+GITHUB_OWNER = "llxlzx"
+GITHUB_REPO = "MechabellumMods"
+MAX_UPLOAD_BYTES = "20971520"
