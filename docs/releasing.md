@@ -7,6 +7,19 @@
 
 失败时回退 GitHub API：`/repos/llxlzx/MechabellumModManager/releases/latest`。
 
+## 仓库内 release/ 布局
+
+本地整理产物时建议按版本分目录，并区分「安装包」与「本体」：
+
+```
+release/vX.Y.Z/
+  安装包/          # Setup exe + 用户 README.txt（推荐分发）
+  本体/            # 便携 exe + Assets + README.txt（需 .NET 8 Desktop）
+  latest.json      # 可选：本地对照；上传 Release 时文件名仍为 latest.json
+```
+
+详见 `release/README.md`。上传到 GitHub Releases 时，可将 Setup 与 `latest.json` 作为 Release 资源上传（不必保留仓库子文件夹结构）。
+
 ## 版本号
 
 同步三处：
@@ -76,7 +89,7 @@ installer\build-installer.bat
 4. 本地跑 `build-installer`，确认 `dist\` 下 Setup（体积应含 MelonLoader zip）
 5. 在 GitHub 创建 Release（tag 建议 `vX.Y.Z`）
 6. 上传：
-   - `MechabellumModManager_Setup_vX.Y.Z.exe`
+   - `MechabellumModManager_Setup_vX.Y.Z.exe`（来自 `release/vX.Y.Z/安装包/`；可选同时上传本体便携文件）
    - `latest.json`（文件名必须为 `latest.json`）
 7. 用管理器「设置 → 检查更新」验证
 8. Release notes 可注明：MelonLoader 已离线内嵌，安装一般无需访问 GitHub
