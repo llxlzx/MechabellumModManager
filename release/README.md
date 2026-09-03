@@ -2,21 +2,21 @@
 
 本目录按版本存放本地整理好的发布文件，便于对照与上传 GitHub Releases。
 
-## 目录结构（以 v1.0.4 为例（当前最新；v1.0.0 仍保留作历史对照））
+## 目录结构（以 v1.0.5 为例（当前最新；旧版本仍保留作历史对照））
 
 ```
 release/
   README.md
-  v1.0.4/
+  v1.0.5/
     安装包/
-      MechabellumModManager_Setup_v1.0.4.exe   # 推荐：完整安装程序
+      MechabellumModManager_Setup_v1.0.5.exe   # 推荐：完整安装程序
       README.txt                               # 给最终用户：运行 Setup
     本体/
       MechabellumModManager.exe                # 便携版程序
       Assets/
       README.txt                               # 需 .NET 8 Desktop，双击 exe
     latest.json                                # 更新检查元数据（上传 Releases 时一并附上）
-    MechabellumModManager_portable_v1.0.4.zip  # 便携包（本体内容打 zip，解压即 exe+Assets）
+    MechabellumModManager_portable_v1.0.5.zip  # 便携包（本体内容打 zip，解压即 exe+Assets）
 ```
 
 ## 安装包 vs 本体
@@ -32,6 +32,6 @@ release/
 
 ## latest.json
 
-- 可放在版本目录根（如 `v1.0.4/latest.json`）方便本地对照。
+- 可放在版本目录根（如 `v1.0.5/latest.json`）方便本地对照。
 - 上传到 GitHub Release 时，资源文件名仍须为 `latest.json`（程序会按 `.../releases/latest/download/latest.json` 拉取）。
 - 字段说明见 `docs/releasing.md` 与 `docs/latest.example.json`。

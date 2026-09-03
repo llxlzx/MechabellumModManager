@@ -37,13 +37,10 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SubmitModFailed => T("SubmitModFailed");
     public string SubmitGuideTitle => T("SubmitGuideTitle");
     public string SubmitGuideIntro => T("SubmitGuideIntro");
-    public string SubmitGuideStep1 => T("SubmitGuideStep1");
-    public string SubmitGuideStep2 => T("SubmitGuideStep2");
-    public string SubmitGuideStep3 => T("SubmitGuideStep3");
-    public string SubmitGuideStep4 => T("SubmitGuideStep4");
-    public string SubmitGuideStep5 => T("SubmitGuideStep5");
+    public string SubmitGuideBody => T("SubmitGuideBody");
     public string SubmitGuideTip => T("SubmitGuideTip");
     public string SubmitGuideOpen => T("SubmitGuideOpen");
+    public string SubmitGuideOpenEmail => T("SubmitGuideOpenEmail");
     public string Confirm => T("Confirm");
     public string Cancel => T("Cancel");
     public string Ok => T("Ok");

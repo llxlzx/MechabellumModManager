@@ -31,7 +31,7 @@ Use the links below to jump within this page (Chinese and English sections share
 - **外部 Mod 库**：DLL / Zip / 文件夹导入；可从游戏目录扫描导入。
 - **方案（Profile）**：多套勾选组合，一键「应用方案」扁平同步到游戏的 `Mods` / `Plugins` / `UserLibs` / `UserData`。
 - **Mod 浏览**：从 [MechabellumMods](https://github.com/llxlzx/MechabellumMods) 拉取目录，「加入本地库」（**不会**自动启用）。
-- **投稿 / 举报**：打开 GitHub 新手教程（Fork + PR）或预填 Issue；**不经过** Cloudflare 中转。
+- **投稿 / 举报**：打开邮件客户端发往 **llxmod@foxmail.com**（标准主题前缀 + 模板正文）；维护者审核后上传社区目录。作者**无需** Fork/PR。
 - **多语言**：简体中文 / English / 日本語 / Deutsch / Русский（可跟随系统）。
 - **安装包**：可选安装 .NET 8（管理器）、.NET 6（MelonLoader）、MelonLoader；优先使用 `installer/redist/` 离线包。
 
@@ -79,14 +79,17 @@ Use the links below to jump within this page (Chinese and English sections share
 
 ## Mod 作者投稿 (中文)
 
-投稿方式保持 **GitHub Fork + Pull Request**（网页即可，无需安装 Git）。
+投稿 / 更新 / 举报请发邮件至 **llxmod@foxmail.com**（作者**不需要** Fork 或开 PR）。
 
-1. 在管理器点 **投稿 Mod**，阅读弹窗步骤后打开教程。  
-2. 按社区仓库 README 操作：  
-   **[新手投稿教程（中文）](https://github.com/llxlzx/MechabellumMods#新手投稿教程网页操作无需安装git-中文)**  
-3. 简要流程：Fork → 上传到 `mods/你的id/xxx.dll` → 编辑 `catalog.json` → 提 Pull Request → 等待合并。  
+1. 在管理器点 **投稿 Mod**，阅读弹窗后点「打开发送投稿邮件」。  
+2. 主题必须以标准前缀开头，例如 `[Mod投稿/Submit] 你的Mod名`；一封邮件只办一件事。  
+3. 投稿/更新请附加 `.dll`（可选 `preview.png`）；附件过大时在正文写网盘链接。  
+4. 完整模板与说明见社区仓库：  
+   **[投稿与举报](https://github.com/llxlzx/MechabellumMods#投稿与举报--submit--report)** · [submit.html](https://github.com/llxlzx/MechabellumMods/blob/main/docs/submit.html)
 
-举报：对目录或本地库中的 Mod 点 **举报**，选择分类后打开预填 GitHub Issue（请登录后点 Submit）。
+维护者审核后会上传到本仓库的社区目录；玩家在管理器里 **刷新目录** 即可看到。
+
+举报：对目录或本地库中的 Mod 点 **举报**，选择分类后打开预填邮件（正文也会复制到剪贴板），发送至 **llxmod@foxmail.com**。
 
 ---
 
@@ -135,7 +138,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 - **External mod library**: import DLL / Zip / folder; optional import from the game folder.
 - **Profiles**: multiple enable-sets; **Apply profile** flattens files into the game `Mods` / `Plugins` / `UserLibs` / `UserData` folders.
 - **Browse mods**: fetch [MechabellumMods](https://github.com/llxlzx/MechabellumMods) catalog; **Add to library** (does **not** auto-enable).
-- **Submit / report**: opens the GitHub beginner guide (Fork + PR) or a pre-filled Issue — **no** Cloudflare relay.
+- **Submit / report**: opens mailto to **llxmod@foxmail.com** (standard subject prefixes + templates). Maintainers review and upload; authors do **not** need Fork/PR.
 - **Languages**: zh-CN / en / ja / de / ru (or follow the OS).
 - **Installer**: optional .NET 8 (app), .NET 6 (MelonLoader), MelonLoader; prefers offline files under `installer/redist/`.
 
@@ -183,14 +186,17 @@ High-risk mods require confirmation. Use the status bar and sync log to verify d
 
 ## Mod authors submit (English)
 
-Submission stays **GitHub Fork + Pull Request** (browser only; Git CLI optional).
+Submit / update / report by email to **llxmod@foxmail.com** (no Fork/PR required).
 
-1. In the manager, click **Submit Mod**, read the steps, open the guide.  
-2. Follow the community README:  
-   **[Beginner submit guide (English)](https://github.com/llxlzx/MechabellumMods#beginner-submit-guide-english)**  
-3. Summary: Fork → upload `mods/your-id/xxx.dll` → edit `catalog.json` → open a Pull Request → wait for merge.
+1. In the manager, click **Submit Mod**, then **Open submit email**.  
+2. Subject must use a standard prefix, e.g. `[Mod投稿/Submit] YourModName`; one email = one request.  
+3. For submit/update, attach `.dll` (optional `preview.png`); use a netdisk link if attachments are huge.  
+4. Full templates:  
+   **[Submit & Report](https://github.com/llxlzx/MechabellumMods#投稿与举报--submit--report)** · [submit.html](https://github.com/llxlzx/MechabellumMods/blob/main/docs/submit.html)
 
-**Report**: pick a category; the manager opens a pre-filled GitHub Issue (sign in and click Submit).
+After review, maintainers upload to the community catalog; players **Refresh catalog** in the manager.
+
+**Report**: pick a category; the manager opens a pre-filled mail (body also copied to clipboard) to **llxmod@foxmail.com**.
 
 ---
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -57,15 +57,15 @@ This manager is not involved in any for-profit projects, has no sponsorship entr
 1. This software is provided "as is". The author and related parties are not liable for any direct or indirect losses arising from use of this manager, or from obtaining, installing, enabling, or managing any third-party mods / plugins / related files through this manager, including but not limited to: account penalties or bans, save corruption, game or system anomalies, data loss or leaks, device damage, and other economic or non-economic losses.
 2. Third-party mods and community submissions are the responsibility of their providers and may be unstable, incompatible, violate rules, or contain malicious code. Judge carefully before downloading, installing, or using them; you assume the risk.
 3. Official game support for third-party modifications is typically not guaranteed; modifying the client may violate the user agreement, terms of service, or competition rules, and consequences are borne by the user.
-4. Local checks and GitHub reporting features provided by this manager are for assistance only and do not constitute any guarantee, promise, or endorsement of the safety, integrity, legality, or availability of any file.
-5. If you find suspicious or inappropriate content, please use the in-app report feature. Maintainers may refuse to list, delist, or delete content, and are not obligated to perform a full security or legal review of every file.
+4. Local checks and email reporting in this manager are for assistance only and do not constitute any guarantee, promise, or endorsement of the safety, integrity, legality, or availability of any file.
+5. If you find suspicious or inappropriate content, please use the in-app report feature (email llxmod@foxmail.com). Maintainers may refuse to list, delist, or delete content, and are not obligated to perform a full security or legal review of every file.
 6. Continued use of this manager means you have read and agree to this statement. If you do not agree, stop using and uninstall this software immediately.</value>
   </data>
   <data name="Report" xml:space="preserve">
     <value>Report</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>This opens the GitHub report page. Sign in and click Submit to finish. False reports may affect review. Continue?</value>
+    <value>This opens your email client to send a report to llxmod@foxmail.com (body copied to clipboard as backup). False reports may affect review. Continue?</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>Cheat</value>
@@ -83,49 +83,46 @@ This manager is not involved in any for-profit projects, has no sponsorship entr
     <value>Please describe (required)</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>Opened the GitHub report page and copied the Issue URL to the clipboard. Sign in and click Submit to finish.</value>
+    <value>Opened your email client; report body copied to clipboard. Send to llxmod@foxmail.com. If no mail app opens, paste the body into a new message yourself.</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>Could not open the report page</value>
+    <value>Could not open the email client</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>Submit Mod</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>This opens the beginner GitHub guide: Fork → upload DLL → edit catalog.json → Pull Request. Continue?</value>
+    <value>Open your email client to submit to llxmod@foxmail.com?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Opened the beginner guide. Follow the README step by step in your browser (no Git install needed).</value>
+    <value>Email client opened. Fill the template, attach .dll (optional preview.png), and send to llxmod@foxmail.com.</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>Could not open the contribute page</value>
+    <value>Could not open the email client</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>Submit steps (beginners)</value>
+    <value>Submit / 投稿</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>Submissions still use GitHub Fork + Pull Request. You can do everything in the browser—no Git install. Sign in to GitHub, then:</value>
+    <value>Inbox / 投稿邮箱</value>
   </data>
-  <data name="SubmitGuideStep1" xml:space="preserve">
-    <value>1. Open the repo and click Fork (top-right) to copy llxlzx/MechabellumMods to your account.</value>
-  </data>
-  <data name="SubmitGuideStep2" xml:space="preserve">
-    <value>2. In your fork go to mods → Add file → Upload files. Upload to mods/your-id/xxx.dll (id = lowercase letters/digits/hyphens only; the id folder is required).</value>
-  </data>
-  <data name="SubmitGuideStep3" xml:space="preserve">
-    <value>3. Edit root catalog.json: add an entry in the mods array; id/file must match the path; update top-level updatedAt.</value>
-  </data>
-  <data name="SubmitGuideStep4" xml:space="preserve">
-    <value>4. On your fork click Contribute / Open pull request, write a short description, then Create pull request.</value>
-  </data>
-  <data name="SubmitGuideStep5" xml:space="preserve">
-    <value>5. Wait for maintainer merge. Players then use Refresh catalog in the manager.</value>
+  <data name="SubmitGuideBody" xml:space="preserve">
+    <value>Subject must start with one of these prefixes (copy-paste):
+• [Mod投稿/Submit] new mod
+• [Mod更新/Update] update existing
+• [Mod举报/Report] report
+• [管理器建议/Feedback] feedback
+One email = one request. Maintainers review and upload to the catalog — no Fork/PR required.
+(Advanced users may still open a PR.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>After GitHub opens, read README section “新手投稿教程（网页操作，无需安装 Git)” / beginner web guide for full steps and a JSON example.</value>
+    <value>For Submit/Update: attach .dll (optional preview.png). If attachments are huge (~&gt;40MB), put a netdisk link in the body. Do not send source unless asked.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>Open guide</value>
+    <value>Open full guide / 打开完整教程</value>
+  </data>
+  <data name="SubmitGuideOpenEmail" xml:space="preserve">
+    <value>Open submit email / 打开发送投稿邮件</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Confirm</value>
