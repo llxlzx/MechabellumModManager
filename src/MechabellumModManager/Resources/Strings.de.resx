@@ -96,6 +96,21 @@
   <data name="SubmitModFailed" xml:space="preserve">
     <value>E-Mail-Programm konnte nicht geöffnet werden</value>
   </data>
+  <data name="SubmitMailOpenedDomestic" xml:space="preserve">
+    <value>Betreff &amp; Text kopiert; QQ-Mail-Web geöffnet — neue Nachricht erstellen, einfügen, anhängen und an llxmod@foxmail.com senden.</value>
+  </data>
+  <data name="SubmitMailOpenedInternational" xml:space="preserve">
+    <value>Betreff &amp; Text kopiert; Gmail-Verfassen geöffnet — .dll anhängen (optional preview.png) und an llxmod@foxmail.com senden.</value>
+  </data>
+  <data name="ReportMailOpenedDomestic" xml:space="preserve">
+    <value>Betreff &amp; Text kopiert; QQ-Mail-Web geöffnet — neue Nachricht erstellen, einfügen und Melde an llxmod@foxmail.com senden.</value>
+  </data>
+  <data name="ReportMailOpenedInternational" xml:space="preserve">
+    <value>Betreff &amp; Text kopiert; Gmail-Verfassen geöffnet — Melde prüfen und an llxmod@foxmail.com senden.</value>
+  </data>
+  <data name="MailOpenFailed" xml:space="preserve">
+    <value>Webmail konnte nicht geöffnet werden; Betreff &amp; Text sind kopiert. Bitte manuell an llxmod@foxmail.com senden und einfügen.</value>
+  </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
     <value>Einreichen / Submit</value>
   </data>
@@ -112,7 +127,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
 (Fortgeschrittene dürfen weiterhin PRs öffnen.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>Bei Submit/Update: .dll anhängen (optional preview.png). Bei sehr großen Anhängen (~&gt;40MB) Netdisk-Link in den Text. Quellcode nur auf Anfrage senden.</value>
+    <value>Danach kopiert der Manager die Vorlage und öffnet QQ-Mail-Web (chinesische UI) oder Gmail-Verfassen (andere Sprachen). Einfügen, .dll anhängen (optional preview.png) und senden. Bei sehr großen Anhängen (~&gt;40MB) Netdisk-Link in den Text. Quellcode nur auf Anfrage senden.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>Vollständige Anleitung / Open full guide</value>
