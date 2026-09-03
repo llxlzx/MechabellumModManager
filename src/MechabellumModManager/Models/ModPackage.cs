@@ -15,6 +15,10 @@ public sealed class ModPackage
     public ModPackageType Type { get; set; }
     public bool HighRisk { get; set; }
     public string? RequiredMelonLoaderVersion { get; set; }
+    public string? Summary { get; set; }
+    public string? CatalogUpdatedAt { get; set; }
+    /// <summary>Relative path in MechabellumMods repo, e.g. mods/show-grid/preview.png.</summary>
+    public string? Preview { get; set; }
     public List<DeployableFile> Files { get; set; } = new();
     public string PackageDirectory { get; set; } = ""; // absolute under library
 }

@@ -180,6 +180,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _catalogExpanded;
     [ObservableProperty] private string _catalogStatus = "";
     [ObservableProperty] private CatalogModItemViewModel? _selectedCatalogMod;
+    [ObservableProperty] private ModItemViewModel? _selectedLibraryMod;
     [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
     [ObservableProperty] private string _updateStatus = "";
 
@@ -579,13 +580,19 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var mod in root.Mods)
             {
                 var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
-                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
+                var item = new CatalogModItemViewModel(mod, inLib);
+                item.LoadPreviewImage();
+                CatalogMods.Add(item);
             }
 
             SelectedCatalogMod = CatalogMods.FirstOrDefault(m =>
                 previousId is not null &&
                 string.Equals(m.Id, previousId, StringComparison.OrdinalIgnoreCase))
                 ?? CatalogMods.FirstOrDefault();
+
+            EnrichModsFromCatalog();
+            if (SelectedLibraryMod is not null)
+                UpdateLibraryModDetail();
 
             var updated = string.IsNullOrWhiteSpace(root.UpdatedAt) ? "未知" : root.UpdatedAt;
             CatalogStatus = $"已加载 {CatalogMods.Count} 个条目（目录更新：{updated}）";
@@ -656,6 +663,21 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 var forceType = ModCatalogService.ParsePackageType(item.Type);
                 var pkg = _library.ImportDll(tempPath, forceType);
+                try
+                {
+                    pkg = _library.UpdatePackageMetadata(
+                        pkg.Id,
+                        author: item.Author,
+                        version: item.Version,
+                        summary: item.Summary,
+                        catalogUpdatedAt: item.UpdatedAt,
+                        preview: item.Mod.Preview);
+                }
+                catch (Exception metaEx)
+                {
+                    AppendLog($"写入目录元数据失败：{metaEx.Message}");
+                }
+
                 AppendLog($"已从目录加入本地库：{pkg.DisplayName} ({pkg.Id})（未启用）");
                 CatalogStatus = $"已加入本地库：{pkg.DisplayName}";
                 ReloadMods();
@@ -663,6 +685,9 @@ public sealed partial class MainViewModel : ObservableObject
                 UpdateLoaderVersionWarning();
                 UpdateFirstAssemblyWarning();
                 RecomputeDirty();
+                SelectedLibraryMod = Mods.FirstOrDefault(m =>
+                    string.Equals(m.Package.Id, pkg.Id, StringComparison.OrdinalIgnoreCase));
+                UpdateLibraryModDetail();
             }
             finally
             {
@@ -694,6 +719,95 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnSelectedCatalogModChanged(CatalogModItemViewModel? value) =>
         AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedLibraryModChanged(ModItemViewModel? value) =>
+        UpdateLibraryModDetail();
+
+    void UpdateLibraryModDetail()
+    {
+        var item = SelectedLibraryMod;
+        if (item is null || item.IsMissing)
+            return;
+
+        var catalog = FindCatalogMatch(item);
+        if (catalog is null && CatalogMods.Count == 0)
+        {
+            // Soft refresh once so local library detail can resolve previews without opening the panel.
+            _ = SoftRefreshCatalogForLibraryDetailAsync();
+            catalog = FindCatalogMatch(item);
+        }
+
+        if (catalog is not null)
+            item.ApplyCatalogEnrichment(catalog.Mod);
+
+        var previewUrl = catalog?.PreviewUrl
+            ?? (string.IsNullOrWhiteSpace(item.Package.Preview)
+                ? null
+                : ModCatalogService.GetRawUrl(item.Package.Preview));
+        item.LoadPreviewImage(previewUrl);
+    }
+
+    async Task SoftRefreshCatalogForLibraryDetailAsync()
+    {
+        if (_checkingCatalog || CatalogMods.Count > 0) return;
+        _checkingCatalog = true;
+        try
+        {
+            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            var packages = _library.List();
+            CatalogMods.Clear();
+            foreach (var mod in root.Mods)
+            {
+                var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
+                var vm = new CatalogModItemViewModel(mod, inLib);
+                vm.LoadPreviewImage();
+                CatalogMods.Add(vm);
+            }
+
+            EnrichModsFromCatalog();
+            if (SelectedLibraryMod is not null)
+                UpdateLibraryModDetail();
+        }
+        catch
+        {
+            // Soft refresh: leave existing library detail as-is on network failure.
+        }
+        finally
+        {
+            _checkingCatalog = false;
+        }
+    }
+
+    CatalogModItemViewModel? FindCatalogMatch(ModItemViewModel item)
+    {
+        foreach (var catalog in CatalogMods)
+        {
+            var catalogFile = Path.GetFileName((catalog.File ?? "").Replace('\\', '/'));
+            if (string.IsNullOrWhiteSpace(catalogFile))
+                continue;
+
+            foreach (var file in item.Package.Files)
+            {
+                var localName = Path.GetFileName((file.RelativePathInPackage ?? "").Replace('\\', '/'));
+                if (string.Equals(localName, catalogFile, StringComparison.OrdinalIgnoreCase))
+                    return catalog;
+            }
+        }
+
+        return null;
+    }
+
+    void EnrichModsFromCatalog()
+    {
+        if (CatalogMods.Count == 0) return;
+        foreach (var mod in Mods)
+        {
+            if (mod.IsMissing) continue;
+            var match = FindCatalogMatch(mod);
+            if (match is null) continue;
+            mod.ApplyCatalogEnrichment(match.Mod);
+        }
+    }
 
     void RefreshCatalogInLibraryFlags()
     {
@@ -949,14 +1063,21 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var libraryIds = new HashSet<string>(library.Select(p => p.Id), StringComparer.OrdinalIgnoreCase);
+        var previousId = SelectedLibraryMod?.Package.Id;
 
         Mods.Clear();
         foreach (var pkg in library.OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase))
             Mods.Add(new ModItemViewModel(this, pkg, enabled.Contains(pkg.Id)));
 
+        EnrichModsFromCatalog();
+
         var missing = enabled.Where(id => !libraryIds.Contains(id)).OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToList();
         foreach (var id in missing)
             Mods.Add(ModItemViewModel.CreateMissing(this, id));
+
+        SelectedLibraryMod = Mods.FirstOrDefault(m =>
+            previousId is not null &&
+            string.Equals(m.Package.Id, previousId, StringComparison.OrdinalIgnoreCase));
 
         if (missing.Count > 0)
         {
@@ -1121,6 +1242,9 @@ public sealed partial class MainViewModel : ObservableObject
             },
             highRisk = pkg.HighRisk,
             requiredMelonLoaderVersion = pkg.RequiredMelonLoaderVersion,
+            summary = pkg.Summary,
+            catalogUpdatedAt = pkg.CatalogUpdatedAt,
+            preview = pkg.Preview,
             files = pkg.Files
         };
         var json = JsonSerializer.Serialize(meta, PackageJsonOptions);

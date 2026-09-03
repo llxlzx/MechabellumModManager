@@ -38,6 +38,9 @@ public sealed class CatalogMod
     [JsonPropertyName("file")]
     public string File { get; set; } = "";
 
+    [JsonPropertyName("preview")]
+    public string? Preview { get; set; }
+
     [JsonPropertyName("type")]
     public string? Type { get; set; }
 }
@@ -74,11 +77,23 @@ public sealed class ModCatalogService
         return client;
     }
 
+    public static string GetRawUrl(string relativePath)
+    {
+        var relative = (relativePath ?? "").Replace('\\', '/').TrimStart('/');
+        return $"https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/{relative}";
+    }
+
     public Uri BuildFileUrl(CatalogMod mod)
     {
         ArgumentNullException.ThrowIfNull(mod);
-        var relative = (mod.File ?? "").Replace('\\', '/').TrimStart('/');
-        return new Uri($"https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/{relative}");
+        return new Uri(GetRawUrl(mod.File ?? ""));
+    }
+
+    public static string? PreviewUrl(CatalogMod? mod)
+    {
+        if (mod is null || string.IsNullOrWhiteSpace(mod.Preview))
+            return null;
+        return GetRawUrl(mod.Preview);
     }
 
     public async Task<CatalogRoot> FetchCatalogAsync(CancellationToken ct = default)
