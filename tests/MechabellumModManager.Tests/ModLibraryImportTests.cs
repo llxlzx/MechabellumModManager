@@ -303,6 +303,96 @@ public class ModLibraryImportTests
         }
     }
 
+    [Fact]
+    public void ImportFolder_melon_entry_plus_stub_dll_attaches_leftover_to_entry_package()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var folder = Path.Combine(Path.GetTempPath(), "mmm-folder-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(folder, "Mods"));
+            File.Copy(SampleDll, Path.Combine(folder, "Mods", "a.dll"));
+            File.WriteAllBytes(Path.Combine(folder, "Mods", "dep.dll"), new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
+            File.WriteAllText(Path.Combine(folder, "Mods", "notes.txt"), "sidecar");
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var pkgs = lib.ImportFolder(folder);
+            pkgs.Should().ContainSingle();
+            var pkg = pkgs[0];
+            pkg.Type.Should().Be(ModPackageType.MelonMod);
+            pkg.Files.Should().Contain(f => f.RelativePathInPackage.Equals("a.dll", StringComparison.OrdinalIgnoreCase));
+            pkg.Files.Should().Contain(f => f.RelativePathInPackage.Equals("dep.dll", StringComparison.OrdinalIgnoreCase));
+            pkg.Files.Should().Contain(f => f.RelativePathInPackage.Equals("notes.txt", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (Directory.Exists(folder)) Directory.Delete(folder, true);
+        }
+    }
+
+    [Fact]
+    public void ImportFromGame_imports_mods_folder_dll()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(Path.GetTempPath(), "mmm-game-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            Directory.CreateDirectory(game);
+            File.WriteAllBytes(Path.Combine(game, "Mechabellum.exe"), new byte[] { 0x4D, 0x5A });
+            File.WriteAllBytes(Path.Combine(game, "GameAssembly.dll"), new byte[] { 0x4D, 0x5A });
+            Directory.CreateDirectory(Path.Combine(game, "Mods"));
+            File.Copy(SampleDll, Path.Combine(game, "Mods", "QuickCamera.dll"));
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var result = lib.ImportFromGame(game);
+            result.Imported.Should().Be(1);
+            result.Skipped.Should().Be(0);
+            lib.List().Should().ContainSingle();
+            lib.List()[0].Type.Should().Be(ModPackageType.MelonMod);
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (Directory.Exists(game)) Directory.Delete(game, true);
+        }
+    }
+
+    [Fact]
+    public void ImportFromGame_skips_already_imported_hash()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(Path.GetTempPath(), "mmm-game-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            Directory.CreateDirectory(game);
+            File.WriteAllBytes(Path.Combine(game, "Mechabellum.exe"), new byte[] { 0x4D, 0x5A });
+            File.WriteAllBytes(Path.Combine(game, "GameAssembly.dll"), new byte[] { 0x4D, 0x5A });
+            Directory.CreateDirectory(Path.Combine(game, "Mods"));
+            File.Copy(SampleDll, Path.Combine(game, "Mods", "QuickCamera.dll"));
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var first = lib.ImportFromGame(game);
+            first.Imported.Should().Be(1);
+
+            var second = lib.ImportFromGame(game);
+            second.Imported.Should().Be(0);
+            second.Skipped.Should().BeGreaterThanOrEqualTo(1);
+            lib.List().Should().ContainSingle();
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (Directory.Exists(game)) Directory.Delete(game, true);
+        }
+    }
+
     static void CreateZip(string zipPath, params (string Entry, byte[] Bytes)[] entries)
     {
         if (File.Exists(zipPath)) File.Delete(zipPath);

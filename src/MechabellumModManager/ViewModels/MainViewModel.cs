@@ -39,6 +39,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string?>? _openFolder;
     bool _loggedMelonOptimize;
     bool _checkingUpdates;
+    bool _autoImportedFromGame;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -117,6 +118,7 @@ public sealed partial class MainViewModel : ObservableObject
         RecomputeDirty();
         UpdateLoaderVersionWarning();
         UpdateFirstAssemblyWarning();
+        TryAutoImportFromGame();
 
         if (string.IsNullOrWhiteSpace(_gamePath))
             AppendLog("未自动找到游戏目录。请在「设置」中浏览选择 Mechabellum 安装路径。");
@@ -235,6 +237,63 @@ public sealed partial class MainViewModel : ObservableObject
         UpdateFirstAssemblyWarning();
         AppendLog(GameStatus.Message);
         TryOptimizeMelonLoader(logAlways: false);
+        TryAutoImportFromGame();
+    }
+
+    void TryAutoImportFromGame()
+    {
+        if (_autoImportedFromGame)
+            return;
+
+        if (GameStatus?.Kind is not (
+            GameStatusKind.Ready or
+            GameStatusKind.GameOkLoaderMissing or
+            GameStatusKind.LoaderPartial))
+            return;
+
+        if (string.IsNullOrWhiteSpace(GamePath) ||
+            !File.Exists(Path.Combine(GamePath, "Mechabellum.exe")))
+            return;
+
+        _autoImportedFromGame = true;
+        try
+        {
+            var result = _library.ImportFromGame(GamePath);
+            if (result.Imported <= 0)
+                return;
+
+            foreach (var msg in result.Messages)
+                AppendLog(msg);
+            AppendLog($"已从游戏自动导入 {result.Imported} 个包（跳过 {result.Skipped}）。");
+            ReloadMods();
+            UpdateLoaderVersionWarning();
+            UpdateFirstAssemblyWarning();
+            RecomputeDirty();
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"从游戏自动导入失败：{ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    void ImportFromGame()
+    {
+        try
+        {
+            var result = _library.ImportFromGame(GamePath);
+            foreach (var msg in result.Messages)
+                AppendLog(msg);
+            AppendLog($"从游戏导入完成：导入 {result.Imported}，跳过 {result.Skipped}。");
+            ReloadMods();
+            UpdateLoaderVersionWarning();
+            UpdateFirstAssemblyWarning();
+            RecomputeDirty();
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"从游戏导入失败：{ex.Message}");
+        }
     }
 
     void TryOptimizeMelonLoader(bool logAlways)

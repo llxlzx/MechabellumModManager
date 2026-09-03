@@ -223,6 +223,12 @@
                                 MinWidth="88"
                                 Margin="0,0,12,0"
                                 Style="{StaticResource GhostButtonStyle}" />
+                        <Button Content="从游戏导入"
+                                Command="{Binding ImportFromGameCommand}"
+                                DockPanel.Dock="Left"
+                                MinWidth="96"
+                                Margin="0,0,12,0"
+                                Style="{StaticResource GhostButtonStyle}" />
                         <TextBlock Text="{Binding UpdateStatus}"
                                    VerticalAlignment="Center"
                                    TextWrapping="Wrap"
