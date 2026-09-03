@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -57,15 +57,15 @@
 1. 本软件按「现状」提供。作者及关联方不对因使用本管理器，或因通过本管理器获取、安装、启用、管理任何第三方 Mod / 插件 / 相关文件而导致的任何直接或间接损失承担责任，包括但不限于：账号处罚或封禁、存档损坏、游戏或系统异常、数据丢失或泄露、设备损害及其他经济或非经济损失。
 2. 第三方 Mod 与社区投稿内容由提供者自行负责，可能存在不稳定、不兼容、违规或含有恶意代码等风险。下载、安装与使用前请自行判断，风险自负。
 3. 游戏官方通常未必支持第三方修改；修改客户端可能导致违反用户协议、服务条款或竞赛规则，相关后果由使用者自行承担。
-4. 本管理器提供的本地校验与 GitHub 举报等功能仅供辅助，不构成对任何文件之安全性、完整性、合法性或可用性的保证、承诺或背书。
-5. 如发现可疑或不当内容，请使用应用内举报功能。维护者有权拒绝上架、下架或删除相关内容，且无义务对每一份文件进行全面的安全或法律鉴定。
+4. 本管理器提供的本地校验与邮件举报等功能仅供辅助，不构成对任何文件之安全性、完整性、合法性或可用性的保证、承诺或背书。
+5. 如发现可疑或不当内容，请使用应用内举报功能（发邮件至 llxmod@foxmail.com）。维护者有权拒绝上架、下架或删除相关内容，且无义务对每一份文件进行全面的安全或法律鉴定。
 6. 继续使用本管理器，即视为您已阅读并同意本声明。如不同意，请立即停止使用并卸载本软件。</value>
   </data>
   <data name="Report" xml:space="preserve">
     <value>举报</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>将打开 GitHub 举报页，登录后点击 Submit 才会真正提交。虚假举报可能影响审核。是否继续？</value>
+    <value>将打开邮件客户端发送举报至 llxmod@foxmail.com（正文已复制到剪贴板作备份）。虚假举报可能影响审核。是否继续？</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>作弊</value>
@@ -83,49 +83,47 @@
     <value>请说明原因（必填）</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>已打开 GitHub 举报页，Issue 链接已复制到剪贴板。请登录后点击 Submit 完成举报。</value>
+    <value>已打开邮件客户端；举报正文已复制到剪贴板。请确认收件人为 llxmod@foxmail.com 后发送。若未弹出邮件程序，请手动发信并粘贴正文。</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>无法打开举报页</value>
+    <value>无法打开邮件客户端</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>投稿 Mod</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>将打开 GitHub 新手投稿教程。流程是：Fork → 上传 DLL → 改 catalog.json → 提 Pull Request。是否继续？</value>
+    <value>将打开发送投稿邮件（llxmod@foxmail.com），是否继续？</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>已打开新手投稿教程。请按 README 逐步操作；只需浏览器，无需安装 Git。</value>
+    <value>已打开邮件客户端。请填写模板、附加 .dll（可选 preview.png）后发送至 llxmod@foxmail.com。</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>无法打开投稿页</value>
+    <value>无法打开邮件客户端</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>投稿步骤（新手）</value>
+    <value>投稿 / Submit</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>投稿仍使用 GitHub Fork + Pull Request。推荐只用网页，不必安装 Git。请先注册并登录 GitHub，再按下面做：</value>
+    <value>投稿邮箱 / Inbox</value>
   </data>
-  <data name="SubmitGuideStep1" xml:space="preserve">
-    <value>1. 打开仓库后点右上角 Fork，把 llxlzx/MechabellumMods 复制到你的账号。</value>
-  </data>
-  <data name="SubmitGuideStep2" xml:space="preserve">
-    <value>2. 进入你的 Fork → mods → Add file → Upload files，上传到 mods/你的id/xxx.dll（id 只用小写英文、数字、短横线；必须多一层以 id 命名的文件夹）。</value>
-  </data>
-  <data name="SubmitGuideStep3" xml:space="preserve">
-    <value>3. 编辑根目录 catalog.json：在 mods 数组里新增一条，id/file 与文件夹路径一致，并更新顶部 updatedAt。</value>
-  </data>
-  <data name="SubmitGuideStep4" xml:space="preserve">
-    <value>4. 在你的 Fork 页点 Contribute / Open pull request，填写说明后 Create pull request。</value>
-  </data>
-  <data name="SubmitGuideStep5" xml:space="preserve">
-    <value>5. 等待维护者合并。合并后玩家在管理器「刷新目录」即可看到。</value>
+  <data name="SubmitGuideBody" xml:space="preserve">
+    <value>邮件主题须以以下前缀之一开头（复制即可）/ Subject must start with one of:
+• [Mod投稿/Submit] 新 Mod
+• [Mod更新/Update] 更新已有
+• [Mod举报/Report] 举报
+• [管理器建议/Feedback] 建议
+一封邮件只办一件事。维护者审核后上传到社区目录，作者无需 Fork/PR。
+（高级用户仍可自行提 PR。）</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>打开 GitHub 后请直接阅读 README「新手投稿教程（网页操作，无需安装 Git）」；里面有截图式逐步说明和 JSON 示例。</value>
+    <value>投稿/更新请附加 .dll（可选 preview.png）。附件过大（约 &gt;40MB）请在正文写网盘链接。不要主动发送源码。
+Attach .dll (optional preview.png). If attachments are huge, put a netdisk link in the body.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>打开投稿教程</value>
+    <value>打开完整教程 / Open full guide</value>
+  </data>
+  <data name="SubmitGuideOpenEmail" xml:space="preserve">
+    <value>打开发送投稿邮件 / Open submit email</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>确认</value>

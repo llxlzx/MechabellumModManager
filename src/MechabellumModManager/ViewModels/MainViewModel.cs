@@ -672,22 +672,31 @@ public sealed partial class MainViewModel : ObservableObject
                 return Task.CompletedTask;
             }
 
-            var url = GitHubCommunityLinks.BuildReportIssueUrl(
+            var body = GitHubCommunityLinks.BuildReportBody(
                 request.ModId,
                 request.ModName,
                 request.Source,
                 request.Category,
                 request.Notes,
                 request.AppVersion);
+            var url = GitHubCommunityLinks.BuildReportMailto(
+                request.ModId,
+                request.ModName,
+                request.Source,
+                request.Category,
+                request.Notes,
+                request.AppVersion);
+
+            TryCopyText(body);
+
             if (!TryOpenUrl(url))
             {
-                AppendLog($"{Ui.ReportFailed}：{url}");
+                AppendLog($"{Ui.ReportFailed}：{GitHubCommunityLinks.Inbox}");
                 _notify(Ui.ReportFailed);
                 return Task.CompletedTask;
             }
 
-            TryCopyText(url);
-            AppendLog($"{Ui.ReportSuccess}\n{url}");
+            AppendLog($"{Ui.ReportSuccess}\n{GitHubCommunityLinks.Inbox}");
             _notify(Ui.ReportSuccess);
         }
         catch (Exception ex)
@@ -716,10 +725,10 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        var url = GitHubCommunityLinks.ContributeGuideUrl;
+        var url = GitHubCommunityLinks.BuildSubmitMailto();
         if (!TryOpenUrl(url))
         {
-            AppendLog($"{Ui.SubmitModFailed}：{url}");
+            AppendLog($"{Ui.SubmitModFailed}：{GitHubCommunityLinks.Inbox}");
             _notify(Ui.SubmitModFailed);
             return;
         }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -57,15 +57,15 @@
 1. ПО предоставляется «как есть». Автор и связанные стороны не несут ответственности за любые прямые или косвенные убытки из-за использования менеджера либо получения, установки, включения или управления сторонними модами / плагинами / связанными файлами через него, включая (но не ограничиваясь): санкции или блокировку аккаунта, порчу сохранений, сбои игры или системы, потерю или утечку данных, повреждение устройств и иные экономические или неэкономические убытки.
 2. Сторонние моды и материалы сообщества — ответственность их поставщиков; возможны нестабильность, несовместимость, нарушения правил или вредоносный код. Перед загрузкой, установкой и использованием оценивайте риски самостоятельно.
 3. Официальная поддержка сторонних модификаций обычно не гарантируется; изменение клиента может нарушать пользовательское соглашение, условия сервиса или правила соревнований — последствия несёт пользователь.
-4. Локальные проверки и жалобы через GitHub в менеджере — лишь вспомогательные функции и не являются гарантией, обещанием или одобрением безопасности, целостности, законности или пригодности любого файла.
-5. При подозрительном или недопустимом контенте используйте функцию жалобы в приложении. Сопровождающие вправе отказать в публикации, снять или удалить материалы и не обязаны проводить полную проверку безопасности или юридическую экспертизу каждого файла.
+4. Локальные проверки и жалобы по электронной почте в менеджере — лишь вспомогательные функции и не являются гарантией, обещанием или одобрением безопасности, целостности, законности или пригодности любого файла.
+5. При подозрительном или недопустимом контенте используйте функцию жалобы в приложении (письмо на llxmod@foxmail.com). Сопровождающие вправе отказать в публикации, снять или удалить материалы и не обязаны проводить полную проверку безопасности или юридическую экспертизу каждого файла.
 6. Продолжая пользоваться менеджером, вы подтверждаете, что прочитали и согласны с этим заявлением. Если не согласны — немедленно прекратите использование и удалите ПО.</value>
   </data>
   <data name="Report" xml:space="preserve">
     <value>Пожаловаться</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>Откроется страница жалобы на GitHub. Войдите и нажмите Submit. Ложные жалобы вредят проверке. Продолжить?</value>
+    <value>Откроется почтовый клиент для письма на llxmod@foxmail.com (текст также скопирован). Ложные жалобы вредят проверке. Продолжить?</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>Читы</value>
@@ -83,49 +83,46 @@
     <value>Опишите причину (обязательно)</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>Открыта страница жалобы GitHub; ссылка Issue скопирована. Войдите и нажмите Submit.</value>
+    <value>Почтовый клиент открыт; текст жалобы скопирован. Отправьте на llxmod@foxmail.com. Если клиент не открылся — вставьте текст вручную.</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>Не удалось открыть страницу жалобы</value>
+    <value>Не удалось открыть почтовый клиент</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>Отправить мод</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>Откроется руководство для новичков на GitHub: Fork → загрузка DLL → правка catalog.json → Pull Request. Продолжить?</value>
+    <value>Открыть письмо для публикации на llxmod@foxmail.com?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Руководство для новичков открыто. Следуйте README по шагам в браузере (Git устанавливать не нужно).</value>
+    <value>Почтовый клиент открыт. Заполните шаблон, приложите .dll (опционально preview.png) и отправьте на llxmod@foxmail.com.</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>Не удалось открыть страницу публикации</value>
+    <value>Не удалось открыть почтовый клиент</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>Шаги отправки (для новичков)</value>
+    <value>Публикация / Submit</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>Отправка по-прежнему через GitHub Fork + Pull Request. Всё можно сделать в браузере — Git устанавливать не нужно. Войдите в GitHub, затем:</value>
+    <value>Почта / Inbox</value>
   </data>
-  <data name="SubmitGuideStep1" xml:space="preserve">
-    <value>1. Откройте репозиторий и нажмите Fork (справа вверху), чтобы скопировать llxlzx/MechabellumMods в свой аккаунт.</value>
-  </data>
-  <data name="SubmitGuideStep2" xml:space="preserve">
-    <value>2. В своём форке: mods → Add file → Upload files. Загрузите в mods/ваш-id/xxx.dll (id — только строчные буквы/цифры/дефисы; папка с id обязательна).</value>
-  </data>
-  <data name="SubmitGuideStep3" xml:space="preserve">
-    <value>3. Отредактируйте корневой catalog.json: добавьте запись в массив mods; id/file должны совпадать с путём; обновите верхний updatedAt.</value>
-  </data>
-  <data name="SubmitGuideStep4" xml:space="preserve">
-    <value>4. На странице форка нажмите Contribute / Open pull request, кратко опишите изменения и нажмите Create pull request.</value>
-  </data>
-  <data name="SubmitGuideStep5" xml:space="preserve">
-    <value>5. Дождитесь слияния сопровождающим. После этого игроки обновят каталог в менеджере («Обновить каталог»).</value>
+  <data name="SubmitGuideBody" xml:space="preserve">
+    <value>Тема письма должна начинаться с одного из префиксов:
+• [Mod投稿/Submit] новый мод
+• [Mod更新/Update] обновление
+• [Mod举报/Report] жалоба
+• [管理器建议/Feedback] предложение
+Одно письмо = один запрос. Сопровождающие проверяют и загружают в каталог — Fork/PR не нужны.
+(Продвинутые пользователи по-прежнему могут открыть PR.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>Открыв GitHub, прочитайте раздел README «新手投稿教程（网页操作，无需安装 Git)» / руководство для новичков в браузере — там пошаговые инструкции и пример JSON.</value>
+    <value>Для Submit/Update: приложите .dll (опционально preview.png). Если вложения очень большие (~&gt;40MB), укажите ссылку на облако. Исходники — только по запросу.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>Открыть руководство</value>
+    <value>Полная инструкция / Open full guide</value>
+  </data>
+  <data name="SubmitGuideOpenEmail" xml:space="preserve">
+    <value>Открыть письмо / Open submit email</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Подтвердить</value>

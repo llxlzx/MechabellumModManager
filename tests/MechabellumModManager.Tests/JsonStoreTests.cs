@@ -15,7 +15,7 @@ public class JsonStoreTests
             var store = new JsonStore();
             var cfg = new AppConfig
             {
-                GamePath = @"D:\steam\steamapps\common\Mechabellum",
+                GamePath = @"C:\Program Files (x86)\Steam\steamapps\common\Mechabellum",
                 LaunchMode = LaunchMode.SteamThenExe,
                 ActiveProfileId = "default",
                 DataRoot = dir

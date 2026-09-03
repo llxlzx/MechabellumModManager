@@ -1,9 +1,8 @@
 <Window x:Class="MechabellumModManager.Dialogs.SubmitGuideDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="投稿步骤"
+        Title="投稿 / Submit"
         Width="560"
-        MaxHeight="560"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
@@ -13,43 +12,26 @@
     <Border Padding="20"
             BorderBrush="{StaticResource SteelEdgeBrush}"
             BorderThickness="1">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          MaxHeight="420"
-                          Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock x:Name="IntroText"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,12"
-                               Foreground="{StaticResource TextMutedBrush}" />
-                    <TextBlock x:Name="Step1Text"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,10" />
-                    <TextBlock x:Name="Step2Text"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,10" />
-                    <TextBlock x:Name="Step3Text"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,10" />
-                    <TextBlock x:Name="Step4Text"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,10" />
-                    <TextBlock x:Name="Step5Text"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,12" />
-                    <TextBlock x:Name="TipText"
-                               TextWrapping="Wrap"
-                               Foreground="{StaticResource AccentAmberBrush}" />
-                </StackPanel>
-            </ScrollViewer>
-
-            <StackPanel Grid.Row="1"
-                        Orientation="Horizontal"
+        <StackPanel>
+            <TextBlock x:Name="IntroLabel"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,4"
+                       Foreground="{StaticResource TextMutedBrush}" />
+            <TextBlock Margin="0,0,0,14"
+                       TextWrapping="Wrap">
+                <Hyperlink x:Name="InboxLink"
+                           RequestNavigate="InboxLink_RequestNavigate">
+                    <Run x:Name="InboxLinkText" />
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock x:Name="BodyText"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,14" />
+            <TextBlock x:Name="TipText"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,16"
+                       Foreground="{StaticResource AccentAmberBrush}" />
+            <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right">
                 <Button x:Name="CancelButton"
                         Width="88"
@@ -57,14 +39,20 @@
                         Margin="0,0,8,0"
                         IsCancel="True"
                         Click="Cancel_Click" />
-                <Button x:Name="OkButton"
+                <Button x:Name="GuideButton"
                         MinWidth="140"
+                        Height="30"
+                        Margin="0,0,8,0"
+                        Padding="12,0"
+                        Click="Guide_Click" />
+                <Button x:Name="OkButton"
+                        MinWidth="160"
                         Height="30"
                         Padding="12,0"
                         IsDefault="True"
                         Style="{StaticResource AccentButtonStyle}"
                         Click="Ok_Click" />
             </StackPanel>
-        </Grid>
+        </StackPanel>
     </Border>
 </Window>

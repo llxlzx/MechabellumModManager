@@ -7,10 +7,9 @@ using MechabellumModManager.Services;
 
 public class ModLibraryImportTests
 {
-    static readonly string SampleDll =
-        @"D:\gongzuo\钢铁指挥官mod管理器开发\_samples\QuickCamera\QuickCamera.dll";
+    static string SampleDll => SampleModPaths.RequireQuickCameraDll();
 
-    [Fact]
+    [SkippableFact]
     public void Import_QuickCamera_dll_creates_melon_mod_package_flat_files()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
@@ -38,7 +37,7 @@ public class ModLibraryImportTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void Import_zip_with_Mods_prefix_strips_prefix()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
@@ -67,7 +66,7 @@ public class ModLibraryImportTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void Import_mixed_zip_splits_into_mod_and_userlibs()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
@@ -176,7 +175,7 @@ public class ModLibraryImportTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void Delete_removes_package_id_from_profile_EnabledPackageIds()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
@@ -277,7 +276,7 @@ public class ModLibraryImportTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void ImportFolder_with_Mods_prefix_strips_prefix()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
@@ -303,7 +302,7 @@ public class ModLibraryImportTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void ImportFolder_melon_entry_plus_stub_dll_attaches_leftover_to_entry_package()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
@@ -333,7 +332,7 @@ public class ModLibraryImportTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void ImportFromGame_imports_mods_folder_dll()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
@@ -362,7 +361,7 @@ public class ModLibraryImportTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void ImportFromGame_skips_already_imported_hash()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));

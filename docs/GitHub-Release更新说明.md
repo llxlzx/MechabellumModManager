@@ -13,6 +13,18 @@ Mechabellum Mod Manager — GitHub Release guide
 面向维护者：如何打新版本安装包，并发布到 GitHub Releases。  
 For maintainers: how to build the Setup and publish a GitHub Release.
 
+## 版本速记 / Release notes
+
+### v1.0.5
+
+- 投稿 / 更新 / 举报 / 建议改为邮件 **llxmod@foxmail.com**（标准主题前缀 + 正文模板；mailto）。
+- 作者无需 Fork/PR；维护者审核后上传 MechabellumMods。
+- Mod 库 Author 列（若上一版已含则延续）。
+
+### v1.0.4
+
+- Mod 库新增 Author（作者）列显示。
+
 更完整的技术细节见同目录 `releasing.md`。  
 More technical detail: `releasing.md` in this folder.
 
@@ -66,15 +78,15 @@ release/v1.0.4/
 
 ## 3. 发管理器新版本：标准步骤 (中文)
 
-以发布 **v1.0.4** 为例（以后把版本号换成新的即可）。
+以发布 **v1.0.5** 为例（以后把版本号换成新的即可）。
 
 ### 步骤 1 — 改版本号
 
 同时改这三处，数字必须一致：
 
-1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.0.4</Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.0.4"`
-3. 稍后的 `latest.json` → `"version": "1.0.4"`
+1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.0.5</Version>`
+2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.0.5"`
+3. 稍后的 `latest.json` → `"version": "1.0.5"`
 
 ### 步骤 2 — 准备 MelonLoader 离线包（必做）
 

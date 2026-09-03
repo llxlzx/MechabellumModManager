@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -57,15 +57,15 @@ Dieser Manager ist kein kommerzielles Projekt: kein Sponsoring-Einstieg und kein
 1. Diese Software wird „wie besehen“ bereitgestellt. Autor und verbundene Parteien haften nicht für direkte oder indirekte Schäden durch Nutzung dieses Managers oder durch Abruf, Installation, Aktivierung oder Verwaltung von Drittanbieter-Mods / Plugins / zugehörigen Dateien darüber, einschließlich (aber nicht beschränkt auf): Kontosanktionen oder Sperren, Speicherbeschädigung, Spiel- oder Systemstörungen, Datenverlust oder -leck, Geräteschäden sowie sonstige wirtschaftliche oder nichtwirtschaftliche Verluste.
 2. Drittanbieter-Mods und Community-Einreichungen liegen in der Verantwortung der Anbieter und können instabil, inkompatibel, regelwidrig oder schädlichen Code enthalten. Beurteilen Sie vor Download, Installation und Nutzung selbst; Sie tragen das Risiko.
 3. Offizielle Spieleunterstützung für Drittänderungen ist in der Regel nicht gegeben; Client-Änderungen können Nutzungsbedingungen, Servicebedingungen oder Wettbewerbsregeln verletzen — Folgen trägt der Nutzer.
-4. Lokale Prüfungen und GitHub-Meldefunktionen dienen nur der Unterstützung und stellen keine Garantie, Zusage oder Empfehlung zur Sicherheit, Integrität, Rechtmäßigkeit oder Nutzbarkeit einer Datei dar.
-5. Bei verdächtigen oder unzulässigen Inhalten nutzen Sie bitte die Meldefunktion in der App. Betreuer dürfen Inhalte ablehnen, entfernen oder löschen und sind nicht verpflichtet, jede Datei umfassend sicherheits- oder rechtlich zu prüfen.
+4. Lokale Prüfungen und E-Mail-Meldungen dienen nur der Unterstützung und stellen keine Garantie, Zusage oder Empfehlung zur Sicherheit, Integrität, Rechtmäßigkeit oder Nutzbarkeit einer Datei dar.
+5. Bei verdächtigen oder unzulässigen Inhalten nutzen Sie bitte die Meldefunktion in der App (E-Mail an llxmod@foxmail.com). Betreuer dürfen Inhalte ablehnen, entfernen oder löschen und sind nicht verpflichtet, jede Datei umfassend sicherheits- oder rechtlich zu prüfen.
 6. Die fortgesetzte Nutzung dieses Managers gilt als Lesen und Zustimmung zu dieser Erklärung. Bei Ablehnung beenden Sie die Nutzung sofort und deinstallieren Sie die Software.</value>
   </data>
   <data name="Report" xml:space="preserve">
     <value>Melden</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>Öffnet die GitHub-Meldeseite. Nach dem Anmelden Submit klicken. Falsche Meldungen schaden der Prüfung. Fortfahren?</value>
+    <value>Öffnet Ihr E-Mail-Programm an llxmod@foxmail.com (Text auch in die Zwischenablage). Falsche Meldungen schaden der Prüfung. Fortfahren?</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>Cheat</value>
@@ -83,49 +83,46 @@ Dieser Manager ist kein kommerzielles Projekt: kein Sponsoring-Einstieg und kein
     <value>Bitte Grund angeben (Pflicht)</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>GitHub-Meldeseite geöffnet; Issue-URL in die Zwischenablage kopiert. Anmelden und Submit klicken.</value>
+    <value>E-Mail-Programm geöffnet; Meldetext in die Zwischenablage kopiert. An llxmod@foxmail.com senden. Falls kein Mail-Client startet, Text manuell einfügen.</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>Meldeseite konnte nicht geöffnet werden</value>
+    <value>E-Mail-Programm konnte nicht geöffnet werden</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>Mod einreichen</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>Öffnet die GitHub-Anfängeranleitung: Fork → DLL hochladen → catalog.json bearbeiten → Pull Request. Fortfahren?</value>
+    <value>E-Mail zum Einreichen an llxmod@foxmail.com öffnen?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Anfängeranleitung geöffnet. Folgen Sie der README Schritt für Schritt im Browser (kein Git nötig).</value>
+    <value>E-Mail-Programm geöffnet. Vorlage ausfüllen, .dll anhängen (optional preview.png) und an llxmod@foxmail.com senden.</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>Beitragsseite konnte nicht geöffnet werden</value>
+    <value>E-Mail-Programm konnte nicht geöffnet werden</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>Einreichschritte (Anfänger)</value>
+    <value>Einreichen / Submit</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>Einreichungen nutzen weiterhin GitHub Fork + Pull Request. Alles geht im Browser — kein Git nötig. Bei GitHub anmelden, dann:</value>
+    <value>Postfach / Inbox</value>
   </data>
-  <data name="SubmitGuideStep1" xml:space="preserve">
-    <value>1. Repo öffnen und oben rechts auf Fork klicken, um llxlzx/MechabellumMods in Ihr Konto zu kopieren.</value>
-  </data>
-  <data name="SubmitGuideStep2" xml:space="preserve">
-    <value>2. In Ihrem Fork: mods → Add file → Upload files. Hochladen nach mods/ihre-id/xxx.dll (id = nur Kleinbuchstaben/Ziffern/Bindestriche; der id-Ordner ist Pflicht).</value>
-  </data>
-  <data name="SubmitGuideStep3" xml:space="preserve">
-    <value>3. Root-catalog.json bearbeiten: Eintrag im mods-Array hinzufügen; id/file müssen dem Pfad entsprechen; updatedAt oben aktualisieren.</value>
-  </data>
-  <data name="SubmitGuideStep4" xml:space="preserve">
-    <value>4. Auf Ihrer Fork-Seite Contribute / Open pull request klicken, kurze Beschreibung schreiben, dann Create pull request.</value>
-  </data>
-  <data name="SubmitGuideStep5" xml:space="preserve">
-    <value>5. Auf Merge durch den Betreuer warten. Spieler nutzen danach „Katalog aktualisieren“ im Manager.</value>
+  <data name="SubmitGuideBody" xml:space="preserve">
+    <value>Betreff muss mit einem dieser Präfixe beginnen:
+• [Mod投稿/Submit] neu
+• [Mod更新/Update] Update
+• [Mod举报/Report] melden
+• [管理器建议/Feedback] Feedback
+Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein Fork/PR nötig.
+(Fortgeschrittene dürfen weiterhin PRs öffnen.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>Nach dem Öffnen von GitHub die README-Sektion „新手投稿教程（网页操作，无需安装 Git)” / Anfänger-Webanleitung mit Schritten und JSON-Beispiel lesen.</value>
+    <value>Bei Submit/Update: .dll anhängen (optional preview.png). Bei sehr großen Anhängen (~&gt;40MB) Netdisk-Link in den Text. Quellcode nur auf Anfrage senden.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>Anleitung öffnen</value>
+    <value>Vollständige Anleitung / Open full guide</value>
+  </data>
+  <data name="SubmitGuideOpenEmail" xml:space="preserve">
+    <value>Submit-E-Mail öffnen / Open submit email</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Bestätigen</value>
