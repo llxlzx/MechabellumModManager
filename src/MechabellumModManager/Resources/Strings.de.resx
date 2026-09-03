@@ -46,20 +46,16 @@
     <value>Credits &amp; Hinweis</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
-    <value>Dieser Mod-Manager wurde von „院长大人“ erstellt.
-Kontakt QQ: 319323959
-Herzlichen Dank an alle Tester, Spieler, die diesen Manager nutzen, und an die Mod-Entwickler von Mechabellum.
+    <value>Dieser Mod-Manager wurde von „院长大人“ erstellt. Herzlichen Dank an alle Tester, Spieler, die diesen Manager nutzen, und an die Mod-Entwickler von Mechabellum.
 
-[Gemeinnützigkeitserklärung]
-Dieser Manager ist kein kommerzielles Projekt: kein Sponsoring-Einstieg und keine Gebühren. Wenn jemand ihn zur Gewinnerzielung nutzt, lehnen Sie das bitte ab.
-
-[Risiken und Haftungsausschluss]
-1. Diese Software wird „wie besehen“ bereitgestellt. Autor und verbundene Parteien haften nicht für direkte oder indirekte Schäden durch Nutzung dieses Managers oder durch Abruf, Installation, Aktivierung oder Verwaltung von Drittanbieter-Mods / Plugins / zugehörigen Dateien darüber, einschließlich (aber nicht beschränkt auf): Kontosanktionen oder Sperren, Speicherbeschädigung, Spiel- oder Systemstörungen, Datenverlust oder -leck, Geräteschäden sowie sonstige wirtschaftliche oder nichtwirtschaftliche Verluste.
-2. Drittanbieter-Mods und Community-Einreichungen liegen in der Verantwortung der Anbieter und können instabil, inkompatibel, regelwidrig oder schädlichen Code enthalten. Beurteilen Sie vor Download, Installation und Nutzung selbst; Sie tragen das Risiko.
-3. Offizielle Spieleunterstützung für Drittänderungen ist in der Regel nicht gegeben; Client-Änderungen können Nutzungsbedingungen, Servicebedingungen oder Wettbewerbsregeln verletzen — Folgen trägt der Nutzer.
-4. Lokale Prüfungen und E-Mail-Meldungen dienen nur der Unterstützung und stellen keine Garantie, Zusage oder Empfehlung zur Sicherheit, Integrität, Rechtmäßigkeit oder Nutzbarkeit einer Datei dar.
-5. Bei verdächtigen oder unzulässigen Inhalten nutzen Sie bitte die Meldefunktion in der App (E-Mail an llxmod@foxmail.com). Betreuer dürfen Inhalte ablehnen, entfernen oder löschen und sind nicht verpflichtet, jede Datei umfassend sicherheits- oder rechtlich zu prüfen.
-6. Die fortgesetzte Nutzung dieses Managers gilt als Lesen und Zustimmung zu dieser Erklärung. Bei Ablehnung beenden Sie die Nutzung sofort und deinstallieren Sie die Software.</value>
+1. Dies ist ein unabhängiges Fan-Tool und steht in keiner Verbindung zu Mechabellum, dessen Publishern oder Steam.
+2. Gemeinnützig und kostenlos nutzbar; kein Sponsoring-Einstieg und keine Gebühren. Wenn jemand ihn zur Gewinnerzielung nutzt, lehnen Sie das bitte ab.
+3. Entwicklung und Dokumentation können KI-gestützt sein und werden von Menschen gepflegt; KI-Anbieter geben keine Gewähr für diese Software.
+4. Die Software wird „WIE BESEHEN“ (AS IS) ohne jegliche Gewährleistung bereitgestellt. Sie tragen das Risiko (Spielupdates können Mods oder den Manager beeinträchtigen; Backups werden empfohlen). Autor und verbundene Parteien haften nicht für direkte oder indirekte Schäden aus der Nutzung dieses Managers oder aus dem Bezug, der Installation, Aktivierung oder Verwaltung von Drittanbieter-Mods / Plugins / zugehörigen Dateien darüber.
+5. Drittanbieter-Mods stammen von ihren Autoren; Manager- und Katalogbetreuer garantieren weder Sicherheit noch Rechtmäßigkeit noch Qualität. Aktivierung auf eigenes Risiko. Probleme bitte per E-Mail melden.
+6. Katalogeintrag ist keine Empfehlung; der Betreuer kann Einträge ablehnen, verzögern, Metadaten bearbeiten oder entfernen.
+7. Kontakt: E-Mail llxmod@foxmail.com (Mods / Meldungen / Feedback); QQ 319323959 (Betreuer „院长大人“) als sekundärer Kontakt.
+8. Fortgesetzte Nutzung gilt als Annahme dieser Hinweise. Bei Ablehnung Nutzung sofort beenden und deinstallieren.</value>
   </data>
   <data name="Report" xml:space="preserve">
     <value>Melden</value>
@@ -166,4 +162,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="CurrentProfile" xml:space="preserve">
     <value>Aktives Profil</value>
   </data>
+
+  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Der Maintainer prüft und bearbeitet Ihre Nachricht innerhalb angemessener Zeit. Die Bearbeitung kann aufgrund des Alltags und persönlicher Termine kurzzeitig verzögert sein; vielen Dank für Ihre Geduld. Bitte senden Sie dieselbe Anfrage nicht erneut.
+The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
 </root>

@@ -1,4 +1,4 @@
-# 钢铁指挥官 Mod 管理器 — GitHub Release 更新说明
+﻿# 钢铁指挥官 Mod 管理器 — GitHub Release 更新说明
 
 Mechabellum Mod Manager — GitHub Release guide
 
@@ -56,11 +56,11 @@ Use the links below to jump within this page (Chinese and English sections share
 在管理器仓库的 `release/v版本号/` 下：
 
 ```
-release/v1.0.4/
+release/v1.0.5/
   安装包/     → 给绝大多数用户（Setup.exe）
   本体/       → 便携运行（exe + Assets，无 Mod 数据）
   latest.json → 给「检查更新」用
-  MechabellumModManager_portable_v1.0.4.zip  → 把「本体」打成的 zip，上传 Release
+  MechabellumModManager_portable_v1.0.5.zip  → 把「本体」打成的 zip，上传 Release
 ```
 
 | | **安装包** | **本体（便携）** |
@@ -121,18 +121,18 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 .\installer\build-installer.ps1
 ```
 
-得到：`dist\MechabellumModManager_Setup_v1.0.4.exe`  
+得到：`dist\MechabellumModManager_Setup_v1.0.5.exe`  
 （体积大约二十多 MB 才正常，因为内嵌了 Melon。）
 
-把产物整理进 `release/v1.0.4/安装包/` 与 `release/v1.0.4/本体/`，并写好 `latest.json`。
+把产物整理进 `release/v1.0.5/安装包/` 与 `release/v1.0.5/本体/`，并写好 `latest.json`。
 
 安装向导应依次出现：**选择目标位置**（管理器安装目录）→ **选择游戏目录**。若只看到游戏目录页，请确认已使用含 `DisableDirPage=no` 的 Setup。
 
 ### 步骤 5 — 打本体 zip
 
 ```powershell
-cd release\v1.0.4
-Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.0.4.zip" -Force
+cd release\v1.0.5
+Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.0.5.zip" -Force
 ```
 
 解压后应直接看到 exe 和 Assets，而不是多一层无关目录。
@@ -141,16 +141,16 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 1. 打开：https://github.com/llxlzx/MechabellumModManager/releases  
 2. **Draft a new release**  
-3. **Tag**：输入 `v1.0.4` → Create new tag；**Target** 选 `master`  
-4. **Title**：`v1.0.4`  
+3. **Tag**：输入 `v1.0.5` → Create new tag；**Target** 选 `master`  
+4. **Title**：`v1.0.5`  
 5. **说明**：写本版更新点（可与 latest.json 的 notes 相同；可中英双语）  
 6. **上传附件**（拖进虚线框）：
 
 | 必传 / 推荐 | 文件 |
 |-------------|------|
-| 必传 | `安装包\MechabellumModManager_Setup_v1.0.4.exe` |
+| 必传 | `安装包\MechabellumModManager_Setup_v1.0.5.exe` |
 | 必传 | `latest.json`（**文件名不能改**） |
-| 推荐 | `MechabellumModManager_portable_v1.0.4.zip` |
+| 推荐 | `MechabellumModManager_portable_v1.0.5.zip` |
 
 7. 勾选 **Set as the latest release**  
 8. **不要**勾选 Pre-release  
@@ -158,7 +158,7 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ### 步骤 7 — 自检
 
-- 打开：https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.0.4  
+- 打开：https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.0.5  
   确认三个资源都在  
 - 打开：  
   `https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json`  
@@ -171,9 +171,9 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ```json
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "notes": "本版更新说明，可多行。",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.4/MechabellumModManager_Setup_v1.0.4.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.5/MechabellumModManager_Setup_v1.0.5.exe",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
@@ -208,22 +208,20 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 ---
 
-## 6. v1.0.4 本版要点 (中文)
+## 6. v1.0.5 本版要点 (中文)
 
-- **取消 Cloudflare 中继**：投稿 / 举报不再走 Worker，客户端直连 GitHub。
-- **投稿**：应用内引导 Fork + 更新 `catalog.json` + Pull Request 到 `MechabellumMods`。
-- **举报**：打开 GitHub Issues 预填页，并把 Issue 链接复制到剪贴板；用户登录后点 Submit 才真正提交。
-- **MechabellumMods 侧**：Issue 模板 + `catalog.json` CI 校验，便于审稿与防坏目录。
-- **安装包**：`DisableDirPage=no`，重装时也会显示管理器安装目录页。
-- **界面**：顶栏双行布局，窄窗口按钮可换行。
+- **邮件优先（现行）**：投稿 / 更新 / 举报 / 建议发往 **llxmod@foxmail.com**（标准主题前缀 + 正文模板；应用内 mailto）。作者**无需** Fork/PR。
+- **处理时效**：维护者将在合理时间内审阅；受日常生活与个人事务安排影响，或有短暂延误，请勿重复发送同一内容。
+- **免责与法律说明**：应用内「关于与声明」已扩展；仓库根目录见 `NOTICE.md` 与 MIT `LICENSE`。
+- **MechabellumMods 侧**：邮件投稿指南 + `docs/submit.html`；`catalog.json` CI 校验仍保留。
 
----
+> **历史（≤1.0.4）**：取消 Cloudflare 中继后，曾短暂以 GitHub Fork/PR 投稿、Issues 举报为主路径；自 **1.0.5** 起以邮件为准。
 
 ## 7. 当前本地对照（写作时） (中文)
 
 | 项 | 位置 |
 |----|------|
-| 最新整理目录 | `release/v1.0.4/`（相对本仓库根目录） |
+| 最新整理目录（当前最新） | `release/v1.0.5/`（相对本仓库根目录） |
 | 流程详版 | `docs/releasing.md` |
 | 本说明 | `docs/GitHub-Release更新说明.md`（本文件，英汉双语） |
 
@@ -259,11 +257,11 @@ A：检查 Mods 仓库是否公开、`catalog.json` 是否在 `master` 分支根
 Under `release/vVERSION/` in the manager repo:
 
 ```
-release/v1.0.4/
+release/v1.0.5/
   安装包/     → Setup for most users
   本体/       → portable (exe + Assets, no mod data)
   latest.json → used by in-app update check
-  MechabellumModManager_portable_v1.0.4.zip  → zip of 本体/, attach to Release
+  MechabellumModManager_portable_v1.0.5.zip  → zip of 本体/, attach to Release
 ```
 
 | | **Setup** | **Portable** |
@@ -280,13 +278,13 @@ Use `release/vX.Y.Z/本体\` or `publish\`.
 
 ## 3. Shipping a new manager version (English)
 
-Example: **v1.0.4** (replace the version everywhere for later releases).
+Example: **v1.0.5** (replace the version everywhere for later releases).
 
 ### Step 1 — Bump version (three places, same number)
 
-1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.0.4</Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.0.4"`
-3. `latest.json` → `"version": "1.0.4"`
+1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.0.5</Version>`
+2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.0.5"`
+3. `latest.json` → `"version": "1.0.5"`
 
 ### Step 2 — MelonLoader offline zip (required)
 
@@ -321,18 +319,18 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 .\installer\build-installer.ps1
 ```
 
-Output: `dist\MechabellumModManager_Setup_v1.0.4.exe`  
+Output: `dist\MechabellumModManager_Setup_v1.0.5.exe`  
 (~20+ MB is normal; Melon is embedded.)
 
-Copy into `release/v1.0.4/安装包/` and `release/v1.0.4/本体/`, and write `latest.json`.
+Copy into `release/v1.0.5/安装包/` and `release/v1.0.5/本体/`, and write `latest.json`.
 
 Wizard order should be: **Select destination** (manager install dir) → **Select game folder**. If the first page is missing, rebuild with `DisableDirPage=no`.
 
 ### Step 5 — Zip portable
 
 ```powershell
-cd release\v1.0.4
-Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.0.4.zip" -Force
+cd release\v1.0.5
+Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.0.5.zip" -Force
 ```
 
 Extracted zip should show `exe` + `Assets` at the top level (no extra junk folder).
@@ -341,16 +339,16 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 
 1. Open https://github.com/llxlzx/MechabellumModManager/releases  
 2. **Draft a new release**  
-3. **Tag:** `v1.0.4` → create tag; **Target:** `master`  
-4. **Title:** `v1.0.4`  
+3. **Tag:** `v1.0.5` → create tag; **Target:** `master`  
+4. **Title:** `v1.0.5`  
 5. **Description:** release notes (can match `latest.json` notes; bilingual OK)  
 6. **Attach:**
 
 | Required / recommended | File |
 |------------------------|------|
-| Required | `安装包\MechabellumModManager_Setup_v1.0.4.exe` |
+| Required | `安装包\MechabellumModManager_Setup_v1.0.5.exe` |
 | Required | `latest.json` (**exact filename**) |
-| Recommended | `MechabellumModManager_portable_v1.0.4.zip` |
+| Recommended | `MechabellumModManager_portable_v1.0.5.zip` |
 
 7. Check **Set as the latest release**  
 8. Do **not** check Pre-release  
@@ -358,7 +356,7 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 
 ### Step 7 — Verify
 
-- https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.0.4 — all assets present  
+- https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.0.5 — all assets present  
 - https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json — valid JSON  
 - Manager → **Settings → Check for updates** should offer the new version if the installed app is older
 
@@ -368,9 +366,9 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 
 ```json
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "notes": "Release notes (can be multi-line).",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.4/MechabellumModManager_Setup_v1.0.4.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.5/MechabellumModManager_Setup_v1.0.5.exe",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
@@ -405,22 +403,20 @@ Author flow: bilingual beginner guide in the MechabellumMods `README.md`.
 
 ---
 
-## 6. v1.0.4 highlights (English)
+## 6. v1.0.5 highlights (English)
 
-- **Cloudflare relay removed**: submit/report talk to GitHub directly.
-- **Submit**: in-app guide → Fork + `catalog.json` + Pull Request on MechabellumMods.
-- **Report**: pre-filled Issue URL + clipboard copy; user must sign in and Submit on GitHub.
-- **MechabellumMods**: Issue template + `catalog.json` CI validation.
-- **Installer**: `DisableDirPage=no` so the manager install-dir page always shows.
-- **UI**: two-row header; action buttons wrap on narrow windows.
+- **Email-first (current):** submit / update / report / feedback to **llxmod@foxmail.com** (standard subject prefixes + templates; in-app mailto). Authors do **not** need Fork/PR.
+- **Processing time:** review within a reasonable time; brief delays may occur due to daily life and personal schedule — please do not resend the same request.
+- **Disclaimer / legal:** expanded in-app Credits; see repo root `NOTICE.md` and MIT `LICENSE`.
+- **MechabellumMods:** email guide + `docs/submit.html`; `catalog.json` CI validation remains.
 
----
+> **Historical (≤1.0.4):** after removing the Cloudflare relay, Fork/PR submit and Issues report were briefly the primary path; from **1.0.5** email is canonical.
 
 ## 7. Local paths (at write time) (English)
 
 | Item | Path |
 |------|------|
-| Packaged folder | `release/v1.0.4/` (relative to this repo root) |
+| Packaged folder (current latest) | `release/v1.0.5/` (relative to this repo root) |
 | Longer tech notes | `docs/releasing.md` |
 | This guide | `docs/GitHub-Release更新说明.md` (bilingual) |
 

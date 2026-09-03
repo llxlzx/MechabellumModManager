@@ -46,20 +46,16 @@
     <value>关于与声明</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
-    <value>本 Mod 管理器由「院长大人」制作。
-联系方式 QQ：319323959
-衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。
+    <value>本 Mod 管理器由「院长大人」制作。衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。
 
-【非盈利声明】
-本管理器不涉及任何盈利项目，无赞助入口，不存在任何收费行为。若有人将本管理器用于盈利，请自觉抵制。
-
-【风险与免责】
-1. 本软件按「现状」提供。作者及关联方不对因使用本管理器，或因通过本管理器获取、安装、启用、管理任何第三方 Mod / 插件 / 相关文件而导致的任何直接或间接损失承担责任，包括但不限于：账号处罚或封禁、存档损坏、游戏或系统异常、数据丢失或泄露、设备损害及其他经济或非经济损失。
-2. 第三方 Mod 与社区投稿内容由提供者自行负责，可能存在不稳定、不兼容、违规或含有恶意代码等风险。下载、安装与使用前请自行判断，风险自负。
-3. 游戏官方通常未必支持第三方修改；修改客户端可能导致违反用户协议、服务条款或竞赛规则，相关后果由使用者自行承担。
-4. 本管理器提供的本地校验与邮件举报等功能仅供辅助，不构成对任何文件之安全性、完整性、合法性或可用性的保证、承诺或背书。
-5. 如发现可疑或不当内容，请使用应用内举报功能（发邮件至 llxmod@foxmail.com）。维护者有权拒绝上架、下架或删除相关内容，且无义务对每一份文件进行全面的安全或法律鉴定。
-6. 继续使用本管理器，即视为您已阅读并同意本声明。如不同意，请立即停止使用并卸载本软件。</value>
+1. 本软件为独立粉丝工具，与 Mechabellum（钢铁指挥官）及其发行商、Steam 无任何从属或官方合作关系。
+2. 本项目为非营利性质，供免费使用；无赞助入口与收费行为。若有人将本管理器用于盈利，请自觉抵制。
+3. 开发与文档可能使用 AI 辅助，并由人工维护校对；相关 AI 服务提供方不对本软件提供任何保证。
+4. 本软件按「现状」（AS IS）提供，不作任何明示或默示保证。使用者自行承担风险（游戏更新可能导致 Mod 或管理器失效；建议备份存档与重要数据）。作者及关联方不对因使用本管理器，或因通过本管理器获取、安装、启用、管理任何第三方 Mod / 插件 / 相关文件而导致的任何直接或间接损失承担责任。
+5. 第三方 Mod 由其作者提供；管理器与目录维护者不保证其安全性、合法性或质量。启用风险自负。发现问题请发邮件举报。
+6. 目录收录不代表背书；维护者可拒绝、延期处理、编辑元数据或下架条目。
+7. 联系方式：电子邮箱 llxmod@foxmail.com（投稿 / 举报 / 建议）；QQ 319323959（维护者「院长大人」）为次要联系方式。
+8. 继续使用本管理器，即视为您已阅读并同意本声明。如不同意，请立即停止使用并卸载本软件。</value>
   </data>
   <data name="Report" xml:space="preserve">
     <value>举报</value>
@@ -167,4 +163,7 @@ Attach .dll (optional preview.png). If attachments are huge, put a netdisk link 
   <data name="CurrentProfile" xml:space="preserve">
     <value>当前方案</value>
   </data>
+
+  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>维护者将在合理时间内审阅并处理您的来信。受日常生活与个人事务安排影响，处理进度或有短暂延误，敬请谅解并耐心等待。请勿重复发送同一内容。
+The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
 </root>

@@ -1,4 +1,4 @@
-# GitHub Release 更新流程（现行）
+﻿# GitHub Release 更新流程（现行）
 
 > **说明 / Notice**  
 > 本文档整理自本项目维护者在使用 Git 仓库与开发 Mechabellum（钢铁指挥官）Mod 管理器过程中的实践记录，旨在为有意开发类似工具或复现本项目发版流程的开发者提供参考。文中涉及的目录、代理与环境变量均为**示例**，请按本机环境自行调整；内容不构成官方承诺、服务条款或完整运维规范。  
@@ -103,9 +103,9 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ```json
 {
-  "version": "1.0.3",
+  "version": "1.0.5",
   "notes": "本版更新说明……",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.3/MechabellumModManager_Setup_v1.0.3.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.5/MechabellumModManager_Setup_v1.0.5.exe",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
@@ -187,7 +187,7 @@ git push origin master
 
 ## 6. 当前最新本地对照（写作时） (中文)
 
-- 程序 / Setup：**v1.0.3** → 仓库内相对路径 `release/v1.0.3/`
+- 程序 / Setup：**v1.0.5**（当前最新）→ 仓库内相对路径 `release/v1.0.5/`
 - 安装包与本体产物均整理在上述 `release/vX.Y.Z/` 目录（勿依赖本机个人测试文件夹路径）
 
 ---
@@ -343,7 +343,7 @@ Players: **Browse mods → Refresh catalog**. Author flow: that repo’s `README
 
 ## 6. Local paths (at write time) (English)
 
-- App / Setup: **v1.0.3** → `release/v1.0.3/` relative to this repo
+- App / Setup: **v1.0.5** (current latest) → `release/v1.0.5/` relative to this repo
 - Keep packaged artifacts under `release/vX.Y.Z/` (do not rely on personal install-test folders)
 
 ---

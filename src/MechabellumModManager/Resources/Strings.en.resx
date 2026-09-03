@@ -46,20 +46,16 @@
     <value>Credits &amp; Disclaimer</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
-    <value>This Mod Manager was made by "院长大人" (Dean).
-Contact QQ: 319323959
-Heartfelt thanks to all testers, players who use this manager, and Mechabellum mod developers.
+    <value>This Mod Manager was made by "院长大人" (Dean). Heartfelt thanks to all testers, players who use this manager, and Mechabellum mod developers.
 
-[Non-profit statement]
-This manager is not involved in any for-profit projects, has no sponsorship entry, and does not charge any fees. If anyone uses this manager for profit, please refuse to support them.
-
-[Risks and disclaimer]
-1. This software is provided "as is". The author and related parties are not liable for any direct or indirect losses arising from use of this manager, or from obtaining, installing, enabling, or managing any third-party mods / plugins / related files through this manager, including but not limited to: account penalties or bans, save corruption, game or system anomalies, data loss or leaks, device damage, and other economic or non-economic losses.
-2. Third-party mods and community submissions are the responsibility of their providers and may be unstable, incompatible, violate rules, or contain malicious code. Judge carefully before downloading, installing, or using them; you assume the risk.
-3. Official game support for third-party modifications is typically not guaranteed; modifying the client may violate the user agreement, terms of service, or competition rules, and consequences are borne by the user.
-4. Local checks and email reporting in this manager are for assistance only and do not constitute any guarantee, promise, or endorsement of the safety, integrity, legality, or availability of any file.
-5. If you find suspicious or inappropriate content, please use the in-app report feature (email llxmod@foxmail.com). Maintainers may refuse to list, delist, or delete content, and are not obligated to perform a full security or legal review of every file.
-6. Continued use of this manager means you have read and agree to this statement. If you do not agree, stop using and uninstall this software immediately.</value>
+1. This is an independent fan tool and is not affiliated with Mechabellum, its publishers, or Steam.
+2. Non-profit and free to use; no sponsorship entry or fees. If anyone uses this manager for profit, please refuse to support them.
+3. Development and documentation may be AI-assisted and are human-maintained; AI vendors provide no warranty for this software.
+4. Software is provided AS IS, without warranty of any kind. You assume the risk (game updates may break mods or the manager; backups are recommended). The author and related parties are not liable for any direct or indirect losses arising from use of this manager or from obtaining, installing, enabling, or managing any third-party mods / plugins / related files through it.
+5. Third-party mods are provided by their authors; the manager and catalog maintainer do not guarantee safety, legality, or quality. Enable at your own risk. Report issues by email.
+6. Catalog listing is not an endorsement; the maintainer may refuse, delay, edit metadata, or remove entries.
+7. Contact: email llxmod@foxmail.com (mods / reports / feedback); QQ 319323959 (maintainer "院长大人") as secondary.
+8. Continued use means you accept this notice. If you do not agree, stop using and uninstall immediately.</value>
   </data>
   <data name="Report" xml:space="preserve">
     <value>Report</value>
@@ -166,4 +162,6 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="CurrentProfile" xml:space="preserve">
     <value>Active Profile</value>
   </data>
+
+  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
 </root>
