@@ -1,9 +1,9 @@
-﻿; 钢铁指挥官 Mod 管理器 — Inno Setup 6
+; 钢铁指挥官 Mod 管理器 — Inno Setup 6
 ; Compile with: ISCC.exe MechabellumModManager.iss
 ; Or run: build-installer.bat
 
 #define MyAppName "钢铁指挥官 Mod 管理器"
-#define MyAppVersion "1.0.5"
+#define MyAppVersion "1.0.4"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"

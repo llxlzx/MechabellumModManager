@@ -176,8 +176,8 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 | 项 | 位置 |
 |----|------|
-| 最新整理目录 | `release/v1.0.3/` |
-| 测试用 Setup 副本 | `D:\gongzuo\钢铁指挥官Mod管理器_安装包测试\MechabellumModManager_Setup_v1.0.3.exe` |
+| 最新整理目录 | `release/v1.0.4/` |
+| 测试用 Setup 副本 | `D:\gongzuo\钢铁指挥官Mod管理器_安装包测试\MechabellumModManager_Setup_v1.0.4.exe` |
 | 流程详版 | `docs/releasing.md` |
 | 本说明 | `docs/GitHub-Release更新说明.md` |
 
