@@ -8,11 +8,65 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Test-MelonLoaderInstalled {
+    param([string] $Root)
+    $melonDir = Join-Path $Root "MelonLoader"
+    $proxy = (Test-Path (Join-Path $Root "version.dll")) -or (Test-Path (Join-Path $Root "winhttp.dll"))
+    return (Test-Path $melonDir) -and $proxy
+}
+
+function Apply-LoaderCfgOptimizations {
+    param([string] $Root)
+    $userData = Join-Path $Root "UserData"
+    New-Item -ItemType Directory -Force -Path $userData | Out-Null
+    $cfg = Join-Path $userData "Loader.cfg"
+    if (-not (Test-Path $cfg)) {
+        @"
+[loader]
+force_quit = true
+
+[unityengine]
+force_offline_generation = true
+"@ | Set-Content -Path $cfg -Encoding UTF8
+        return
+    }
+
+    $text = Get-Content $cfg -Raw -Encoding UTF8
+    $text = [regex]::Replace($text, '(?m)^(\s*)force_quit\s*=\s*false\s*$', '${1}force_quit = true')
+    $text = [regex]::Replace($text, '(?m)^(\s*)force_offline_generation\s*=\s*false\s*$', '${1}force_offline_generation = true')
+    if ($text -notmatch '(?m)^\s*force_quit\s*=') {
+        if ($text -match '(?m)^\[loader\]\s*$') {
+            $text = [regex]::Replace($text, '(?m)^\[loader\]\s*$', "[loader]`r`nforce_quit = true")
+        } else {
+            $text = $text.TrimEnd() + "`r`n`r`n[loader]`r`nforce_quit = true`r`n"
+        }
+    }
+    if ($text -notmatch '(?m)^\s*force_offline_generation\s*=') {
+        if ($text -match '(?m)^\[unityengine\]\s*$') {
+            $text = [regex]::Replace($text, '(?m)^\[unityengine\]\s*$', "[unityengine]`r`nforce_offline_generation = true")
+        } else {
+            $text = $text.TrimEnd() + "`r`n`r`n[unityengine]`r`nforce_offline_generation = true`r`n"
+        }
+    }
+    Set-Content -Path $cfg -Value $text -Encoding UTF8
+}
+
 $exe = Join-Path $GamePath "Mechabellum.exe"
 $ga = Join-Path $GamePath "GameAssembly.dll"
 if (-not (Test-Path $exe) -or -not (Test-Path $ga)) {
     Write-Error "Invalid game path (need Mechabellum.exe and GameAssembly.dll): $GamePath"
     exit 1
+}
+
+# Same readiness rule as GameDetector: MelonLoader folder + version.dll or winhttp.dll
+if (Test-MelonLoaderInstalled -Root $GamePath) {
+    Write-Host "Skip MelonLoader — already installed at $GamePath"
+    try {
+        Apply-LoaderCfgOptimizations -Root $GamePath
+    } catch {
+        Write-Host "Loader.cfg optimize skipped: $($_.Exception.Message)"
+    }
+    exit 0
 }
 
 $zipUrl = "https://github.com/LavaGang/MelonLoader/releases/latest/download/MelonLoader.x64.zip"
@@ -55,46 +109,25 @@ try {
             Copy-Item $_.FullName $dest -Force
         }
     }
+} catch {
+    Write-Error @"
+Failed to install MelonLoader files (exit will be 1).
+If MelonLoader is already present, close the game and retry — or the installer will skip when detection succeeds.
+If files are locked (version.dll in use), close Mechabellum / MelonLoader processes and antivirus locks, then retry.
+$($_.Exception.Message)
+"@
+    exit 1
 } finally {
     Remove-Item $extract -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-# Loader.cfg optimizations (same intent as MelonLoaderConfigOptimizer)
-$userData = Join-Path $GamePath "UserData"
-New-Item -ItemType Directory -Force -Path $userData | Out-Null
-$cfg = Join-Path $userData "Loader.cfg"
-if (-not (Test-Path $cfg)) {
-    @"
-[loader]
-force_quit = true
-
-[unityengine]
-force_offline_generation = true
-"@ | Set-Content -Path $cfg -Encoding UTF8
-} else {
-    $text = Get-Content $cfg -Raw -Encoding UTF8
-    $text = [regex]::Replace($text, '(?m)^(\s*)force_quit\s*=\s*false\s*$', '${1}force_quit = true')
-    $text = [regex]::Replace($text, '(?m)^(\s*)force_offline_generation\s*=\s*false\s*$', '${1}force_offline_generation = true')
-    if ($text -notmatch '(?m)^\s*force_quit\s*=') {
-        if ($text -match '(?m)^\[loader\]\s*$') {
-            $text = [regex]::Replace($text, '(?m)^\[loader\]\s*$', "[loader]`r`nforce_quit = true")
-        } else {
-            $text = $text.TrimEnd() + "`r`n`r`n[loader]`r`nforce_quit = true`r`n"
-        }
-    }
-    if ($text -notmatch '(?m)^\s*force_offline_generation\s*=') {
-        if ($text -match '(?m)^\[unityengine\]\s*$') {
-            $text = [regex]::Replace($text, '(?m)^\[unityengine\]\s*$', "[unityengine]`r`nforce_offline_generation = true")
-        } else {
-            $text = $text.TrimEnd() + "`r`n`r`n[unityengine]`r`nforce_offline_generation = true`r`n"
-        }
-    }
-    Set-Content -Path $cfg -Value $text -Encoding UTF8
+try {
+    Apply-LoaderCfgOptimizations -Root $GamePath
+} catch {
+    Write-Host "Loader.cfg optimize skipped: $($_.Exception.Message)"
 }
 
-$melonOk = (Test-Path (Join-Path $GamePath "MelonLoader")) -and (
-    (Test-Path (Join-Path $GamePath "version.dll")) -or (Test-Path (Join-Path $GamePath "winhttp.dll")))
-if (-not $melonOk) {
+if (-not (Test-MelonLoaderInstalled -Root $GamePath)) {
     Write-Error "MelonLoader files were written but detection still incomplete."
     exit 3
 }
