@@ -1,6 +1,6 @@
-﻿{
-    "publishedAt":  "2026-09-03T04:30:00Z",
+{
     "version":  "1.0.4",
+    "publishedAt":  "2026-09-03T05:02:15Z",
     "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.4/MechabellumModManager_Setup_v1.0.4.exe",
-    "notes":  "修复模组库详情面板拦截其他条目选择的 UI 问题；可正常切换选中不同模组。"
+    "notes":  "多语言（中/英/日/德/俄）、制作人员页、提交/举报 Mod（中继）、以及模组列表选中切换修复。"
 }
