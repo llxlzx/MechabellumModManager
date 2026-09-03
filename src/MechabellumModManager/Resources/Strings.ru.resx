@@ -1,58 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
-  <resheader name="version"><value>2.0</value></resheader>
-  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="Settings" xml:space="preserve"><value>Настройки</value></data>
-  <data name="BrowseMods" xml:space="preserve"><value>Каталог модов</value></data>
-  <data name="ImportDll" xml:space="preserve"><value>Импорт DLL</value></data>
-  <data name="ImportZip" xml:space="preserve"><value>Импорт Zip</value></data>
-  <data name="ImportFolder" xml:space="preserve"><value>Импорт папки</value></data>
-  <data name="ApplyProfile" xml:space="preserve"><value>Применить профиль</value></data>
-  <data name="ApplyAndLaunch" xml:space="preserve"><value>Применить и запустить</value></data>
-  <data name="CheckUpdates" xml:space="preserve"><value>Проверить обновления</value></data>
-  <data name="Language" xml:space="preserve"><value>Язык</value></data>
-  <data name="LanguageSystem" xml:space="preserve"><value>Системный</value></data>
-  <data name="CreditsTitle" xml:space="preserve"><value>Авторы и отказ</value></data>
-  <data name="CreditsBody" xml:space="preserve"><value>Этот менеджер модов создан «院长大人».
-QQ: 319323959
-Искренняя благодарность тестировщикам, игрокам и авторам модов Mechabellum.
-Менеджер некоммерческий: без спонсорства и платы. Отказывайтесь от попыток монетизации.
-Сообщественные файлы и сторонние моды — на ваш риск; абсолютная безопасность не гарантируется. При аномалиях используйте «Пожаловаться».</value></data>
-  <data name="Report" xml:space="preserve"><value>Пожаловаться</value></data>
-  <data name="ReportConfirm" xml:space="preserve"><value>Отправить жалобу? Ложные жалобы вредят проверке.</value></data>
-  <data name="ReportCategoryCheat" xml:space="preserve"><value>Читы</value></data>
-  <data name="ReportCategoryVirus" xml:space="preserve"><value>Вирус / вредонос</value></data>
-  <data name="ReportCategoryUnrelated" xml:space="preserve"><value>Не связано с игрой</value></data>
-  <data name="ReportCategoryOther" xml:space="preserve"><value>Другое</value></data>
-  <data name="ReportOtherHint" xml:space="preserve"><value>Опишите причину (обязательно)</value></data>
-  <data name="ReportSuccess" xml:space="preserve"><value>Жалоба отправлена. Спасибо.</value></data>
-  <data name="ReportFailed" xml:space="preserve"><value>Ошибка отправки жалобы</value></data>
-  <data name="SubmitMod" xml:space="preserve"><value>Отправить мод</value></data>
-  <data name="SubmitModTitle" xml:space="preserve"><value>Отправка мода (на проверку)</value></data>
-  <data name="SubmitModName" xml:space="preserve"><value>Название</value></data>
-  <data name="SubmitModAuthor" xml:space="preserve"><value>Автор</value></data>
-  <data name="SubmitModVersion" xml:space="preserve"><value>Версия</value></data>
-  <data name="SubmitModSummary" xml:space="preserve"><value>Описание</value></data>
-  <data name="SubmitModPickDll" xml:space="preserve"><value>Выбрать DLL…</value></data>
-  <data name="SubmitModSuccess" xml:space="preserve"><value>Отправлено; ожидает проверки.</value></data>
-  <data name="SubmitModFailed" xml:space="preserve"><value>Ошибка отправки</value></data>
-  <data name="SubmitModNotMelonWarn" xml:space="preserve"><value>DLL не похож на Melon Mod. Всё равно отправить?</value></data>
-  <data name="SubmitModTooLarge" xml:space="preserve"><value>Файл больше лимита 20 МБ.</value></data>
-  <data name="SubmitModInvalidExt" xml:space="preserve"><value>Разрешены только .dll.</value></data>
-  <data name="RelayNotConfigured" xml:space="preserve"><value>Relay не настроен. Укажите RelayBaseUrl (URL Worker).</value></data>
-  <data name="Confirm" xml:space="preserve"><value>Подтвердить</value></data>
-  <data name="Cancel" xml:space="preserve"><value>Отмена</value></data>
-  <data name="Ok" xml:space="preserve"><value>OK</value></data>
-  <data name="RefreshCatalog" xml:space="preserve"><value>Обновить каталог</value></data>
-  <data name="AddToLibrary" xml:space="preserve"><value>В локальную библиотеку</value></data>
-  <data name="ImportFromGame" xml:space="preserve"><value>Импорт из игры</value></data>
-  <data name="GamePath" xml:space="preserve"><value>Путь к игре</value></data>
-  <data name="LaunchMode" xml:space="preserve"><value>Режим запуска</value></data>
-  <data name="PortableDataRoot" xml:space="preserve"><value>Портативные данные (app/data, нужен перезапуск)</value></data>
-  <data name="Profiles" xml:space="preserve"><value>Профили</value></data>
-  <data name="ModLibrary" xml:space="preserve"><value>Библиотека модов</value></data>
-  <data name="SyncLog" xml:space="preserve"><value>Журнал синхронизации</value></data>
-  <data name="CurrentProfile" xml:space="preserve"><value>Текущий профиль</value></data>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Settings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="BrowseMods" xml:space="preserve">
+    <value>Каталог модов</value>
+  </data>
+  <data name="ImportDll" xml:space="preserve">
+    <value>Импорт DLL</value>
+  </data>
+  <data name="ImportZip" xml:space="preserve">
+    <value>Импорт Zip</value>
+  </data>
+  <data name="ImportFolder" xml:space="preserve">
+    <value>Импорт папки</value>
+  </data>
+  <data name="ApplyProfile" xml:space="preserve">
+    <value>Применить профиль</value>
+  </data>
+  <data name="ApplyAndLaunch" xml:space="preserve">
+    <value>Применить и запустить</value>
+  </data>
+  <data name="CheckUpdates" xml:space="preserve">
+    <value>Проверить обновления</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="LanguageSystem" xml:space="preserve">
+    <value>Системный</value>
+  </data>
+  <data name="CreditsTitle" xml:space="preserve">
+    <value>Авторы и отказ</value>
+  </data>
+  <data name="CreditsBody" xml:space="preserve">
+    <value>Этот менеджер модов создан «院长大人».
+Контакт QQ: 319323959
+Искренняя благодарность всем тестировщикам, игрокам, использующим этот менеджер, и авторам модов Mechabellum.
+
+[Заявление о некоммерческом характере]
+Менеджер не связан с коммерческими проектами: нет спонсорства и никаких плат. Если кто-то использует его ради прибыли — откажитесь от поддержки.
+
+[Риски и отказ от ответственности]
+1. ПО предоставляется «как есть». Автор и связанные стороны не несут ответственности за любые прямые или косвенные убытки из-за использования менеджера либо получения, установки, включения или управления сторонними модами / плагинами / связанными файлами через него, включая (но не ограничиваясь): санкции или блокировку аккаунта, порчу сохранений, сбои игры или системы, потерю или утечку данных, повреждение устройств и иные экономические или неэкономические убытки.
+2. Сторонние моды и материалы сообщества — ответственность их поставщиков; возможны нестабильность, несовместимость, нарушения правил или вредоносный код. Перед загрузкой, установкой и использованием оценивайте риски самостоятельно.
+3. Официальная поддержка сторонних модификаций обычно не гарантируется; изменение клиента может нарушать пользовательское соглашение, условия сервиса или правила соревнований — последствия несёт пользователь.
+4. Локальная проверка, ретрансляция заявок и жалобы в менеджере — лишь вспомогательные функции и не являются гарантией, обещанием или одобрением безопасности, целостности, законности или пригодности любого файла.
+5. При подозрительном или недопустимом контенте используйте функцию жалобы в приложении. Сопровождающие вправе отказать в публикации, снять или удалить материалы и не обязаны проводить полную проверку безопасности или юридическую экспертизу каждого файла.
+6. Продолжая пользоваться менеджером, вы подтверждаете, что прочитали и согласны с этим заявлением. Если не согласны — немедленно прекратите использование и удалите ПО.</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>Пожаловаться</value>
+  </data>
+  <data name="ReportConfirm" xml:space="preserve">
+    <value>Отправить жалобу? Ложные жалобы вредят проверке.</value>
+  </data>
+  <data name="ReportCategoryCheat" xml:space="preserve">
+    <value>Читы</value>
+  </data>
+  <data name="ReportCategoryVirus" xml:space="preserve">
+    <value>Вирус / вредонос</value>
+  </data>
+  <data name="ReportCategoryUnrelated" xml:space="preserve">
+    <value>Не связано с игрой</value>
+  </data>
+  <data name="ReportCategoryOther" xml:space="preserve">
+    <value>Другое</value>
+  </data>
+  <data name="ReportOtherHint" xml:space="preserve">
+    <value>Опишите причину (обязательно)</value>
+  </data>
+  <data name="ReportSuccess" xml:space="preserve">
+    <value>Жалоба отправлена. Спасибо.</value>
+  </data>
+  <data name="ReportFailed" xml:space="preserve">
+    <value>Ошибка отправки жалобы</value>
+  </data>
+  <data name="SubmitMod" xml:space="preserve">
+    <value>Отправить мод</value>
+  </data>
+  <data name="SubmitModTitle" xml:space="preserve">
+    <value>Отправка мода (на проверку)</value>
+  </data>
+  <data name="SubmitModName" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="SubmitModAuthor" xml:space="preserve">
+    <value>Автор</value>
+  </data>
+  <data name="SubmitModVersion" xml:space="preserve">
+    <value>Версия</value>
+  </data>
+  <data name="SubmitModSummary" xml:space="preserve">
+    <value>Описание</value>
+  </data>
+  <data name="SubmitModPickDll" xml:space="preserve">
+    <value>Выбрать DLL…</value>
+  </data>
+  <data name="SubmitModSuccess" xml:space="preserve">
+    <value>Отправлено; ожидает проверки.</value>
+  </data>
+  <data name="SubmitModFailed" xml:space="preserve">
+    <value>Ошибка отправки</value>
+  </data>
+  <data name="SubmitModNotMelonWarn" xml:space="preserve">
+    <value>DLL не похож на Melon Mod. Всё равно отправить?</value>
+  </data>
+  <data name="SubmitModTooLarge" xml:space="preserve">
+    <value>Файл больше лимита 20 МБ.</value>
+  </data>
+  <data name="SubmitModInvalidExt" xml:space="preserve">
+    <value>Разрешены только .dll.</value>
+  </data>
+  <data name="RelayNotConfigured" xml:space="preserve">
+    <value>Relay не настроен. Укажите RelayBaseUrl (URL Worker).</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Подтвердить</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Notice" xml:space="preserve">
+    <value>Уведомление</value>
+  </data>
+  <data name="RefreshCatalog" xml:space="preserve">
+    <value>Обновить каталог</value>
+  </data>
+  <data name="AddToLibrary" xml:space="preserve">
+    <value>В локальную библиотеку</value>
+  </data>
+  <data name="ImportFromGame" xml:space="preserve">
+    <value>Импорт из игры</value>
+  </data>
+  <data name="GamePath" xml:space="preserve">
+    <value>Путь к игре</value>
+  </data>
+  <data name="LaunchMode" xml:space="preserve">
+    <value>Режим запуска</value>
+  </data>
+  <data name="PortableDataRoot" xml:space="preserve">
+    <value>Портативные данные (app/data, нужен перезапуск)</value>
+  </data>
+  <data name="Profiles" xml:space="preserve">
+    <value>Профили</value>
+  </data>
+  <data name="ModLibrary" xml:space="preserve">
+    <value>Библиотека модов</value>
+  </data>
+  <data name="SyncLog" xml:space="preserve">
+    <value>Журнал синхронизации</value>
+  </data>
+  <data name="CurrentProfile" xml:space="preserve">
+    <value>Текущий профиль</value>
+  </data>
 </root>

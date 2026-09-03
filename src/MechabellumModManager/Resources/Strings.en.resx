@@ -1,58 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
-  <resheader name="version"><value>2.0</value></resheader>
-  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
-  <data name="BrowseMods" xml:space="preserve"><value>Browse Mods</value></data>
-  <data name="ImportDll" xml:space="preserve"><value>Import DLL</value></data>
-  <data name="ImportZip" xml:space="preserve"><value>Import Zip</value></data>
-  <data name="ImportFolder" xml:space="preserve"><value>Import Folder</value></data>
-  <data name="ApplyProfile" xml:space="preserve"><value>Apply Profile</value></data>
-  <data name="ApplyAndLaunch" xml:space="preserve"><value>Apply &amp; Launch</value></data>
-  <data name="CheckUpdates" xml:space="preserve"><value>Check for Updates</value></data>
-  <data name="Language" xml:space="preserve"><value>Language</value></data>
-  <data name="LanguageSystem" xml:space="preserve"><value>System</value></data>
-  <data name="CreditsTitle" xml:space="preserve"><value>Credits &amp; Disclaimer</value></data>
-  <data name="CreditsBody" xml:space="preserve"><value>This Mod Manager was made by &quot;院长大人&quot; (Dean).
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="BrowseMods" xml:space="preserve">
+    <value>Browse Mods</value>
+  </data>
+  <data name="ImportDll" xml:space="preserve">
+    <value>Import DLL</value>
+  </data>
+  <data name="ImportZip" xml:space="preserve">
+    <value>Import Zip</value>
+  </data>
+  <data name="ImportFolder" xml:space="preserve">
+    <value>Import Folder</value>
+  </data>
+  <data name="ApplyProfile" xml:space="preserve">
+    <value>Apply Profile</value>
+  </data>
+  <data name="ApplyAndLaunch" xml:space="preserve">
+    <value>Apply &amp; Launch</value>
+  </data>
+  <data name="CheckUpdates" xml:space="preserve">
+    <value>Check for Updates</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LanguageSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="CreditsTitle" xml:space="preserve">
+    <value>Credits &amp; Disclaimer</value>
+  </data>
+  <data name="CreditsBody" xml:space="preserve">
+    <value>This Mod Manager was made by "院长大人" (Dean).
 Contact QQ: 319323959
 Heartfelt thanks to all testers, players who use this manager, and Mechabellum mod developers.
-This manager is non-profit: no sponsorship entry and no fees. Please reject anyone who monetizes it.
-Community submissions and third-party mods are at your own risk; absolute safety cannot be guaranteed (similar to workshop platforms). Use Report if something looks wrong.</value></data>
-  <data name="Report" xml:space="preserve"><value>Report</value></data>
-  <data name="ReportConfirm" xml:space="preserve"><value>Submit this report? False reports may affect review.</value></data>
-  <data name="ReportCategoryCheat" xml:space="preserve"><value>Cheat</value></data>
-  <data name="ReportCategoryVirus" xml:space="preserve"><value>Virus / Malware</value></data>
-  <data name="ReportCategoryUnrelated" xml:space="preserve"><value>Unrelated to game</value></data>
-  <data name="ReportCategoryOther" xml:space="preserve"><value>Other</value></data>
-  <data name="ReportOtherHint" xml:space="preserve"><value>Please describe (required)</value></data>
-  <data name="ReportSuccess" xml:space="preserve"><value>Report submitted. Thank you.</value></data>
-  <data name="ReportFailed" xml:space="preserve"><value>Report failed</value></data>
-  <data name="SubmitMod" xml:space="preserve"><value>Submit Mod</value></data>
-  <data name="SubmitModTitle" xml:space="preserve"><value>Submit Mod (pending review)</value></data>
-  <data name="SubmitModName" xml:space="preserve"><value>Name</value></data>
-  <data name="SubmitModAuthor" xml:space="preserve"><value>Author</value></data>
-  <data name="SubmitModVersion" xml:space="preserve"><value>Version</value></data>
-  <data name="SubmitModSummary" xml:space="preserve"><value>Summary</value></data>
-  <data name="SubmitModPickDll" xml:space="preserve"><value>Choose DLL…</value></data>
-  <data name="SubmitModSuccess" xml:space="preserve"><value>Submission sent; awaiting maintainer review.</value></data>
-  <data name="SubmitModFailed" xml:space="preserve"><value>Submission failed</value></data>
-  <data name="SubmitModNotMelonWarn" xml:space="preserve"><value>This DLL does not look like a Melon Mod. Submit anyway?</value></data>
-  <data name="SubmitModTooLarge" xml:space="preserve"><value>File exceeds the 20MB limit.</value></data>
-  <data name="SubmitModInvalidExt" xml:space="preserve"><value>Only .dll files are allowed.</value></data>
-  <data name="RelayNotConfigured" xml:space="preserve"><value>Relay is not configured. Set RelayBaseUrl to your Cloudflare Worker URL.</value></data>
-  <data name="Confirm" xml:space="preserve"><value>Confirm</value></data>
-  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
-  <data name="Ok" xml:space="preserve"><value>OK</value></data>
-  <data name="RefreshCatalog" xml:space="preserve"><value>Refresh Catalog</value></data>
-  <data name="AddToLibrary" xml:space="preserve"><value>Add to Library</value></data>
-  <data name="ImportFromGame" xml:space="preserve"><value>Import from Game</value></data>
-  <data name="GamePath" xml:space="preserve"><value>Game Path</value></data>
-  <data name="LaunchMode" xml:space="preserve"><value>Launch Mode</value></data>
-  <data name="PortableDataRoot" xml:space="preserve"><value>Portable data root (app/data, restart required)</value></data>
-  <data name="Profiles" xml:space="preserve"><value>Profiles</value></data>
-  <data name="ModLibrary" xml:space="preserve"><value>Mod Library</value></data>
-  <data name="SyncLog" xml:space="preserve"><value>Sync Log</value></data>
-  <data name="CurrentProfile" xml:space="preserve"><value>Active Profile</value></data>
+
+[Non-profit statement]
+This manager is not involved in any for-profit projects, has no sponsorship entry, and does not charge any fees. If anyone uses this manager for profit, please refuse to support them.
+
+[Risks and disclaimer]
+1. This software is provided "as is". The author and related parties are not liable for any direct or indirect losses arising from use of this manager, or from obtaining, installing, enabling, or managing any third-party mods / plugins / related files through this manager, including but not limited to: account penalties or bans, save corruption, game or system anomalies, data loss or leaks, device damage, and other economic or non-economic losses.
+2. Third-party mods and community submissions are the responsibility of their providers and may be unstable, incompatible, violate rules, or contain malicious code. Judge carefully before downloading, installing, or using them; you assume the risk.
+3. Official game support for third-party modifications is typically not guaranteed; modifying the client may violate the user agreement, terms of service, or competition rules, and consequences are borne by the user.
+4. Local validation, submission relay, and reporting features provided by this manager are for assistance only and do not constitute any guarantee, promise, or endorsement of the safety, integrity, legality, or availability of any file.
+5. If you find suspicious or inappropriate content, please use the in-app report feature. Maintainers may refuse to list, delist, or delete content, and are not obligated to perform a full security or legal review of every file.
+6. Continued use of this manager means you have read and agree to this statement. If you do not agree, stop using and uninstall this software immediately.</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="ReportConfirm" xml:space="preserve">
+    <value>Submit this report? False reports may affect review.</value>
+  </data>
+  <data name="ReportCategoryCheat" xml:space="preserve">
+    <value>Cheat</value>
+  </data>
+  <data name="ReportCategoryVirus" xml:space="preserve">
+    <value>Virus / Malware</value>
+  </data>
+  <data name="ReportCategoryUnrelated" xml:space="preserve">
+    <value>Unrelated to game</value>
+  </data>
+  <data name="ReportCategoryOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="ReportOtherHint" xml:space="preserve">
+    <value>Please describe (required)</value>
+  </data>
+  <data name="ReportSuccess" xml:space="preserve">
+    <value>Report submitted. Thank you.</value>
+  </data>
+  <data name="ReportFailed" xml:space="preserve">
+    <value>Report failed</value>
+  </data>
+  <data name="SubmitMod" xml:space="preserve">
+    <value>Submit Mod</value>
+  </data>
+  <data name="SubmitModTitle" xml:space="preserve">
+    <value>Submit Mod (pending review)</value>
+  </data>
+  <data name="SubmitModName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SubmitModAuthor" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="SubmitModVersion" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="SubmitModSummary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="SubmitModPickDll" xml:space="preserve">
+    <value>Choose DLL…</value>
+  </data>
+  <data name="SubmitModSuccess" xml:space="preserve">
+    <value>Submission sent; awaiting maintainer review.</value>
+  </data>
+  <data name="SubmitModFailed" xml:space="preserve">
+    <value>Submission failed</value>
+  </data>
+  <data name="SubmitModNotMelonWarn" xml:space="preserve">
+    <value>This DLL does not look like a Melon Mod. Submit anyway?</value>
+  </data>
+  <data name="SubmitModTooLarge" xml:space="preserve">
+    <value>File exceeds the 20MB limit.</value>
+  </data>
+  <data name="SubmitModInvalidExt" xml:space="preserve">
+    <value>Only .dll files are allowed.</value>
+  </data>
+  <data name="RelayNotConfigured" xml:space="preserve">
+    <value>Relay is not configured. Set RelayBaseUrl to your Cloudflare Worker URL.</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Notice" xml:space="preserve">
+    <value>Notice</value>
+  </data>
+  <data name="RefreshCatalog" xml:space="preserve">
+    <value>Refresh Catalog</value>
+  </data>
+  <data name="AddToLibrary" xml:space="preserve">
+    <value>Add to Library</value>
+  </data>
+  <data name="ImportFromGame" xml:space="preserve">
+    <value>Import from Game</value>
+  </data>
+  <data name="GamePath" xml:space="preserve">
+    <value>Game Path</value>
+  </data>
+  <data name="LaunchMode" xml:space="preserve">
+    <value>Launch Mode</value>
+  </data>
+  <data name="PortableDataRoot" xml:space="preserve">
+    <value>Portable data root (app/data, restart required)</value>
+  </data>
+  <data name="Profiles" xml:space="preserve">
+    <value>Profiles</value>
+  </data>
+  <data name="ModLibrary" xml:space="preserve">
+    <value>Mod Library</value>
+  </data>
+  <data name="SyncLog" xml:space="preserve">
+    <value>Sync Log</value>
+  </data>
+  <data name="CurrentProfile" xml:space="preserve">
+    <value>Active Profile</value>
+  </data>
 </root>

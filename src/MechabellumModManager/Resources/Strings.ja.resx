@@ -1,58 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
-  <resheader name="version"><value>2.0</value></resheader>
-  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="Settings" xml:space="preserve"><value>設定</value></data>
-  <data name="BrowseMods" xml:space="preserve"><value>Mod 一覧</value></data>
-  <data name="ImportDll" xml:space="preserve"><value>DLL を取り込み</value></data>
-  <data name="ImportZip" xml:space="preserve"><value>Zip を取り込み</value></data>
-  <data name="ImportFolder" xml:space="preserve"><value>フォルダを取り込み</value></data>
-  <data name="ApplyProfile" xml:space="preserve"><value>プロファイル適用</value></data>
-  <data name="ApplyAndLaunch" xml:space="preserve"><value>適用して起動</value></data>
-  <data name="CheckUpdates" xml:space="preserve"><value>更新を確認</value></data>
-  <data name="Language" xml:space="preserve"><value>言語</value></data>
-  <data name="LanguageSystem" xml:space="preserve"><value>システムに合わせる</value></data>
-  <data name="CreditsTitle" xml:space="preserve"><value>クレジットと免責</value></data>
-  <data name="CreditsBody" xml:space="preserve"><value>本 Mod マネージャーは「院长大人」が制作しました。
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="BrowseMods" xml:space="preserve">
+    <value>Mod 一覧</value>
+  </data>
+  <data name="ImportDll" xml:space="preserve">
+    <value>DLL を取り込み</value>
+  </data>
+  <data name="ImportZip" xml:space="preserve">
+    <value>Zip を取り込み</value>
+  </data>
+  <data name="ImportFolder" xml:space="preserve">
+    <value>フォルダを取り込み</value>
+  </data>
+  <data name="ApplyProfile" xml:space="preserve">
+    <value>プロファイル適用</value>
+  </data>
+  <data name="ApplyAndLaunch" xml:space="preserve">
+    <value>適用して起動</value>
+  </data>
+  <data name="CheckUpdates" xml:space="preserve">
+    <value>更新を確認</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="LanguageSystem" xml:space="preserve">
+    <value>システムに合わせる</value>
+  </data>
+  <data name="CreditsTitle" xml:space="preserve">
+    <value>クレジットと免責</value>
+  </data>
+  <data name="CreditsBody" xml:space="preserve">
+    <value>本 Mod マネージャーは「院长大人」が制作しました。
 連絡先 QQ：319323959
-テスターの皆さん、利用者の皆さん、そして鋼鉄指揮官の Mod 作者に心より感謝します。
-本マネージャーは非営利です。スポンサー入口や課金はありません。営利利用にはご注意ください。
-コミュニティ投稿や第三者 Mod は自己責任です。絶対安全は保証できません。異常があれば「通報」をご利用ください。</value></data>
-  <data name="Report" xml:space="preserve"><value>通報</value></data>
-  <data name="ReportConfirm" xml:space="preserve"><value>この通報を送信しますか？虚偽通報は審査に影響します。</value></data>
-  <data name="ReportCategoryCheat" xml:space="preserve"><value>チート</value></data>
-  <data name="ReportCategoryVirus" xml:space="preserve"><value>ウイルス / 悪意</value></data>
-  <data name="ReportCategoryUnrelated" xml:space="preserve"><value>ゲーム無関係</value></data>
-  <data name="ReportCategoryOther" xml:space="preserve"><value>その他</value></data>
-  <data name="ReportOtherHint" xml:space="preserve"><value>理由を記入（必須）</value></data>
-  <data name="ReportSuccess" xml:space="preserve"><value>通報を送信しました。ありがとうございます。</value></data>
-  <data name="ReportFailed" xml:space="preserve"><value>通報に失敗しました</value></data>
-  <data name="SubmitMod" xml:space="preserve"><value>Mod を投稿</value></data>
-  <data name="SubmitModTitle" xml:space="preserve"><value>Mod 投稿（審査待ち）</value></data>
-  <data name="SubmitModName" xml:space="preserve"><value>名前</value></data>
-  <data name="SubmitModAuthor" xml:space="preserve"><value>作者</value></data>
-  <data name="SubmitModVersion" xml:space="preserve"><value>バージョン</value></data>
-  <data name="SubmitModSummary" xml:space="preserve"><value>概要</value></data>
-  <data name="SubmitModPickDll" xml:space="preserve"><value>DLL を選択…</value></data>
-  <data name="SubmitModSuccess" xml:space="preserve"><value>投稿しました。メンテナ審査待ちです。</value></data>
-  <data name="SubmitModFailed" xml:space="preserve"><value>投稿に失敗しました</value></data>
-  <data name="SubmitModNotMelonWarn" xml:space="preserve"><value>この DLL は Melon Mod に見えません。投稿しますか？</value></data>
-  <data name="SubmitModTooLarge" xml:space="preserve"><value>ファイルが 20MB 上限を超えています。</value></data>
-  <data name="SubmitModInvalidExt" xml:space="preserve"><value>.dll のみ対応しています。</value></data>
-  <data name="RelayNotConfigured" xml:space="preserve"><value>中継が未設定です。RelayBaseUrl に Cloudflare Worker URL を設定してください。</value></data>
-  <data name="Confirm" xml:space="preserve"><value>確認</value></data>
-  <data name="Cancel" xml:space="preserve"><value>キャンセル</value></data>
-  <data name="Ok" xml:space="preserve"><value>OK</value></data>
-  <data name="RefreshCatalog" xml:space="preserve"><value>カタログ更新</value></data>
-  <data name="AddToLibrary" xml:space="preserve"><value>ライブラリに追加</value></data>
-  <data name="ImportFromGame" xml:space="preserve"><value>ゲームから取り込み</value></data>
-  <data name="GamePath" xml:space="preserve"><value>ゲームパス</value></data>
-  <data name="LaunchMode" xml:space="preserve"><value>起動方式</value></data>
-  <data name="PortableDataRoot" xml:space="preserve"><value>ポータブルデータ（app/data、再起動が必要）</value></data>
-  <data name="Profiles" xml:space="preserve"><value>プロファイル</value></data>
-  <data name="ModLibrary" xml:space="preserve"><value>Mod ライブラリ</value></data>
-  <data name="SyncLog" xml:space="preserve"><value>同期ログ</value></data>
-  <data name="CurrentProfile" xml:space="preserve"><value>現在のプロファイル</value></data>
+テスターの皆さん、本マネージャーをご利用のプレイヤー、および鋼鉄指揮官の Mod 作者に心より感謝します。
+
+【非営利に関する声明】
+本マネージャーは営利目的のプロジェクトには関与せず、スポンサー入口や課金はありません。営利利用する者がいれば、ご自身でご判断のうえご遠慮ください。
+
+【リスクと免責】
+1. 本ソフトウェアは「現状有姿」で提供されます。作者および関係者は、本マネージャーの使用、または本マネージャーを通じた第三者 Mod / プラグイン / 関連ファイルの取得・インストール・有効化・管理に起因する直接・間接の損害について責任を負いません。これにはアカウント制裁・BAN、セーブ破損、ゲーム／システム異常、データ損失・漏洩、機器損傷、その他経済的・非経済的損害を含みますが、これらに限りません。
+2. 第三者 Mod およびコミュニティ投稿は提供者の責任であり、不安定・非互換・規約違反・悪意あるコード等のリスクがあり得ます。ダウンロード・インストール・使用前に自行判断し、リスクはご自身で負ってください。
+3. ゲーム公式は通常、第三者改変を保証しません。クライアント改変は利用規約・サービス条件・競技規則違反となり得、結果は利用者が負います。
+4. 本マネージャーのローカル検証、投稿中継、通報などの機能は補助にすぎず、いかなるファイルの安全性・完全性・合法性・可用性についての保証・約束・推奨ではありません。
+5. 不審または不適切な内容を見つけた場合は、アプリ内の通報機能をご利用ください。メンテナは掲載拒否・取り下げ・削除を行う権利を有し、すべてのファイルについて包括的な安全または法的鑑定を行う義務はありません。
+6. 本マネージャーを引き続き使用することで、本声明を読み同意したものとみなします。同意しない場合は直ちに使用を停止し、本ソフトウェアをアンインストールしてください。</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>通報</value>
+  </data>
+  <data name="ReportConfirm" xml:space="preserve">
+    <value>この通報を送信しますか？虚偽通報は審査に影響します。</value>
+  </data>
+  <data name="ReportCategoryCheat" xml:space="preserve">
+    <value>チート</value>
+  </data>
+  <data name="ReportCategoryVirus" xml:space="preserve">
+    <value>ウイルス / 悪意</value>
+  </data>
+  <data name="ReportCategoryUnrelated" xml:space="preserve">
+    <value>ゲーム無関係</value>
+  </data>
+  <data name="ReportCategoryOther" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="ReportOtherHint" xml:space="preserve">
+    <value>理由を記入（必須）</value>
+  </data>
+  <data name="ReportSuccess" xml:space="preserve">
+    <value>通報を送信しました。ありがとうございます。</value>
+  </data>
+  <data name="ReportFailed" xml:space="preserve">
+    <value>通報に失敗しました</value>
+  </data>
+  <data name="SubmitMod" xml:space="preserve">
+    <value>Mod を投稿</value>
+  </data>
+  <data name="SubmitModTitle" xml:space="preserve">
+    <value>Mod 投稿（審査待ち）</value>
+  </data>
+  <data name="SubmitModName" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="SubmitModAuthor" xml:space="preserve">
+    <value>作者</value>
+  </data>
+  <data name="SubmitModVersion" xml:space="preserve">
+    <value>バージョン</value>
+  </data>
+  <data name="SubmitModSummary" xml:space="preserve">
+    <value>概要</value>
+  </data>
+  <data name="SubmitModPickDll" xml:space="preserve">
+    <value>DLL を選択…</value>
+  </data>
+  <data name="SubmitModSuccess" xml:space="preserve">
+    <value>投稿しました。メンテナ審査待ちです。</value>
+  </data>
+  <data name="SubmitModFailed" xml:space="preserve">
+    <value>投稿に失敗しました</value>
+  </data>
+  <data name="SubmitModNotMelonWarn" xml:space="preserve">
+    <value>この DLL は Melon Mod に見えません。投稿しますか？</value>
+  </data>
+  <data name="SubmitModTooLarge" xml:space="preserve">
+    <value>ファイルが 20MB 上限を超えています。</value>
+  </data>
+  <data name="SubmitModInvalidExt" xml:space="preserve">
+    <value>.dll のみ対応しています。</value>
+  </data>
+  <data name="RelayNotConfigured" xml:space="preserve">
+    <value>中継が未設定です。RelayBaseUrl に Cloudflare Worker URL を設定してください。</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Notice" xml:space="preserve">
+    <value>通知</value>
+  </data>
+  <data name="RefreshCatalog" xml:space="preserve">
+    <value>カタログ更新</value>
+  </data>
+  <data name="AddToLibrary" xml:space="preserve">
+    <value>ライブラリに追加</value>
+  </data>
+  <data name="ImportFromGame" xml:space="preserve">
+    <value>ゲームから取り込み</value>
+  </data>
+  <data name="GamePath" xml:space="preserve">
+    <value>ゲームパス</value>
+  </data>
+  <data name="LaunchMode" xml:space="preserve">
+    <value>起動方式</value>
+  </data>
+  <data name="PortableDataRoot" xml:space="preserve">
+    <value>ポータブルデータ（app/data、再起動が必要）</value>
+  </data>
+  <data name="Profiles" xml:space="preserve">
+    <value>プロファイル</value>
+  </data>
+  <data name="ModLibrary" xml:space="preserve">
+    <value>Mod ライブラリ</value>
+  </data>
+  <data name="SyncLog" xml:space="preserve">
+    <value>同期ログ</value>
+  </data>
+  <data name="CurrentProfile" xml:space="preserve">
+    <value>現在のプロファイル</value>
+  </data>
 </root>
