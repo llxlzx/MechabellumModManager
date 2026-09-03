@@ -106,7 +106,7 @@ Windows desktop tool: external mod library + profiles, one-click sync into the g
 .\installer\build-installer.bat
 ```
 
-产物：`dist\MechabellumModManager_Setup_v*.exe`。整理进 `release/v版本号/` 的方式见 [docs/GitHub-Release更新说明.md](docs/GitHub-Release更新说明.md)。
+产物：`dist\MechabellumModManager_Setup_v*.exe`。整理进 `release/v版本号/` 的方式见 [docs/GitHub-Release更新说明.md（中文）](docs/GitHub-Release更新说明.md#一两个仓库分别干什么中文)。
 
 ### 开发命令
 
@@ -118,7 +118,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 最终用户请使用 **Setup** 或开始菜单快捷方式，不要依赖仓库根目录下临时 bat / 便捷 exe 副本。
 
-维护者发版流程、附件清单（Setup + `latest.json` + portable zip）见上述 GitHub Release 说明文档。
+维护者发版流程、附件清单（Setup + `latest.json` + portable zip）见 [GitHub Release 更新说明（中文）](docs/GitHub-Release更新说明.md#三发管理器新版本标准步骤中文)。
 
 ---
 
@@ -214,7 +214,7 @@ Install [Inno Setup 6](https://jrsoftware.org/isinfo.php). Release builds **requ
 .\installer\build-installer.ps1
 ```
 
-Output: `dist\MechabellumModManager_Setup_v*.exe`. Packaging layout: [docs/GitHub-Release更新说明.md](docs/GitHub-Release更新说明.md) (Chinese maintainer doc).
+Output: `dist\MechabellumModManager_Setup_v*.exe`. Packaging / Release steps: [GitHub Release guide (English)](docs/GitHub-Release更新说明.md#1-what-the-two-repos-are-for-english).
 
 ### Dev commands
 
@@ -226,7 +226,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 End users should run the **Setup** or Start Menu shortcut—not ad-hoc bat/exe copies in the repo root.
 
-Release checklist: upload Setup + `latest.json` + portable zip; see the Release doc above.
+Release checklist: upload Setup + `latest.json` + portable zip; see the [English Release guide](docs/GitHub-Release更新说明.md#3-shipping-a-new-manager-version-english).
 
 ---
 
