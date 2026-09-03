@@ -2,6 +2,14 @@
 
 Mechabellum Mod Manager — GitHub Release guide
 
+> **说明 / Notice**  
+> 本文档整理自本项目维护者在使用 Git 仓库与开发 Mechabellum（钢铁指挥官）Mod 管理器过程中的实践记录，旨在为有意开发类似工具或复现本项目发版流程的开发者提供参考。文中涉及的目录、代理与环境变量均为**示例**，请按本机环境自行调整；内容不构成官方承诺、服务条款或完整运维规范。  
+> **This document collects the maintainer’s practical notes on using Git and developing the Mechabellum Mod Manager. It is shared as a reference for developers who wish to build similar tools or reproduce this release workflow. Paths, proxy settings, and environment variables are examples only—adapt them to your environment. This text is not an official commitment, terms of service, or a complete operations manual.**
+
+> **⚠️ AI 生成声明 / AI-generated notice**  
+> 本说明文档的中英文内容主要由 AI 辅助整理与翻译，可能存在表述偏差。请以实际发版脚本与仓库行为为准。  
+> **This guide’s Chinese and English text was largely produced with AI assistance and may contain inaccuracies. Prefer the actual build scripts and repository behavior.**
+
 面向维护者：如何打新版本安装包，并发布到 GitHub Releases。  
 For maintainers: how to build the Setup and publish a GitHub Release.
 
@@ -10,18 +18,16 @@ More technical detail: `releasing.md` in this folder.
 
 ## 语言 / Language
 
-**请向下滚动本页**，可找到另一种语言的完整发版说明。
+使用下方链接在本页各节间跳转（中英文内容均在同一文档中）。
 
-**Scroll down this page** to find the full release guide in the other language.
+Use the links below to jump within this page (Chinese and English sections share one document).
 
-- 中文：[两个仓库](#一两个仓库分别干什么中文) · [标准发版步骤](#三发管理器新版本标准步骤中文) · [latest.json](#四latestjson-怎么写中文) · [FAQ](#八常见问题中文)
+- 中文：[两个仓库](#1-两个仓库分别干什么-中文) · [标准发版步骤](#3-发管理器新版本标准步骤-中文) · [latest.json](#4-latestjson-怎么写-中文) · [FAQ](#8-常见问题-中文)
 - English: [Two repos](#1-what-the-two-repos-are-for-english) · [Release steps](#3-shipping-a-new-manager-version-english) · [latest.json](#4-latestjson-english) · [FAQ](#8-faq-english)
 
 ---
 
-## 一、两个仓库分别干什么·中文
-
-> English → [§1 Two repos](#1-what-the-two-repos-are-for-english)
+## 1. 两个仓库分别干什么 (中文)
 
 | 仓库 | 地址 | 发什么 |
 |------|------|--------|
@@ -33,9 +39,7 @@ More technical detail: `releasing.md` in this folder.
 
 ---
 
-## 二、本地文件怎么分（安装包 vs 本体）·中文
-
-> English → [§2 Layout](#2-local-layout-setup-vs-portable-english)
+## 2. 本地文件怎么分（安装包 vs 本体） (中文)
 
 在管理器仓库的 `release/v版本号/` 下：
 
@@ -60,9 +64,7 @@ release/v1.0.4/
 
 ---
 
-## 三、发管理器新版本：标准步骤·中文
-
-> English → [§3 Shipping](#3-shipping-a-new-manager-version-english)
+## 3. 发管理器新版本：标准步骤 (中文)
 
 以发布 **v1.0.4** 为例（以后把版本号换成新的即可）。
 
@@ -87,18 +89,18 @@ release/v1.0.4/
 ### 步骤 3 — 测试并推代码
 
 ```powershell
-cd D:\gongzuo\钢铁指挥官mod管理器开发
+cd <path-to-your-MechabellumModManager-clone>
 dotnet test -c Release
 git add ...
 git commit -m "说明本版改动"
 git push origin master
 ```
 
-连不上 GitHub 时可先：
+若浏览器可访问 GitHub，但终端 `git` / `gh` 失败，可按本机代理软件说明设置 HTTP(S) 代理环境变量（地址与端口以你的客户端为准，以下仅为占位示例）：
 
 ```powershell
-$env:HTTPS_PROXY='http://127.0.0.1:7890'
-$env:HTTP_PROXY='http://127.0.0.1:7890'
+$env:HTTPS_PROXY = 'http://127.0.0.1:<PORT>'
+$env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 ```
 
 ### 步骤 4 — 打安装包
@@ -153,9 +155,7 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ---
 
-## 四、latest.json 怎么写·中文
-
-> English → [§4](#4-latestjson-english)
+## 4. latest.json 怎么写 (中文)
 
 ```json
 {
@@ -177,10 +177,10 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ---
 
-## 五、只更新 Mod 大全时（不发管理器新版本）·中文
+## 5. 只更新 Mod 大全时（不发管理器新版本） (中文)
 
 ```powershell
-cd D:\gongzuo\MechabellumMods
+cd <path-to-your-MechabellumMods-clone>
 # 改 mods/、catalog.json、preview.png 等
 git add -A
 git commit -m "说明"
@@ -196,7 +196,7 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 ---
 
-## 六、v1.0.4 本版要点·中文
+## 6. v1.0.4 本版要点 (中文)
 
 - **取消 Cloudflare 中继**：投稿 / 举报不再走 Worker，客户端直连 GitHub。
 - **投稿**：应用内引导 Fork + 更新 `catalog.json` + Pull Request 到 `MechabellumMods`。
@@ -207,33 +207,30 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 ---
 
-## 七、当前本地对照（写作时）·中文
+## 7. 当前本地对照（写作时） (中文)
 
 | 项 | 位置 |
 |----|------|
-| 最新整理目录 | `release/v1.0.4/` |
-| 测试用 Setup 副本 | `D:\gongzuo\钢铁指挥官Mod管理器_安装包测试\MechabellumModManager_Setup_v1.0.4.exe` |
+| 最新整理目录 | `release/v1.0.4/`（相对本仓库根目录） |
 | 流程详版 | `docs/releasing.md` |
 | 本说明 | `docs/GitHub-Release更新说明.md`（本文件，英汉双语） |
 
 ---
 
-## 八、常见问题·中文
+## 8. 常见问题 (中文)
 
 **Q：安装测试目录里的「钢铁指挥官Mod管理器」能整包当本体吗？**  
 A：不能。去掉卸载器和 installer 目录后，理论上只留 exe+Assets 可以，但请优先用 `release/vX.Y.Z/本体\`。
 
 **Q：Push / 检查更新失败，网页却能开 GitHub？**  
-A：浏览器走了代理，Git/管理器可能没走。给终端设 `HTTPS_PROXY=http://127.0.0.1:7890`（端口按你的代理软件为准）。
+A：浏览器可能已走系统/扩展代理，而 Git 或管理器未配置代理。请按本机代理客户端文档为终端设置 `HTTPS_PROXY` / `HTTP_PROXY`（主机与端口因软件而异）。
 
 **Q：Mod 浏览刷新失败？**  
 A：检查 Mods 仓库是否公开、`catalog.json` 是否在 `master` 分支根目录，以及本机能否访问 raw.githubusercontent.com。
 
 ---
 
-## 1. What the two repos are for · English
-
-> Chinese → [§一](#一两个仓库分别干什么中文)
+## 1. What the two repos are for (English)
 
 | Repo | URL | Publishes |
 |------|-----|-----------|
@@ -245,9 +242,7 @@ A：检查 Mods 仓库是否公开、`catalog.json` 是否在 `master` 分支根
 
 ---
 
-## 2. Local layout (Setup vs portable) · English
-
-> Chinese → [§二](#二本地文件怎么分安装包-vs-本体中文)
+## 2. Local layout (Setup vs portable) (English)
 
 Under `release/vVERSION/` in the manager repo:
 
@@ -271,9 +266,7 @@ Use `release/vX.Y.Z/本体\` or `publish\`.
 
 ---
 
-## 3. Shipping a new manager version · English
-
-> Chinese → [§三](#三发管理器新版本标准步骤中文)
+## 3. Shipping a new manager version (English)
 
 Example: **v1.0.4** (replace the version everywhere for later releases).
 
@@ -296,18 +289,18 @@ Without it, the build script **fails** and will not produce a release Setup.
 ### Step 3 — Test and push code
 
 ```powershell
-cd D:\gongzuo\钢铁指挥官mod管理器开发
+cd <path-to-your-MechabellumModManager-clone>
 dotnet test -c Release
 git add ...
 git commit -m "Describe this release"
 git push origin master
 ```
 
-If GitHub is unreachable from the CLI:
+If the browser can open GitHub but the terminal `git` / `gh` fails, set HTTP(S) proxy environment variables per your local proxy client (host and port vary; the following is a placeholder only):
 
 ```powershell
-$env:HTTPS_PROXY='http://127.0.0.1:7890'
-$env:HTTP_PROXY='http://127.0.0.1:7890'
+$env:HTTPS_PROXY = 'http://127.0.0.1:<PORT>'
+$env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 ```
 
 ### Step 4 — Build the installer
@@ -359,9 +352,7 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 
 ---
 
-## 4. latest.json · English
-
-> Chinese → [§四](#四latestjson-怎么写中文)
+## 4. latest.json (English)
 
 ```json
 {
@@ -383,10 +374,10 @@ The Release attachment **must** be named `latest.json`.
 
 ---
 
-## 5. Catalog-only updates (no new manager) · English
+## 5. Catalog-only updates (no new manager) (English)
 
 ```powershell
-cd D:\gongzuo\MechabellumMods
+cd <path-to-your-MechabellumMods-clone>
 # edit mods/, catalog.json, previews, …
 git add -A
 git commit -m "Describe catalog change"
@@ -402,7 +393,7 @@ Author flow: bilingual beginner guide in the MechabellumMods `README.md`.
 
 ---
 
-## 6. v1.0.4 highlights · English
+## 6. v1.0.4 highlights (English)
 
 - **Cloudflare relay removed**: submit/report talk to GitHub directly.
 - **Submit**: in-app guide → Fork + `catalog.json` + Pull Request on MechabellumMods.
@@ -413,24 +404,23 @@ Author flow: bilingual beginner guide in the MechabellumMods `README.md`.
 
 ---
 
-## 7. Local paths (at write time) · English
+## 7. Local paths (at write time) (English)
 
 | Item | Path |
 |------|------|
-| Packaged folder | `release/v1.0.4/` |
-| Test Setup copy | `D:\gongzuo\钢铁指挥官Mod管理器_安装包测试\MechabellumModManager_Setup_v1.0.4.exe` |
+| Packaged folder | `release/v1.0.4/` (relative to this repo root) |
 | Longer tech notes | `docs/releasing.md` |
 | This guide | `docs/GitHub-Release更新说明.md` (bilingual) |
 
 ---
 
-## 8. FAQ · English
+## 8. FAQ (English)
 
 **Q: Can I upload a full post-Setup install folder as portable?**  
 A: No. Prefer `release/vX.Y.Z/本体\` (exe + Assets only).
 
 **Q: Push / update check fails but the browser opens GitHub?**  
-A: Browser uses a proxy; Git/CLI may not. Set `HTTPS_PROXY=http://127.0.0.1:7890` (port per your proxy app).
+A: The browser may already use a system/extension proxy while Git or the manager does not. Set `HTTPS_PROXY` / `HTTP_PROXY` for the terminal per your local proxy client docs (host and port vary; e.g. `http://127.0.0.1:<PORT>`).
 
 **Q: Browse mods refresh fails?**  
 A: Repo must be public, `catalog.json` on `master` root, and the machine must reach raw.githubusercontent.com.

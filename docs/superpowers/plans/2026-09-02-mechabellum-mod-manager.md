@@ -1,5 +1,10 @@
 # Mechabellum Mod Manager Implementation Plan
 
+> **说明 / Notice**  
+> 本文档整理自本项目维护者在实现 Mechabellum（钢铁指挥官）Mod 管理器过程中的任务计划，供有意复现或参考本方案的开发者使用。文中路径与环境均为**示例**，请按本机调整；不构成官方承诺或完整运维规范。  
+> **This document is the implementation plan for the Mechabellum Mod Manager, shared as a reference for developers who wish to reproduce or learn from it. Paths and environment details are examples only. This is not an official commitment or a complete operations manual.**
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a .NET 8 WPF MelonLoader mod manager for Mechabellum that detects the game, manages an external mod library with profiles, file-copy deploys (flattened) to `Mods`/`Plugins`/`UserLibs`/`UserData`, and supports apply + Steam/exe launch.
@@ -13,7 +18,7 @@
 ## Global Constraints
 
 - Target: Windows x64; language UI default Chinese
-- Game default path: `D:\steam\steamapps\common\Mechabellum`; Steam AppID `669330`
+- Game default path: `C:\Program Files (x86)\Steam\steamapps\common\Mechabellum`; Steam AppID `669330`
 - Do **not** install MelonLoader/BepInEx; require Ready (game + `MelonLoader/` + `version.dll` or `winhttp.dll`) before deploy/launch
 - Deploy = file **copy** only; flatten to folder roots for Mods/Plugins/UserLibs (no per-mod subfolders in game)
 - Never delete/overwrite `UserData/Loader.cfg`
@@ -21,7 +26,7 @@
 - One library entry = one type; mixed zips split into multiple entries
 - Checkbox saves profile immediately; Apply deploys; Apply+Launch deploys then launches
 - No cheat features; RiskGate is warning + manual high-risk flag only
-- Working tree root: `D:\gongzuo\钢铁指挥官mod管理器开发`
+- Working tree root: `<repo-root>`
 - Sample mod: `_samples/QuickCamera/QuickCamera.dll`
 
 ---
@@ -29,7 +34,7 @@
 ## File Structure
 
 ```
-D:\gongzuo\钢铁指挥官mod管理器开发\
+<repo-root>\
   MechabellumModManager.sln
   src\
     MechabellumModManager\
@@ -107,7 +112,7 @@ D:\gongzuo\钢铁指挥官mod管理器开发\
 - [ ] **Step 1: Create solution and projects**
 
 ```powershell
-cd "D:\gongzuo\钢铁指挥官mod管理器开发"
+cd "<repo-root>"
 dotnet new sln -n MechabellumModManager
 dotnet new wpf -n MechabellumModManager -o src/MechabellumModManager -f net8.0-windows
 dotnet new xunit -n MechabellumModManager.Tests -o tests/MechabellumModManager.Tests -f net8.0
@@ -141,7 +146,7 @@ public class JsonStoreTests
             var store = new JsonStore();
             var cfg = new AppConfig
             {
-                GamePath = @"D:\steam\steamapps\common\Mechabellum",
+                GamePath = @"C:\Program Files (x86)\Steam\steamapps\common\Mechabellum",
                 LaunchMode = LaunchMode.SteamThenExe,
                 ActiveProfileId = "default",
                 DataRoot = dir
@@ -173,7 +178,7 @@ public enum LaunchMode { SteamThenExe, SteamOnly, ExeOnly }
 
 public sealed class AppConfig
 {
-    public string GamePath { get; set; } = @"D:\steam\steamapps\common\Mechabellum";
+    public string GamePath { get; set; } = @"C:\Program Files (x86)\Steam\steamapps\common\Mechabellum";
     public LaunchMode LaunchMode { get; set; } = LaunchMode.SteamThenExe;
     public string ActiveProfileId { get; set; } = "default";
     public string? DataRoot { get; set; }
@@ -294,7 +299,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```powershell
-cd "D:\gongzuo\钢铁指挥官mod管理器开发"
+cd "<repo-root>"
 git init  # only if not already a repo
 git add MechabellumModManager.sln src tests
 git commit -m "chore: scaffold WPF solution, models, JsonStore, PathsService"
@@ -478,7 +483,7 @@ git commit -m "feat: detect Mechabellum and MelonLoader readiness"
 [Fact]
 public void QuickCamera_looks_like_MelonMod()
 {
-    var dll = @"D:\gongzuo\钢铁指挥官mod管理器开发\_samples\QuickCamera\QuickCamera.dll";
+    var dll = @"<repo-root>\_samples\QuickCamera\QuickCamera.dll";
     File.Exists(dll).Should().BeTrue();
     var r = new AssemblyInspector().Inspect(dll);
     r.ReferencesMelonLoader.Should().BeTrue();
@@ -501,7 +506,7 @@ public void Import_QuickCamera_dll_creates_melon_mod_package_flat_files()
     var paths = new PathsService(data);
     paths.EnsureCreated();
     var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore());
-    var pkg = lib.ImportDll(@"D:\gongzuo\钢铁指挥官mod管理器开发\_samples\QuickCamera\QuickCamera.dll");
+    var pkg = lib.ImportDll(@"<repo-root>\_samples\QuickCamera\QuickCamera.dll");
     pkg.Type.Should().Be(ModPackageType.MelonMod);
     pkg.Files.Should().ContainSingle(f => f.RelativePathInPackage.Equals("QuickCamera.dll", StringComparison.OrdinalIgnoreCase));
     File.Exists(Path.Combine(pkg.PackageDirectory, "QuickCamera.dll")).Should().BeTrue();
@@ -877,7 +882,7 @@ git commit -m "feat: WPF UI for Mechabellum mod manager"
 - [ ] **Step 1: Run full test suite**
 
 ```powershell
-cd "D:\gongzuo\钢铁指挥官mod管理器开发"
+cd "<repo-root>"
 dotnet test
 ```
 

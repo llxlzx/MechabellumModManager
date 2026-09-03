@@ -4,14 +4,18 @@ Windows 桌面工具：外部 Mod 库 + 方案勾选，一键同步到游戏目�
 
 Windows desktop tool: external mod library + profiles, one-click sync into the game folder.
 
+> **⚠️ AI 生成声明 / AI-generated notice**  
+> **本管理器程序本体以外的仓库说明文档，以及其中的中英文等内容，均主要由 AI 辅助撰写与翻译。** 可能存在语义偏差、表述不严谨或逻辑疏漏。请以实际软件行为与应用内说明为准；如有疑问，请通过应用内「关于与声明」中的联系方式联系维护者。  
+> **Repository documentation and translations (Chinese, English, and other languages) were largely produced with AI assistance.** They may contain semantic inaccuracies, awkward wording, or logic gaps. Prefer the running application and in-app notices; contact the maintainer via in-app Credits if needed.
+
 ## 语言 / Language
 
-**请向下滚动本页**，可找到另一种语言的完整说明。
+使用下方链接在本页各节间跳转（中英文内容均在同一 README 中）。
 
-**Scroll down this page** to find the full documentation in the other language.
+Use the links below to jump within this page (Chinese and English sections share one README).
 
-- 中文：[功能概览（中文）](#功能概览中文) · [最终用户（中文）](#最终用户中文) · [Mod 作者投稿（中文）](#mod-作者投稿中文) · [开发与发版（中文）](#开发与发版中文) · [风险声明（中文）](#风险声明中文)
-- English: [Features (EN)](#features-english) · [End users (EN)](#end-users-english) · [Authors (EN)](#mod-authors--submit-english) · [Developers (EN)](#developers--release-english) · [Risks (EN)](#risk-notice-english)
+- 中文：[功能概览](#功能概览-中文) · [最终用户](#最终用户-中文) · [Mod 作者投稿](#mod-作者投稿-中文) · [开发与发版](#开发与发版-中文) · [风险声明](#风险声明-中文)
+- English: [Features](#features-english) · [End users](#end-users-english) · [Authors](#mod-authors-submit-english) · [Developers](#developers-release-english) · [Risks](#risk-notice-english)
 
 | 仓库 / Repo | 用途 / Purpose |
 |-------------|----------------|
@@ -22,9 +26,7 @@ Windows desktop tool: external mod library + profiles, one-click sync into the g
 
 ---
 
-## 功能概览·中文
-
-> 英文版请**向下滚动** → [Features (English)](#features-english)
+## 功能概览 (中文)
 
 - **外部 Mod 库**：DLL / Zip / 文件夹导入；可从游戏目录扫描导入。
 - **方案（Profile）**：多套勾选组合，一键「应用方案」扁平同步到游戏的 `Mods` / `Plugins` / `UserLibs` / `UserData`。
@@ -35,9 +37,9 @@ Windows desktop tool: external mod library + profiles, one-click sync into the g
 
 ---
 
-## 最终用户·中文
+## 最终用户 (中文)
 
-> 更细的安装步骤也可参见 `docs/分发-使用说明.txt`。英文 → [End users (EN)](#end-users-english)
+更细的安装与使用说明见 [docs/分发-使用说明.md](docs/分发-使用说明.md)。
 
 ### 系统要求
 
@@ -75,24 +77,20 @@ Windows desktop tool: external mod library + profiles, one-click sync into the g
 
 ---
 
-## Mod 作者投稿·中文
+## Mod 作者投稿 (中文)
 
 投稿方式保持 **GitHub Fork + Pull Request**（网页即可，无需安装 Git）。
 
 1. 在管理器点 **投稿 Mod**，阅读弹窗步骤后打开教程。  
 2. 按社区仓库 README 操作：  
-   **[新手投稿教程（中文）](https://github.com/llxlzx/MechabellumMods#新手投稿教程网页操作无需安装-git中文)**  
+   **[新手投稿教程（中文）](https://github.com/llxlzx/MechabellumMods#新手投稿教程网页操作无需安装git-中文)**  
 3. 简要流程：Fork → 上传到 `mods/你的id/xxx.dll` → 编辑 `catalog.json` → 提 Pull Request → 等待合并。  
 
 举报：对目录或本地库中的 Mod 点 **举报**，选择分类后打开预填 GitHub Issue（请登录后点 Submit）。
 
-英文作者请看社区仓库的 [English guide](https://github.com/llxlzx/MechabellumMods#beginner-submit-guide-web-only-no-git--english)，或本页下方英文「Authors」一节。
-
 ---
 
-## 开发与发版·中文
-
-> 英文 → [Developers (EN)](#developers--release-english)
+## 开发与发版 (中文)
 
 ### 构建安装包
 
@@ -106,7 +104,7 @@ Windows desktop tool: external mod library + profiles, one-click sync into the g
 .\installer\build-installer.bat
 ```
 
-产物：`dist\MechabellumModManager_Setup_v*.exe`。整理进 `release/v版本号/` 的方式见 [docs/GitHub-Release更新说明.md（中文）](docs/GitHub-Release更新说明.md#一两个仓库分别干什么中文)。
+产物：`dist\MechabellumModManager_Setup_v*.exe`。整理与发版步骤见 [docs/GitHub-Release更新说明.md（中文）](docs/GitHub-Release更新说明.md#1-两个仓库分别干什么-中文)。
 
 ### 开发命令
 
@@ -118,11 +116,11 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 最终用户请使用 **Setup** 或开始菜单快捷方式，不要依赖仓库根目录下临时 bat / 便捷 exe 副本。
 
-维护者发版流程、附件清单（Setup + `latest.json` + portable zip）见 [GitHub Release 更新说明（中文）](docs/GitHub-Release更新说明.md#三发管理器新版本标准步骤中文)。
+维护者发版流程见 [GitHub Release 更新说明（中文）](docs/GitHub-Release更新说明.md#3-发管理器新版本标准步骤-中文)。更紧凑的流程摘要见 [docs/releasing.md](docs/releasing.md)。
 
 ---
 
-## 风险声明·中文
+## 风险声明 (中文)
 
 - 使用第三方 Mod 可能导致**封号、存档损坏、游戏或系统异常**等，风险自负。  
 - 高风险包启用需二次确认；管理器提供的本地检查**不是**完整杀毒。  
@@ -132,9 +130,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 ---
 
-## Features · English
-
-> Chinese version is **above** — [功能概览（中文）](#功能概览中文)
+## Features (English)
 
 - **External mod library**: import DLL / Zip / folder; optional import from the game folder.
 - **Profiles**: multiple enable-sets; **Apply profile** flattens files into the game `Mods` / `Plugins` / `UserLibs` / `UserData` folders.
@@ -145,9 +141,9 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 ---
 
-## End users · English
+## End users (English)
 
-> Also see `docs/分发-使用说明.txt` (Chinese). Jump to [最终用户（中文）](#最终用户中文) if needed.
+See also [docs/分发-使用说明.md](docs/分发-使用说明.md) (bilingual end-user notes).
 
 ### Requirements
 
@@ -185,24 +181,20 @@ High-risk mods require confirmation. Use the status bar and sync log to verify d
 
 ---
 
-## Mod authors / submit · English
+## Mod authors submit (English)
 
 Submission stays **GitHub Fork + Pull Request** (browser only; Git CLI optional).
 
 1. In the manager, click **Submit Mod**, read the steps, open the guide.  
 2. Follow the community README:  
-   **[Beginner submit guide (English)](https://github.com/llxlzx/MechabellumMods#beginner-submit-guide-web-only-no-git--english)**  
+   **[Beginner submit guide (English)](https://github.com/llxlzx/MechabellumMods#beginner-submit-guide-english)**  
 3. Summary: Fork → upload `mods/your-id/xxx.dll` → edit `catalog.json` → open a Pull Request → wait for merge.
 
 **Report**: pick a category; the manager opens a pre-filled GitHub Issue (sign in and click Submit).
 
-Chinese authors: [中文投稿教程](https://github.com/llxlzx/MechabellumMods#新手投稿教程网页操作无需安装-git中文).
-
 ---
 
-## Developers / release · English
-
-> Chinese → [开发与发版（中文）](#开发与发版中文)
+## Developers release (English)
 
 ### Build the installer
 
@@ -226,11 +218,11 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 End users should run the **Setup** or Start Menu shortcut—not ad-hoc bat/exe copies in the repo root.
 
-Release checklist: upload Setup + `latest.json` + portable zip; see the [English Release guide](docs/GitHub-Release更新说明.md#3-shipping-a-new-manager-version-english).
+Release checklist: upload Setup + `latest.json` + portable zip; see [Shipping steps (English)](docs/GitHub-Release更新说明.md#3-shipping-a-new-manager-version-english). Compact summary: [docs/releasing.md](docs/releasing.md).
 
 ---
 
-## Risk notice · English
+## Risk notice (English)
 
 - Third-party mods may cause **bans, save corruption, or instability**—use at your own risk.  
 - High-risk packages require confirmation; local checks are **not** a full antivirus.  

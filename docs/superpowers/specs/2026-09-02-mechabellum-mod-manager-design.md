@@ -1,9 +1,13 @@
 # Mechabellum（钢铁指挥官）Mod 管理器 — 设计规格
 
+> **说明 / Notice**  
+> 本文档整理自本项目维护者在开发 Mechabellum（钢铁指挥官）Mod 管理器过程中的设计记录，供有意复现或参考本方案的开发者使用。文中路径与环境均为**示例**，请按本机调整；不构成官方承诺或完整产品说明。  
+> **This document records the design of the Mechabellum Mod Manager for developers who wish to reproduce or learn from it. Paths and environment details are examples only. This is not an official commitment or a complete product manual.**
+
 **日期：** 2026-09-02  
 **状态：** 规格已确认；实现计划已就绪（见 `docs/superpowers/plans/2026-09-02-mechabellum-mod-manager.md`）  
-**工作目录：** `D:\gongzuo\钢铁指挥官mod管理器开发`  
-**目标游戏路径（默认）：** `D:\steam\steamapps\common\Mechabellum`  
+**工作目录：** `<repo-root>`  
+**目标游戏路径（默认）：** `C:\Program Files (x86)\Steam\steamapps\common\Mechabellum`  
 **Steam AppID：** `669330`
 
 ---
@@ -158,7 +162,7 @@
 | UserLibs | `{GameRoot}/UserLibs/` | 仅根目录文件 |
 | UserData | `{GameRoot}/UserData/` | 保留包内相对子路径 |
 
-`GameRoot` 默认：`D:\steam\steamapps\common\Mechabellum`。
+`GameRoot` 默认：`C:\Program Files (x86)\Steam\steamapps\common\Mechabellum`。
 
 ---
 
