@@ -7,6 +7,7 @@ Windows 桌面工具：外部 Mod 库 + 方案勾选，一键同步到游戏目�
 1. 运行安装包 `钢铁指挥官Mod管理器_Setup_v*.exe`（管理员）
 2. 安装过程中选择游戏路径，并按需安装 .NET 8 / .NET 6 / MelonLoader（混合：优先离线缓存，否则联网下载）
 3. 启动管理器后导入 Mod 并应用方案
+4. 可选：点「Mod 浏览」从社区目录 [llxlzx/MechabellumMods](https://github.com/llxlzx/MechabellumMods) 拉取列表，将条目「加入本地库」（不会自动启用）
 
 详见 `docs/分发-使用说明.txt`。
 

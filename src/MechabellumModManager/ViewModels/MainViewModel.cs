@@ -29,6 +29,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly RiskHeuristic _riskHeuristic;
     readonly SteamGameLocator _steamLocator;
     readonly UpdateChecker _updateChecker;
+    readonly ModCatalogService _catalog;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
@@ -39,6 +40,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string?>? _openFolder;
     bool _loggedMelonOptimize;
     bool _checkingUpdates;
+    bool _checkingCatalog;
+    bool _addingCatalogMod;
     bool _autoImportedFromGame;
 
     public IRelayCommand ApplyProfileCommand { get; }
@@ -56,6 +59,7 @@ public sealed partial class MainViewModel : ObservableObject
         RiskHeuristic? riskHeuristic = null,
         SteamGameLocator? steamLocator = null,
         UpdateChecker? updateChecker = null,
+        ModCatalogService? catalog = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
@@ -77,6 +81,7 @@ public sealed partial class MainViewModel : ObservableObject
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         _steamLocator = steamLocator ?? new SteamGameLocator();
         _updateChecker = updateChecker ?? new UpdateChecker();
+        _catalog = catalog ?? new ModCatalogService();
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -90,6 +95,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         Profiles = new ObservableCollection<ProfileItemViewModel>();
         Mods = new ObservableCollection<ModItemViewModel>();
+        CatalogMods = new ObservableCollection<CatalogModItemViewModel>();
         RiskBanner = RiskGate.BannerText;
         LaunchModeOptions = new[]
         {
@@ -143,6 +149,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ObservableCollection<ProfileItemViewModel> Profiles { get; }
     public ObservableCollection<ModItemViewModel> Mods { get; }
+    public ObservableCollection<CatalogModItemViewModel> CatalogMods { get; }
     public IReadOnlyList<LaunchModeOption> LaunchModeOptions { get; }
 
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
@@ -170,6 +177,9 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _settingsExpanded;
+    [ObservableProperty] private bool _catalogExpanded;
+    [ObservableProperty] private string _catalogStatus = "";
+    [ObservableProperty] private CatalogModItemViewModel? _selectedCatalogMod;
     [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
     [ObservableProperty] private string _updateStatus = "";
 
@@ -543,6 +553,154 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void ToggleSettings() => SettingsExpanded = !SettingsExpanded;
+
+    [RelayCommand]
+    void ToggleCatalog()
+    {
+        CatalogExpanded = !CatalogExpanded;
+        if (CatalogExpanded && CatalogMods.Count == 0)
+            _ = RefreshCatalogAsync();
+    }
+
+    [RelayCommand]
+    async Task RefreshCatalogAsync()
+    {
+        if (_checkingCatalog) return;
+        _checkingCatalog = true;
+        CatalogStatus = "正在拉取目录…";
+        AppendLog("正在拉取 Mod 目录…");
+        try
+        {
+            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            var packages = _library.List();
+            var previousId = SelectedCatalogMod?.Id;
+
+            CatalogMods.Clear();
+            foreach (var mod in root.Mods)
+            {
+                var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
+                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
+            }
+
+            SelectedCatalogMod = CatalogMods.FirstOrDefault(m =>
+                previousId is not null &&
+                string.Equals(m.Id, previousId, StringComparison.OrdinalIgnoreCase))
+                ?? CatalogMods.FirstOrDefault();
+
+            var updated = string.IsNullOrWhiteSpace(root.UpdatedAt) ? "未知" : root.UpdatedAt;
+            CatalogStatus = $"已加载 {CatalogMods.Count} 个条目（目录更新：{updated}）";
+            AppendLog(CatalogStatus);
+        }
+        catch (Exception ex)
+        {
+            CatalogStatus =
+                $"拉取目录失败：{ex.Message}。请确认可访问 GitHub（raw.githubusercontent.com），必要时配置代理。";
+            AppendLog(CatalogStatus);
+        }
+        finally
+        {
+            _checkingCatalog = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAddCatalogMod))]
+    async Task AddCatalogModToLibraryAsync()
+    {
+        if (SelectedCatalogMod is null || _addingCatalogMod) return;
+        _addingCatalogMod = true;
+        AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+
+        var item = SelectedCatalogMod;
+        try
+        {
+            if (item.IsInLibrary)
+            {
+                AppendLog($"「{item.Name}」已在本地库（同名文件），跳过下载。");
+                CatalogStatus = $"已在本地库：{item.Name}";
+                return;
+            }
+
+            // Pre-check name keywords; RiskHeuristic still runs on ImportDll / ReloadMods.
+            var probe = new ModPackage
+            {
+                Id = item.Id,
+                DisplayName = item.Name,
+                Author = item.Author,
+                Files =
+                {
+                    new DeployableFile
+                    {
+                        RelativePathInPackage = Path.GetFileName(item.File.Replace('\\', '/'))
+                    }
+                }
+            };
+            var risk = _riskHeuristic.Evaluate(probe);
+            if (risk.HighRisk &&
+                !_confirmHighRisk(
+                    $"「{item.Name}」命中高风险关键词「{risk.MatchedKeyword}」。确定仅加入本地库（不会自动启用）？"))
+            {
+                AppendLog($"已取消加入高风险目录项：{item.Name}");
+                return;
+            }
+
+            var fileName = Path.GetFileName(item.File.Replace('\\', '/'));
+            if (string.IsNullOrWhiteSpace(fileName))
+                fileName = item.Id + ".dll";
+
+            var tempPath = Path.Combine(Path.GetTempPath(), "mmm-catalog-" + Guid.NewGuid().ToString("N"), fileName);
+            CatalogStatus = $"正在下载 {item.Name}…";
+            AppendLog(CatalogStatus);
+            await _catalog.DownloadModAsync(item.Mod, tempPath).ConfigureAwait(true);
+
+            try
+            {
+                var forceType = ModCatalogService.ParsePackageType(item.Type);
+                var pkg = _library.ImportDll(tempPath, forceType);
+                AppendLog($"已从目录加入本地库：{pkg.DisplayName} ({pkg.Id})（未启用）");
+                CatalogStatus = $"已加入本地库：{pkg.DisplayName}";
+                ReloadMods();
+                RefreshCatalogInLibraryFlags();
+                UpdateLoaderVersionWarning();
+                UpdateFirstAssemblyWarning();
+                RecomputeDirty();
+            }
+            finally
+            {
+                try
+                {
+                    var dir = Path.GetDirectoryName(tempPath);
+                    if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir))
+                        Directory.Delete(dir, recursive: true);
+                }
+                catch
+                {
+                    // best-effort temp cleanup
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            CatalogStatus = $"加入本地库失败：{ex.Message}";
+            AppendLog(CatalogStatus);
+        }
+        finally
+        {
+            _addingCatalogMod = false;
+            AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    bool CanAddCatalogMod() => SelectedCatalogMod is not null && !_addingCatalogMod;
+
+    partial void OnSelectedCatalogModChanged(CatalogModItemViewModel? value) =>
+        AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+
+    void RefreshCatalogInLibraryFlags()
+    {
+        var packages = _library.List();
+        foreach (var item in CatalogMods)
+            item.IsInLibrary = ModCatalogService.IsInLibraryByFileName(packages, item.File);
+    }
 
     [RelayCommand]
     async Task CheckForUpdatesAsync()
