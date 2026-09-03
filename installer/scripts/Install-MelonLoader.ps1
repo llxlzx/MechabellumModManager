@@ -26,12 +26,19 @@ if (Test-Path $localZip) {
     $destDir = Join-Path $WorkDir "mmm-melon-redist"
     New-Item -ItemType Directory -Force -Path $destDir | Out-Null
     $zipPath = Join-Path $destDir "MelonLoader.x64.zip"
-    Write-Host "Downloading MelonLoader..."
+    Write-Host "Local MelonLoader zip not found; downloading from GitHub..."
+    Write-Host "Note: GitHub may be unreachable without a proxy in some regions. If this hangs or fails, use a proxy or install MelonLoader manually."
+    Write-Host "URL: $zipUrl"
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
     } catch {
-        Write-Error "Failed to download MelonLoader. Place MelonLoader.x64.zip under redist/melonloader/ or install manually. $($_.Exception.Message)"
+        Write-Error @"
+Failed to download MelonLoader from GitHub (often blocked without a proxy).
+Place MelonLoader.x64.zip under installer-redist\melonloader\ (or rebuild Setup with redist embedded), or install manually from:
+  https://github.com/LavaGang/MelonLoader/releases
+$($_.Exception.Message)
+"@
         exit 2
     }
 }

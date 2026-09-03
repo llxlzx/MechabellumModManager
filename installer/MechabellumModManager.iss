@@ -40,7 +40,7 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 Name: "main"; Description: "管理器本体（必选）"; Types: full compact custom; Flags: fixed
 Name: "dotnet8"; Description: ".NET 8 Desktop Runtime x64（管理器需要；已安装则跳过；下载约 55-60 MB，安装后约 150-200 MB）"; Types: full compact custom
 Name: "dotnet6"; Description: ".NET 6 Desktop Runtime x64（MelonLoader 需要；已安装则跳过；下载约 50-55 MB，安装后约 140-180 MB）"; Types: full compact custom
-Name: "melon"; Description: "MelonLoader（默认建议安装到游戏目录）"; Types: full custom
+Name: "melon"; Description: "MelonLoader（安装包已内嵌离线包，一般无需访问 GitHub；默认建议安装到游戏目录）"; Types: full custom
 
 [Files]
 ; Published app + assets (build-installer.bat publishes first)
@@ -193,11 +193,17 @@ begin
 
   if WizardIsComponentSelected('melon') then
   begin
-    SetStatus('正在安装 MelonLoader 到游戏目录…');
+    SetStatus('正在安装 MelonLoader（优先使用安装包内嵌离线包；仅缺失时才会访问 GitHub）…');
     Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
     Code := PsFromSrc('Install-MelonLoader.ps1', Args);
     if Code <> 0 then
-      MsgBox('MelonLoader 安装未成功（exit ' + IntToStr(Code) + '）。可取消该组件后重装，或手动安装 MelonLoader。', mbError, MB_OK)
+      MsgBox(
+        'MelonLoader 安装未成功（exit ' + IntToStr(Code) + '）。' + #13#10 + #13#10 +
+        '若正在从网络下载：GitHub 在部分网络环境下无法访问，可能表现为长时间卡住或失败；可开启代理后重试。' + #13#10 + #13#10 +
+        '也可取消 MelonLoader 组件后重装管理器，或手动安装：' + #13#10 +
+        'https://github.com/LavaGang/MelonLoader/releases' + #13#10 +
+        '（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）',
+        mbError, MB_OK)
     else
       SetStatus('MelonLoader 安装完成。');
   end;

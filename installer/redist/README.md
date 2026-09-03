@@ -1,15 +1,26 @@
-# Offline redistributables (optional)
+# Redistributables for the Setup
 
-Place official installers here to enable offline / faster installs.
-Filenames are matched by prefix; keep Microsoft/GitHub originals.
+## MelonLoader — **required for release builds**
+
+Place the official zip here before running `installer\build-installer`:
 
 ```
-redist/
-  dotnet8/windowsdesktop-runtime-8.*-win-x64.exe
-  dotnet6/windowsdesktop-runtime-6.*-win-x64.exe
-  melonloader/MelonLoader.x64.zip
+redist/melonloader/MelonLoader.x64.zip
 ```
 
-If a file is missing, the installer downloads from official URLs.
+Download: https://github.com/LavaGang/MelonLoader/releases  
+(file name must be `MelonLoader.x64.zip`)
 
-Do **not** commit large binaries to git (see `.gitignore`).
+`build-installer` **hard-fails** if this file is missing or empty.  
+Local debug only: PowerShell `-SkipMelonRedistCheck` or `set SKIP_MELON_REDIST_CHECK=1` — **do not** use for release.
+
+Do **not** commit the zip to git (see `.gitignore`).
+
+## .NET Desktop Runtime — optional
+
+```
+redist/dotnet8/windowsdesktop-runtime-8.*-win-x64.exe
+redist/dotnet6/windowsdesktop-runtime-6.*-win-x64.exe
+```
+
+If missing, the installer downloads from Microsoft CDN when those components are selected.

@@ -1,4 +1,8 @@
 # Build publish folder + Inno Setup installer
+param(
+    [switch] $SkipMelonRedistCheck
+)
+
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
 
@@ -21,6 +25,26 @@ Copy-Item "src\MechabellumModManager\Assets\*" $assetsOut -Force
   "installer\redist\dotnet6",
   "installer\redist\melonloader"
 ) | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ | Out-Null }
+
+Write-Host "[2/3] Checking MelonLoader offline redist..."
+$melonZip = Join-Path (Get-Location) "installer\redist\melonloader\MelonLoader.x64.zip"
+if (-not $SkipMelonRedistCheck) {
+    if (-not (Test-Path -LiteralPath $melonZip) -or ((Get-Item -LiteralPath $melonZip).Length -le 0)) {
+        Write-Error @"
+Missing MelonLoader offline package (required for release builds).
+Place the official file here:
+  installer\redist\melonloader\MelonLoader.x64.zip
+Download: https://github.com/LavaGang/MelonLoader/releases
+(Use MelonLoader.x64.zip)
+
+Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
+"@
+        exit 3
+    }
+    Write-Host "Found MelonLoader redist: $melonZip ($([math]::Round((Get-Item $melonZip).Length / 1MB, 1)) MB)"
+} else {
+    Write-Warning "SkipMelonRedistCheck set — Setup may lack MelonLoader zip. Do not use for release."
+}
 
 Write-Host "[3/3] Compiling Inno Setup..."
 $iscc = $null

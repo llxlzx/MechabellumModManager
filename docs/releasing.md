@@ -31,7 +31,18 @@ installer\build-installer.bat
 
 产物：`dist\MechabellumModManager_Setup_vX.Y.Z.exe`
 
-可选：将 .NET / MelonLoader 离线包放入 `installer\redist\`（见 `installer\redist\README.md`），安装时优先本地、无需下载。
+### MelonLoader 离线包（发版必选）
+
+在跑 `build-installer` **之前**，把官方文件放到：
+
+`installer/redist/melonloader/MelonLoader.x64.zip`
+
+来源：https://github.com/LavaGang/MelonLoader/releases  
+
+缺失或空文件时构建脚本会以退出码 3 **硬失败**，禁止出包。  
+调试可用 `-SkipMelonRedistCheck` / `SKIP_MELON_REDIST_CHECK=1`，**正式发版禁止使用**。
+
+可选：将 .NET Desktop Runtime 离线安装包放入 `installer/redist/dotnet8` / `dotnet6`（见 `installer/redist/README.md`）。
 
 ## latest.json
 
@@ -59,14 +70,16 @@ installer\build-installer.bat
 
 ## 发布步骤
 
-1.  bump 版本（csproj + ISS）
+1. bump 版本（csproj + ISS）
 2. 提交并推送 `master`
-3. 本地跑 `build-installer`，确认 `dist\` 下 Setup
-4. 在 GitHub 创建 Release（tag 建议 `vX.Y.Z`）
-5. 上传：
+3. 下载并放入 `MelonLoader.x64.zip`（见上文「发版必选」）
+4. 本地跑 `build-installer`，确认 `dist\` 下 Setup（体积应含 MelonLoader zip）
+5. 在 GitHub 创建 Release（tag 建议 `vX.Y.Z`）
+6. 上传：
    - `MechabellumModManager_Setup_vX.Y.Z.exe`
    - `latest.json`（文件名必须为 `latest.json`）
-6. 用管理器「设置 → 检查更新」验证
+7. 用管理器「设置 → 检查更新」验证
+8. Release notes 可注明：MelonLoader 已离线内嵌，安装一般无需访问 GitHub
 
 ## 管理器行为
 
