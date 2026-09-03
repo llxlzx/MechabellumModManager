@@ -22,11 +22,11 @@
 在管理器仓库的 `release/v版本号/` 下：
 
 ```
-release/v1.0.3/
+release/v1.0.4/
   安装包/     → 给绝大多数用户（Setup.exe）
   本体/       → 便携运行（exe + Assets，无 Mod 数据）
   latest.json → 给「检查更新」用
-  MechabellumModManager_portable_v1.0.3.zip  → 把「本体」打成的 zip，上传 Release
+  MechabellumModManager_portable_v1.0.4.zip  → 把「本体」打成的 zip，上传 Release
 ```
 
 | | **安装包** | **本体（便携）** |
@@ -44,15 +44,15 @@ release/v1.0.3/
 
 ## 三、发管理器新版本：标准步骤
 
-以发布 **v1.0.3** 为例（以后把版本号换成新的即可）。
+以发布 **v1.0.4** 为例（以后把版本号换成新的即可）。
 
 ### 步骤 1 — 改版本号
 
 同时改这三处，数字必须一致：
 
-1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.0.3</Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.0.3"`
-3. 稍后的 `latest.json` → `"version": "1.0.3"`
+1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.0.4</Version>`
+2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.0.4"`
+3. 稍后的 `latest.json` → `"version": "1.0.4"`
 
 ### 步骤 2 — 准备 MelonLoader 离线包（必做）
 
@@ -87,16 +87,16 @@ $env:HTTP_PROXY='http://127.0.0.1:7890'
 .\installer\build-installer.ps1
 ```
 
-得到：`dist\MechabellumModManager_Setup_v1.0.3.exe`  
+得到：`dist\MechabellumModManager_Setup_v1.0.4.exe`  
 （体积大约二十多 MB 才正常，因为内嵌了 Melon。）
 
-把产物整理进 `release/v1.0.3/安装包/` 与 `release/v1.0.3/本体/`，并写好 `latest.json`。
+把产物整理进 `release/v1.0.4/安装包/` 与 `release/v1.0.4/本体/`，并写好 `latest.json`。
 
 ### 步骤 5 — 打本体 zip
 
 ```powershell
-cd release\v1.0.3
-Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.0.3.zip" -Force
+cd release\v1.0.4
+Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.0.4.zip" -Force
 ```
 
 解压后应直接看到 exe 和 Assets，而不是多一层无关目录。
@@ -105,16 +105,16 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 1. 打开：https://github.com/llxlzx/MechabellumModManager/releases  
 2. **Draft a new release**  
-3. **Tag**：输入 `v1.0.3` → Create new tag；**Target** 选 `master`  
-4. **Title**：`v1.0.3`  
+3. **Tag**：输入 `v1.0.4` → Create new tag；**Target** 选 `master`  
+4. **Title**：`v1.0.4`  
 5. **说明**：写本版更新点（可与 latest.json 的 notes 相同）  
 6. **上传附件**（拖进虚线框）：
 
 | 必传 / 推荐 | 文件 |
 |-------------|------|
-| 必传 | `安装包\MechabellumModManager_Setup_v1.0.3.exe` |
+| 必传 | `安装包\MechabellumModManager_Setup_v1.0.4.exe` |
 | 必传 | `latest.json`（**文件名不能改**） |
-| 推荐 | `MechabellumModManager_portable_v1.0.3.zip` |
+| 推荐 | `MechabellumModManager_portable_v1.0.4.zip` |
 
 7. 勾选 **Set as the latest release**  
 8. **不要**勾选 Pre-release  
@@ -122,7 +122,7 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ### 步骤 7 — 自检
 
-- 打开：https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.0.3  
+- 打开：https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.0.4  
   确认三个资源都在  
 - 打开：  
   `https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json`  
@@ -135,9 +135,9 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ```json
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "notes": "本版更新说明，可多行。",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.3/MechabellumModManager_Setup_v1.0.3.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.4/MechabellumModManager_Setup_v1.0.4.exe",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
@@ -172,7 +172,16 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 ---
 
-## 六、当前本地对照（写作时）
+## 六、v1.0.4 本版要点
+
+- **取消 Cloudflare 中继**：投稿 / 举报不再走 Worker，客户端直连 GitHub。
+- **投稿**：应用内引导 Fork + 更新 `catalog.json` + Pull Request 到 `MechabellumMods`。
+- **举报**：打开 GitHub Issues 预填页，并把 Issue 链接复制到剪贴板；用户登录后点 Submit 才真正提交。
+- **MechabellumMods 侧**：Issue 模板 + `catalog.json` CI 校验，便于审稿与防坏目录。
+
+---
+
+## 七、当前本地对照（写作时）
 
 | 项 | 位置 |
 |----|------|
@@ -183,7 +192,7 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 ---
 
-## 七、常见问题
+## 八、常见问题
 
 **Q：安装测试目录里的「钢铁指挥官Mod管理器」能整包当本体吗？**  
 A：不能。去掉卸载器和 installer 目录后，理论上只留 exe+Assets 可以，但请优先用 `release/vX.Y.Z/本体\`。

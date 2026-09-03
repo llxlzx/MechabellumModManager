@@ -2,6 +2,8 @@ namespace MechabellumModManager.Models;
 
 public sealed class ReportRequest
 {
+    public const int MaxNotesLength = 1500;
+
     public string ModId { get; set; } = "";
     public string? ModName { get; set; }
     public string? Source { get; set; }
@@ -28,6 +30,12 @@ public sealed class ReportRequest
             string.IsNullOrWhiteSpace(request.Notes))
         {
             error = "notes required for Other";
+            return false;
+        }
+
+        if (request.Notes is { Length: > MaxNotesLength })
+        {
+            error = $"notes must be <= {MaxNotesLength} characters";
             return false;
         }
 

@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -32,7 +31,6 @@ public sealed partial class MainViewModel : ObservableObject
     readonly UpdateChecker _updateChecker;
     readonly ModCatalogService _catalog;
     readonly AssemblyInspector _assemblyInspector;
-    RelayClient _relay;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Action<string> _notify;
@@ -43,7 +41,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<ModPackageType?>? _pickPackageType;
     readonly Func<string?>? _openFolder;
     readonly Func<string, (ReportCategory Category, string Notes)?>? _promptReport;
-    readonly Func<SubmitModFields?>? _promptSubmitMod;
+    readonly Func<bool>? _promptSubmitGuide;
+    readonly Action<string>? _copyText;
     bool _loggedMelonOptimize;
     bool _checkingUpdates;
     bool _checkingCatalog;
@@ -51,7 +50,6 @@ public sealed partial class MainViewModel : ObservableObject
     bool _autoImportedFromGame;
     bool _suppressLanguageSave;
     bool _reporting;
-    bool _submittingMod;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -69,7 +67,6 @@ public sealed partial class MainViewModel : ObservableObject
         SteamGameLocator? steamLocator = null,
         UpdateChecker? updateChecker = null,
         ModCatalogService? catalog = null,
-        RelayClient? relay = null,
         AssemblyInspector? assemblyInspector = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
@@ -81,7 +78,8 @@ public sealed partial class MainViewModel : ObservableObject
         Func<ModPackageType?>? pickPackageType = null,
         Func<string?>? openFolder = null,
         Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
-        Func<SubmitModFields?>? promptSubmitMod = null)
+        Func<bool>? promptSubmitGuide = null,
+        Action<string>? copyText = null)
     {
         _paths = paths;
         _store = store;
@@ -108,7 +106,8 @@ public sealed partial class MainViewModel : ObservableObject
         _pickPackageType = pickPackageType;
         _openFolder = openFolder;
         _promptReport = promptReport;
-        _promptSubmitMod = promptSubmitMod;
+        _promptSubmitGuide = promptSubmitGuide;
+        _copyText = copyText;
         ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => IsReady);
 
         Ui = new UiStrings();
@@ -136,7 +135,6 @@ public sealed partial class MainViewModel : ObservableObject
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
-        _relay = relay ?? new RelayClient(config.RelayBaseUrl);
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
 
         _gamePath = ResolveInitialGamePath(config.GamePath);
@@ -645,21 +643,15 @@ public sealed partial class MainViewModel : ObservableObject
             "library").ConfigureAwait(true);
     }
 
-    async Task ReportAsync(string modId, string modName, string source)
+    Task ReportAsync(string modId, string modName, string source)
     {
-        if (_reporting) return;
-        if (!_relay.IsConfigured)
-        {
-            AppendLog(Ui.RelayNotConfigured);
-            _notify(Ui.RelayNotConfigured);
-            return;
-        }
+        if (_reporting) return Task.CompletedTask;
 
         var picked = _promptReport?.Invoke(modName);
-        if (picked is null) return;
+        if (picked is null) return Task.CompletedTask;
 
         if (!_confirm(Ui.ReportConfirm))
-            return;
+            return Task.CompletedTask;
 
         _reporting = true;
         try
@@ -673,96 +665,67 @@ public sealed partial class MainViewModel : ObservableObject
                 Notes = picked.Value.Notes,
                 AppVersion = AppVersion
             };
-            await _relay.SubmitReportAsync(request).ConfigureAwait(true);
-            AppendLog(Ui.ReportSuccess);
+            if (!ReportRequest.TryValidate(request, out var error))
+            {
+                AppendLog($"{Ui.ReportFailed}：{error}");
+                _notify(Ui.ReportFailed);
+                return Task.CompletedTask;
+            }
+
+            var url = GitHubCommunityLinks.BuildReportIssueUrl(
+                request.ModId,
+                request.ModName,
+                request.Source,
+                request.Category,
+                request.Notes,
+                request.AppVersion);
+            if (!TryOpenUrl(url))
+            {
+                AppendLog($"{Ui.ReportFailed}：{url}");
+                _notify(Ui.ReportFailed);
+                return Task.CompletedTask;
+            }
+
+            TryCopyText(url);
+            AppendLog($"{Ui.ReportSuccess}\n{url}");
+            _notify(Ui.ReportSuccess);
         }
         catch (Exception ex)
         {
             AppendLog($"{Ui.ReportFailed}：{ex.Message}");
+            _notify(Ui.ReportFailed);
         }
         finally
         {
             _reporting = false;
         }
+
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
-    async Task SubmitModAsync()
+    void SubmitMod()
     {
-        if (_submittingMod) return;
-        if (!_relay.IsConfigured)
+        if (_promptSubmitGuide is not null)
         {
-            AppendLog(Ui.RelayNotConfigured);
-            _notify(Ui.RelayNotConfigured);
-            return;
-        }
-
-        var fields = _promptSubmitMod?.Invoke();
-        if (fields is null) return;
-
-        if (!fields.DllPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-        {
-            AppendLog(Ui.SubmitModInvalidExt);
-            return;
-        }
-
-        var info = new FileInfo(fields.DllPath);
-        if (!info.Exists)
-        {
-            AppendLog(Ui.SubmitModPickDll);
-            return;
-        }
-
-        if (info.Length > RelayClient.MaxSubmitBytes)
-        {
-            AppendLog(Ui.SubmitModTooLarge);
-            return;
-        }
-
-        try
-        {
-            var inspect = _assemblyInspector.Inspect(fields.DllPath);
-            if (!inspect.LooksLikeMelonMod && !inspect.LooksLikeMelonPlugin)
-            {
-                if (!_confirm(Ui.SubmitModNotMelonWarn))
-                    return;
-            }
-        }
-        catch
-        {
-            if (!_confirm(Ui.SubmitModNotMelonWarn))
+            if (!_promptSubmitGuide())
                 return;
         }
+        else if (!_confirm(Ui.SubmitModConfirm))
+        {
+            return;
+        }
 
-        _submittingMod = true;
-        try
+        var url = GitHubCommunityLinks.ContributeGuideUrl;
+        if (!TryOpenUrl(url))
         {
-            await using var stream = File.OpenRead(fields.DllPath);
-            var sha = Convert.ToHexString(await SHA256.HashDataAsync(stream).ConfigureAwait(true)).ToLowerInvariant();
-            stream.Position = 0;
+            AppendLog($"{Ui.SubmitModFailed}：{url}");
+            _notify(Ui.SubmitModFailed);
+            return;
+        }
 
-            var meta = new SubmitModRequest
-            {
-                Name = fields.Name,
-                Author = fields.Author,
-                Version = fields.Version,
-                Summary = fields.Summary,
-                Sha256 = sha,
-                FileName = Path.GetFileName(fields.DllPath),
-                FileSize = info.Length,
-                AppVersion = AppVersion
-            };
-            await _relay.SubmitModAsync(meta, stream, meta.FileName).ConfigureAwait(true);
-            AppendLog(Ui.SubmitModSuccess);
-        }
-        catch (Exception ex)
-        {
-            AppendLog($"{Ui.SubmitModFailed}：{ex.Message}");
-        }
-        finally
-        {
-            _submittingMod = false;
-        }
+        AppendLog(Ui.SubmitModSuccess);
+        _notify(Ui.SubmitModSuccess);
     }
 
     [RelayCommand]
@@ -1045,13 +1008,13 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 var detail = $"{result.Message}\n\n{result.Notes}\n\n是否打开下载链接？\n{result.SetupUrl}";
                 if (_confirm(detail))
-                    OpenUrl(result.SetupUrl!);
+                    TryOpenUrl(result.SetupUrl!);
             }
             else if (result.Kind == UpdateCheckKind.Failed)
             {
                 var fallback = $"https://github.com/{UpdateChecker.Owner}/{UpdateChecker.Repo}/releases/latest";
                 if (_confirm($"{result.Message}\n\n是否打开 GitHub Releases 页面？"))
-                    OpenUrl(fallback);
+                    TryOpenUrl(fallback);
             }
         }
         catch (Exception ex)
@@ -1065,15 +1028,37 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    static void OpenUrl(string url)
+    static bool TryOpenUrl(string url)
     {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
         try
         {
             Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            return true;
         }
         catch
         {
-            // Ignore — user can copy URL from log / dialog.
+            return false;
+        }
+    }
+
+    void TryCopyText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        try
+        {
+            if (_copyText is not null)
+                _copyText(text);
+            else
+                System.Windows.Clipboard.SetText(text);
+        }
+        catch
+        {
+            // Clipboard may be locked; URL is still in the sync log.
         }
     }
 

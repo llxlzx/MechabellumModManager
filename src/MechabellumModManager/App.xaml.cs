@@ -32,8 +32,6 @@ public partial class App : Application
         var deploy = new DeployService(paths, store, planner, detector, probe);
         var launcher = new GameLauncher(new ShellProcessStarter(), probe);
         var riskGate = new RiskGate();
-        var config = store.LoadOrDefault(paths.ConfigPath, () => new AppConfig());
-        var relay = new RelayClient(config.RelayBaseUrl);
 
         return new MainViewModel(
             paths,
@@ -44,7 +42,6 @@ public partial class App : Application
             deploy,
             launcher,
             riskGate,
-            relay: relay,
             assemblyInspector: inspector,
             confirmHighRisk: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Warning),
             confirm: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question),
@@ -56,7 +53,8 @@ public partial class App : Application
             pickPackageType: () => PickPackageType(owner),
             openFolder: () => BrowseImportFolder(owner),
             promptReport: modName => PromptReport(owner, modName),
-            promptSubmitMod: () => PromptSubmitMod(owner));
+            promptSubmitGuide: () => PromptSubmitGuide(owner),
+            copyText: text => Clipboard.SetText(text));
     }
 
     static PathsService ResolvePaths(JsonStore store)
@@ -127,19 +125,9 @@ public partial class App : Application
         return (dialog.Category, dialog.Notes);
     }
 
-    static SubmitModFields? PromptSubmitMod(Window owner)
+    static bool PromptSubmitGuide(Window owner)
     {
-        var dialog = new SubmitModDialog { Owner = owner };
-        if (dialog.ShowDialog() != true || dialog.Result is null)
-            return null;
-        var r = dialog.Result;
-        return new SubmitModFields
-        {
-            DllPath = r.DllPath,
-            Name = r.Name,
-            Author = r.Author,
-            Version = r.Version,
-            Summary = r.Summary
-        };
+        var dialog = new SubmitGuideDialog { Owner = owner };
+        return dialog.ShowDialog() == true;
     }
 }

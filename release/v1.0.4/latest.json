@@ -1,6 +1,6 @@
 ﻿{
-    "version":  "1.0.4",
-    "publishedAt":  "2026-09-03T05:14:59Z",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.4/MechabellumModManager_Setup_v1.0.4.exe",
-    "notes":  "多语言（中/英/日/德/俄）、制作人员与完整免责声明、提交/举报 Mod（中继）、模组列表选中切换修复；中转未配置改为 OK 提示对话框。"
+  "version": "1.0.4",
+  "publishedAt": "2026-09-03T06:00:00Z",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.4/MechabellumModManager_Setup_v1.0.4.exe",
+  "notes": "取消中转：投稿/举报直连 GitHub；投稿三步引导 + PR；举报预填 Issue 并复制链接；多语言与免责声明。"
 }

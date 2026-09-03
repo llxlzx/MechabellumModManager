@@ -57,7 +57,7 @@
 1. 本软件按「现状」提供。作者及关联方不对因使用本管理器，或因通过本管理器获取、安装、启用、管理任何第三方 Mod / 插件 / 相关文件而导致的任何直接或间接损失承担责任，包括但不限于：账号处罚或封禁、存档损坏、游戏或系统异常、数据丢失或泄露、设备损害及其他经济或非经济损失。
 2. 第三方 Mod 与社区投稿内容由提供者自行负责，可能存在不稳定、不兼容、违规或含有恶意代码等风险。下载、安装与使用前请自行判断，风险自负。
 3. 游戏官方通常未必支持第三方修改；修改客户端可能导致违反用户协议、服务条款或竞赛规则，相关后果由使用者自行承担。
-4. 本管理器提供的本地校验、投稿中转与举报等功能仅供辅助，不构成对任何文件之安全性、完整性、合法性或可用性的保证、承诺或背书。
+4. 本管理器提供的本地校验与 GitHub 举报等功能仅供辅助，不构成对任何文件之安全性、完整性、合法性或可用性的保证、承诺或背书。
 5. 如发现可疑或不当内容，请使用应用内举报功能。维护者有权拒绝上架、下架或删除相关内容，且无义务对每一份文件进行全面的安全或法律鉴定。
 6. 继续使用本管理器，即视为您已阅读并同意本声明。如不同意，请立即停止使用并卸载本软件。</value>
   </data>
@@ -65,7 +65,7 @@
     <value>举报</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>确认提交此举报？虚假举报可能影响审核。</value>
+    <value>将打开 GitHub 举报页，登录后点击 Submit 才会真正提交。虚假举报可能影响审核。是否继续？</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>作弊</value>
@@ -83,49 +83,40 @@
     <value>请说明原因（必填）</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>举报已提交，感谢反馈。</value>
+    <value>已打开 GitHub 举报页，Issue 链接已复制到剪贴板。请登录后点击 Submit 完成举报。</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>举报提交失败</value>
+    <value>无法打开举报页</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>投稿 Mod</value>
   </data>
-  <data name="SubmitModTitle" xml:space="preserve">
-    <value>投稿 Mod（待审核）</value>
-  </data>
-  <data name="SubmitModName" xml:space="preserve">
-    <value>名称</value>
-  </data>
-  <data name="SubmitModAuthor" xml:space="preserve">
-    <value>作者</value>
-  </data>
-  <data name="SubmitModVersion" xml:space="preserve">
-    <value>版本</value>
-  </data>
-  <data name="SubmitModSummary" xml:space="preserve">
-    <value>简介</value>
-  </data>
-  <data name="SubmitModPickDll" xml:space="preserve">
-    <value>选择 DLL…</value>
+  <data name="SubmitModConfirm" xml:space="preserve">
+    <value>将打开 GitHub 仓库投稿说明。请按 README 通过 Fork + Pull Request 提交 Mod，是否继续？</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>投稿已提交，等待维护者审核。</value>
+    <value>已打开投稿说明页。请按 README 通过 Pull Request 提交。</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>投稿失败</value>
+    <value>无法打开投稿页</value>
   </data>
-  <data name="SubmitModNotMelonWarn" xml:space="preserve">
-    <value>该 DLL 看起来不像 Melon Mod。仍要投稿吗？</value>
+  <data name="SubmitGuideTitle" xml:space="preserve">
+    <value>投稿步骤</value>
   </data>
-  <data name="SubmitModTooLarge" xml:space="preserve">
-    <value>文件超过 20MB 上限。</value>
+  <data name="SubmitGuideIntro" xml:space="preserve">
+    <value>请按以下三步向社区仓库投稿（需 GitHub 账号）：</value>
   </data>
-  <data name="SubmitModInvalidExt" xml:space="preserve">
-    <value>仅支持 .dll 文件。</value>
+  <data name="SubmitGuideStep1" xml:space="preserve">
+    <value>1. Fork 仓库 llxlzx/MechabellumMods</value>
   </data>
-  <data name="RelayNotConfigured" xml:space="preserve">
-    <value>投稿/举报中转未配置。请在配置中设置 RelayBaseUrl（Cloudflare Worker 地址）。</value>
+  <data name="SubmitGuideStep2" xml:space="preserve">
+    <value>2. 放入 mods/&lt;id&gt;/xxx.dll，并更新 catalog.json</value>
+  </data>
+  <data name="SubmitGuideStep3" xml:space="preserve">
+    <value>3. 向本仓库提交 Pull Request，等待维护者审核合并</value>
+  </data>
+  <data name="SubmitGuideOpen" xml:space="preserve">
+    <value>打开 GitHub</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>确认</value>

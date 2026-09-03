@@ -38,6 +38,7 @@
                        Visibility="Collapsed" />
             <TextBox x:Name="NotesBox"
                      Height="72"
+                     MaxLength="1500"
                      TextWrapping="Wrap"
                      AcceptsReturn="True"
                      Visibility="Collapsed"
