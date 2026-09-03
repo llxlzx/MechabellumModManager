@@ -82,6 +82,41 @@ public class MelonLoaderConfigOptimizerTests
         finally { Directory.Delete(root, true); }
     }
 
+
+    [Fact]
+    public void NeedsFirstAssemblyGeneration_true_when_assemblies_missing()
+    {
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            new MelonLoaderConfigOptimizer().NeedsFirstAssemblyGeneration(root).Should().BeTrue();
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void NeedsFirstAssemblyGeneration_false_when_dll_present()
+    {
+        var root = CreateTempGame(withAssemblies: true);
+        try
+        {
+            new MelonLoaderConfigOptimizer().NeedsFirstAssemblyGeneration(root).Should().BeFalse();
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void NeedsFirstAssemblyGeneration_true_when_folder_empty()
+    {
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "Il2CppAssemblies"));
+            new MelonLoaderConfigOptimizer().NeedsFirstAssemblyGeneration(root).Should().BeTrue();
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     static string CreateTempGame(bool withAssemblies)
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-ml-opt-" + Guid.NewGuid().ToString("N"));

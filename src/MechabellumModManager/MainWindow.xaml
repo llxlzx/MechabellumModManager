@@ -410,6 +410,18 @@
                                TextWrapping="Wrap"
                                FontSize="12" />
                 </Border>
+                <Border Background="#FF241C12"
+                        BorderBrush="{StaticResource WarnBrush}"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="12,8"
+                        Margin="0,8,0,0"
+                        Visibility="{Binding FirstAssemblyWarning, Converter={StaticResource NonEmptyVis}}">
+                    <TextBlock Text="{Binding FirstAssemblyWarning}"
+                               Foreground="{StaticResource AccentAmberHotBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="12" />
+                </Border>
             </StackPanel>
 
             <Border Grid.Row="4"

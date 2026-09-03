@@ -116,6 +116,7 @@ public sealed partial class MainViewModel : ObservableObject
         ReloadMods();
         RecomputeDirty();
         UpdateLoaderVersionWarning();
+        UpdateFirstAssemblyWarning();
 
         if (string.IsNullOrWhiteSpace(_gamePath))
             AppendLog("未自动找到游戏目录。请在「设置」中浏览选择 Mechabellum 安装路径。");
@@ -161,6 +162,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isDirty;
     [ObservableProperty] private string _riskBanner = "";
     [ObservableProperty] private string _loaderVersionWarning = "";
+    [ObservableProperty] private string _firstAssemblyWarning = "";
     [ObservableProperty] private string _missingEnabledPackagesWarning = "";
     [ObservableProperty] private string _gamePath = "";
     [ObservableProperty] private LaunchMode _launchMode;
@@ -187,6 +189,7 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshStatus();
         RecomputeDirty();
         UpdateLoaderVersionWarning();
+        UpdateFirstAssemblyWarning();
     }
 
     partial void OnLaunchModeChanged(LaunchMode value)
@@ -221,6 +224,7 @@ public sealed partial class MainViewModel : ObservableObject
         ReloadMods();
         RecomputeDirty();
         UpdateLoaderVersionWarning();
+        UpdateFirstAssemblyWarning();
     }
 
     [RelayCommand]
@@ -228,6 +232,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         GameStatus = _detector.Detect(GamePath);
         UpdateLoaderVersionWarning();
+        UpdateFirstAssemblyWarning();
         AppendLog(GameStatus.Message);
         TryOptimizeMelonLoader(logAlways: false);
     }
@@ -271,6 +276,7 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
             ReloadMods();
             UpdateLoaderVersionWarning();
+            UpdateFirstAssemblyWarning();
             RecomputeDirty();
         }
         catch (ImportNeedsTypeException ex)
@@ -289,6 +295,7 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
                 ReloadMods();
                 UpdateLoaderVersionWarning();
+                UpdateFirstAssemblyWarning();
                 RecomputeDirty();
             }
             catch (Exception commitEx)
@@ -322,6 +329,7 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
             ReloadMods();
             UpdateLoaderVersionWarning();
+            UpdateFirstAssemblyWarning();
             RecomputeDirty();
         }
         catch (ImportNeedsTypeException ex)
@@ -341,6 +349,7 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
                 ReloadMods();
                 UpdateLoaderVersionWarning();
+                UpdateFirstAssemblyWarning();
                 RecomputeDirty();
             }
             catch (Exception retryEx)
@@ -362,6 +371,7 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
             ReloadMods();
             UpdateLoaderVersionWarning();
+            UpdateFirstAssemblyWarning();
             RecomputeDirty();
         }
         catch (ImportNeedsTypeException ex)
@@ -381,6 +391,7 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
                 ReloadMods();
                 UpdateLoaderVersionWarning();
+                UpdateFirstAssemblyWarning();
                 RecomputeDirty();
             }
             catch (Exception retryEx)
@@ -609,6 +620,7 @@ public sealed partial class MainViewModel : ObservableObject
             ReloadMods();
             RecomputeDirty();
             UpdateLoaderVersionWarning();
+            UpdateFirstAssemblyWarning();
             AppendLog($"已删除 Mod：{mod.DisplayName}");
         }
         catch (Exception ex)
@@ -657,6 +669,7 @@ public sealed partial class MainViewModel : ObservableObject
             _profiles.SetEnabled(SelectedProfile.Id, item.Package.Id, enabled);
             IsDirty = true;
             UpdateLoaderVersionWarning();
+            UpdateFirstAssemblyWarning();
             AppendLog($"{(enabled ? "启用" : "禁用")}：{item.DisplayName}");
         }
         catch (Exception ex)
@@ -835,6 +848,27 @@ public sealed partial class MainViewModel : ObservableObject
         LoaderVersionWarning = mismatches.Count == 0
             ? ""
             : $"MelonLoader 版本可能不匹配（当前 {loader}）：{string.Join("；", mismatches)}";
+    }
+
+
+    void UpdateFirstAssemblyWarning()
+    {
+        if (GameStatus?.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPartial))
+        {
+            FirstAssemblyWarning = "";
+            return;
+        }
+
+        if (!_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
+        {
+            FirstAssemblyWarning = "";
+            return;
+        }
+
+        FirstAssemblyWarning =
+            "检测到 MelonLoader 已安装，但尚未完成首次程序集生成（缺少 MelonLoader\\Il2CppAssemblies）。" +
+            "首次启动游戏时可能需联网（部分网络需代理），黑屏或控制台滚动属正常，请耐心等待完成；" +
+            "不要把其他电脑已初始化过的 MelonLoader 文件夹直接拷贝到本机。";
     }
 
     static bool VersionMatches(string required, string actual)
