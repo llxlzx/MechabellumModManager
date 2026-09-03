@@ -1,101 +1,178 @@
-# 发布说明（GitHub Releases）
+# GitHub Release 更新流程（现行）
 
-仓库：https://github.com/llxlzx/MechabellumModManager  
-管理器通过下列地址检查更新（优先）：
+两个相关仓库：
+
+| 仓库 | 用途 |
+|------|------|
+| https://github.com/llxlzx/MechabellumModManager | 管理器程序 + Setup / 本体 |
+| https://github.com/llxlzx/MechabellumMods | Mod 浏览大全（catalog + dll + preview） |
+
+管理器检查更新优先读：
 
 `https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json`
 
-失败时回退 GitHub API：`/repos/llxlzx/MechabellumModManager/releases/latest`。
+失败时回退 API：`/repos/llxlzx/MechabellumModManager/releases/latest`。
 
-## 仓库内 release/ 布局
+---
 
-本地整理产物时建议按版本分目录，并区分「安装包」与「本体」：
+## 1. 发版前准备
 
-```
-release/vX.Y.Z/
-  安装包/          # Setup exe + 用户 README.txt（推荐分发）
-  本体/            # 便携 exe + Assets + README.txt（需 .NET 8 Desktop）
-  latest.json      # 可选：本地对照；上传 Release 时文件名仍为 latest.json
-```
+### 1.1 改版本号（三处一致）
 
-详见 `release/README.md`。上传到 GitHub Releases 时，可将 Setup 与 `latest.json` 作为 Release 资源上传（不必保留仓库子文件夹结构）。
+1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>X.Y.Z</Version>`
+2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
+3. 稍后写入的 `release/vX.Y.Z/latest.json` → `"version": "X.Y.Z"`
 
-## 版本号
+### 1.2 MelonLoader 离线包（打 Setup **必选**）
 
-同步三处：
-
-1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion`
-3. Release 上的 `latest.json` → `version`
-
-## 构建安装包
-
-在仓库根目录：
-
-```bat
-installer\build-installer.bat
-```
-
-或：
-
-```powershell
-.\installer\build-installer.ps1
-```
-
-产物：`dist\MechabellumModManager_Setup_vX.Y.Z.exe`
-
-### MelonLoader 离线包（发版必选）
-
-在跑 `build-installer` **之前**，把官方文件放到：
+将官方文件放到：
 
 `installer/redist/melonloader/MelonLoader.x64.zip`
 
 来源：https://github.com/LavaGang/MelonLoader/releases  
 
-缺失或空文件时构建脚本会以退出码 3 **硬失败**，禁止出包。  
-调试可用 `-SkipMelonRedistCheck` / `SKIP_MELON_REDIST_CHECK=1`，**正式发版禁止使用**。
+缺失时 `build-installer` **硬失败**（退出码 3）。正式发版禁止 `-SkipMelonRedistCheck`。
 
-可选：将 .NET Desktop Runtime 离线安装包放入 `installer/redist/dotnet8` / `dotnet6`（见 `installer/redist/README.md`）。
+### 1.3 代码与测试
 
-## latest.json
+```powershell
+cd D:\gongzuo\钢铁指挥官mod管理器开发
+dotnet test -c Release
+git add -A   # 勿提交 Melon zip / publish / dist
+git commit -m "..."
+git push origin master   # 若需代理：$env:HTTPS_PROXY='http://127.0.0.1:7890'
+```
 
-每个 Release **必须**附带同名资源 `latest.json`（与 Setup 一起上传到 **latest** 标签对应的 Release，或始终维护一个指向最新的 Release）。
+---
 
-示例（见 `docs/latest.example.json`）：
+## 2. 本地出包
+
+```powershell
+.\installer\build-installer.ps1
+```
+
+产物：`dist\MechabellumModManager_Setup_vX.Y.Z.exe`（应明显大于仅程序体积，因内嵌 Melon zip）。
+
+整理到仓库对照目录：
+
+```
+release/vX.Y.Z/
+  安装包/
+    MechabellumModManager_Setup_vX.Y.Z.exe
+    README.txt
+  本体/
+    MechabellumModManager.exe
+    Assets\
+    README.txt
+  latest.json
+```
+
+**本体内容规则（干净便携版，无 Mod 数据）：**
+
+- **只保留**：`MechabellumModManager.exe` + `Assets\`（+ 可选 `README.txt`）
+- **不要**把「Setup 安装后的目录」整包当本体（勿含 `unins000.*`、`installer-redist\`、`installer-scripts\`、本地 `data`/`library`）
+- 推荐直接用 `publish\` 或本目录 `release/vX.Y.Z/本体\`，与安装测试文件夹无关
+
+将本体打成 zip（上传 Release 用），例如在 `release/vX.Y.Z/` 下：
+
+```powershell
+Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_vX.Y.Z.zip" -Force
+```
+
+`latest.json` 示例：
 
 ```json
 {
-  "version": "1.0.1",
-  "notes": "修复游戏路径检测；改进安装器 .NET 进度显示。",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.1/MechabellumModManager_Setup_v1.0.1.exe",
-  "publishedAt": "2026-03-22T00:00:00Z"
+  "version": "1.0.3",
+  "notes": "本版更新说明……",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.3/MechabellumModManager_Setup_v1.0.3.exe",
+  "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
 
-字段：
+把 `release/vX.Y.Z/` 提交并推送到管理器仓库（可选但建议，便于对照）。
 
-| 字段 | 说明 |
-|------|------|
-| `version` | 语义化版本，与 csproj / ISS 一致 |
-| `notes` | 更新说明（可多行，管理器弹窗展示） |
-| `setupUrl` | Setup 直链（推荐 Releases download URL） |
-| `publishedAt` | ISO-8601 时间，可选 |
+---
 
-## 发布步骤
+## 3. 创建 GitHub Release（网页）
 
-1. bump 版本（csproj + ISS）
-2. 提交并推送 `master`
-3. 下载并放入 `MelonLoader.x64.zip`（见上文「发版必选」）
-4. 本地跑 `build-installer`，确认 `dist\` 下 Setup（体积应含 MelonLoader zip）
-5. 在 GitHub 创建 Release（tag 建议 `vX.Y.Z`）
-6. 上传：
-   - `MechabellumModManager_Setup_vX.Y.Z.exe`（来自 `release/vX.Y.Z/安装包/`；可选同时上传本体便携文件）
-   - `latest.json`（文件名必须为 `latest.json`）
-7. 用管理器「设置 → 检查更新」验证
-8. Release notes 可注明：MelonLoader 已离线内嵌，安装一般无需访问 GitHub
+1. 打开 https://github.com/llxlzx/MechabellumModManager/releases → **Draft a new release**
+2. **Tag**：`vX.Y.Z`（Create new tag on publish），**Target**：`master`
+3. **Title**：`vX.Y.Z`
+4. **Describe**：写清本版要点（可与 `latest.json` 的 notes 一致）
+5. **Attach binaries**（拖入；注意文件名）：
 
-## 管理器行为
+| 资源 | 本地来源 | 上传后文件名 |
+|------|----------|----------------|
+| 安装包（必传） | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe` | 保持原名 |
+| 更新元数据（必传） | `release/vX.Y.Z/latest.json` | **必须仍是 `latest.json`** |
+| 本体便携包（推荐） | `MechabellumModManager_portable_vX.Y.Z.zip` | 建议带版本号 |
 
-- **不会**静默自动安装
-- 发现新版本：弹窗显示版本与说明，可选「打开下载页 / 下载安装包」
-- 用户自行运行新 Setup 完成升级
+6. 勾选 **Set as the latest release**；不要勾 Pre-release  
+7. **Publish release**
+
+验证：
+
+- https://github.com/llxlzx/MechabellumModManager/releases/tag/vX.Y.Z  
+- https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json  
+- 管理器「设置 → 检查更新」
+
+---
+
+## 4. 命令行备选（已装 gh 并登录）
+
+```powershell
+cd D:\gongzuo\钢铁指挥官mod管理器开发
+$env:HTTPS_PROXY='http://127.0.0.1:7890'
+$env:HTTP_PROXY='http://127.0.0.1:7890'
+
+gh release create vX.Y.Z `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe" `
+  "release/vX.Y.Z/latest.json" `
+  "release/vX.Y.Z/MechabellumModManager_portable_vX.Y.Z.zip" `
+  --title "vX.Y.Z" `
+  --notes-file - `
+  --target master
+```
+
+若 Release 已存在，只更新附件：
+
+```powershell
+gh release upload vX.Y.Z `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe" `
+  "release/vX.Y.Z/latest.json" `
+  --clobber
+```
+
+---
+
+## 5. Mod 大全仓库（与程序发版分开）
+
+Mod 内容在 **MechabellumMods**，不随 Setup 版本强制同步，但若改了 catalog / preview / dll：
+
+```powershell
+cd D:\gongzuo\MechabellumMods
+git add -A
+git commit -m "..."
+git push origin master
+```
+
+确认：  
+`https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json`
+
+管理器「Mod 浏览 → 刷新目录」应能看到更新。作者提交流程见该仓库 `README.md`。
+
+---
+
+## 6. 当前最新本地对照（写作时）
+
+- 程序 / Setup：**v1.0.3** → `release/v1.0.3/`
+- 测试安装包副本：`D:\gongzuo\钢铁指挥官Mod管理器_安装包测试\MechabellumModManager_Setup_v1.0.3.exe`
+
+---
+
+## 管理器更新行为（提醒用户）
+
+- 不会静默自动安装  
+- 「检查更新」提示后，用户自行下载并运行新 Setup  
+- 便携「本体」需本机已装 .NET 8 Desktop Runtime  
