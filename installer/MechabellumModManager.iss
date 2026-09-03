@@ -38,8 +38,8 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 
 [Components]
 Name: "main"; Description: "管理器本体（必选）"; Types: full compact custom; Flags: fixed
-Name: "dotnet8"; Description: ".NET 8 Desktop Runtime x64（管理器运行需要；已安装则跳过）"; Types: full compact custom
-Name: "dotnet6"; Description: ".NET 6 Desktop Runtime x64（MelonLoader 需要；已安装则跳过）"; Types: full compact custom
+Name: "dotnet8"; Description: ".NET 8 Desktop Runtime x64（管理器需要；已安装则跳过；下载约 55-60 MB，安装后约 150-200 MB）"; Types: full compact custom
+Name: "dotnet6"; Description: ".NET 6 Desktop Runtime x64（MelonLoader 需要；已安装则跳过；下载约 50-55 MB，安装后约 140-180 MB）"; Types: full compact custom
 Name: "melon"; Description: "MelonLoader（默认建议安装到游戏目录）"; Types: full custom
 
 [Files]
@@ -61,6 +61,13 @@ Filename: "{app}\{#MyAppExeName}"; Description: "立即启动 {#MyAppName}"; Fla
 var
   GamePathPage: TInputDirWizardPage;
   RiskLabel: TNewStaticText;
+
+procedure SetStatus(const Msg: string);
+begin
+  WizardForm.StatusLabel.Caption := Msg;
+  WizardForm.StatusLabel.Update;
+  WizardForm.Update;
+end;
 
 function PsFromSrc(const ScriptName, ExtraArgs: string): Integer;
 var
@@ -156,6 +163,7 @@ begin
   Redist := ExpandConstant('{app}\installer-redist');
 
   { Always write manager config }
+  SetStatus('正在写入管理器配置…');
   Args := '-GamePath "' + GamePath + '"';
   Code := PsFromSrc('Write-ManagerConfig.ps1', Args);
   if Code <> 0 then
@@ -163,25 +171,36 @@ begin
 
   if WizardIsComponentSelected('dotnet8') then
   begin
+    SetStatus('正在准备 .NET 8 Desktop Runtime（下载约 55-60 MB；安装后约 150-200 MB；已安装则跳过）…');
     Args := '-Major 8 -RedistDir "' + Redist + '"';
     Code := PsFromSrc('Install-Prereqs.ps1', Args);
     if (Code <> 0) and (Code <> 3010) then
-      MsgBox('.NET 8 Desktop Runtime 安装未成功（exit ' + IntToStr(Code) + '）。请稍后从 https://dotnet.microsoft.com/download/dotnet/8.0 手动安装。', mbError, MB_OK);
+      MsgBox('.NET 8 Desktop Runtime 安装未成功（exit ' + IntToStr(Code) + '）。请稍后从 https://dotnet.microsoft.com/download/dotnet/8.0 手动安装。', mbError, MB_OK)
+    else
+      SetStatus('.NET 8 Desktop Runtime 已完成（或已跳过）。');
   end;
 
   if WizardIsComponentSelected('dotnet6') then
   begin
+    SetStatus('正在准备 .NET 6 Desktop Runtime（下载约 50-55 MB；安装后约 140-180 MB；已安装则跳过）…');
     Args := '-Major 6 -RedistDir "' + Redist + '"';
     Code := PsFromSrc('Install-Prereqs.ps1', Args);
     if (Code <> 0) and (Code <> 3010) then
-      MsgBox('.NET 6 Desktop Runtime 安装未成功（exit ' + IntToStr(Code) + '）。请稍后从 https://dotnet.microsoft.com/download/dotnet/6.0 手动安装。', mbError, MB_OK);
+      MsgBox('.NET 6 Desktop Runtime 安装未成功（exit ' + IntToStr(Code) + '）。请稍后从 https://dotnet.microsoft.com/download/dotnet/6.0 手动安装。', mbError, MB_OK)
+    else
+      SetStatus('.NET 6 Desktop Runtime 已完成（或已跳过）。');
   end;
 
   if WizardIsComponentSelected('melon') then
   begin
+    SetStatus('正在安装 MelonLoader 到游戏目录…');
     Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
     Code := PsFromSrc('Install-MelonLoader.ps1', Args);
     if Code <> 0 then
-      MsgBox('MelonLoader 安装未成功（exit ' + IntToStr(Code) + '）。可取消该组件后重装，或手动安装 MelonLoader。', mbError, MB_OK);
+      MsgBox('MelonLoader 安装未成功（exit ' + IntToStr(Code) + '）。可取消该组件后重装，或手动安装 MelonLoader。', mbError, MB_OK)
+    else
+      SetStatus('MelonLoader 安装完成。');
   end;
+
+  SetStatus('安装后置步骤完成。');
 end;

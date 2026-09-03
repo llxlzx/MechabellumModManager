@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,6 +28,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly MelonLoaderConfigOptimizer _melonOptimizer;
     readonly RiskHeuristic _riskHeuristic;
     readonly SteamGameLocator _steamLocator;
+    readonly UpdateChecker _updateChecker;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
@@ -36,6 +38,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<ModPackageType?>? _pickPackageType;
     readonly Func<string?>? _openFolder;
     bool _loggedMelonOptimize;
+    bool _checkingUpdates;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -51,6 +54,7 @@ public sealed partial class MainViewModel : ObservableObject
         MelonLoaderConfigOptimizer? melonOptimizer = null,
         RiskHeuristic? riskHeuristic = null,
         SteamGameLocator? steamLocator = null,
+        UpdateChecker? updateChecker = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
@@ -71,6 +75,7 @@ public sealed partial class MainViewModel : ObservableObject
         _melonOptimizer = melonOptimizer ?? new MelonLoaderConfigOptimizer();
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         _steamLocator = steamLocator ?? new SteamGameLocator();
+        _updateChecker = updateChecker ?? new UpdateChecker();
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -161,6 +166,8 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _settingsExpanded;
+    [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
+    [ObservableProperty] private string _updateStatus = "";
 
     partial void OnGameStatusChanged(GameStatus? value)
     {
@@ -466,6 +473,55 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void ToggleSettings() => SettingsExpanded = !SettingsExpanded;
+
+    [RelayCommand]
+    async Task CheckForUpdatesAsync()
+    {
+        if (_checkingUpdates) return;
+        _checkingUpdates = true;
+        UpdateStatus = "正在检查更新…";
+        AppendLog("正在检查更新…");
+        try
+        {
+            var result = await _updateChecker.CheckAsync().ConfigureAwait(true);
+            UpdateStatus = result.Message;
+            AppendLog(result.Message);
+
+            if (result.Kind == UpdateCheckKind.UpdateAvailable && !string.IsNullOrWhiteSpace(result.SetupUrl))
+            {
+                var detail = $"{result.Message}\n\n{result.Notes}\n\n是否打开下载链接？\n{result.SetupUrl}";
+                if (_confirm(detail))
+                    OpenUrl(result.SetupUrl!);
+            }
+            else if (result.Kind == UpdateCheckKind.Failed)
+            {
+                var fallback = $"https://github.com/{UpdateChecker.Owner}/{UpdateChecker.Repo}/releases/latest";
+                if (_confirm($"{result.Message}\n\n是否打开 GitHub Releases 页面？"))
+                    OpenUrl(fallback);
+            }
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus = $"检查更新失败：{ex.Message}";
+            AppendLog(UpdateStatus);
+        }
+        finally
+        {
+            _checkingUpdates = false;
+        }
+    }
+
+    static void OpenUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+        }
+        catch
+        {
+            // Ignore — user can copy URL from log / dialog.
+        }
+    }
 
     [RelayCommand]
     void CreateProfile()

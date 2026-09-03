@@ -172,6 +172,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.ColumnSpan="3"
@@ -209,6 +210,24 @@
                         <CheckBox Content="便携数据根（程序目录/data，需重启生效）"
                                   IsChecked="{Binding UsePortableDataRoot}" />
                     </StackPanel>
+
+                    <DockPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10,0,0">
+                        <TextBlock Text="{Binding AppVersion, StringFormat=版本 {0}}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   DockPanel.Dock="Left"
+                                   Margin="0,0,12,0" />
+                        <Button Content="检查更新"
+                                Command="{Binding CheckForUpdatesCommand}"
+                                DockPanel.Dock="Left"
+                                MinWidth="88"
+                                Margin="0,0,12,0"
+                                Style="{StaticResource GhostButtonStyle}" />
+                        <TextBlock Text="{Binding UpdateStatus}"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+                    </DockPanel>
                 </Grid>
             </Border>
 

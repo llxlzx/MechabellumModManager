@@ -15,12 +15,21 @@ $Urls = @{
     6 = "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/6.0.36/windowsdesktop-runtime-6.0.36-win-x64.exe"
 }
 
+# Approximate sizes for user-facing messages (package / installed footprint).
+$SizeHint = @{
+    8 = @{ Package = "约 55-60 MB"; Installed = "约 150-200 MB" }
+    6 = @{ Package = "约 50-55 MB"; Installed = "约 140-180 MB" }
+}
+
 $detect = Join-Path $PSScriptRoot "Detect-DotNetDesktop.ps1"
 & $detect -MajorVersion $Major
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Skip .NET $Major Desktop — already installed."
     exit 0
 }
+
+$hint = $SizeHint[$Major]
+Write-Host ("Preparing .NET {0} Desktop Runtime (download {1}, installed footprint {2})..." -f $Major, $hint.Package, $hint.Installed)
 
 $localDir = Join-Path $RedistDir ("dotnet" + $Major)
 $local = $null
@@ -39,18 +48,24 @@ if ($local) {
     $destDir = Join-Path $WorkDir "mmm-dotnet-redist"
     New-Item -ItemType Directory -Force -Path $destDir | Out-Null
     $installerPath = Join-Path $destDir ("windowsdesktop-runtime-{0}-win-x64.exe" -f $Major)
-    Write-Host "Downloading $url ..."
+    Write-Host "Downloading .NET $Major Desktop Runtime from Microsoft CDN..."
+    Write-Host "URL: $url"
+    Write-Host "Expected package size: $($hint.Package). Please wait..."
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $ProgressPreference = 'Continue'
         Invoke-WebRequest -Uri $url -OutFile $installerPath -UseBasicParsing
+        $bytes = (Get-Item $installerPath).Length
+        Write-Host ("Download complete ({0:N1} MB)." -f ($bytes / 1MB))
     } catch {
         Write-Error "Failed to download .NET $Major Desktop Runtime. Install manually from https://dotnet.microsoft.com/download/dotnet/$Major.0 — $($_.Exception.Message)"
         exit 2
     }
 }
 
-Write-Host "Installing .NET $Major Desktop Runtime (quiet)..."
-$p = Start-Process -FilePath $installerPath -ArgumentList "/install","/quiet","/norestart" -Wait -PassThru
+Write-Host "Launching .NET $Major Desktop Runtime installer (/passive — progress UI will appear)..."
+Write-Host "Installed footprint typically $($hint.Installed)."
+$p = Start-Process -FilePath $installerPath -ArgumentList "/install","/passive","/norestart" -Wait -PassThru
 $code = $p.ExitCode
 # 0 = success, 3010 = success reboot required
 if ($code -eq 0 -or $code -eq 3010) {
