@@ -18,6 +18,13 @@ public sealed class ImportNeedsTypeException : Exception
         => StagingPath = stagingPath;
 }
 
+public sealed class GameImportResult
+{
+    public int Imported { get; init; }
+    public int Skipped { get; init; }
+    public IReadOnlyList<string> Messages { get; init; } = Array.Empty<string>();
+}
+
 public sealed class ModLibraryService
 {
     static readonly JsonSerializerOptions PackageJsonOptions = new()
@@ -133,12 +140,122 @@ public sealed class ModLibraryService
 
     public void DiscardStaging(string stagingPath) => TryDeleteDir(stagingPath);
 
+    public bool LibraryContainsFileHash(string sha256)
+    {
+        if (string.IsNullOrWhiteSpace(sha256))
+            return false;
+
+        foreach (var pkg in List())
+        {
+            if (pkg.Files.Any(f => string.Equals(f.Sha256, sha256, StringComparison.OrdinalIgnoreCase)))
+                return true;
+        }
+
+        return false;
+    }
+
+    public GameImportResult ImportFromGame(string gamePath)
+    {
+        var messages = new List<string>();
+        if (string.IsNullOrWhiteSpace(gamePath) ||
+            !File.Exists(Path.Combine(gamePath, "Mechabellum.exe")))
+        {
+            messages.Add("游戏路径无效（缺少 Mechabellum.exe）。");
+            return new GameImportResult { Imported = 0, Skipped = 0, Messages = messages };
+        }
+
+        var imported = 0;
+        var skipped = 0;
+
+        foreach (var (dllPath, forceType) in EnumerateGameModDlls(gamePath))
+        {
+            string hash;
+            try
+            {
+                hash = Sha256Hex(dllPath);
+            }
+            catch (Exception ex)
+            {
+                skipped++;
+                messages.Add($"跳过 {Path.GetFileName(dllPath)}：无法读取（{ex.Message}）");
+                continue;
+            }
+
+            if (LibraryContainsFileHash(hash))
+            {
+                skipped++;
+                messages.Add($"跳过已导入：{Path.GetFileName(dllPath)}");
+                continue;
+            }
+
+            try
+            {
+                var pkg = ImportDll(dllPath, forceType);
+                imported++;
+                messages.Add($"已导入：{pkg.DisplayName} ({pkg.Id}) ← {RelativeUnderGame(gamePath, dllPath)}");
+            }
+            catch (ImportNeedsTypeException ex)
+            {
+                DiscardStaging(ex.StagingPath);
+                skipped++;
+                messages.Add($"跳过无法识别类型：{Path.GetFileName(dllPath)}");
+            }
+            catch (Exception ex)
+            {
+                skipped++;
+                messages.Add($"跳过 {Path.GetFileName(dllPath)}：{ex.Message}");
+            }
+        }
+
+        return new GameImportResult
+        {
+            Imported = imported,
+            Skipped = skipped,
+            Messages = messages
+        };
+    }
+
+    static IEnumerable<(string Path, ModPackageType ForceType)> EnumerateGameModDlls(string gamePath)
+    {
+        foreach (var dll in EnumerateDllsTopAndOneLevel(Path.Combine(gamePath, "Mods")))
+            yield return (dll, ModPackageType.MelonMod);
+        foreach (var dll in EnumerateDllsTopAndOneLevel(Path.Combine(gamePath, "Plugins")))
+            yield return (dll, ModPackageType.MelonPlugin);
+    }
+
+    static IEnumerable<string> EnumerateDllsTopAndOneLevel(string folder)
+    {
+        if (!Directory.Exists(folder))
+            yield break;
+
+        foreach (var dll in Directory.GetFiles(folder, "*.dll"))
+            yield return dll;
+
+        foreach (var sub in Directory.GetDirectories(folder))
+        {
+            foreach (var dll in Directory.GetFiles(sub, "*.dll"))
+                yield return dll;
+        }
+    }
+
+    static string RelativeUnderGame(string gamePath, string absolutePath)
+    {
+        try
+        {
+            return Path.GetRelativePath(gamePath, absolutePath).Replace('\\', '/');
+        }
+        catch
+        {
+            return Path.GetFileName(absolutePath);
+        }
+    }
+
     IReadOnlyList<ModPackage> ImportFromExtractRoot(string extractRoot, ModPackageType? forceType, bool deleteExtractRoot)
     {
         var prepared = new List<PreparedImport>();
         try
         {
-            var groups = GroupExtractedFiles(extractRoot);
+            var groups = SplitEntryDllGroups(GroupExtractedFiles(extractRoot));
             if (groups.Count == 0)
                 throw new InvalidOperationException("Zip 中没有可导入的文件。");
 
@@ -468,6 +585,96 @@ public sealed class ModLibraryService
             groups.Add(new FileGroup(null, unprefixed));
 
         return groups;
+    }
+
+    /// <summary>
+    /// Split MelonMod/Plugin (and unprefixed) groups so each entry Melon DLL becomes its own package.
+    /// UserLibs/UserData groups are left intact. Dependency DLLs attach to the first entry group.
+    /// </summary>
+    List<FileGroup> SplitEntryDllGroups(List<FileGroup> groups)
+    {
+        var result = new List<FileGroup>();
+        foreach (var group in groups)
+        {
+            if (group.PathHint is ModPackageType.MelonUserLibs or ModPackageType.MelonUserData)
+            {
+                result.Add(group);
+                continue;
+            }
+
+            var dlls = group.Files
+                .Where(f => f.Relative.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (dlls.Count <= 1)
+            {
+                result.Add(group);
+                continue;
+            }
+
+            var entryGroups = new List<FileGroup>();
+            var claimed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var dll in dlls)
+            {
+                ModPackageType? entryHint = null;
+                try
+                {
+                    var inspect = _inspector.Inspect(dll.Absolute);
+                    if (inspect.LooksLikeMelonMod)
+                        entryHint = ModPackageType.MelonMod;
+                    else if (inspect.LooksLikeMelonPlugin)
+                        entryHint = ModPackageType.MelonPlugin;
+                }
+                catch
+                {
+                    // stub / non-assembly
+                }
+
+                if (entryHint is null)
+                    continue;
+
+                var dllDir = RelativeDirectory(dll.Relative);
+                var files = new List<(string Relative, string Absolute)> { dll };
+                claimed.Add(dll.Relative);
+
+                foreach (var f in group.Files)
+                {
+                    if (f.Relative.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    if (claimed.Contains(f.Relative))
+                        continue;
+                    if (!string.Equals(RelativeDirectory(f.Relative), dllDir, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    files.Add(f);
+                    claimed.Add(f.Relative);
+                }
+
+                entryGroups.Add(new FileGroup(entryHint, files));
+            }
+
+            if (entryGroups.Count == 0)
+            {
+                result.Add(group);
+                continue;
+            }
+
+            var leftovers = group.Files.Where(f => !claimed.Contains(f.Relative)).ToList();
+            if (leftovers.Count > 0)
+                entryGroups[0].Files.AddRange(leftovers);
+
+            result.AddRange(entryGroups);
+        }
+
+        return result;
+    }
+
+    static string RelativeDirectory(string relativePath)
+    {
+        var normalized = relativePath.Replace('\\', '/');
+        var idx = normalized.LastIndexOf('/');
+        return idx < 0 ? "" : normalized[..idx];
     }
 
     static bool TryStripPrefix(string relative, out ModPackageType hint, out string stripped)
