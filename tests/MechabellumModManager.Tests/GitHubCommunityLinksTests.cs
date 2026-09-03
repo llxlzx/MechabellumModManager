@@ -5,12 +5,10 @@ using MechabellumModManager.Services;
 public class GitHubCommunityLinksTests
 {
     [Fact]
-    public void ContributeGuideUrl_is_stable_repo_root()
+    public void ContributeGuideUrl_points_at_beginner_readme_section()
     {
         GitHubCommunityLinks.ContributeGuideUrl
-            .Should().Be("https://github.com/llxlzx/MechabellumMods");
-        GitHubCommunityLinks.ContributeGuideUrl
-            .Should().Be(GitHubCommunityLinks.RepositoryUrl);
+            .Should().Be("https://github.com/llxlzx/MechabellumMods#语言--language");
     }
 
     [Fact]

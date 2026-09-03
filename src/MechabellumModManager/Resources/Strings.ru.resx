@@ -92,31 +92,40 @@
     <value>Отправить мод</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>Откроется руководство по внесению вклада на GitHub. Отправляйте моды через Fork + Pull Request по README. Продолжить?</value>
+    <value>Откроется руководство для новичков на GitHub: Fork → загрузка DLL → правка catalog.json → Pull Request. Продолжить?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Руководство открыто. Отправьте через Pull Request.</value>
+    <value>Руководство для новичков открыто. Следуйте README по шагам в браузере (Git устанавливать не нужно).</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
     <value>Не удалось открыть страницу публикации</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>Как отправить</value>
+    <value>Шаги отправки (для новичков)</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>Отправьте в сообщество-репозиторий за три шага (нужен аккаунт GitHub):</value>
+    <value>Отправка по-прежнему через GitHub Fork + Pull Request. Всё можно сделать в браузере — Git устанавливать не нужно. Войдите в GitHub, затем:</value>
   </data>
   <data name="SubmitGuideStep1" xml:space="preserve">
-    <value>1. Сделайте Fork репозитория llxlzx/MechabellumMods</value>
+    <value>1. Откройте репозиторий и нажмите Fork (справа вверху), чтобы скопировать llxlzx/MechabellumMods в свой аккаунт.</value>
   </data>
   <data name="SubmitGuideStep2" xml:space="preserve">
-    <value>2. Добавьте mods/&lt;id&gt;/xxx.dll и обновите catalog.json</value>
+    <value>2. В своём форке: mods → Add file → Upload files. Загрузите в mods/ваш-id/xxx.dll (id — только строчные буквы/цифры/дефисы; папка с id обязательна).</value>
   </data>
   <data name="SubmitGuideStep3" xml:space="preserve">
-    <value>3. Откройте Pull Request и дождитесь проверки сопровождающих</value>
+    <value>3. Отредактируйте корневой catalog.json: добавьте запись в массив mods; id/file должны совпадать с путём; обновите верхний updatedAt.</value>
+  </data>
+  <data name="SubmitGuideStep4" xml:space="preserve">
+    <value>4. На странице форка нажмите Contribute / Open pull request, кратко опишите изменения и нажмите Create pull request.</value>
+  </data>
+  <data name="SubmitGuideStep5" xml:space="preserve">
+    <value>5. Дождитесь слияния сопровождающим. После этого игроки обновят каталог в менеджере («Обновить каталог»).</value>
+  </data>
+  <data name="SubmitGuideTip" xml:space="preserve">
+    <value>Открыв GitHub, прочитайте раздел README «新手投稿教程（网页操作，无需安装 Git)» / руководство для новичков в браузере — там пошаговые инструкции и пример JSON.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>Открыть GitHub</value>
+    <value>Открыть руководство</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Подтвердить</value>

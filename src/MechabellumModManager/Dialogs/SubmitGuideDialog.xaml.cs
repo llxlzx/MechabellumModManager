@@ -13,6 +13,9 @@ public partial class SubmitGuideDialog : Window
         Step1Text.Text = LocalizationService.T("SubmitGuideStep1");
         Step2Text.Text = LocalizationService.T("SubmitGuideStep2");
         Step3Text.Text = LocalizationService.T("SubmitGuideStep3");
+        Step4Text.Text = LocalizationService.T("SubmitGuideStep4");
+        Step5Text.Text = LocalizationService.T("SubmitGuideStep5");
+        TipText.Text = LocalizationService.T("SubmitGuideTip");
         CancelButton.Content = LocalizationService.T("Cancel");
         OkButton.Content = LocalizationService.T("SubmitGuideOpen");
     }

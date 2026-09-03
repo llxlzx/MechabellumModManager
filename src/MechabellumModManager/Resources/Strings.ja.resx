@@ -92,31 +92,40 @@
     <value>Mod を投稿</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>GitHub の投稿ガイドを開きます。README に従い Fork + Pull Request で Mod を投稿します。続行しますか？</value>
+    <value>GitHub 初心者向けガイドを開きます。流れ：Fork → DLL アップロード → catalog.json 編集 → Pull Request。続行しますか？</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>投稿ガイドを開きました。Pull Request で投稿してください。</value>
+    <value>初心者向けガイドを開きました。README に従いブラウザだけで進めてください（Git のインストールは不要です）。</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
     <value>投稿ページを開けませんでした</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>投稿手順</value>
+    <value>投稿手順（初心者向け）</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>コミュニティリポジトリへ、次の 3 ステップで投稿してください（GitHub アカウントが必要です）：</value>
+    <value>投稿は引き続き GitHub の Fork + Pull Request です。ブラウザだけで完結でき、Git のインストールは不要です。GitHub にログインしてから：</value>
   </data>
   <data name="SubmitGuideStep1" xml:space="preserve">
-    <value>1. リポジトリ llxlzx/MechabellumMods を Fork</value>
+    <value>1. リポジトリを開き、右上の Fork をクリックして llxlzx/MechabellumMods を自分のアカウントにコピーします。</value>
   </data>
   <data name="SubmitGuideStep2" xml:space="preserve">
-    <value>2. mods/&lt;id&gt;/xxx.dll を追加し、catalog.json を更新</value>
+    <value>2. 自分の Fork で mods → Add file → Upload files へ進み、mods/あなたのid/xxx.dll にアップロードします（id は英小文字・数字・ハイフンのみ；id 名のフォルダが必須です）。</value>
   </data>
   <data name="SubmitGuideStep3" xml:space="preserve">
-    <value>3. 本リポジトリへ Pull Request を送り、メンテナの審査を待つ</value>
+    <value>3. ルートの catalog.json を編集：mods 配列にエントリを追加し、id/file をパスと一致させ、先頭の updatedAt を更新します。</value>
+  </data>
+  <data name="SubmitGuideStep4" xml:space="preserve">
+    <value>4. 自分の Fork ページで Contribute / Open pull request をクリックし、説明を書いて Create pull request します。</value>
+  </data>
+  <data name="SubmitGuideStep5" xml:space="preserve">
+    <value>5. メンテナのマージを待ちます。マージ後、プレイヤーはマネージャーの「カタログ更新」で確認できます。</value>
+  </data>
+  <data name="SubmitGuideTip" xml:space="preserve">
+    <value>GitHub を開いたら README の「新手投稿教程（网页操作，无需安装 Git）」／初心者向け Web ガイドを読み、手順と JSON 例を確認してください。</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>GitHub を開く</value>
+    <value>投稿ガイドを開く</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>確認</value>
