@@ -5,8 +5,8 @@ Windows 桌面工具：外部 Mod 库 + 方案勾选，一键同步到游戏目�
 Windows desktop tool: external mod library + profiles, one-click sync into the game folder.
 
 > **⚠️ AI 生成声明 / AI-generated notice**  
-> **本管理器程序本体以外的仓库说明文档，以及其中的中英文等内容，均主要由 AI 辅助撰写与翻译。** 可能存在语义偏差、表述不严谨或逻辑疏漏。请以实际软件行为与应用内说明为准；如有疑问，请通过应用内「关于与声明」中的联系方式联系维护者。  
-> **Repository documentation and translations (Chinese, English, and other languages) were largely produced with AI assistance.** They may contain semantic inaccuracies, awkward wording, or logic gaps. Prefer the running application and in-app notices; contact the maintainer via in-app Credits if needed.
+> **本管理器程序本体，以及仓库中的说明文档与中英文等内容，均主要由 AI 辅助开发、撰写与翻译。** 可能存在功能偏差、语义偏差、表述不严谨或逻辑疏漏。请以实际软件行为与应用内说明为准；如有疑问，请通过应用内「关于与声明」中的联系方式联系维护者。  
+> **This Mod Manager application, as well as repository documentation and translations (Chinese, English, and other languages), were largely produced with AI assistance.** They may contain functional gaps, semantic inaccuracies, awkward wording, or logic issues. Prefer the running application and in-app notices; contact the maintainer via in-app Credits if needed.
 
 ## 语言 / Language
 
