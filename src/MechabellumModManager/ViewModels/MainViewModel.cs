@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -30,6 +31,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly SteamGameLocator _steamLocator;
     readonly UpdateChecker _updateChecker;
     readonly ModCatalogService _catalog;
+    readonly AssemblyInspector _assemblyInspector;
+    RelayClient _relay;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string?>? _browseFolder;
@@ -38,11 +41,16 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string, string?>? _promptText;
     readonly Func<ModPackageType?>? _pickPackageType;
     readonly Func<string?>? _openFolder;
+    readonly Func<string, (ReportCategory Category, string Notes)?>? _promptReport;
+    readonly Func<SubmitModFields?>? _promptSubmitMod;
     bool _loggedMelonOptimize;
     bool _checkingUpdates;
     bool _checkingCatalog;
     bool _addingCatalogMod;
     bool _autoImportedFromGame;
+    bool _suppressLanguageSave;
+    bool _reporting;
+    bool _submittingMod;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -60,6 +68,8 @@ public sealed partial class MainViewModel : ObservableObject
         SteamGameLocator? steamLocator = null,
         UpdateChecker? updateChecker = null,
         ModCatalogService? catalog = null,
+        RelayClient? relay = null,
+        AssemblyInspector? assemblyInspector = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
         Func<string?>? browseFolder = null,
@@ -67,7 +77,9 @@ public sealed partial class MainViewModel : ObservableObject
         Func<string?>? openZip = null,
         Func<string, string?>? promptText = null,
         Func<ModPackageType?>? pickPackageType = null,
-        Func<string?>? openFolder = null)
+        Func<string?>? openFolder = null,
+        Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
+        Func<SubmitModFields?>? promptSubmitMod = null)
     {
         _paths = paths;
         _store = store;
@@ -82,6 +94,7 @@ public sealed partial class MainViewModel : ObservableObject
         _steamLocator = steamLocator ?? new SteamGameLocator();
         _updateChecker = updateChecker ?? new UpdateChecker();
         _catalog = catalog ?? new ModCatalogService();
+        _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -91,8 +104,11 @@ public sealed partial class MainViewModel : ObservableObject
         _promptText = promptText;
         _pickPackageType = pickPackageType;
         _openFolder = openFolder;
+        _promptReport = promptReport;
+        _promptSubmitMod = promptSubmitMod;
         ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => IsReady);
 
+        Ui = new UiStrings();
         Profiles = new ObservableCollection<ProfileItemViewModel>();
         Mods = new ObservableCollection<ModItemViewModel>();
         CatalogMods = new ObservableCollection<CatalogModItemViewModel>();
@@ -103,11 +119,23 @@ public sealed partial class MainViewModel : ObservableObject
             new LaunchModeOption(LaunchMode.SteamOnly, "仅 Steam"),
             new LaunchModeOption(LaunchMode.ExeOnly, "仅直启 exe")
         };
+        LanguageOptions = new[]
+        {
+            new LanguageOption("system", "System"),
+            new LanguageOption("zh-CN", "简体中文"),
+            new LanguageOption("en", "English"),
+            new LanguageOption("ru", "Русский"),
+            new LanguageOption("ja", "日本語"),
+            new LanguageOption("de", "Deutsch")
+        };
 
         _paths.EnsureCreated();
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
+        _relay = relay ?? new RelayClient(config.RelayBaseUrl);
+        ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
+
         _gamePath = ResolveInitialGamePath(config.GamePath);
         _launchMode = config.LaunchMode;
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
@@ -151,6 +179,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<ModItemViewModel> Mods { get; }
     public ObservableCollection<CatalogModItemViewModel> CatalogMods { get; }
     public IReadOnlyList<LaunchModeOption> LaunchModeOptions { get; }
+    public IReadOnlyList<LanguageOption> LanguageOptions { get; }
+    public UiStrings Ui { get; }
 
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
@@ -183,6 +213,43 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private ModItemViewModel? _selectedLibraryMod;
     [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
     [ObservableProperty] private string _updateStatus = "";
+    [ObservableProperty] private string _selectedUiLanguageCode = "system";
+
+    partial void OnSelectedUiLanguageCodeChanged(string value)
+    {
+        if (_suppressLanguageSave) return;
+        ApplyUiLanguage(value, save: true, refreshUi: true);
+    }
+
+    void ApplyUiLanguage(string? code, bool save, bool refreshUi)
+    {
+        var configured = string.IsNullOrWhiteSpace(code) ? "system" : code.Trim();
+        var resolved = LocalizationService.ResolveConfiguredLanguage(configured);
+        LocalizationService.Apply(resolved);
+
+        _suppressLanguageSave = true;
+        try
+        {
+            SelectedUiLanguageCode = configured;
+            var system = LanguageOptions.FirstOrDefault(o => o.Code == "system");
+            if (system is not null)
+                system.Label = LocalizationService.T("LanguageSystem");
+        }
+        finally
+        {
+            _suppressLanguageSave = false;
+        }
+
+        if (save)
+        {
+            var config = LoadConfig();
+            config.UiLanguage = configured;
+            SaveConfig(config);
+        }
+
+        if (refreshUi)
+            Ui.Refresh();
+    }
 
     partial void OnGameStatusChanged(GameStatus? value)
     {
@@ -554,6 +621,146 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void ToggleSettings() => SettingsExpanded = !SettingsExpanded;
+
+    [RelayCommand]
+    async Task ReportCatalogModAsync()
+    {
+        if (SelectedCatalogMod is null) return;
+        await ReportAsync(
+            SelectedCatalogMod.Id,
+            SelectedCatalogMod.Name,
+            "catalog").ConfigureAwait(true);
+    }
+
+    [RelayCommand]
+    async Task ReportLibraryModAsync()
+    {
+        if (SelectedLibraryMod is null || SelectedLibraryMod.IsMissing) return;
+        await ReportAsync(
+            SelectedLibraryMod.Package.Id,
+            SelectedLibraryMod.DisplayName,
+            "library").ConfigureAwait(true);
+    }
+
+    async Task ReportAsync(string modId, string modName, string source)
+    {
+        if (_reporting) return;
+        if (!_relay.IsConfigured)
+        {
+            AppendLog(Ui.RelayNotConfigured);
+            _ = _confirm(Ui.RelayNotConfigured);
+            return;
+        }
+
+        var picked = _promptReport?.Invoke(modName);
+        if (picked is null) return;
+
+        if (!_confirm(Ui.ReportConfirm))
+            return;
+
+        _reporting = true;
+        try
+        {
+            var request = new ReportRequest
+            {
+                ModId = modId,
+                ModName = modName,
+                Source = source,
+                Category = picked.Value.Category,
+                Notes = picked.Value.Notes,
+                AppVersion = AppVersion
+            };
+            await _relay.SubmitReportAsync(request).ConfigureAwait(true);
+            AppendLog(Ui.ReportSuccess);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"{Ui.ReportFailed}：{ex.Message}");
+        }
+        finally
+        {
+            _reporting = false;
+        }
+    }
+
+    [RelayCommand]
+    async Task SubmitModAsync()
+    {
+        if (_submittingMod) return;
+        if (!_relay.IsConfigured)
+        {
+            AppendLog(Ui.RelayNotConfigured);
+            _ = _confirm(Ui.RelayNotConfigured);
+            return;
+        }
+
+        var fields = _promptSubmitMod?.Invoke();
+        if (fields is null) return;
+
+        if (!fields.DllPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendLog(Ui.SubmitModInvalidExt);
+            return;
+        }
+
+        var info = new FileInfo(fields.DllPath);
+        if (!info.Exists)
+        {
+            AppendLog(Ui.SubmitModPickDll);
+            return;
+        }
+
+        if (info.Length > RelayClient.MaxSubmitBytes)
+        {
+            AppendLog(Ui.SubmitModTooLarge);
+            return;
+        }
+
+        try
+        {
+            var inspect = _assemblyInspector.Inspect(fields.DllPath);
+            if (!inspect.LooksLikeMelonMod && !inspect.LooksLikeMelonPlugin)
+            {
+                if (!_confirm(Ui.SubmitModNotMelonWarn))
+                    return;
+            }
+        }
+        catch
+        {
+            if (!_confirm(Ui.SubmitModNotMelonWarn))
+                return;
+        }
+
+        _submittingMod = true;
+        try
+        {
+            await using var stream = File.OpenRead(fields.DllPath);
+            var sha = Convert.ToHexString(await SHA256.HashDataAsync(stream).ConfigureAwait(true)).ToLowerInvariant();
+            stream.Position = 0;
+
+            var meta = new SubmitModRequest
+            {
+                Name = fields.Name,
+                Author = fields.Author,
+                Version = fields.Version,
+                Summary = fields.Summary,
+                Sha256 = sha,
+                FileName = Path.GetFileName(fields.DllPath),
+                FileSize = info.Length,
+                AppVersion = AppVersion
+            };
+            await _relay.SubmitModAsync(meta, stream, meta.FileName).ConfigureAwait(true);
+            AppendLog(Ui.SubmitModSuccess);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"{Ui.SubmitModFailed}：{ex.Message}");
+        }
+        finally
+        {
+            _submittingMod = false;
+        }
+    }
 
     [RelayCommand]
     void ToggleCatalog()

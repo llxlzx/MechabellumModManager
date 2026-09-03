@@ -1,0 +1,48 @@
+key	zh-CN
+Settings	设置
+BrowseMods	Mod 浏览
+ImportDll	导入 DLL
+ImportZip	导入 Zip
+ImportFolder	导入 文件夹
+ApplyProfile	应用方案
+ApplyAndLaunch	应用并启动
+CheckUpdates	检查更新
+Language	语言
+LanguageSystem	跟随系统
+CreditsTitle	关于与声明
+CreditsBody	本 Mod 管理器由「院长大人」制作。\n联系方式 QQ：319323959\n衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。\n本管理器不涉及任何盈利项目，无赞助入口，不存在任何收费行为。若有人将本管理器用于盈利，请自觉抵制。\n社区投稿与第三方 Mod 风险自负；管理器无法保证文件绝对安全（与创意工坊等平台类似），发现异常请使用举报功能。
+Report	举报
+ReportConfirm	确认提交此举报？虚假举报可能影响审核。
+ReportCategoryCheat	作弊
+ReportCategoryVirus	病毒 / 恶意
+ReportCategoryUnrelated	与游戏无关
+ReportCategoryOther	其他
+ReportOtherHint	请说明原因（必填）
+ReportSuccess	举报已提交，感谢反馈。
+ReportFailed	举报提交失败
+SubmitMod	投稿 Mod
+SubmitModTitle	投稿 Mod（待审核）
+SubmitModName	名称
+SubmitModAuthor	作者
+SubmitModVersion	版本
+SubmitModSummary	简介
+SubmitModPickDll	选择 DLL…
+SubmitModSuccess	投稿已提交，等待维护者审核。
+SubmitModFailed	投稿失败
+SubmitModNotMelonWarn	该 DLL 看起来不像 Melon Mod。仍要投稿吗？
+SubmitModTooLarge	文件超过 20MB 上限。
+SubmitModInvalidExt	仅支持 .dll 文件。
+RelayNotConfigured	投稿/举报中转未配置。请在配置中设置 RelayBaseUrl（Cloudflare Worker 地址）。
+Confirm	确认
+Cancel	取消
+Ok	确定
+RefreshCatalog	刷新目录
+AddToLibrary	加入本地库
+ImportFromGame	从游戏导入
+GamePath	游戏路径
+LaunchMode	启动方式
+PortableDataRoot	便携数据根（程序目录/data，需重启生效）
+Profiles	方案
+ModLibrary	Mod 库
+SyncLog	同步日志
+CurrentProfile	当前方案

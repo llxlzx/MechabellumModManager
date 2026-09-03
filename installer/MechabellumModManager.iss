@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "钢铁指挥官 Mod 管理器"
-#define MyAppVersion "1.0.4"
+#define MyAppVersion "1.0.5"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"

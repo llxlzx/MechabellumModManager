@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Settings" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="BrowseMods" xml:space="preserve"><value>Mods durchsuchen</value></data>
+  <data name="ImportDll" xml:space="preserve"><value>DLL importieren</value></data>
+  <data name="ImportZip" xml:space="preserve"><value>Zip importieren</value></data>
+  <data name="ImportFolder" xml:space="preserve"><value>Ordner importieren</value></data>
+  <data name="ApplyProfile" xml:space="preserve"><value>Profil anwenden</value></data>
+  <data name="ApplyAndLaunch" xml:space="preserve"><value>Anwenden &amp; starten</value></data>
+  <data name="CheckUpdates" xml:space="preserve"><value>Updates prüfen</value></data>
+  <data name="Language" xml:space="preserve"><value>Sprache</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>System</value></data>
+  <data name="CreditsTitle" xml:space="preserve"><value>Credits &amp; Hinweis</value></data>
+  <data name="CreditsBody" xml:space="preserve"><value>Dieser Mod-Manager wurde von „院长大人“ erstellt.
+Kontakt QQ: 319323959
+Herzlichen Dank an alle Tester, Spieler und Mechabellum-Mod-Entwickler.
+Kein Profit, kein Sponsoring, keine Gebühren. Monetarisierungen bitte ablehnen.
+Community-Uploads und Drittanbieter-Mods auf eigenes Risiko; absolute Sicherheit ist nicht garantiert. Bei Auffälligkeiten bitte Melden nutzen.</value></data>
+  <data name="Report" xml:space="preserve"><value>Melden</value></data>
+  <data name="ReportConfirm" xml:space="preserve"><value>Meldung senden? Falsche Meldungen schaden der Prüfung.</value></data>
+  <data name="ReportCategoryCheat" xml:space="preserve"><value>Cheat</value></data>
+  <data name="ReportCategoryVirus" xml:space="preserve"><value>Virus / Malware</value></data>
+  <data name="ReportCategoryUnrelated" xml:space="preserve"><value>Nicht spielbezogen</value></data>
+  <data name="ReportCategoryOther" xml:space="preserve"><value>Sonstiges</value></data>
+  <data name="ReportOtherHint" xml:space="preserve"><value>Bitte Grund angeben (Pflicht)</value></data>
+  <data name="ReportSuccess" xml:space="preserve"><value>Meldung gesendet. Danke.</value></data>
+  <data name="ReportFailed" xml:space="preserve"><value>Meldung fehlgeschlagen</value></data>
+  <data name="SubmitMod" xml:space="preserve"><value>Mod einreichen</value></data>
+  <data name="SubmitModTitle" xml:space="preserve"><value>Mod einreichen (Prüfung)</value></data>
+  <data name="SubmitModName" xml:space="preserve"><value>Name</value></data>
+  <data name="SubmitModAuthor" xml:space="preserve"><value>Autor</value></data>
+  <data name="SubmitModVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="SubmitModSummary" xml:space="preserve"><value>Kurzbeschreibung</value></data>
+  <data name="SubmitModPickDll" xml:space="preserve"><value>DLL wählen…</value></data>
+  <data name="SubmitModSuccess" xml:space="preserve"><value>Eingereicht; wartet auf Prüfung.</value></data>
+  <data name="SubmitModFailed" xml:space="preserve"><value>Einreichung fehlgeschlagen</value></data>
+  <data name="SubmitModNotMelonWarn" xml:space="preserve"><value>Diese DLL wirkt nicht wie ein Melon Mod. Trotzdem senden?</value></data>
+  <data name="SubmitModTooLarge" xml:space="preserve"><value>Datei überschreitet das 20-MB-Limit.</value></data>
+  <data name="SubmitModInvalidExt" xml:space="preserve"><value>Nur .dll-Dateien erlaubt.</value></data>
+  <data name="RelayNotConfigured" xml:space="preserve"><value>Relay nicht konfiguriert. Bitte RelayBaseUrl auf die Worker-URL setzen.</value></data>
+  <data name="Confirm" xml:space="preserve"><value>Bestätigen</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="RefreshCatalog" xml:space="preserve"><value>Katalog aktualisieren</value></data>
+  <data name="AddToLibrary" xml:space="preserve"><value>Zur Bibliothek</value></data>
+  <data name="ImportFromGame" xml:space="preserve"><value>Aus Spiel importieren</value></data>
+  <data name="GamePath" xml:space="preserve"><value>Spielpfad</value></data>
+  <data name="LaunchMode" xml:space="preserve"><value>Startmodus</value></data>
+  <data name="PortableDataRoot" xml:space="preserve"><value>Portable Daten (app/data, Neustart nötig)</value></data>
+  <data name="Profiles" xml:space="preserve"><value>Profile</value></data>
+  <data name="ModLibrary" xml:space="preserve"><value>Mod-Bibliothek</value></data>
+  <data name="SyncLog" xml:space="preserve"><value>Sync-Protokoll</value></data>
+  <data name="CurrentProfile" xml:space="preserve"><value>Aktives Profil</value></data>
+</root>
