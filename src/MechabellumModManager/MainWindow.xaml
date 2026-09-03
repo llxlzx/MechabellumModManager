@@ -15,6 +15,7 @@
         FontFamily="{StaticResource AppFontFamily}">
     <Window.Resources>
         <conv:NonEmptyStringToVisibilityConverter x:Key="NonEmptyVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
     </Window.Resources>
 
     <Grid>
@@ -250,7 +251,7 @@
                     BorderThickness="0,0,0,1"
                     Padding="18,12"
                     Visibility="{Binding CatalogExpanded, Converter={StaticResource BoolToVis}}">
-                <DockPanel MaxHeight="280">
+                <DockPanel MaxHeight="420">
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Style="{StaticResource AccentBarStyle}"
@@ -284,21 +285,51 @@
                                TextWrapping="Wrap"
                                FontSize="12" />
 
-                    <TextBlock DockPanel.Dock="Bottom"
-                               Margin="0,8,0,0"
-                               Text="{Binding SelectedCatalogMod.Summary}"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               TextWrapping="Wrap"
-                               FontSize="12"
-                               MaxHeight="64"
-                               TextTrimming="CharacterEllipsis"
-                               ToolTip="{Binding SelectedCatalogMod.Summary}" />
+                    <Border DockPanel.Dock="Bottom"
+                            Margin="0,10,0,0"
+                            Padding="0,10,0,0"
+                            BorderBrush="{StaticResource SteelEdgeBrush}"
+                            BorderThickness="0,1,0,0"
+                            Visibility="{Binding SelectedCatalogMod, Converter={StaticResource NullToVis}}">
+                        <DockPanel>
+                            <Image DockPanel.Dock="Left"
+                                   Source="{Binding SelectedCatalogMod.PreviewImage}"
+                                   MaxHeight="160"
+                                   MaxWidth="240"
+                                   Stretch="Uniform"
+                                   Margin="0,0,14,0"
+                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                            <StackPanel>
+                                <TextBlock Text="{Binding SelectedCatalogMod.Name}"
+                                           FontWeight="SemiBold"
+                                           FontSize="14"
+                                           TextWrapping="Wrap"
+                                           Foreground="{StaticResource TextPrimaryBrush}" />
+                                <TextBlock Margin="0,4,0,0"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap">
+                                    <Run Text="作者：" />
+                                    <Run Text="{Binding SelectedCatalogMod.Author, Mode=OneWay}" />
+                                    <Run Text="  ·  版本：" />
+                                    <Run Text="{Binding SelectedCatalogMod.Version, Mode=OneWay}" />
+                                    <Run Text="  ·  更新：" />
+                                    <Run Text="{Binding SelectedCatalogMod.UpdatedAt, Mode=OneWay}" />
+                                </TextBlock>
+                                <TextBlock Margin="0,8,0,0"
+                                           Text="{Binding SelectedCatalogMod.Summary}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           TextWrapping="Wrap"
+                                           FontSize="12" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
 
                     <DataGrid ItemsSource="{Binding CatalogMods}"
                               SelectedItem="{Binding SelectedCatalogMod}"
                               IsReadOnly="True"
                               HeadersVisibility="Column"
-                              MaxHeight="160">
+                              MaxHeight="180">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="名称"
                                                 Binding="{Binding Name}"
@@ -404,13 +435,54 @@
                                 Padding="0,10,0,0"
                                 BorderBrush="{StaticResource SteelEdgeBrush}"
                                 BorderThickness="0,1,0,0">
-                            <TextBlock Margin="0,8,0,0"
-                                       Text="{Binding DirtyHint}"
-                                       Foreground="{StaticResource AccentTealBrush}"
-                                       FontSize="12" />
+                            <StackPanel>
+                                <Border Margin="0,0,0,10"
+                                        Visibility="{Binding SelectedLibraryMod, Converter={StaticResource NullToVis}}">
+                                    <DockPanel>
+                                        <Image DockPanel.Dock="Left"
+                                               Source="{Binding SelectedLibraryMod.PreviewImage}"
+                                               MaxHeight="140"
+                                               MaxWidth="220"
+                                               Stretch="Uniform"
+                                               Margin="0,0,12,0"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <StackPanel>
+                                            <TextBlock FontWeight="SemiBold"
+                                                       FontSize="13"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{StaticResource TextPrimaryBrush}">
+                                                <Run Text="名称：" />
+                                                <Run Text="{Binding SelectedLibraryMod.DisplayName, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <TextBlock Margin="0,4,0,0"
+                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap">
+                                                <Run Text="作者：" />
+                                                <Run Text="{Binding SelectedLibraryMod.Author, Mode=OneWay}" />
+                                                <Run Text="  ·  版本：" />
+                                                <Run Text="{Binding SelectedLibraryMod.Version, Mode=OneWay}" />
+                                                <Run Text="  ·  更新：" />
+                                                <Run Text="{Binding SelectedLibraryMod.CatalogUpdatedAt, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <TextBlock Margin="0,6,0,0"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap">
+                                                <Run Text="功能：" />
+                                                <Run Text="{Binding SelectedLibraryMod.Summary, Mode=OneWay}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <TextBlock Text="{Binding DirtyHint}"
+                                           Foreground="{StaticResource AccentTealBrush}"
+                                           FontSize="12" />
+                            </StackPanel>
                         </Border>
 
                         <DataGrid ItemsSource="{Binding Mods}"
+                                  SelectedItem="{Binding SelectedLibraryMod}"
                                   IsReadOnly="False"
                                   HeadersVisibility="Column">
                             <DataGrid.Columns>

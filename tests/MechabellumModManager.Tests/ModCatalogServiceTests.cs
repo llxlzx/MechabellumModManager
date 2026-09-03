@@ -16,6 +16,7 @@ public class ModCatalogServiceTests
               "updatedAt": "2026-09-01",
               "summary": "摄像头相关 QoL",
               "file": "mods/cam/Cam.dll",
+              "preview": "mods/cam/preview.png",
               "type": "melon_mod"
             },
             {
@@ -47,7 +48,21 @@ public class ModCatalogServiceTests
         cam.UpdatedAt.Should().Be("2026-09-01");
         cam.Summary.Should().Be("摄像头相关 QoL");
         cam.File.Should().Be("mods/cam/Cam.dll");
+        cam.Preview.Should().Be("mods/cam/preview.png");
         cam.Type.Should().Be("melon_mod");
+        root.Mods[1].Preview.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetRawUrl_and_PreviewUrl_build_raw_github_urls()
+    {
+        ModCatalogService.GetRawUrl("mods/cam/preview.png").Should().Be(
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
+
+        var cam = new CatalogMod { Preview = "mods/cam/preview.png" };
+        ModCatalogService.PreviewUrl(cam).Should().Be(
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
+        ModCatalogService.PreviewUrl(new CatalogMod()).Should().BeNull();
     }
 
     [Fact]

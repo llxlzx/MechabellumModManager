@@ -364,6 +364,33 @@ public sealed class ModLibraryService
         _profiles.RemovePackageFromAllProfiles(packageId);
     }
 
+    /// <summary>
+    /// Updates optional catalog-derived metadata on an existing package and rewrites package.json.
+    /// </summary>
+    public ModPackage UpdatePackageMetadata(
+        string packageId,
+        string? author,
+        string? version,
+        string? summary,
+        string? catalogUpdatedAt,
+        string? preview)
+    {
+        if (string.IsNullOrWhiteSpace(packageId))
+            throw new ArgumentException("Package id is required.", nameof(packageId));
+
+        var pkg = TryLoadPackage(packageId)
+            ?? throw new InvalidOperationException($"Package not found: {packageId}");
+
+        pkg.Author = author;
+        pkg.Version = version;
+        pkg.Summary = summary;
+        pkg.CatalogUpdatedAt = catalogUpdatedAt;
+        pkg.Preview = preview;
+
+        WritePackageJson(pkg);
+        return pkg;
+    }
+
     ModPackageType ResolveType(string stagingPath, string? primaryDll, ModPackageType? pathHint, ModPackageType? forceType)
     {
         var packageJsonPath = Path.Combine(stagingPath, "package.json");
@@ -495,6 +522,9 @@ public sealed class ModLibraryService
             Type = pkg.Type,
             HighRisk = pkg.HighRisk,
             RequiredMelonLoaderVersion = pkg.RequiredMelonLoaderVersion,
+            Summary = pkg.Summary,
+            CatalogUpdatedAt = pkg.CatalogUpdatedAt,
+            Preview = pkg.Preview,
             Files = pkg.Files
         };
         var json = JsonSerializer.Serialize(meta, PackageJsonOptions);
@@ -523,6 +553,9 @@ public sealed class ModLibraryService
                 Type = meta.Type.Value,
                 HighRisk = meta.HighRisk,
                 RequiredMelonLoaderVersion = meta.RequiredMelonLoaderVersion,
+                Summary = meta.Summary,
+                CatalogUpdatedAt = meta.CatalogUpdatedAt,
+                Preview = meta.Preview,
                 Files = meta.Files ?? new List<DeployableFile>(),
                 PackageDirectory = dir
             };
@@ -786,6 +819,9 @@ public sealed class ModLibraryService
         public ModPackageType? Type { get; set; }
         public bool HighRisk { get; set; }
         public string? RequiredMelonLoaderVersion { get; set; }
+        public string? Summary { get; set; }
+        public string? CatalogUpdatedAt { get; set; }
+        public string? Preview { get; set; }
         public List<DeployableFile>? Files { get; set; }
     }
 
