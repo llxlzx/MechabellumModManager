@@ -21,6 +21,8 @@ Windows 桌面工具：外部 Mod 库 + 方案勾选，一键同步到游戏目�
 
 ## 开发者
 
+维护者发布新版本到 GitHub Release 时，见 [docs/GitHub-Release更新说明.md](docs/GitHub-Release更新说明.md)。
+
 ```powershell
 dotnet build
 dotnet test
@@ -32,3 +34,4 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 ## 风险声明
 
 使用第三方 Mod 可能导致封号、存档损坏或异常。高风险包启用需确认。管理器**不含**作弊入口；**不再内置**一键安装 MelonLoader（改由安装包处理）。
+
