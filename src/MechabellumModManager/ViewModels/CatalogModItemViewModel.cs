@@ -6,6 +6,9 @@ namespace MechabellumModManager.ViewModels;
 
 public sealed partial class CatalogModItemViewModel : ObservableObject
 {
+    CancellationTokenSource? _previewCts;
+    string? _previewLoadUrl;
+
     public CatalogMod Mod { get; }
 
     public CatalogModItemViewModel(CatalogMod mod, bool isInLibrary)
@@ -34,8 +37,26 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 
     public string StatusText => IsInLibrary ? "已在库" : "未安装";
 
-    public void LoadPreviewImage()
+    public async Task LoadPreviewImageAsync()
     {
-        PreviewImage = PreviewImageLoader.TryLoad(PreviewUrl);
+        var url = PreviewUrl;
+        _previewCts?.Cancel();
+        _previewCts?.Dispose();
+        _previewCts = new CancellationTokenSource();
+        var ct = _previewCts.Token;
+        _previewLoadUrl = url;
+
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            PreviewImage = null;
+            return;
+        }
+
+        var bmp = await PreviewImageLoader.TryLoadAsync(url, ct).ConfigureAwait(true);
+        if (ct.IsCancellationRequested)
+            return;
+        if (!string.Equals(_previewLoadUrl, url, StringComparison.Ordinal))
+            return;
+        PreviewImage = bmp;
     }
 }

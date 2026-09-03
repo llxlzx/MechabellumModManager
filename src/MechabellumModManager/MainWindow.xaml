@@ -401,8 +401,14 @@
                               ResizeBehavior="PreviousAndNext" />
 
                 <Border Grid.Column="2" Style="{StaticResource PanelChromeStyle}">
-                    <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" MinHeight="140" />
+                            <RowDefinition Height="Auto" MaxHeight="180" />
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0" Margin="0,0,0,12">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <Border Style="{StaticResource AccentBarStyle}"
                                         Height="14"
@@ -430,61 +436,12 @@
                             </StackPanel>
                         </DockPanel>
 
-                        <Border DockPanel.Dock="Bottom"
-                                Margin="0,12,0,0"
-                                Padding="0,10,0,0"
-                                BorderBrush="{StaticResource SteelEdgeBrush}"
-                                BorderThickness="0,1,0,0">
-                            <StackPanel>
-                                <Border Margin="0,0,0,10"
-                                        Visibility="{Binding SelectedLibraryMod, Converter={StaticResource NullToVis}}">
-                                    <DockPanel>
-                                        <Image DockPanel.Dock="Left"
-                                               Source="{Binding SelectedLibraryMod.PreviewImage}"
-                                               MaxHeight="140"
-                                               MaxWidth="220"
-                                               Stretch="Uniform"
-                                               Margin="0,0,12,0"
-                                               RenderOptions.BitmapScalingMode="HighQuality" />
-                                        <StackPanel>
-                                            <TextBlock FontWeight="SemiBold"
-                                                       FontSize="13"
-                                                       TextWrapping="Wrap"
-                                                       Foreground="{StaticResource TextPrimaryBrush}">
-                                                <Run Text="名称：" />
-                                                <Run Text="{Binding SelectedLibraryMod.DisplayName, Mode=OneWay}" />
-                                            </TextBlock>
-                                            <TextBlock Margin="0,4,0,0"
-                                                       Foreground="{StaticResource TextMutedBrush}"
-                                                       FontSize="12"
-                                                       TextWrapping="Wrap">
-                                                <Run Text="作者：" />
-                                                <Run Text="{Binding SelectedLibraryMod.Author, Mode=OneWay}" />
-                                                <Run Text="  ·  版本：" />
-                                                <Run Text="{Binding SelectedLibraryMod.Version, Mode=OneWay}" />
-                                                <Run Text="  ·  更新：" />
-                                                <Run Text="{Binding SelectedLibraryMod.CatalogUpdatedAt, Mode=OneWay}" />
-                                            </TextBlock>
-                                            <TextBlock Margin="0,6,0,0"
-                                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                                       FontSize="12"
-                                                       TextWrapping="Wrap">
-                                                <Run Text="功能：" />
-                                                <Run Text="{Binding SelectedLibraryMod.Summary, Mode=OneWay}" />
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </DockPanel>
-                                </Border>
-                                <TextBlock Text="{Binding DirtyHint}"
-                                           Foreground="{StaticResource AccentTealBrush}"
-                                           FontSize="12" />
-                            </StackPanel>
-                        </Border>
-
-                        <DataGrid ItemsSource="{Binding Mods}"
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding Mods}"
                                   SelectedItem="{Binding SelectedLibraryMod}"
                                   IsReadOnly="False"
-                                  HeadersVisibility="Column">
+                                  HeadersVisibility="Column"
+                                  MinHeight="140">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="启用" Width="56">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -544,7 +501,74 @@
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
-                    </DockPanel>
+
+                        <Border Grid.Row="2"
+                                Margin="0,12,0,0"
+                                Padding="0,10,0,0"
+                                MaxHeight="160"
+                                BorderBrush="{StaticResource SteelEdgeBrush}"
+                                BorderThickness="0,1,0,0">
+                            <StackPanel>
+                                <Border Margin="0,0,0,10"
+                                        Visibility="{Binding SelectedLibraryMod, Converter={StaticResource NullToVis}}">
+                                    <DockPanel>
+                                        <Button Content="收起介绍"
+                                                Command="{Binding ClearLibraryModSelectionCommand}"
+                                                DockPanel.Dock="Right"
+                                                VerticalAlignment="Top"
+                                                Margin="8,0,0,0"
+                                                MinWidth="72"
+                                                Padding="8,2"
+                                                FontSize="11"
+                                                Style="{StaticResource GhostButtonStyle}" />
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                      HorizontalScrollBarVisibility="Disabled"
+                                                      MaxHeight="140">
+                                            <DockPanel>
+                                                <Image DockPanel.Dock="Left"
+                                                       Source="{Binding SelectedLibraryMod.PreviewImage}"
+                                                       MaxHeight="120"
+                                                       MaxWidth="180"
+                                                       Stretch="Uniform"
+                                                       Margin="0,0,12,0"
+                                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                                                <StackPanel>
+                                                    <TextBlock FontWeight="SemiBold"
+                                                               FontSize="13"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="{StaticResource TextPrimaryBrush}">
+                                                        <Run Text="名称：" />
+                                                        <Run Text="{Binding SelectedLibraryMod.DisplayName, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                    <TextBlock Margin="0,4,0,0"
+                                                               Foreground="{StaticResource TextMutedBrush}"
+                                                               FontSize="12"
+                                                               TextWrapping="Wrap">
+                                                        <Run Text="作者：" />
+                                                        <Run Text="{Binding SelectedLibraryMod.Author, Mode=OneWay}" />
+                                                        <Run Text="  ·  版本：" />
+                                                        <Run Text="{Binding SelectedLibraryMod.Version, Mode=OneWay}" />
+                                                        <Run Text="  ·  更新：" />
+                                                        <Run Text="{Binding SelectedLibraryMod.CatalogUpdatedAt, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                    <TextBlock Margin="0,6,0,0"
+                                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                                               FontSize="12"
+                                                               TextWrapping="Wrap">
+                                                        <Run Text="功能：" />
+                                                        <Run Text="{Binding SelectedLibraryMod.Summary, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </ScrollViewer>
+                                    </DockPanel>
+                                </Border>
+                                <TextBlock Text="{Binding DirtyHint}"
+                                           Foreground="{StaticResource AccentTealBrush}"
+                                           FontSize="12" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Border>
             </Grid>
 

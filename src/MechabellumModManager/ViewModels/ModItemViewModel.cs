@@ -9,6 +9,8 @@ public sealed partial class ModItemViewModel : ObservableObject
 {
     readonly MainViewModel _owner;
     bool _suppressEnabledCallback;
+    CancellationTokenSource? _previewCts;
+    string? _previewLoadUrl;
 
     public ModPackage Package { get; }
     public bool IsMissing { get; }
@@ -105,10 +107,27 @@ public sealed partial class ModItemViewModel : ObservableObject
         RefreshCatalogFieldsFromPackage();
     }
 
-    public void LoadPreviewImage(string? urlOverride = null)
+    public async Task LoadPreviewImageAsync(string? urlOverride = null)
     {
         var url = urlOverride ?? PreviewUrl;
-        PreviewImage = PreviewImageLoader.TryLoad(url);
+        _previewCts?.Cancel();
+        _previewCts?.Dispose();
+        _previewCts = new CancellationTokenSource();
+        var ct = _previewCts.Token;
+        _previewLoadUrl = url;
+
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            PreviewImage = null;
+            return;
+        }
+
+        var bmp = await PreviewImageLoader.TryLoadAsync(url, ct).ConfigureAwait(true);
+        if (ct.IsCancellationRequested)
+            return;
+        if (!string.Equals(_previewLoadUrl, url, StringComparison.Ordinal))
+            return;
+        PreviewImage = bmp;
     }
 
     [ObservableProperty]
