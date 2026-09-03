@@ -92,31 +92,40 @@ This manager is not involved in any for-profit projects, has no sponsorship entr
     <value>Submit Mod</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>This opens the GitHub contribute guide. Submit mods via Fork + Pull Request per the README. Continue?</value>
+    <value>This opens the beginner GitHub guide: Fork → upload DLL → edit catalog.json → Pull Request. Continue?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Opened the contribute guide. Please submit via Pull Request.</value>
+    <value>Opened the beginner guide. Follow the README step by step in your browser (no Git install needed).</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
     <value>Could not open the contribute page</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>How to submit</value>
+    <value>Submit steps (beginners)</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>Submit to the community repo in three steps (GitHub account required):</value>
+    <value>Submissions still use GitHub Fork + Pull Request. You can do everything in the browser—no Git install. Sign in to GitHub, then:</value>
   </data>
   <data name="SubmitGuideStep1" xml:space="preserve">
-    <value>1. Fork llxlzx/MechabellumMods</value>
+    <value>1. Open the repo and click Fork (top-right) to copy llxlzx/MechabellumMods to your account.</value>
   </data>
   <data name="SubmitGuideStep2" xml:space="preserve">
-    <value>2. Add mods/&lt;id&gt;/xxx.dll and update catalog.json</value>
+    <value>2. In your fork go to mods → Add file → Upload files. Upload to mods/your-id/xxx.dll (id = lowercase letters/digits/hyphens only; the id folder is required).</value>
   </data>
   <data name="SubmitGuideStep3" xml:space="preserve">
-    <value>3. Open a Pull Request and wait for maintainer review</value>
+    <value>3. Edit root catalog.json: add an entry in the mods array; id/file must match the path; update top-level updatedAt.</value>
+  </data>
+  <data name="SubmitGuideStep4" xml:space="preserve">
+    <value>4. On your fork click Contribute / Open pull request, write a short description, then Create pull request.</value>
+  </data>
+  <data name="SubmitGuideStep5" xml:space="preserve">
+    <value>5. Wait for maintainer merge. Players then use Refresh catalog in the manager.</value>
+  </data>
+  <data name="SubmitGuideTip" xml:space="preserve">
+    <value>After GitHub opens, read README section “新手投稿教程（网页操作，无需安装 Git)” / beginner web guide for full steps and a JSON example.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>Open GitHub</value>
+    <value>Open guide</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Confirm</value>

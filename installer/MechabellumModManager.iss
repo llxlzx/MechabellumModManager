@@ -16,6 +16,9 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\钢铁指挥官Mod管理器
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
+; Default is "auto": skips manager install-dir page on upgrade/reinstall. Always show it.
+DisableDirPage=no
+AlwaysShowDirOnReadyPage=yes
 OutputDir=..\dist
 OutputBaseFilename=MechabellumModManager_Setup_v{#MyAppVersion}
 Compression=lzma2

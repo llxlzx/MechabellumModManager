@@ -17,9 +17,10 @@ public static class GitHubCommunityLinks
     public static string RepositoryUrl => $"https://github.com/{Owner}/{Repo}";
 
     /// <summary>
-    /// Repo root README documents Fork + Pull Request. Avoid fragile heading anchors.
+    /// README beginner guide (web UI, no Git install).
     /// </summary>
-    public static string ContributeGuideUrl => RepositoryUrl;
+    public static string ContributeGuideUrl =>
+        $"{RepositoryUrl}#语言--language";
 
     public static string BuildReportIssueUrl(
         string modId,

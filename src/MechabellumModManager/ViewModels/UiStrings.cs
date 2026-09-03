@@ -40,6 +40,9 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SubmitGuideStep1 => T("SubmitGuideStep1");
     public string SubmitGuideStep2 => T("SubmitGuideStep2");
     public string SubmitGuideStep3 => T("SubmitGuideStep3");
+    public string SubmitGuideStep4 => T("SubmitGuideStep4");
+    public string SubmitGuideStep5 => T("SubmitGuideStep5");
+    public string SubmitGuideTip => T("SubmitGuideTip");
     public string SubmitGuideOpen => T("SubmitGuideOpen");
     public string Confirm => T("Confirm");
     public string Cancel => T("Cancel");

@@ -21,15 +21,18 @@ ReportOtherHint	请说明原因（必填）
 ReportSuccess	已打开 GitHub 举报页，Issue 链接已复制到剪贴板。请登录后点击 Submit 完成举报。
 ReportFailed	无法打开举报页
 SubmitMod	投稿 Mod
-SubmitModConfirm	将打开 GitHub 仓库投稿说明。请按 README 通过 Fork + Pull Request 提交 Mod，是否继续？
-SubmitModSuccess	已打开投稿说明页。请按 README 通过 Pull Request 提交。
+SubmitModConfirm	将打开 GitHub 新手投稿教程。流程是：Fork → 上传 DLL → 改 catalog.json → 提 Pull Request。是否继续？
+SubmitModSuccess	已打开新手投稿教程。请按 README 逐步操作；只需浏览器，无需安装 Git。
 SubmitModFailed	无法打开投稿页
-SubmitGuideTitle	投稿步骤
-SubmitGuideIntro	请按以下三步向社区仓库投稿（需 GitHub 账号）：
-SubmitGuideStep1	1. Fork 仓库 llxlzx/MechabellumMods
-SubmitGuideStep2	2. 放入 mods/<id>/xxx.dll，并更新 catalog.json
-SubmitGuideStep3	3. 向本仓库提交 Pull Request，等待维护者审核合并
-SubmitGuideOpen	打开 GitHub
+SubmitGuideTitle	投稿步骤（新手）
+SubmitGuideIntro	投稿仍使用 GitHub Fork + Pull Request。推荐只用网页，不必安装 Git。请先注册并登录 GitHub，再按下面做：
+SubmitGuideStep1	1. 打开仓库后点右上角 Fork，把 llxlzx/MechabellumMods 复制到你的账号。
+SubmitGuideStep2	2. 进入你的 Fork → mods → Add file → Upload files，上传到 mods/你的id/xxx.dll（id 只用小写英文、数字、短横线；必须多一层以 id 命名的文件夹）。
+SubmitGuideStep3	3. 编辑根目录 catalog.json：在 mods 数组里新增一条，id/file 与文件夹路径一致，并更新顶部 updatedAt。
+SubmitGuideStep4	4. 在你的 Fork 页点 Contribute / Open pull request，填写说明后 Create pull request。
+SubmitGuideStep5	5. 等待维护者合并。合并后玩家在管理器「刷新目录」即可看到。
+SubmitGuideTip	打开 GitHub 后请直接阅读 README「新手投稿教程（网页操作，无需安装 Git）」；里面有截图式逐步说明和 JSON 示例。
+SubmitGuideOpen	打开投稿教程
 Confirm	确认
 Cancel	取消
 Ok	确定
