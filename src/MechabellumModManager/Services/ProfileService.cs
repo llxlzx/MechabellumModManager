@@ -19,13 +19,26 @@ public sealed class ProfileService
     {
         Directory.CreateDirectory(_paths.ProfilesDir);
         var path = ProfilePath("default");
+        const string defaultDisplayName = "默认";
+
         if (File.Exists(path))
+        {
+            var existing = _store.LoadOrDefault(path, () => (Profile?)null);
+            if (existing is not null
+                && string.Equals(existing.Id, "default", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(existing.Name, defaultDisplayName, StringComparison.Ordinal))
+            {
+                existing.Name = defaultDisplayName;
+                SaveProfile(existing);
+            }
+
             return;
+        }
 
         SaveProfile(new Profile
         {
             Id = "default",
-            Name = "默认",
+            Name = defaultDisplayName,
             EnabledPackageIds = new List<string>()
         });
 

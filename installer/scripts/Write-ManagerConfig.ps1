@@ -32,11 +32,18 @@ if (Test-Path $configPath) {
 }
 
 $json = ($obj | ConvertTo-Json -Depth 5)
-[System.IO.File]::WriteAllText($configPath, $json, (New-Object System.Text.UTF8Encoding $false))
+[IO.File]::WriteAllText($configPath, $json, [Text.UTF8Encoding]::new($false))
 
 $profile = Join-Path $root "profiles\default.json"
 if (-not (Test-Path $profile)) {
-    '{"id":"default","name":"默认","enabledPackageIds":[]}' | Set-Content -Path $profile -Encoding UTF8
+    $defaultName = [Text.Encoding]::UTF8.GetString([byte[]](0xE9,0xBB,0x98,0xE8,0xAE,0xA4))
+    $profileObj = [ordered]@{
+        id                 = "default"
+        name               = $defaultName
+        enabledPackageIds  = @()
+    }
+    $profileJson = ($profileObj | ConvertTo-Json -Depth 5)
+    [IO.File]::WriteAllText($profile, $profileJson, [Text.UTF8Encoding]::new($false))
 }
 
 Write-Host "Wrote config: $configPath"
