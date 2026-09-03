@@ -35,6 +35,7 @@ public sealed partial class MainViewModel : ObservableObject
     RelayClient _relay;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
+    readonly Action<string> _notify;
     readonly Func<string?>? _browseFolder;
     readonly Func<string?>? _openDll;
     readonly Func<string?>? _openZip;
@@ -72,6 +73,7 @@ public sealed partial class MainViewModel : ObservableObject
         AssemblyInspector? assemblyInspector = null,
         Func<string, bool>? confirmHighRisk = null,
         Func<string, bool>? confirm = null,
+        Action<string>? notify = null,
         Func<string?>? browseFolder = null,
         Func<string?>? openDll = null,
         Func<string?>? openZip = null,
@@ -98,6 +100,7 @@ public sealed partial class MainViewModel : ObservableObject
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
+        _notify = notify ?? (_ => { });
         _browseFolder = browseFolder;
         _openDll = openDll;
         _openZip = openZip;
@@ -648,7 +651,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!_relay.IsConfigured)
         {
             AppendLog(Ui.RelayNotConfigured);
-            _ = _confirm(Ui.RelayNotConfigured);
+            _notify(Ui.RelayNotConfigured);
             return;
         }
 
@@ -690,7 +693,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!_relay.IsConfigured)
         {
             AppendLog(Ui.RelayNotConfigured);
-            _ = _confirm(Ui.RelayNotConfigured);
+            _notify(Ui.RelayNotConfigured);
             return;
         }
 

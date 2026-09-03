@@ -48,6 +48,7 @@ public partial class App : Application
             assemblyInspector: inspector,
             confirmHighRisk: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Warning),
             confirm: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question),
+            notify: msg => MessageBox.Show(owner, msg, LocalizationService.T("Notice"), MessageBoxButton.OK, MessageBoxImage.Information),
             browseFolder: () => BrowseFolder(owner),
             openDll: () => OpenFile(owner, "Melon Mod DLL|*.dll|所有文件|*.*"),
             openZip: () => OpenFile(owner, "Mod 压缩包|*.zip|所有文件|*.*"),
