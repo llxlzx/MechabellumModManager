@@ -1,4 +1,4 @@
-﻿bin/
+bin/
 obj/
 .vs/
 *.user
@@ -12,3 +12,8 @@ installer/redist/**/*.exe
 installer/redist/**/*.zip
 !installer/redist/**/.gitkeep
 !installer/redist/**/README.md
+
+# accidental local install into repo
+/MechabellumModManager.exe
+/钢铁指挥官Mod管理器/
+/钢铁指挥官Mod管理器.exe
