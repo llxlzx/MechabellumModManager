@@ -28,4 +28,20 @@ public class JsonStoreTests
         }
         finally { Directory.Delete(dir, true); }
     }
+
+    [Fact]
+    public void LoadOrDefault_returns_factory_on_corrupt_json()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "mmm-json-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var path = Path.Combine(dir, "broken.json");
+            File.WriteAllText(path, "{ not-json");
+            var store = new JsonStore();
+            var loaded = store.LoadOrDefault(path, () => new AppConfig { ActiveProfileId = "fallback" });
+            loaded.ActiveProfileId.Should().Be("fallback");
+        }
+        finally { Directory.Delete(dir, true); }
+    }
 }

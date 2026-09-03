@@ -16,11 +16,22 @@ public sealed class JsonStore
         if (!File.Exists(path))
             return factory();
 
-        var json = File.ReadAllText(path);
-        if (string.IsNullOrWhiteSpace(json))
-            return factory();
+        try
+        {
+            var json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json))
+                return factory();
 
-        return JsonSerializer.Deserialize<T>(json, Options) ?? factory();
+            return JsonSerializer.Deserialize<T>(json, Options) ?? factory();
+        }
+        catch (JsonException)
+        {
+            return factory();
+        }
+        catch (IOException)
+        {
+            return factory();
+        }
     }
 
     public void Save<T>(string path, T value)
