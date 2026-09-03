@@ -1,6 +1,8 @@
-# Cancel relay — GitHub-direct submit/report
+﻿# Cancel relay — GitHub-direct submit/report
 
-**Status:** Approved (user: 同意取消中转)  
+> **Superseded** by email-first community path (manager **1.0.5**). Primary: email to llxmod@foxmail.com.
+
+**Status:** **Superseded** by email-first (1.0.5)
 **Date:** 2026-09-03
 
 ## Decision

@@ -1,4 +1,4 @@
-# Mechabellum（钢铁指挥官）Mod 管理器
+﻿# Mechabellum（钢铁指挥官）Mod 管理器
 
 Windows 桌面工具：外部 Mod 库 + 方案勾选，一键同步到游戏目录。
 
@@ -87,6 +87,8 @@ Use the links below to jump within this page (Chinese and English sections share
 4. 完整模板与说明见社区仓库：  
    **[投稿与举报](https://github.com/llxlzx/MechabellumMods#投稿与举报--submit--report)** · [submit.html](https://github.com/llxlzx/MechabellumMods/blob/main/docs/submit.html)
 
+维护者将在合理时间内审阅并处理您的来信。受日常生活与个人事务安排影响，处理进度或有短暂延误，敬请谅解并耐心等待。请勿重复发送同一内容。
+
 维护者审核后会上传到本仓库的社区目录；玩家在管理器里 **刷新目录** 即可看到。
 
 举报：对目录或本地库中的 Mod 点 **举报**，选择分类后打开预填邮件（正文也会复制到剪贴板），发送至 **llxmod@foxmail.com**。
@@ -129,7 +131,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 - 高风险包启用需二次确认；管理器提供的本地检查**不是**完整杀毒。  
 - 本管理器**不含**作弊入口；**不再内置**一键安装 MelonLoader（改由安装包处理）。  
 - 投稿与目录内容由提供者负责；维护者可拒绝上架或下架，但无法保证每一份文件的安全性。  
-- 详细免责声明见应用内「关于与声明」。
+- 详细免责声明见应用内「关于与声明」。 仓库根目录另见 `NOTICE.md` 与 MIT `LICENSE`。
 
 ---
 
@@ -194,6 +196,8 @@ Submit / update / report by email to **llxmod@foxmail.com** (no Fork/PR required
 4. Full templates:  
    **[Submit & Report](https://github.com/llxlzx/MechabellumMods#投稿与举报--submit--report)** · [submit.html](https://github.com/llxlzx/MechabellumMods/blob/main/docs/submit.html)
 
+The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.
+
 After review, maintainers upload to the community catalog; players **Refresh catalog** in the manager.
 
 **Report**: pick a category; the manager opens a pre-filled mail (body also copied to clipboard) to **llxmod@foxmail.com**.
@@ -229,6 +233,8 @@ Release checklist: upload Setup + `latest.json` + portable zip; see [Shipping st
 ---
 
 ## Risk notice (English)
+
+See also repo `NOTICE.md` and MIT `LICENSE`.
 
 - Third-party mods may cause **bans, save corruption, or instability**—use at your own risk.  
 - High-risk packages require confirmation; local checks are **not** a full antivirus.  

@@ -1,6 +1,6 @@
 ﻿{
-    "publishedAt":  "2026-09-03T23:06:33.0901417Z",
     "version":  "1.0.5",
+    "notes":  "1.0.5 docs/legal polish: expanded in-app Credits disclaimer; NOTICE.md + MIT LICENSE; email processing-delay notice in submit guide / README / submit.html. Community submit/report remains email to llxmod@foxmail.com (no Fork/PR required).",
     "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.5/MechabellumModManager_Setup_v1.0.5.exe",
-    "notes":  "Email-first submit/report to llxmod@foxmail.com; author column improvements in the mod list."
+    "publishedAt":  "2026-09-03T23:17:08Z"
 }

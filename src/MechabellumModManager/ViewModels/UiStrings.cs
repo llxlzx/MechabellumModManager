@@ -39,6 +39,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SubmitGuideIntro => T("SubmitGuideIntro");
     public string SubmitGuideBody => T("SubmitGuideBody");
     public string SubmitGuideTip => T("SubmitGuideTip");
+    public string SubmitGuideWaitNotice => T("SubmitGuideWaitNotice");
     public string SubmitGuideOpen => T("SubmitGuideOpen");
     public string SubmitGuideOpenEmail => T("SubmitGuideOpenEmail");
     public string Confirm => T("Confirm");

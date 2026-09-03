@@ -14,6 +14,7 @@ public partial class SubmitGuideDialog : Window
         IntroLabel.Text = LocalizationService.T("SubmitGuideIntro");
         BodyText.Text = LocalizationService.T("SubmitGuideBody");
         TipText.Text = LocalizationService.T("SubmitGuideTip");
+        WaitNoticeText.Text = LocalizationService.T("SubmitGuideWaitNotice");
         CancelButton.Content = LocalizationService.T("Cancel");
         GuideButton.Content = LocalizationService.T("SubmitGuideOpen");
         OkButton.Content = LocalizationService.T("SubmitGuideOpenEmail");

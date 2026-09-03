@@ -1,3 +1,5 @@
+﻿> **Historical / Superseded:** This plan targeted the GitHub-direct (Fork/Issue) polish for **1.0.4**. Community path is **email-first** as of manager **1.0.5**. Keep for archive only.
+
 # GitHub-direct polish + 1.0.4 package
 
 > **For agentic workers:** Implement task-by-task. User approved all improvement suggestions + installer rebuild.
