@@ -23,8 +23,10 @@ Windows 桌面工具：外部 Mod 库 + 方案勾选，一键同步到游戏目�
 ```powershell
 dotnet build
 dotnet test
-dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o 发布
+dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish
 ```
+
+最终用户请使用 Setup 安装包或开始菜单快捷方式启动已安装的管理器，不要依赖仓库根目录下的 bat / 便捷 exe 副本。
 
 ## 风险声明
 
