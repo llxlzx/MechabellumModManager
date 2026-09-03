@@ -16,6 +16,7 @@ release/
       Assets/
       README.txt                               # 需 .NET 8 Desktop，双击 exe
     latest.json                                # 更新检查元数据（上传 Releases 时一并附上）
+    MechabellumModManager_portable_v1.0.3.zip  # 便携包（本体内容打 zip，解压即 exe+Assets）
 ```
 
 ## 安装包 vs 本体
@@ -26,6 +27,8 @@ release/
 | **本体/** | 便携/开发对照 | 需已安装 **.NET 8 Desktop** Runtime；保持 `Assets` 与 exe 同目录，双击 `MechabellumModManager.exe` |
 
 建议：普通用户只分发/下载 **安装包**；**本体** 仅作便携运行或排查对照。
+
+上传 GitHub Release 时请附上 MechabellumModManager_portable_v*.zip（由干净「本体」目录内容打包，解压后顶层即为 exe 与 Assets）。
 
 ## latest.json
 
