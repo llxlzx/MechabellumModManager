@@ -24,15 +24,19 @@ public sealed class ProfileService
         if (File.Exists(path))
         {
             var existing = _store.LoadOrDefault(path, () => (Profile?)null);
-            if (existing is not null
-                && string.Equals(existing.Id, "default", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(existing.Name, defaultDisplayName, StringComparison.Ordinal))
+            if (existing is not null)
             {
-                existing.Name = defaultDisplayName;
-                SaveProfile(existing);
+                if (string.Equals(existing.Id, "default", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(existing.Name, defaultDisplayName, StringComparison.Ordinal))
+                {
+                    existing.Name = defaultDisplayName;
+                    SaveProfile(existing);
+                }
+
+                return;
             }
 
-            return;
+            // Empty/corrupt default.json — fall through and recreate.
         }
 
         SaveProfile(new Profile

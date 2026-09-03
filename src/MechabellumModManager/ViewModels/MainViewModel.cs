@@ -637,7 +637,7 @@ public sealed partial class MainViewModel : ObservableObject
                 {
                     new DeployableFile
                     {
-                        RelativePathInPackage = Path.GetFileName(item.File.Replace('\\', '/'))
+                        RelativePathInPackage = Path.GetFileName((item.File ?? "").Replace('\\', '/'))
                     }
                 }
             };
@@ -650,7 +650,7 @@ public sealed partial class MainViewModel : ObservableObject
                 return;
             }
 
-            var fileName = Path.GetFileName(item.File.Replace('\\', '/'));
+            var fileName = Path.GetFileName((item.File ?? "").Replace('\\', '/'));
             if (string.IsNullOrWhiteSpace(fileName))
                 fileName = item.Id + ".dll";
 

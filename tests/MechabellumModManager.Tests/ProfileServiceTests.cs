@@ -32,6 +32,58 @@ public class ProfileServiceTests
     }
 
     [Fact]
+    public void EnsureDefaults_repairs_default_profile_name()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        var store = new JsonStore();
+        try
+        {
+            store.Save(Path.Combine(paths.ProfilesDir, "default.json"), new Profile
+            {
+                Id = "default",
+                Name = "Default",
+                EnabledPackageIds = new List<string> { "keep-me" }
+            });
+
+            var svc = new ProfileService(paths, store);
+            svc.EnsureDefaults();
+
+            var p = svc.Get("default");
+            p.Name.Should().Be("默认");
+            p.EnabledPackageIds.Should().Contain("keep-me");
+        }
+        finally
+        {
+            Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
+    public void EnsureDefaults_recreates_corrupt_default_profile()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            File.WriteAllText(Path.Combine(paths.ProfilesDir, "default.json"), "{ not-json");
+
+            var svc = new ProfileService(paths, new JsonStore());
+            svc.EnsureDefaults();
+
+            var list = svc.List();
+            list.Should().ContainSingle(p => p.Id == "default");
+            list[0].Name.Should().Be("默认");
+        }
+        finally
+        {
+            Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
     public void Create_adds_named_profile()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));

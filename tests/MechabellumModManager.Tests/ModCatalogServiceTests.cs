@@ -96,6 +96,19 @@ public class ModCatalogServiceTests
             "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/Cam.dll");
     }
 
+    [Fact]
+    public void GetRawUrl_and_BuildFileUrl_tolerate_null_paths()
+    {
+        ModCatalogService.GetRawUrl(null!).Should().Be(
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/");
+        ModCatalogService.PreviewUrl(null).Should().BeNull();
+
+        var svc = new ModCatalogService();
+        var url = svc.BuildFileUrl(new CatalogMod { File = null! });
+        url.ToString().Should().Be(
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/");
+    }
+
     [Theory]
     [InlineData("melon_mod", ModPackageType.MelonMod)]
     [InlineData("melon_plugin", ModPackageType.MelonPlugin)]
