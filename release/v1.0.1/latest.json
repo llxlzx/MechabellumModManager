@@ -1,0 +1,6 @@
+﻿{
+  "version": "1.0.1",
+  "notes": "修复默认方案名乱码；MelonLoader 已安装则跳过；安装器提示优化。",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.1/MechabellumModManager_Setup_v1.0.1.exe",
+  "publishedAt": "2026-09-03T00:00:00Z"
+}
