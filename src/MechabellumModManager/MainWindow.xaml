@@ -302,11 +302,10 @@
                         <TextBlock Text="{Binding Ui.CreditsTitle}"
                                    Style="{StaticResource SectionLabelStyle}"
                                    Margin="0,0,0,6" />
-                        <TextBlock Text="{Binding Ui.CreditsBody}"
-                                   TextWrapping="Wrap"
-                                   FontSize="12"
-                                   LineHeight="18"
-                                   Foreground="{StaticResource TextMutedBrush}" />
+                        <TextBox Text="{Binding Ui.CreditsBody}"
+                                 Style="{StaticResource SelectableReadOnlyTextStyle}"
+                                 FontSize="12"
+                                 Foreground="{StaticResource TextMutedBrush}" />
                     </StackPanel>
                 </Grid>
             </Border>
