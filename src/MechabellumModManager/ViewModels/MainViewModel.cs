@@ -580,9 +580,7 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var mod in root.Mods)
             {
                 var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
-                var item = new CatalogModItemViewModel(mod, inLib);
-                item.LoadPreviewImage();
-                CatalogMods.Add(item);
+                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
             }
 
             SelectedCatalogMod = CatalogMods.FirstOrDefault(m =>
@@ -717,11 +715,17 @@ public sealed partial class MainViewModel : ObservableObject
 
     bool CanAddCatalogMod() => SelectedCatalogMod is not null && !_addingCatalogMod;
 
-    partial void OnSelectedCatalogModChanged(CatalogModItemViewModel? value) =>
+    partial void OnSelectedCatalogModChanged(CatalogModItemViewModel? value)
+    {
         AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+        _ = value?.LoadPreviewImageAsync();
+    }
 
     partial void OnSelectedLibraryModChanged(ModItemViewModel? value) =>
         UpdateLibraryModDetail();
+
+    [RelayCommand]
+    void ClearLibraryModSelection() => SelectedLibraryMod = null;
 
     void UpdateLibraryModDetail()
     {
@@ -744,7 +748,7 @@ public sealed partial class MainViewModel : ObservableObject
             ?? (string.IsNullOrWhiteSpace(item.Package.Preview)
                 ? null
                 : ModCatalogService.GetRawUrl(item.Package.Preview));
-        item.LoadPreviewImage(previewUrl);
+        _ = item.LoadPreviewImageAsync(previewUrl);
     }
 
     async Task SoftRefreshCatalogForLibraryDetailAsync()
@@ -759,9 +763,7 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var mod in root.Mods)
             {
                 var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
-                var vm = new CatalogModItemViewModel(mod, inLib);
-                vm.LoadPreviewImage();
-                CatalogMods.Add(vm);
+                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
             }
 
             EnrichModsFromCatalog();

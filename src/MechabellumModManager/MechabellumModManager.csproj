@@ -24,4 +24,8 @@
     <Content Include="Assets\brand-256.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MechabellumModManager.Tests" />
+  </ItemGroup>
+
 </Project>
