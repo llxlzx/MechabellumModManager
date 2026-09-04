@@ -70,3 +70,19 @@ CategoryUncategorized	未分类
 EditModTaxonomy	编辑分类/标签
 CategoryFollowCatalog	跟随目录
 ExtraTagsHint	额外标签（逗号分隔）
+BranchSwitchTitle	正式服 / 测试服
+BranchSwitchStatus	当前分支
+BranchSwitchBetaName	测试服 Beta 分支名
+BranchSwitchOfficialProfile	正式服方案
+BranchSwitchBetaProfile	测试服方案
+BranchSwitchToOfficial	切换到正式服
+BranchSwitchToBeta	切换到测试服
+BranchSwitchStartWizard	开始双服配置向导
+BranchSwitchTeardown	解除双服配置
+BranchSwitchConfirmManual	已手选 Beta，继续
+BranchSwitchHint	约两份游戏空间；须退出 Steam；将尝试自动对齐 Beta，失败可手选
+BranchStatusUnconfigured	未配置
+BranchStatusIncomplete	配置未完成
+BranchStatusWaitingSteam	等待 Steam
+BranchStatusOfficial	正式服
+BranchStatusBeta	测试服

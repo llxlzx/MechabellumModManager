@@ -240,6 +240,8 @@ public sealed partial class MainViewModel : ObservableObject
     public bool CanDeployOrLaunch =>
         IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
 
+    public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
+
     public bool IsBranchWizardBlocking =>
         BranchSwitchEnabled &&
         BranchWizardStep is not BranchWizardStep.None and not BranchWizardStep.Ready;
@@ -362,6 +364,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             Ui.Refresh();
             RebuildFilterOptionLabels();
+            RefreshBranchStatusText();
         }
     }
 
@@ -1937,7 +1940,7 @@ public sealed partial class MainViewModel : ObservableObject
             IsAwaitingSteamSettle = false;
             DegradeToManualBeta = false;
             BranchWizardStep = BranchWizardStep.None;
-            BranchStatusText = "未配置";
+            RefreshBranchStatusText();
             NotifyBranchGates();
         }
         finally
@@ -2107,13 +2110,17 @@ public sealed partial class MainViewModel : ObservableObject
     void RefreshBranchStatusText()
     {
         if (!BranchSwitchEnabled)
-            BranchStatusText = BranchWizardStep is BranchWizardStep.None ? "未配置" : "配置未完成";
+            BranchStatusText = BranchWizardStep is BranchWizardStep.None
+                ? LocalizationService.T("BranchStatusUnconfigured")
+                : LocalizationService.T("BranchStatusIncomplete");
         else if (IsAwaitingSteamSettle || BranchWizardStep == BranchWizardStep.AwaitingSteamSettle)
-            BranchStatusText = "等待 Steam";
+            BranchStatusText = LocalizationService.T("BranchStatusWaitingSteam");
         else if (IsBranchWizardBlocking)
-            BranchStatusText = "配置未完成";
+            BranchStatusText = LocalizationService.T("BranchStatusIncomplete");
         else
-            BranchStatusText = ActiveGameBranch == GameBranch.Official ? "正式服" : "测试服";
+            BranchStatusText = ActiveGameBranch == GameBranch.Official
+                ? LocalizationService.T("BranchStatusOfficial")
+                : LocalizationService.T("BranchStatusBeta");
     }
 
     string CurrentDeployManifestPath() =>
@@ -2126,7 +2133,11 @@ public sealed partial class MainViewModel : ObservableObject
     {
         NotifyBranchGates();
         RefreshBranchStatusText();
+        OnPropertyChanged(nameof(ShowConfirmManualBeta));
     }
+
+    partial void OnDegradeToManualBetaChanged(bool value) =>
+        OnPropertyChanged(nameof(ShowConfirmManualBeta));
 
     partial void OnIsBranchSwitchBusyChanged(bool value) => NotifyBranchGates();
 

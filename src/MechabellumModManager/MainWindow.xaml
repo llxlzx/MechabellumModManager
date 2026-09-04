@@ -263,7 +263,126 @@
                                   IsChecked="{Binding UsePortableDataRoot}" />
                     </StackPanel>
 
-                    <DockPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10,0,0">
+                    
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,14,0,0">
+                        <TextBlock Text="{Binding Ui.BranchSwitchTitle}"
+                                   Style="{StaticResource SectionLabelStyle}"
+                                   Margin="0,0,0,6" />
+                        <TextBlock Text="{Binding Ui.BranchSwitchHint}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,8" />
+                        <DockPanel Margin="0,0,0,8">
+                            <TextBlock Text="{Binding Ui.BranchSwitchStatus}"
+                                       Width="120"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       DockPanel.Dock="Left"
+                                       Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding BranchStatusText}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,8">
+                            <TextBlock Text="{Binding Ui.BranchSwitchBetaName}"
+                                       Width="120"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       DockPanel.Dock="Left"
+                                       Margin="0,0,8,0" />
+                            <TextBox Text="{Binding BetaBranchName, UpdateSourceTrigger=PropertyChanged}"
+                                     VerticalAlignment="Center" />
+                        </DockPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <DockPanel>
+                                <TextBlock Text="{Binding Ui.BranchSwitchOfficialProfile}"
+                                           Width="120"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           DockPanel.Dock="Left"
+                                           Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{Binding Profiles}"
+                                          SelectedValue="{Binding OfficialProfileId}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="Name"
+                                          VerticalAlignment="Center" />
+                            </DockPanel>
+                            <DockPanel Grid.Column="2">
+                                <TextBlock Text="{Binding Ui.BranchSwitchBetaProfile}"
+                                           Width="120"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           DockPanel.Dock="Left"
+                                           Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{Binding Profiles}"
+                                          SelectedValue="{Binding BetaProfileId}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="Name"
+                                          VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Grid>
+                        <WrapPanel>
+                            <Button Content="{Binding Ui.BranchSwitchToOfficial}"
+                                    Command="{Binding SwitchToOfficialCommand}"
+                                    MinWidth="108"
+                                    Margin="0,0,8,4"
+                                    Padding="12,6">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                        <Setter Property="IsEnabled" Value="{Binding BranchSwitchEnabled}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBranchSwitchBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="{Binding Ui.BranchSwitchToBeta}"
+                                    Command="{Binding SwitchToBetaCommand}"
+                                    MinWidth="108"
+                                    Margin="0,0,8,4"
+                                    Padding="12,6">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                        <Setter Property="IsEnabled" Value="{Binding BranchSwitchEnabled}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBranchSwitchBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="{Binding Ui.BranchSwitchStartWizard}"
+                                    Command="{Binding StartBranchWizardCommand}"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    MinWidth="120"
+                                    Margin="0,0,8,4"
+                                    Padding="12,6" />
+                            <Button Content="{Binding Ui.BranchSwitchTeardown}"
+                                    Command="{Binding TeardownBranchSwitchCommand}"
+                                    IsEnabled="{Binding BranchSwitchEnabled}"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    MinWidth="120"
+                                    Margin="0,0,8,4"
+                                    Padding="12,6" />
+                            <Button Content="{Binding Ui.BranchSwitchConfirmManual}"
+                                    Command="{Binding ConfirmManualBetaCommand}"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Visibility="{Binding ShowConfirmManualBeta, Converter={StaticResource BoolToVis}}"
+                                    MinWidth="120"
+                                    Margin="0,0,0,4"
+                                    Padding="12,6" />
+                        </WrapPanel>
+                    </StackPanel>
+
+                    <DockPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10,0,0">
                         <TextBlock Text="{Binding AppVersion, StringFormat=版本 {0}}"
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
@@ -300,7 +419,7 @@
                                    Foreground="{StaticResource TextMutedBrush}" />
                     </DockPanel>
 
-                    <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,14,0,0">
+                    <StackPanel Grid.Row="4" Grid.ColumnSpan="3" Margin="0,14,0,0">
                         <TextBlock Text="{Binding Ui.CreditsTitle}"
                                    Style="{StaticResource SectionLabelStyle}"
                                    Margin="0,0,0,6" />
