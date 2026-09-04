@@ -1,6 +1,6 @@
 {
   "version": "1.0.7",
-  "notes": "1.0.7: 双服自动补齐 MelonLoader；切服加固；默认 public_test；locales/文案。 Auto-sync MelonLoader across Official/Test; safer switch; default public_test; locales/copy fixes.",
+  "notes": "1.0.7: 安装器自动检索游戏路径（含多 Steam 库/正式服）；重装按双服记录恢复且不打断 Steam 下载；双服 MelonLoader 补齐；切服加固。 Setup auto-detects game path; reinstall restores dual-folder config without interrupting Steam; Melon sync; safer switch.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.7/MechabellumModManager_Setup_v1.0.7.exe",
-  "publishedAt": "2026-09-04T12:06:27Z"
+  "publishedAt": "2026-09-04T12:21:36Z"
 }

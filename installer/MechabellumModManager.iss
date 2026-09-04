@@ -52,6 +52,8 @@ Source: "..\publish\Assets\*"; DestDir: "{app}\Assets"; Flags: ignoreversion rec
 ; Helper scripts shipped with the app for repair / documentation
 Source: "scripts\*"; DestDir: "{app}\installer-scripts"; Flags: ignoreversion; Components: main
 Source: "redist\*"; DestDir: "{app}\installer-redist"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
+; Used during wizard before files are copied to {app}
+Source: "scripts\Detect-GamePath.ps1"; Flags: dontcopy
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -94,11 +96,40 @@ begin
             FileExists(AddBackslash(Path) + 'GameAssembly.dll');
 end;
 
+function DetectGamePathViaScript: string;
+var
+  ResultCode: Integer;
+  Cmd, OutFile, ScriptFile, S: string;
+  Line: AnsiString;
+begin
+  Result := '';
+  ExtractTemporaryFile('Detect-GamePath.ps1');
+  ScriptFile := ExpandConstant('{tmp}\Detect-GamePath.ps1');
+  OutFile := ExpandConstant('{tmp}\mmm-detected-game-path.txt');
+  DeleteFile(OutFile);
+  Cmd := '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptFile + '" -OutFile "' + OutFile + '"';
+  if not Exec('powershell.exe', Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    exit;
+  if not FileExists(OutFile) then
+    exit;
+  if LoadStringFromFile(OutFile, Line) then
+  begin
+    S := string(Line);
+    StringChangeEx(S, #13, '', True);
+    StringChangeEx(S, #10, '', True);
+    Result := Trim(S);
+  end;
+end;
+
 function TrySteamGuess(): string;
 var
   SteamPath: string;
   Candidate: string;
 begin
+  Result := DetectGamePathViaScript();
+  if (Result <> '') and LooksLikeGame(Result) then
+    exit;
+
   Result := '';
   if RegQueryStringValue(HKLM64, 'SOFTWARE\WOW6432Node\Valve\Steam', 'InstallPath', SteamPath) or
      RegQueryStringValue(HKLM32, 'SOFTWARE\Valve\Steam', 'InstallPath', SteamPath) or
@@ -111,9 +142,43 @@ begin
       Result := Candidate;
       exit;
     end;
+    Candidate := AddBackslash(SteamPath) + 'steamapps\common\Mechabellum_official';
+    if LooksLikeGame(Candidate) then
+    begin
+      Result := Candidate;
+      exit;
+    end;
   end;
   Candidate := 'C:\Program Files (x86)\Steam\steamapps\common\Mechabellum';
-  if LooksLikeGame(Candidate) then Result := Candidate;
+  if LooksLikeGame(Candidate) then
+  begin
+    Result := Candidate;
+    exit;
+  end;
+  Candidate := 'D:\steam\steamapps\common\Mechabellum';
+  if LooksLikeGame(Candidate) then
+    Result := Candidate;
+end;
+
+function QuerySteamBusyViaPs: Boolean;
+var
+  ResultCode: Integer;
+  OutFile, Cmd, S: string;
+  Line: AnsiString;
+begin
+  Result := False;
+  OutFile := ExpandConstant('{tmp}\mmm-steam-busy.txt');
+  DeleteFile(OutFile);
+  Cmd := '-NoProfile -ExecutionPolicy Bypass -Command "if (Get-Process steam,steamwebhelper -ErrorAction SilentlyContinue) { Set-Content -Path ''' + OutFile + ''' -Value busy } else { Set-Content -Path ''' + OutFile + ''' -Value idle }"';
+  if not Exec('powershell.exe', Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    exit;
+  if FileExists(OutFile) and LoadStringFromFile(OutFile, Line) then
+  begin
+    S := string(Line);
+    StringChangeEx(S, #13, '', True);
+    StringChangeEx(S, #10, '', True);
+    Result := Pos('busy', LowerCase(Trim(S))) > 0;
+  end;
 end;
 
 procedure InitializeWizard;
@@ -123,8 +188,10 @@ begin
   GamePathPage := CreateInputDirPage(wpSelectDir,
     '选择游戏目录',
     '请指定 Mechabellum（钢铁指挥官）的安装目录。',
-    '目录中需包含 Mechabellum.exe 与 GameAssembly.dll。安装程序会把该路径写入管理器配置。' + #13#10 +
-    '若勾选 MelonLoader，将安装到此目录。',
+    '目录中需包含 Mechabellum.exe 与 GameAssembly.dll。' + #13#10 +
+    '安装程序会自动检索 Steam 库（含 D:\steam 等），优先填入游戏根目录 Mechabellum；' +
+    '若曾启用双服，会优先使用上次记录的路径。' + #13#10 +
+    '若勾选 MelonLoader：Steam 正在下载时不会写入测试服目录，以免打断下载。',
     False, '');
   GamePathPage.Add('游戏路径');
   Guess := TrySteamGuess();
@@ -159,18 +226,27 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   GamePath, Redist, Args: string;
   Code: Integer;
+  SteamBusy: Boolean;
 begin
   if CurStep <> ssPostInstall then exit;
 
   GamePath := GamePathPage.Values[0];
   Redist := ExpandConstant('{app}\installer-redist');
+  SteamBusy := QuerySteamBusyViaPs();
 
-  { Always write manager config }
-  SetStatus('正在写入管理器配置…');
-  Args := '-GamePath "' + GamePath + '"';
-  Code := PsFromSrc('Write-ManagerConfig.ps1', Args);
+  { Write config + restore dual-folder path from previous AppData record.
+    Does NOT exit Steam / rewrite BetaKey / swap junction. }
+  SetStatus('正在写入管理器配置（保留双服记录，不打断 Steam）…');
+  Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
+  Code := PsFromSrc('Restore-DualFolderConfig.ps1', Args);
   if Code <> 0 then
-    MsgBox('写入管理器配置失败（exit ' + IntToStr(Code) + '）。可稍后在管理器「设置」中手动指定游戏路径。', mbError, MB_OK);
+  begin
+    { Fallback to plain config write }
+    Args := '-GamePath "' + GamePath + '"';
+    Code := PsFromSrc('Write-ManagerConfig.ps1', Args);
+    if Code <> 0 then
+      MsgBox('写入管理器配置失败（exit ' + IntToStr(Code) + '）。可稍后在管理器「设置」中手动指定游戏路径。', mbError, MB_OK);
+  end;
 
   if WizardIsComponentSelected('dotnet8') then
   begin
@@ -196,19 +272,26 @@ begin
 
   if WizardIsComponentSelected('melon') then
   begin
-    SetStatus('正在检测/安装 MelonLoader（已安装则跳过；优先内嵌离线包）…');
-    Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
-    Code := PsFromSrc('Install-MelonLoader.ps1', Args);
-    if Code <> 0 then
-      MsgBox(
-        'MelonLoader 安装未成功（exit ' + IntToStr(Code) + '）。' + #13#10 + #13#10 +
-        'exit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整。' + #13#10 + #13#10 +
-        '也可取消 MelonLoader 组件后重装管理器，或手动安装：' + #13#10 +
-        'https://github.com/LavaGang/MelonLoader/releases' + #13#10 +
-        '（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）',
-        mbError, MB_OK)
+    if SteamBusy then
+    begin
+      SetStatus('检测到 Steam 正在运行/下载：跳过向当前游戏目录写入 MelonLoader，以免打断下载（正式服目录已在恢复步骤中尽量补齐）。');
+    end
     else
-      SetStatus('MelonLoader 已完成（或已跳过）。');
+    begin
+      SetStatus('正在检测/安装 MelonLoader（已安装则跳过；优先内嵌离线包）…');
+      Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
+      Code := PsFromSrc('Install-MelonLoader.ps1', Args);
+      if Code <> 0 then
+        MsgBox(
+          'MelonLoader 安装未成功（exit ' + IntToStr(Code) + '）。' + #13#10 + #13#10 +
+          'exit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整。' + #13#10 + #13#10 +
+          '也可取消 MelonLoader 组件后重装管理器，或手动安装：' + #13#10 +
+          'https://github.com/LavaGang/MelonLoader/releases' + #13#10 +
+          '（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）',
+          mbError, MB_OK)
+      else
+        SetStatus('MelonLoader 已完成（或已跳过）。');
+    end;
   end;
 
   SetStatus('安装后置步骤完成。');
