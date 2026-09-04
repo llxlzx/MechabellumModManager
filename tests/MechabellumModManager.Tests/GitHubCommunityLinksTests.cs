@@ -78,6 +78,15 @@ public class GitHubCommunityLinksTests
     }
 
     [Fact]
+    public void BuildSubmitBody_includes_category_and_tags_lines()
+    {
+        var body = GitHubCommunityLinks.BuildSubmitBody("Demo");
+        body.Should().Contain("Category");
+        body.Should().Contain("Tags");
+        body.Should().Contain("OverlayUI");
+    }
+
+    [Fact]
     public void DomesticWebMailUrl_is_qq_web()
     {
         GitHubCommunityLinks.DomesticWebMailUrl.Should().Be("https://wx.mail.qq.com/");

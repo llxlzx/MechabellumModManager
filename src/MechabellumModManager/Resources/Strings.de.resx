@@ -180,4 +180,24 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Der Maintainer prüft und bearbeitet Ihre Nachricht innerhalb angemessener Zeit. Die Bearbeitung kann aufgrund des Alltags und persönlicher Termine kurzzeitig verzögert sein; vielen Dank für Ihre Geduld. Bitte senden Sie dieselbe Anfrage nicht erneut.
 The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+  <data name="FilterSearch" xml:space="preserve"><value>Suche</value></data>
+  <data name="FilterCategory" xml:space="preserve"><value>Kategorie</value></data>
+  <data name="FilterTag" xml:space="preserve"><value>Tag</value></data>
+  <data name="FilterSort" xml:space="preserve"><value>Sortierung</value></data>
+  <data name="FilterAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="SortByName" xml:space="preserve"><value>Name</value></data>
+  <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>Aktualisiert (neu→alt)</value></data>
+  <data name="ColumnCategory" xml:space="preserve"><value>Kategorie</value></data>
+  <data name="TagsLabel" xml:space="preserve"><value>Tags</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>Overlay / UI</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>QoL</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>Kamera</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>Kampfhilfe</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>Wirtschaft</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>Replay / Debug</value></data>
+  <data name="CategoryMisc" xml:space="preserve"><value>Sonstiges</value></data>
+  <data name="CategoryUncategorized" xml:space="preserve"><value>Unkategorisiert</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>Kategorie/Tags bearbeiten</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>Katalog folgen</value></data>
+  <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Tags (kommagetrennt)</value></data>
 </root>

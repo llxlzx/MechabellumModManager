@@ -179,4 +179,24 @@ One email = one request. Maintainers review and upload to the catalog — no For
   </data>
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+  <data name="FilterSearch" xml:space="preserve"><value>Search</value></data>
+  <data name="FilterCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="FilterTag" xml:space="preserve"><value>Tag</value></data>
+  <data name="FilterSort" xml:space="preserve"><value>Sort</value></data>
+  <data name="FilterAll" xml:space="preserve"><value>All</value></data>
+  <data name="SortByName" xml:space="preserve"><value>Name</value></data>
+  <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>Updated (new→old)</value></data>
+  <data name="ColumnCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="TagsLabel" xml:space="preserve"><value>Tags</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>Overlay / UI</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>QoL</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>Camera</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>Combat Assist</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>Economy</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>Replay / Debug</value></data>
+  <data name="CategoryMisc" xml:space="preserve"><value>Misc</value></data>
+  <data name="CategoryUncategorized" xml:space="preserve"><value>Uncategorized</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>Edit category/tags</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>Follow catalog</value></data>
+  <data name="ExtraTagsHint" xml:space="preserve"><value>Extra tags (comma-separated)</value></data>
 </root>
