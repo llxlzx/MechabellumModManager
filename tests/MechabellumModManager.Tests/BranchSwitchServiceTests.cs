@@ -33,6 +33,107 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void Snapshot_and_restore_acf_keeps_branch_depot_metadata()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        var officialAcf = """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"100"
+	"TargetBuildID"		"100"
+	"BytesToDownload"		"0"
+	"BytesToStage"		"0"
+	"InstalledDepots"
+	{
+		"669331"
+		{
+			"manifest"		"official-manifest"
+			"size"		"1000"
+		}
+	}
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+	}
+}
+""";
+        var betaAcf = """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"200"
+	"TargetBuildID"		"200"
+	"BytesToDownload"		"0"
+	"BytesToStage"		"0"
+	"InstalledDepots"
+	{
+		"669331"
+		{
+			"manifest"		"beta-manifest"
+			"size"		"2000"
+		}
+	}
+	"UserConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+}
+""";
+        File.WriteAllText(h.AcfPath, officialAcf);
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Success.Should().BeTrue();
+
+        File.WriteAllText(h.AcfPath, betaAcf);
+        h.Svc.TrySwapJunction(GameBranch.Beta).Success.Should().BeTrue();
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Beta).Success.Should().BeTrue();
+
+        h.Svc.TrySwapJunction(GameBranch.Official).Success.Should().BeTrue();
+        var restored = h.Svc.TryRestoreAcfSnapshot(GameBranch.Official);
+        restored.Success.Should().BeTrue();
+
+        var text = File.ReadAllText(h.AcfPath);
+        text.Should().Contain("\"buildid\"\t\t\"100\"");
+        text.Should().Contain("official-manifest");
+        text.Should().NotContain("BetaKey");
+        text.Should().NotContain("beta-manifest");
+    }
+
+    [Fact]
+    public void Snapshot_skips_when_acf_is_downloading()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        File.WriteAllText(h.AcfPath, """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"1190"
+	"buildid"		"200"
+	"TargetBuildID"		"100"
+	"BytesToDownload"		"123"
+	"BytesToStage"		"456"
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+}
+""");
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Success.Should().BeFalse();
+        File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official)).Should().BeFalse();
+    }
+
+    [Fact]
     public void SwapJunction_refuses_when_steam_running()
     {
         using var h = Harness.CreateReadyDualFolder();

@@ -57,6 +57,7 @@ public sealed class SteamBetaKeyEditor
         File.Copy(acfPath, backupPath, overwrite: false);
 
         var updated = SetUserConfigBetaKey(text, string.IsNullOrWhiteSpace(betaKey) ? null : betaKey);
+        updated = SetMountedConfigBetaKey(updated, string.IsNullOrWhiteSpace(betaKey) ? null : betaKey);
         File.WriteAllText(acfPath, updated, Utf8NoBom);
         return new SteamBetaEditResult { Success = true, BackupPath = backupPath };
     }
@@ -67,11 +68,79 @@ public sealed class SteamBetaKeyEditor
             return null;
 
         var text = File.ReadAllText(acfPath, Utf8NoBom);
-        if (!TryGetQuotedBlock(text, "UserConfig", out var open, out var close))
+        return ReadBetaKeyFromBlock(text, "UserConfig");
+    }
+
+    public string? ReadMountedBetaKey(string acfPath)
+    {
+        if (!IsAllowedManifestPath(acfPath) || !File.Exists(acfPath))
+            return null;
+
+        var text = File.ReadAllText(acfPath, Utf8NoBom);
+        return ReadBetaKeyFromBlock(text, "MountedConfig");
+    }
+
+    public bool HasMountedConfigBlock(string acfPath)
+    {
+        if (!IsAllowedManifestPath(acfPath) || !File.Exists(acfPath))
+            return false;
+
+        var text = File.ReadAllText(acfPath, Utf8NoBom);
+        return TryGetQuotedBlock(text, "MountedConfig", out _, out _);
+    }
+
+    public static bool LooksSettledForSnapshot(string acfText)
+    {
+        if (string.IsNullOrWhiteSpace(acfText))
+            return false;
+
+        var bytesToDownload = ReadQuotedValue(acfText, "BytesToDownload") ?? "0";
+        if (!string.Equals(bytesToDownload, "0", StringComparison.Ordinal))
+            return false;
+
+        var bytesToStage = ReadQuotedValue(acfText, "BytesToStage");
+        var bytesStaged = ReadQuotedValue(acfText, "BytesStaged");
+        if (!string.IsNullOrWhiteSpace(bytesToStage)
+            && !string.Equals(bytesToStage, "0", StringComparison.Ordinal)
+            && !string.Equals(bytesToStage, bytesStaged ?? "", StringComparison.Ordinal))
+            return false;
+
+        var buildId = ReadQuotedValue(acfText, "buildid");
+        var targetBuildId = ReadQuotedValue(acfText, "TargetBuildID");
+        if (string.IsNullOrWhiteSpace(buildId) || string.IsNullOrWhiteSpace(targetBuildId))
+            return false;
+        if (!string.Equals(buildId, targetBuildId, StringComparison.Ordinal))
+            return false;
+
+        var stateFlags = ReadQuotedValue(acfText, "StateFlags");
+        // 4 = Fully Installed. Reject known updating/downloading masks when present.
+        if (!string.IsNullOrWhiteSpace(stateFlags)
+            && stateFlags != "4"
+            && (stateFlags.Contains('6', StringComparison.Ordinal)
+                || stateFlags == "1190"
+                || stateFlags == "1026"
+                || stateFlags == "1538"))
+            return false;
+
+        return true;
+    }
+
+    static string? ReadBetaKeyFromBlock(string text, string blockName)
+    {
+        if (!TryGetQuotedBlock(text, blockName, out var open, out var close))
             return null;
 
         var inner = text.Substring(open + 1, close - open - 1);
         var match = BetaKeyValue.Match(inner);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    static string? ReadQuotedValue(string text, string key)
+    {
+        var match = Regex.Match(
+            text,
+            $@"\""{Regex.Escape(key)}\""\s+\""([^\""]*)\""",
+            RegexOptions.CultureInvariant);
         return match.Success ? match.Groups[1].Value : null;
     }
 
@@ -90,6 +159,16 @@ public sealed class SteamBetaKeyEditor
     {
         if (!TryGetQuotedBlock(text, "UserConfig", out var open, out var close))
             throw new InvalidOperationException("UserConfig block not found.");
+
+        var inner = text.Substring(open + 1, close - open - 1);
+        var newInner = betaKey is null ? RemoveBetaKeyLine(inner) : UpsertBetaKeyLine(inner, betaKey);
+        return text.Substring(0, open + 1) + newInner + text.Substring(close);
+    }
+
+    static string SetMountedConfigBetaKey(string text, string? betaKey)
+    {
+        if (!TryGetQuotedBlock(text, "MountedConfig", out var open, out var close))
+            return text;
 
         var inner = text.Substring(open + 1, close - open - 1);
         var newInner = betaKey is null ? RemoveBetaKeyLine(inner) : UpsertBetaKeyLine(inner, betaKey);
