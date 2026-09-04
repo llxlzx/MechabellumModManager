@@ -23,6 +23,8 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string CreditsTitle => T("CreditsTitle");
     public string CreditsBody => T("CreditsBody");
     public string Report => T("Report");
+    public string PreviewImageTitle => T("PreviewImageTitle");
+    public string PreviewImageHint => T("PreviewImageHint");
     public string ReportConfirm => T("ReportConfirm");
     public string ReportCategoryCheat => T("ReportCategoryCheat");
     public string ReportCategoryVirus => T("ReportCategoryVirus");

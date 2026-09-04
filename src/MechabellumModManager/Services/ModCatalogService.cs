@@ -49,6 +49,13 @@ public sealed class CatalogMod
 
     [JsonPropertyName("tags")]
     public List<string>? Tags { get; set; }
+
+    /// <summary>
+    /// Optional per-language name/summary. Keys: zh-CN, en, de, ja, ru.
+    /// Missing language or empty field falls back to top-level Name/Summary.
+    /// </summary>
+    [JsonPropertyName("locales")]
+    public Dictionary<string, CatalogModLocale>? Locales { get; set; }
 }
 
 /// <summary>

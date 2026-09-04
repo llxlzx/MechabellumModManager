@@ -100,40 +100,40 @@
     <value>Тема и текст скопированы; открыт QQ Mail в браузере — создайте письмо, вставьте, приложите файлы и отправьте на llxmod@foxmail.com.</value>
   </data>
   <data name="SubmitMailOpenedInternational" xml:space="preserve">
-    <value>Тема и текст скопированы; открыт Gmail compose — приложите .dll (опционально preview.png) и отправьте на llxmod@foxmail.com.</value>
+    <value>Тема и текст скопированы; открыт Gmail — приложите .dll (по желанию preview.png) и отправьте на llxmod@foxmail.com.</value>
   </data>
   <data name="ReportMailOpenedDomestic" xml:space="preserve">
     <value>Тема и текст скопированы; открыт QQ Mail в браузере — создайте письмо, вставьте и отправьте жалобу на llxmod@foxmail.com.</value>
   </data>
   <data name="ReportMailOpenedInternational" xml:space="preserve">
-    <value>Тема и текст скопированы; открыт Gmail compose — проверьте и отправьте жалобу на llxmod@foxmail.com.</value>
+    <value>Тема и текст скопированы; открыт Gmail — проверьте и отправьте жалобу на llxmod@foxmail.com.</value>
   </data>
   <data name="MailOpenFailed" xml:space="preserve">
     <value>Не удалось открыть веб-почту; тема и текст скопированы. Отправьте вручную на llxmod@foxmail.com и вставьте.</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>Публикация / Submit</value>
+    <value>Отправка</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>Почта / Inbox</value>
+    <value>Почта для заявок</value>
   </data>
   <data name="SubmitGuideBody" xml:space="preserve">
     <value>Тема письма должна начинаться с одного из префиксов:
 • [Mod投稿/Submit] новый мод
 • [Mod更新/Update] обновление
 • [Mod举报/Report] жалоба
-• [管理器建议/Feedback] предложение
-Одно письмо = один запрос. Сопровождающие проверяют и загружают в каталог — Fork/PR не нужны.
-(Продвинутые пользователи по-прежнему могут открыть PR.)</value>
+• [管理器建议/Feedback] отзыв
+Одно письмо — один запрос. Сопровождающий проверит и загрузит в каталог — Fork/PR не обязателен.
+(Продвинутые пользователи могут по-прежнему открывать PR.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>После продолжения менеджер копирует шаблон и открывает QQ Mail (китайский UI) или Gmail compose (другие языки). Вставьте, приложите .dll (опционально preview.png) и отправьте. Если вложения очень большие (~&gt;40MB), укажите ссылку на облако. Исходники — только по запросу.</value>
+    <value>После продолжения менеджер скопирует шаблон и откроет QQ Mail (кит. UI) или Gmail (другие языки). Вставьте текст, приложите .dll (по желанию preview.png) и отправьте. При очень больших вложениях (~&gt;40MB) укажите ссылку на облако. Исходники не присылайте без запроса.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>Полная инструкция / Open full guide</value>
+    <value>Открыть полное руководство</value>
   </data>
   <data name="SubmitGuideOpenEmail" xml:space="preserve">
-    <value>Открыть письмо / Open submit email</value>
+    <value>Открыть письмо для отправки</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Подтвердить</value>
@@ -178,8 +178,7 @@
     <value>Текущий профиль</value>
   </data>
 
-  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Сопровождающий рассмотрит и обработает ваше сообщение в разумный срок. Обработка может кратко задержаться из‑за повседневных дел и личного расписания; благодарим за терпение. Пожалуйста, не отправляйте повторно одно и то же обращение.
-The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Сопровождающий рассмотрит и обработает ваше сообщение в разумный срок. Обработка может кратко задержаться из‑за повседневных дел и личного расписания; благодарим за терпение. Пожалуйста, не отправляйте повторно одно и то же обращение.</value></data>
   <data name="FilterSearch" xml:space="preserve"><value>Поиск</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>Категория</value></data>
   <data name="FilterTag" xml:space="preserve"><value>Тег</value></data>
@@ -189,12 +188,12 @@ The maintainer will review and process your message within a reasonable time. Ha
   <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>Обновление (новые→старые)</value></data>
   <data name="ColumnCategory" xml:space="preserve"><value>Категория</value></data>
   <data name="TagsLabel" xml:space="preserve"><value>Теги</value></data>
-  <data name="CategoryOverlayUI" xml:space="preserve"><value>Оверлей / UI</value></data>
-  <data name="CategoryQoL" xml:space="preserve"><value>QoL</value></data>
-  <data name="CategoryCamera" xml:space="preserve"><value>Камера</value></data>
-  <data name="CategoryCombatAssist" xml:space="preserve"><value>Боевая помощь</value></data>
-  <data name="CategoryEconomy" xml:space="preserve"><value>Экономика</value></data>
-  <data name="CategoryReplayDebug" xml:space="preserve"><value>Реплей / Отладка</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>Интерфейс и оверлей</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>Удобство</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>Камера и обзор</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>Помощь в матче</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>Экономика и ресурсы</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>Реплей и отладка</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Прочее</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Без категории</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Изменить категорию/теги</value></data>
@@ -202,19 +201,86 @@ The maintainer will review and process your message within a reasonable time. Ha
   <data name="ExtraTagsHint" xml:space="preserve"><value>Доп. теги (через запятую)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Official / Beta</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Beta branch name</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Имя тестовой ветки</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
-  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Confirm manual Beta</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Тестовая выбрана вручную, продолжить</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Confirm Steam is aligned</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Uses about two copies of the game; Steam must exit; will try to auto-align Beta and fall back to manual selection</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Нужно около двух копий игры; Steam должен быть закрыт; попробуем автоматически выровнять тестовую ветку, иначе — вручную</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam</value></data>
-  <data name="BranchStatusOfficial" xml:space="preserve"><value>Official</value></data>
-  <data name="BranchStatusBeta" xml:space="preserve"><value>Beta</value></data>
+  <data name="BranchStatusOfficial" xml:space="preserve"><value>Официальная</value></data>
+  <data name="BranchStatusBeta" xml:space="preserve"><value>Тестовая</value></data>
+  <data name="Tag_calc" xml:space="preserve"><value>Расчёт</value></data>
+  <data name="Tag_camera" xml:space="preserve"><value>Камера</value></data>
+  <data name="Tag_combat" xml:space="preserve"><value>Бой</value></data>
+  <data name="Tag_damage" xml:space="preserve"><value>Урон</value></data>
+  <data name="Tag_debug" xml:space="preserve"><value>Отладка</value></data>
+  <data name="Tag_economy" xml:space="preserve"><value>Экономика</value></data>
+  <data name="Tag_grid" xml:space="preserve"><value>Сетка</value></data>
+  <data name="Tag_hotkey" xml:space="preserve"><value>Горячие клавиши</value></data>
+  <data name="Tag_hud" xml:space="preserve"><value>Интерфейс</value></data>
+  <data name="Tag_items" xml:space="preserve"><value>Предметы</value></data>
+  <data name="Tag_replay" xml:space="preserve"><value>Повтор</value></data>
+  <data name="Tag_speed" xml:space="preserve"><value>Скорость</value></data>
+  <data name="Tag_undo" xml:space="preserve"><value>Отмена</value></data>
+  <data name="CatalogStatusInLibrary" xml:space="preserve"><value>В библиотеке</value></data>
+  <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>Не установлено</value></data>
+  <data name="PackageMissing" xml:space="preserve"><value>Отсутствует</value></data>
+  <data name="PackageMissingNameFormat" xml:space="preserve"><value>(Отсутствует) {0}</value></data>
+  <data name="PackageTypeMelonMod" xml:space="preserve"><value>Мод</value></data>
+  <data name="PackageTypeMelonPlugin" xml:space="preserve"><value>Плагин</value></data>
+  <data name="PackageTypeMelonUserLibs" xml:space="preserve"><value>Пользовательские библиотеки</value></data>
+  <data name="PackageTypeMelonUserData" xml:space="preserve"><value>Пользовательские данные</value></data>
+  <data name="HighRiskYes" xml:space="preserve"><value>Высокий риск</value></data>
+  <data name="HighRiskNo" xml:space="preserve"><value>—</value></data>
+  <data name="RequiredMelonLoaderFormat" xml:space="preserve"><value>Требуется MelonLoader {0}</value></data>
+  <data name="TypePickTitle" xml:space="preserve"><value>Выберите тип пакета</value></data>
+  <data name="TypePickPrompt" xml:space="preserve"><value>Не удалось определить тип автоматически. Выберите:</value></data>
+  <data name="DialogCancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="DialogOk" xml:space="preserve"><value>ОК</value></data>
+  <data name="PreviewImageTitle" xml:space="preserve"><value>Превью</value></data>
+  <data name="PreviewImageHint" xml:space="preserve"><value>Щёлкните в любом месте, чтобы закрыть</value></data>
+  <data name="PromptDialogTitle" xml:space="preserve"><value>Ввод</value></data>
+  <data name="DialogYes" xml:space="preserve"><value>Да</value></data>
+  <data name="DialogNo" xml:space="preserve"><value>Нет</value></data>
+  <data name="FileFilterDll" xml:space="preserve"><value>Melon Mod DLL|*.dll|Все файлы|*.*</value></data>
+  <data name="FileFilterZip" xml:space="preserve"><value>ZIP мода|*.zip|Все файлы|*.*</value></data>
+  <data name="ConfirmOverwriteUnmanaged" xml:space="preserve"><value>В папке игры уже есть неуправляемые файлы с теми же именами.
+Перезаписать и взять под управление?</value></data>
+  <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
+…всего {0}</value></data>
+  <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Перезапись неуправляемых файлов отменена.</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Двухветочная схема уже включена. Пересборка сначала безопасно снимет настройку (другой каталог сохранится), затем настроит заново. Продолжить?</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Снять двухветочную настройку? Текущий junction снова станет папкой игры. Сначала закройте Steam и игру.</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Также удалить каталог другой ветки? Неиспользуемые файлы будут удалены безвозвратно. (Рекомендуется: Нет)</value></data>
+  <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>Мастер двух веток не удался: {0}</value></data>
+  <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>Не удалось снять двухветочную настройку: {0}</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam ещё запущен. Дождитесь завершения, затем разворачивайте.</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam ещё запущен. Всё равно развернуть? Файлы могут быть заняты.</value></data>
+  <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
+
+{1}
+
+Открыть ссылку загрузки?
+{2}</value></data>
+  <data name="ConfirmOpenGitHubReleases" xml:space="preserve"><value>{0}
+
+Открыть страницу GitHub Releases?</value></data>
+  <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Удалить профиль «{0}»? Это нельзя отменить.</value></data>
+  <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>Удалить «{0}» из библиотеки? Также уберётся из всех профилей.</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Для смены ветки нужно закрыть Steam и игру. Продолжить?</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Для двух веток нужно около двух копий игры; закройте Steam и игру. Начать?</value></data>
+  <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Сейчас установлена официальная ветка? «Нет» = тестовая.</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Скачайте другую ветку в Steam. После загрузки закройте Steam и нажмите «Да». «Нет» приостановит мастер.</value></data>
+  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Не удалось автоматически выставить Beta другой ветки. Выберите вручную в Steam, затем скачайте.</value></data>
+  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Мастер двух веток приостановлен; можно продолжить позже.</value></data>
+  <data name="LogBranchTeardownDone" xml:space="preserve"><value>Двухветочная настройка снята.</value></data>
+  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Двухветочная настройка снята. Проверьте ветку игры в Steam.</value></data>
+  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Не удалось автоматически выровнять Steam Beta. Сначала выберите ветку вручную; не запускайте Steam до выравнивания.</value></data>
 </root>

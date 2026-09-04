@@ -1,6 +1,9 @@
 ﻿using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using MechabellumModManager.Dialogs;
 
 namespace MechabellumModManager;
 
@@ -10,6 +13,20 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         TryApplyBrandAssets();
+    }
+
+    void ModPreviewImage_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not Image { Source: not null } image)
+            return;
+        e.Handled = true;
+        var dialog = new PreviewImageDialog(image.Source)
+        {
+            Owner = this,
+            Width = SystemParameters.WorkArea.Width * 0.85,
+            Height = SystemParameters.WorkArea.Height * 0.85
+        };
+        dialog.ShowDialog();
     }
 
     void TryApplyBrandAssets()

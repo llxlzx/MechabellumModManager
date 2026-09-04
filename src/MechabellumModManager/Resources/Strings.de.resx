@@ -106,19 +106,19 @@
     <value>Betreff &amp; Text kopiert; QQ-Mail-Web geöffnet — neue Nachricht erstellen, einfügen und Melde an llxmod@foxmail.com senden.</value>
   </data>
   <data name="ReportMailOpenedInternational" xml:space="preserve">
-    <value>Betreff &amp; Text kopiert; Gmail-Verfassen geöffnet — Melde prüfen und an llxmod@foxmail.com senden.</value>
+    <value>Betreff &amp; Text kopiert; Gmail-Verfassen geöffnet — prüfen und Meldung an llxmod@foxmail.com senden.</value>
   </data>
   <data name="MailOpenFailed" xml:space="preserve">
     <value>Webmail konnte nicht geöffnet werden; Betreff &amp; Text sind kopiert. Bitte manuell an llxmod@foxmail.com senden und einfügen.</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>Einreichen / Submit</value>
+    <value>Einreichen</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>Postfach / Inbox</value>
+    <value>Postfach</value>
   </data>
   <data name="SubmitGuideBody" xml:space="preserve">
-    <value>Betreff muss mit einem dieser Präfixe beginnen:
+    <value>Der Betreff muss mit einem dieser Präfixe beginnen:
 • [Mod投稿/Submit] neu
 • [Mod更新/Update] Update
 • [Mod举报/Report] melden
@@ -130,10 +130,10 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
     <value>Danach kopiert der Manager die Vorlage und öffnet QQ-Mail-Web (chinesische UI) oder Gmail-Verfassen (andere Sprachen). Einfügen, .dll anhängen (optional preview.png) und senden. Bei sehr großen Anhängen (~&gt;40MB) Netdisk-Link in den Text. Quellcode nur auf Anfrage senden.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>Vollständige Anleitung / Open full guide</value>
+    <value>Vollständige Anleitung öffnen</value>
   </data>
   <data name="SubmitGuideOpenEmail" xml:space="preserve">
-    <value>Submit-E-Mail öffnen / Open submit email</value>
+    <value>Submit-E-Mail öffnen</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Bestätigen</value>
@@ -178,23 +178,22 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
     <value>Aktives Profil</value>
   </data>
 
-  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Der Maintainer prüft und bearbeitet Ihre Nachricht innerhalb angemessener Zeit. Die Bearbeitung kann aufgrund des Alltags und persönlicher Termine kurzzeitig verzögert sein; vielen Dank für Ihre Geduld. Bitte senden Sie dieselbe Anfrage nicht erneut.
-The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Der Maintainer prüft und bearbeitet Ihre Nachricht innerhalb angemessener Zeit. Die Bearbeitung kann aufgrund des Alltags und persönlicher Termine kurzzeitig verzögert sein; vielen Dank für Ihre Geduld. Bitte senden Sie dieselbe Anfrage nicht erneut.</value></data>
   <data name="FilterSearch" xml:space="preserve"><value>Suche</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>Kategorie</value></data>
-  <data name="FilterTag" xml:space="preserve"><value>Tag</value></data>
+  <data name="FilterTag" xml:space="preserve"><value>Stichwort</value></data>
   <data name="FilterSort" xml:space="preserve"><value>Sortierung</value></data>
   <data name="FilterAll" xml:space="preserve"><value>Alle</value></data>
   <data name="SortByName" xml:space="preserve"><value>Name</value></data>
   <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>Aktualisiert (neu→alt)</value></data>
   <data name="ColumnCategory" xml:space="preserve"><value>Kategorie</value></data>
-  <data name="TagsLabel" xml:space="preserve"><value>Tags</value></data>
-  <data name="CategoryOverlayUI" xml:space="preserve"><value>Overlay / UI</value></data>
-  <data name="CategoryQoL" xml:space="preserve"><value>QoL</value></data>
-  <data name="CategoryCamera" xml:space="preserve"><value>Kamera</value></data>
-  <data name="CategoryCombatAssist" xml:space="preserve"><value>Kampfhilfe</value></data>
-  <data name="CategoryEconomy" xml:space="preserve"><value>Wirtschaft</value></data>
-  <data name="CategoryReplayDebug" xml:space="preserve"><value>Replay / Debug</value></data>
+  <data name="TagsLabel" xml:space="preserve"><value>Stichwörter</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>Oberfläche &amp; Einblendung</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>Komfort</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>Kamera &amp; Ansicht</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>Spielhilfe</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>Wirtschaft &amp; Ressourcen</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>Wiederholung &amp; Diagnose</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Sonstiges</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Unkategorisiert</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Kategorie/Tags bearbeiten</value></data>
@@ -202,19 +201,86 @@ The maintainer will review and process your message within a reasonable time. Ha
   <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Tags (kommagetrennt)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Official / Beta</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Beta branch name</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Name des Testzweigs</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
-  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Confirm manual Beta</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Testzweig manuell gewählt, weiter</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Confirm Steam is aligned</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Uses about two copies of the game; Steam must exit; will try to auto-align Beta and fall back to manual selection</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Benötigt etwa zwei Spielkopien; Steam muss beendet sein; versucht automatische Testzweig-Ausrichtung, sonst manuelle Auswahl</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam</value></data>
-  <data name="BranchStatusOfficial" xml:space="preserve"><value>Official</value></data>
-  <data name="BranchStatusBeta" xml:space="preserve"><value>Beta</value></data>
+  <data name="BranchStatusOfficial" xml:space="preserve"><value>Offiziell</value></data>
+  <data name="BranchStatusBeta" xml:space="preserve"><value>Test</value></data>
+  <data name="Tag_calc" xml:space="preserve"><value>Berechnung</value></data>
+  <data name="Tag_camera" xml:space="preserve"><value>Kamera</value></data>
+  <data name="Tag_combat" xml:space="preserve"><value>Kampf</value></data>
+  <data name="Tag_damage" xml:space="preserve"><value>Schaden</value></data>
+  <data name="Tag_debug" xml:space="preserve"><value>Diagnose</value></data>
+  <data name="Tag_economy" xml:space="preserve"><value>Wirtschaft</value></data>
+  <data name="Tag_grid" xml:space="preserve"><value>Raster</value></data>
+  <data name="Tag_hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
+  <data name="Tag_hud" xml:space="preserve"><value>Anzeige</value></data>
+  <data name="Tag_items" xml:space="preserve"><value>Gegenstände</value></data>
+  <data name="Tag_replay" xml:space="preserve"><value>Wiederholung</value></data>
+  <data name="Tag_speed" xml:space="preserve"><value>Geschwindigkeit</value></data>
+  <data name="Tag_undo" xml:space="preserve"><value>Rückgängig</value></data>
+  <data name="CatalogStatusInLibrary" xml:space="preserve"><value>In Bibliothek</value></data>
+  <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>Nicht installiert</value></data>
+  <data name="PackageMissing" xml:space="preserve"><value>Fehlt</value></data>
+  <data name="PackageMissingNameFormat" xml:space="preserve"><value>(Fehlt) {0}</value></data>
+  <data name="PackageTypeMelonMod" xml:space="preserve"><value>Erweiterung</value></data>
+  <data name="PackageTypeMelonPlugin" xml:space="preserve"><value>Erweiterungsplugin</value></data>
+  <data name="PackageTypeMelonUserLibs" xml:space="preserve"><value>Benutzerbibliotheken</value></data>
+  <data name="PackageTypeMelonUserData" xml:space="preserve"><value>Benutzerdaten</value></data>
+  <data name="HighRiskYes" xml:space="preserve"><value>Hohes Risiko</value></data>
+  <data name="HighRiskNo" xml:space="preserve"><value>—</value></data>
+  <data name="RequiredMelonLoaderFormat" xml:space="preserve"><value>Benötigt MelonLoader {0}</value></data>
+  <data name="TypePickTitle" xml:space="preserve"><value>Pakettyp wählen</value></data>
+  <data name="TypePickPrompt" xml:space="preserve"><value>Typ konnte nicht automatisch erkannt werden. Bitte wählen:</value></data>
+  <data name="DialogCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="DialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="PreviewImageTitle" xml:space="preserve"><value>Vorschau</value></data>
+  <data name="PreviewImageHint" xml:space="preserve"><value>Zum Schließen irgendwo klicken</value></data>
+  <data name="PromptDialogTitle" xml:space="preserve"><value>Eingabe</value></data>
+  <data name="DialogYes" xml:space="preserve"><value>Ja</value></data>
+  <data name="DialogNo" xml:space="preserve"><value>Nein</value></data>
+  <data name="FileFilterDll" xml:space="preserve"><value>Melon Mod DLL|*.dll|Alle Dateien|*.*</value></data>
+  <data name="FileFilterZip" xml:space="preserve"><value>Mod-ZIP|*.zip|Alle Dateien|*.*</value></data>
+  <data name="ConfirmOverwriteUnmanaged" xml:space="preserve"><value>Im Spieleordner gibt es bereits nicht verwaltete Dateien gleichen Namens.
+Überschreiben und übernehmen?</value></data>
+  <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
+…insgesamt {0}</value></data>
+  <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Überschreiben nicht verwalteter Dateien abgebrochen.</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Zweizweig ist bereits aktiv. Neuaufbau hebt zuerst sicher auf (anderer Speicher bleibt) und richtet neu ein. Fortfahren?</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Zweizweig-Einrichtung entfernen? Die aktuelle Verknüpfung wird wieder zum Spieleordner. Steam und Spiel beenden.</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Den anderen Zweig-Speicher auch löschen? Ungenutzte Dateien werden dauerhaft entfernt. (Empfohlen: Nein)</value></data>
+  <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>Zweizweig-Assistent fehlgeschlagen: {0}</value></data>
+  <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>Entfernen der Zweizweig-Einrichtung fehlgeschlagen: {0}</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam läuft noch. Warten Sie auf den Abschluss, bevor Sie deployen.</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam läuft noch. Trotzdem deployen? Dateien können gesperrt sein.</value></data>
+  <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
+
+{1}
+
+Download-Link öffnen?
+{2}</value></data>
+  <data name="ConfirmOpenGitHubReleases" xml:space="preserve"><value>{0}
+
+GitHub-Releases-Seite öffnen?</value></data>
+  <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Profil „{0}“ löschen? Dies kann nicht rückgängig gemacht werden.</value></data>
+  <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>„{0}“ aus der Bibliothek entfernen? Wird auch aus allen Profilen entfernt.</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Zum Wechseln des Spielzweigs Steam und Spiel beenden. Fortfahren?</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Zweizweig benötigt etwa zwei Spielkopien Speicherplatz; Steam und Spiel müssen beendet sein. Starten?</value></data>
+  <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Ist die aktuelle Installation Offiziell? Nein = Testzweig.</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Laden Sie den anderen Zweig in Steam. Danach Steam beenden und Ja wählen. Abbrechen pausiert den Assistenten.</value></data>
+  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Anderer Zweig-Beta konnte nicht automatisch gesetzt werden. In Steam manuell wählen, dann laden.</value></data>
+  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Zweizweig-Assistent pausiert; später fortsetzbar.</value></data>
+  <data name="LogBranchTeardownDone" xml:space="preserve"><value>Zweizweig-Einrichtung entfernt.</value></data>
+  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Zweizweig entfernt. Bitte Spielzweig in Steam prüfen.</value></data>
+  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam-Beta konnte nicht automatisch ausgerichtet werden. Zweig manuell wählen, bevor Sie Steam starten; bis dahin Steam nicht starten.</value></data>
 </root>

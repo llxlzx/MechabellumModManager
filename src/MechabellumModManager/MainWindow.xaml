@@ -454,21 +454,21 @@
                     </DockPanel>
 
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8" LastChildFill="False">
-                        <TextBox Width="160" Height="28" Margin="0,0,8,0"
+                        <TextBox Width="160" MinHeight="32" Margin="0,0,8,0"
                                  VerticalContentAlignment="Center"
                                  ToolTip="{Binding Ui.FilterSearch}"
                                  Text="{Binding CatalogSearchText, UpdateSourceTrigger=PropertyChanged}" />
-                        <ComboBox Width="140" Height="28" Margin="0,0,8,0"
+                        <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
                                   ToolTip="{Binding Ui.FilterCategory}"
                                   ItemsSource="{Binding CatalogCategoryFilterOptions}"
                                   SelectedItem="{Binding SelectedCatalogCategoryFilter}"
                                   DisplayMemberPath="Label" />
-                        <ComboBox Width="120" Height="28" Margin="0,0,8,0"
+                        <ComboBox Width="120" MinHeight="32" Margin="0,0,8,0"
                                   ToolTip="{Binding Ui.FilterTag}"
                                   ItemsSource="{Binding CatalogAvailableTagOptions}"
                                   SelectedItem="{Binding SelectedCatalogTagFilter}"
                                   DisplayMemberPath="Label" />
-                        <ComboBox Width="140" Height="28"
+                        <ComboBox Width="140" MinHeight="32"
                                   ToolTip="{Binding Ui.FilterSort}"
                                   ItemsSource="{Binding SortModeOptions}"
                                   SelectedItem="{Binding SelectedCatalogSortMode}"
@@ -495,7 +495,10 @@
                                    MaxWidth="240"
                                    Stretch="Uniform"
                                    Margin="0,0,14,0"
-                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                   Cursor="Hand"
+                                   ToolTip="{Binding Ui.PreviewImageHint}"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   MouseLeftButtonUp="ModPreviewImage_Click" />
                             <StackPanel>
                                 <TextBlock Text="{Binding SelectedCatalogMod.Name}"
                                            FontWeight="SemiBold"
@@ -651,29 +654,30 @@
                         </DockPanel>
 
                         <DockPanel Grid.Row="1" Margin="0,0,0,8" LastChildFill="False">
-                            <TextBox Width="160" Height="28" Margin="0,0,8,0"
+                            <TextBox Width="160" MinHeight="32" Margin="0,0,8,0"
                                      VerticalContentAlignment="Center"
                                      ToolTip="{Binding Ui.FilterSearch}"
                                      Text="{Binding LibrarySearchText, UpdateSourceTrigger=PropertyChanged}" />
-                            <ComboBox Width="140" Height="28" Margin="0,0,8,0"
+                            <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
                                       ToolTip="{Binding Ui.FilterCategory}"
                                       ItemsSource="{Binding LibraryCategoryFilterOptions}"
                                       SelectedItem="{Binding SelectedLibraryCategoryFilter}"
                                       DisplayMemberPath="Label" />
-                            <ComboBox Width="120" Height="28" Margin="0,0,8,0"
+                            <ComboBox Width="120" MinHeight="32" Margin="0,0,8,0"
                                       ToolTip="{Binding Ui.FilterTag}"
                                       ItemsSource="{Binding LibraryAvailableTagOptions}"
                                       SelectedItem="{Binding SelectedLibraryTagFilter}"
                                       DisplayMemberPath="Label" />
-                            <ComboBox Width="140" Height="28" Margin="0,0,8,0"
+                            <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
                                       ToolTip="{Binding Ui.FilterSort}"
                                       ItemsSource="{Binding SortModeOptions}"
                                       SelectedItem="{Binding SelectedLibrarySortMode}"
                                       DisplayMemberPath="Label" />
                             <Button Content="{Binding Ui.EditModTaxonomy}"
                                     Command="{Binding EditLibraryModTaxonomyCommand}"
-                                    Height="28"
-                                    MinWidth="110"
+                                    MinHeight="32"
+                                    MinWidth="120"
+                                    Padding="12,8"
                                     Style="{StaticResource GhostButtonStyle}" />
                         </DockPanel>
 
@@ -721,8 +725,9 @@
                                             <Button Content="{Binding HighRiskLabel}"
                                                     Command="{Binding DataContext.ToggleHighRiskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"
+                                                    Padding="10,6"
+                                                    MinHeight="30"
+                                                    FontSize="12"
                                                     ToolTip="点击临时切换；刷新后按名称关键词重算" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -743,8 +748,9 @@
                                             <Button Content="删除"
                                                     Command="{Binding DataContext.DeleteModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"
+                                                    Padding="10,6"
+                                                    MinHeight="30"
+                                                    FontSize="12"
                                                     ToolTip="从库中删除此包" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -768,15 +774,17 @@
                                             <Button Content="{Binding Ui.Report}"
                                                     Command="{Binding ReportLibraryModCommand}"
                                                     MinWidth="72"
-                                                    Padding="8,2"
-                                                    FontSize="11"
+                                                    Padding="10,6"
+                                                    MinHeight="30"
+                                                    FontSize="12"
                                                     Margin="0,0,0,6"
                                                     Style="{StaticResource GhostButtonStyle}" />
                                             <Button Content="收起介绍"
                                                     Command="{Binding ClearLibraryModSelectionCommand}"
                                                     MinWidth="72"
-                                                    Padding="8,2"
-                                                    FontSize="11"
+                                                    Padding="10,6"
+                                                    MinHeight="30"
+                                                    FontSize="12"
                                                     Style="{StaticResource GhostButtonStyle}" />
                                         </StackPanel>
                                         <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -789,7 +797,10 @@
                                                        MaxWidth="180"
                                                        Stretch="Uniform"
                                                        Margin="0,0,12,0"
-                                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                                                       Cursor="Hand"
+                                                       ToolTip="{Binding Ui.PreviewImageHint}"
+                                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                                       MouseLeftButtonUp="ModPreviewImage_Click" />
                                                 <StackPanel>
                                                     <TextBlock FontWeight="SemiBold"
                                                                FontSize="13"

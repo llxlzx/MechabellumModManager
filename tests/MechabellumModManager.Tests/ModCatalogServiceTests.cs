@@ -128,4 +128,33 @@ public class ModCatalogServiceTests
     {
         ModCatalogService.ParsePackageType(type).Should().Be(expected);
     }
+
+    [Fact]
+    public void DeserializeCatalog_reads_locales()
+    {
+        var json = """
+        {
+          "updatedAt":"t",
+          "mods":[{
+            "id":"feature-test",
+            "name":"功能测试 MOD",
+            "summary":"中文简介",
+            "file":"mods/x.dll",
+            "locales":{
+              "en":{"name":"Feature Test Mod","summary":"English summary"},
+              "de":{"name":"Funktionstest-Mod"}
+            }
+          }]
+        }
+        """;
+        var root = ModCatalogService.DeserializeCatalog(json);
+        var mod = root.Mods[0];
+        mod.Locales.Should().NotBeNull();
+        mod.Locales!["en"].Name.Should().Be("Feature Test Mod");
+        mod.Locales["en"].Summary.Should().Be("English summary");
+        mod.Locales["de"].Name.Should().Be("Funktionstest-Mod");
+        mod.Locales["de"].Summary.Should().BeNull();
+        CatalogLocaleResolver.ResolveName(mod, "en").Should().Be("Feature Test Mod");
+        CatalogLocaleResolver.ResolveSummary(mod, "de").Should().Be("中文简介");
+    }
 }

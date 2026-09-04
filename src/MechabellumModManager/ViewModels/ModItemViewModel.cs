@@ -30,17 +30,27 @@ public sealed partial class ModItemViewModel : ObservableObject
             new ModPackage
             {
                 Id = packageId,
-                DisplayName = "(缺失) " + packageId,
+                DisplayName = string.Format(
+                    LocalizationService.T("PackageMissingNameFormat"),
+                    packageId),
                 Type = ModPackageType.MelonMod,
                 PackageDirectory = ""
             },
             isEnabled: true,
             isMissing: true);
 
-    public string DisplayName => Package.DisplayName;
+    public string DisplayName =>
+        Package.CatalogDisplayName is not null || Package.CatalogLocales is not null
+            ? CatalogLocaleResolver.ResolveName(
+                Package.CatalogDisplayName ?? Package.DisplayName,
+                Package.CatalogLocales)
+            : Package.DisplayName;
     public string? Version => Package.Version;
     public string? Author => Package.Author;
-    public string? Summary => Package.Summary;
+    public string? Summary =>
+        Package.CatalogLocales is not null
+            ? CatalogLocaleResolver.ResolveSummary(Package.Summary, Package.CatalogLocales)
+            : Package.Summary;
     public string? CatalogUpdatedAt => Package.CatalogUpdatedAt;
     public string? Preview => Package.Preview;
     public string? PreviewUrl { get; private set; }
@@ -53,28 +63,32 @@ public sealed partial class ModItemViewModel : ObservableObject
 
     public string EffectiveCategoryDisplay => _owner.Ui.CategoryLabel(EffectiveCategory);
 
-    public string EffectiveTagsText => EffectiveTags.Count == 0 ? "" : string.Join(", ", EffectiveTags);
+    public string EffectiveTagsText => ModTaxonomy.FormatTagsDisplay(EffectiveTags);
 
     [ObservableProperty]
     private BitmapImage? _previewImage;
 
     public string TypeLabel => IsMissing
-        ? "缺失"
+        ? LocalizationService.T("PackageMissing")
         : Package.Type switch
     {
-        ModPackageType.MelonMod => "Mod",
-        ModPackageType.MelonPlugin => "插件",
-        ModPackageType.MelonUserLibs => "UserLibs",
-        ModPackageType.MelonUserData => "UserData",
+        ModPackageType.MelonMod => LocalizationService.T("PackageTypeMelonMod"),
+        ModPackageType.MelonPlugin => LocalizationService.T("PackageTypeMelonPlugin"),
+        ModPackageType.MelonUserLibs => LocalizationService.T("PackageTypeMelonUserLibs"),
+        ModPackageType.MelonUserData => LocalizationService.T("PackageTypeMelonUserData"),
         _ => Package.Type.ToString()
     };
     public bool HighRisk => Package.HighRisk;
-    public string HighRiskLabel => HighRisk ? "高风险" : "—";
+    public string HighRiskLabel => HighRisk
+        ? LocalizationService.T("HighRiskYes")
+        : LocalizationService.T("HighRiskNo");
     public string? RequiredMelonLoaderVersion => Package.RequiredMelonLoaderVersion;
     public string VersionWarningHint =>
         string.IsNullOrWhiteSpace(RequiredMelonLoaderVersion)
             ? ""
-            : $"需要 MelonLoader {RequiredMelonLoaderVersion}";
+            : string.Format(
+                LocalizationService.T("RequiredMelonLoaderFormat"),
+                RequiredMelonLoaderVersion);
 
     public void NotifyRiskChanged()
     {
@@ -95,6 +109,9 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(EffectiveTags));
         OnPropertyChanged(nameof(EffectiveCategoryDisplay));
         OnPropertyChanged(nameof(EffectiveTagsText));
+        OnPropertyChanged(nameof(TypeLabel));
+        OnPropertyChanged(nameof(HighRiskLabel));
+        OnPropertyChanged(nameof(VersionWarningHint));
     }
 
     public void RefreshCatalogFieldsFromPackage()
@@ -120,12 +137,31 @@ public sealed partial class ModItemViewModel : ObservableObject
             Package.Preview = catalog.Preview;
         Package.CatalogCategory = catalog.Category;
         Package.CatalogTags = catalog.Tags is null ? null : new List<string>(catalog.Tags);
+        Package.CatalogDisplayName = string.IsNullOrWhiteSpace(catalog.Name) ? null : catalog.Name;
+        Package.CatalogLocales = CloneLocales(catalog.Locales);
         if (!string.IsNullOrWhiteSpace(catalog.Category) &&
             !ModTaxonomy.TryParseCategory(catalog.Category, out _))
         {
             _owner.LogTaxonomyWarning($"Mod '{Package.Id}': invalid catalog category '{catalog.Category}', treating as Uncategorized.");
         }
         RefreshCatalogFieldsFromPackage();
+    }
+
+    static Dictionary<string, CatalogModLocale>? CloneLocales(
+        Dictionary<string, CatalogModLocale>? source)
+    {
+        if (source is null || source.Count == 0)
+            return null;
+        var copy = new Dictionary<string, CatalogModLocale>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, value) in source)
+        {
+            copy[key] = new CatalogModLocale
+            {
+                Name = value?.Name,
+                Summary = value?.Summary
+            };
+        }
+        return copy;
     }
 
     public async Task LoadPreviewImageAsync(string? urlOverride = null)
