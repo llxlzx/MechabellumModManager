@@ -50,6 +50,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly IProcessProbe _processProbe;
     readonly IProcessStarter _processStarter;
     readonly Func<TimeSpan, Task> _delay;
+    readonly TimeSpan _steamExitTimeout;
     bool _loggedMelonOptimize;
     bool _suppressBranchSwitchSave;
     bool _checkingUpdates;
@@ -93,7 +94,8 @@ public sealed partial class MainViewModel : ObservableObject
         BranchSwitchService? branchSwitch = null,
         IProcessProbe? processProbe = null,
         IProcessStarter? processStarter = null,
-        Func<TimeSpan, Task>? delay = null)
+        Func<TimeSpan, Task>? delay = null,
+        TimeSpan? steamExitTimeout = null)
     {
         _paths = paths;
         _store = store;
@@ -126,6 +128,7 @@ public sealed partial class MainViewModel : ObservableObject
         _processProbe = processProbe ?? new ProcessProbe();
         _processStarter = processStarter ?? new ShellProcessStarter();
         _delay = delay ?? (span => Task.Delay(span));
+        _steamExitTimeout = steamExitTimeout ?? TimeSpan.FromSeconds(30);
         _branchSwitch = branchSwitch ?? new BranchSwitchService(
             paths,
             store,
@@ -235,7 +238,7 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
     public bool CanDeployOrLaunch =>
-        IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking;
+        IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
 
     public bool IsBranchWizardBlocking =>
         BranchSwitchEnabled &&
@@ -1905,6 +1908,15 @@ public sealed partial class MainViewModel : ObservableObject
         _suppressBranchSwitchSave = true;
         try
         {
+            try
+            {
+                _branchSwitch.TryRepairFromJournal();
+            }
+            catch
+            {
+                // Isolation: journal repair must not block loading branch-switch state.
+            }
+
             var cfg = _branchSwitch.LoadConfig();
             BranchSwitchEnabled = cfg.Enabled;
             ActiveGameBranch = cfg.ActiveBranch;
@@ -1913,7 +1925,9 @@ public sealed partial class MainViewModel : ObservableObject
             BetaProfileId = string.IsNullOrWhiteSpace(cfg.BetaProfileId) ? "default" : cfg.BetaProfileId;
             BranchWizardStep = cfg.WizardStep;
             IsAwaitingSteamSettle = cfg.Enabled && cfg.WizardStep == BranchWizardStep.AwaitingSteamSettle;
-            DegradeToManualBeta = false;
+            DegradeToManualBeta = IsAwaitingSteamSettle;
+            SelectBoundProfile(ActiveGameBranch);
+            RecomputeDirty();
             RefreshBranchStatusText();
             NotifyBranchGates();
         }
@@ -1977,7 +1991,6 @@ public sealed partial class MainViewModel : ObservableObject
             }
 
             DegradeToManualBeta = false;
-            DeployBoundProfileAndClearSettle();
         }
         catch (Exception ex)
         {
@@ -2005,7 +2018,7 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog($"请求退出 Steam 失败：{ex.Message}");
         }
 
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        var deadline = DateTime.UtcNow + _steamExitTimeout;
         while (_processProbe.IsGameOrSteamRunning() && DateTime.UtcNow < deadline)
             await _delay(TimeSpan.FromMilliseconds(250)).ConfigureAwait(true);
 
@@ -2114,6 +2127,8 @@ public sealed partial class MainViewModel : ObservableObject
         NotifyBranchGates();
         RefreshBranchStatusText();
     }
+
+    partial void OnIsBranchSwitchBusyChanged(bool value) => NotifyBranchGates();
 
     partial void OnBranchSwitchEnabledChanged(bool value)
     {

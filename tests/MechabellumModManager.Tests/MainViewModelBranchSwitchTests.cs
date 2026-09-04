@@ -139,6 +139,142 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task SwitchToBeta_steam_still_running_aborts_before_swap()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+        fx.Probe.SteamRunning = true;
+
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(
+            confirm: _ => true,
+            starter: starter,
+            delay: _ => Task.CompletedTask,
+            steamExitTimeout: TimeSpan.Zero);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+
+        starter.Starts.Should().Contain("steam://exit");
+        starter.Starts.Should().NotContain("steam://open/games");
+        vm.ActiveGameBranch.Should().Be(GameBranch.Official);
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
+        File.ReadAllText(Path.Combine(fx.SteamLink, "marker.txt")).Should().Be("official");
+        File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SwitchToBeta_silent_success_stays_in_settle_until_ConfirmManualBeta()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(confirm: _ => true, starter: starter);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+        vm.Mods[0].IsEnabled = true;
+        vm.IsReady.Should().BeTrue();
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+
+        vm.ActiveGameBranch.Should().Be(GameBranch.Beta);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeFalse();
+        starter.Starts.Should().Contain("steam://open/games");
+        File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
+
+        vm.ConfirmManualBetaCommand.Execute(null);
+
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
+        vm.DegradeToManualBeta.Should().BeFalse();
+        vm.CanDeployOrLaunch.Should().BeTrue();
+        File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Load_selects_bound_profile_for_active_branch()
+    {
+        using var fx = Fixture.CreateReady();
+        var extra = fx.Profiles.Create("Beta Build");
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            ActiveBranch = GameBranch.Beta,
+            OfficialProfileId = "default",
+            BetaProfileId = extra.Id,
+            BetaBranchName = "publicbeta"
+        });
+
+        var vm = fx.CreateVm();
+
+        vm.BranchSwitchEnabled.Should().BeTrue();
+        vm.ActiveGameBranch.Should().Be(GameBranch.Beta);
+        vm.SelectedProfile!.Id.Should().Be(extra.Id);
+    }
+
+    [Fact]
+    public void Restored_AwaitingSteamSettle_sets_DegradeToManualBeta()
+    {
+        using var fx = Fixture.CreateReady();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.AwaitingSteamSettle,
+            ActiveBranch = GameBranch.Beta,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        var vm = fx.CreateVm();
+
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        vm.DegradeToManualBeta.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Busy_disables_CanDeployOrLaunch()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm();
+
+        vm.IsReady.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeTrue();
+
+        vm.IsBranchSwitchBusy = true;
+
+        vm.CanDeployOrLaunch.Should().BeFalse();
+        vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeFalse();
+        vm.ApplyProfileCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
     public void Branch_switch_commands_exist()
     {
         using var fx = Fixture.CreateReady();
@@ -273,7 +409,9 @@ public class MainViewModelBranchSwitchTests
 
         public MainViewModel CreateVm(
             Func<string, bool>? confirm = null,
-            IProcessStarter? starter = null)
+            IProcessStarter? starter = null,
+            Func<TimeSpan, Task>? delay = null,
+            TimeSpan? steamExitTimeout = null)
         {
             var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
             return new MainViewModel(
@@ -289,7 +427,9 @@ public class MainViewModelBranchSwitchTests
                 confirm: confirm ?? (_ => false),
                 branchSwitch: _branchSwitch,
                 processProbe: Probe,
-                processStarter: starter ?? new RecordingStarter());
+                processStarter: starter ?? new RecordingStarter(),
+                delay: delay,
+                steamExitTimeout: steamExitTimeout);
         }
 
         public void WriteBranchConfig(BranchSwitchConfig cfg) =>
