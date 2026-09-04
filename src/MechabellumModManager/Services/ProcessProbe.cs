@@ -7,7 +7,13 @@ public interface ISteamRunningProbe
     bool IsSteamRunning();
 }
 
-public sealed class ProcessProbe : ISteamRunningProbe
+public interface IProcessProbe : ISteamRunningProbe
+{
+    bool IsGameRunning();
+    bool IsGameOrSteamRunning();
+}
+
+public sealed class ProcessProbe : IProcessProbe
 {
     public bool IsGameRunning()
     {

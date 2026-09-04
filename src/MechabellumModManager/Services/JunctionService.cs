@@ -6,7 +6,15 @@ using System.Text;
 
 namespace MechabellumModManager.Services;
 
-public sealed class JunctionService
+public interface IJunctionService
+{
+    bool IsJunction(string path);
+    string? ResolveTarget(string path);
+    void CreateJunction(string linkPath, string targetPath);
+    void DeleteJunction(string linkPath);
+}
+
+public sealed class JunctionService : IJunctionService
 {
     const uint FileReadAttributes = 0x0080;
     const uint FileShareRead = 0x0001;
