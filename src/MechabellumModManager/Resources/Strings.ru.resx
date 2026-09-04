@@ -323,4 +323,5 @@
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam или игра ещё запущены (включая steamwebhelper). Завершите процессы в диспетчере задач и повторите.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Не удалось переключить папки.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Уже на этой ветке (папка и бета Steam совпадают). Переключение не нужно.</value></data>
+  <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>В одной из папок официальная/тестовая всё ещё нет MelonLoader. Переустановите Setup с MelonLoader или сначала поставьте на папку, где Loader уже есть.</value></data>
 </root>

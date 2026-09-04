@@ -323,4 +323,5 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam or the game is still running (including steamwebhelper). End those processes in Task Manager, then try again.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
+  <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>One Official/Test folder is still missing MelonLoader. Re-run Setup and tick MelonLoader, or install it on the folder that already has a loader.</value></data>
 </root>

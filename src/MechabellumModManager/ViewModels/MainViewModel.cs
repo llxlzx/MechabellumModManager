@@ -29,6 +29,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly GameLauncher _launcher;
     readonly RiskGate _riskGate;
     readonly MelonLoaderConfigOptimizer _melonOptimizer;
+    readonly MelonLoaderDualStoreSync _melonDualSync;
     readonly RiskHeuristic _riskHeuristic;
     readonly SteamGameLocator _steamLocator;
     readonly UpdateChecker _updateChecker;
@@ -77,6 +78,7 @@ public sealed partial class MainViewModel : ObservableObject
         GameLauncher launcher,
         RiskGate riskGate,
         MelonLoaderConfigOptimizer? melonOptimizer = null,
+        MelonLoaderDualStoreSync? melonDualSync = null,
         RiskHeuristic? riskHeuristic = null,
         SteamGameLocator? steamLocator = null,
         UpdateChecker? updateChecker = null,
@@ -113,6 +115,7 @@ public sealed partial class MainViewModel : ObservableObject
         _launcher = launcher;
         _riskGate = riskGate;
         _melonOptimizer = melonOptimizer ?? new MelonLoaderConfigOptimizer();
+        _melonDualSync = melonDualSync ?? new MelonLoaderDualStoreSync();
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         _steamLocator = steamLocator ?? new SteamGameLocator();
         _updateChecker = updateChecker ?? new UpdateChecker();
@@ -2029,6 +2032,23 @@ public sealed partial class MainViewModel : ObservableObject
             IsAwaitingSteamSettle = cfg.Enabled && cfg.WizardStep == BranchWizardStep.AwaitingSteamSettle;
             DegradeToManualBeta = IsAwaitingSteamSettle;
             SelectBoundProfile(ActiveGameBranch);
+            if (cfg.Enabled
+                && !string.IsNullOrWhiteSpace(cfg.OfficialStorePath)
+                && !string.IsNullOrWhiteSpace(cfg.BetaStorePath))
+            {
+                // Do not notify on every startup; only log if something changed/failed.
+                try
+                {
+                    var sync = _melonDualSync.EnsureOnBothStores(cfg.OfficialStorePath, cfg.BetaStorePath);
+                    if (!sync.Success || (sync.Message?.Contains("安装", StringComparison.Ordinal) == true)
+                        || (sync.Message?.Contains("复制", StringComparison.Ordinal) == true))
+                        AppendLog(sync.Message);
+                }
+                catch (Exception ex)
+                {
+                    AppendLog($"启动时补齐双服 MelonLoader 失败：{ex.Message}");
+                }
+            }
             RecomputeDirty();
             RefreshBranchStatusText();
             NotifyBranchGates();
@@ -2087,6 +2107,8 @@ public sealed partial class MainViewModel : ObservableObject
             }
 
             SelectBoundProfile(target);
+
+            EnsureMelonLoaderForDualStores(preferTarget: target);
 
             var silent = _branchSwitch.TrySilentSetBeta(target);
             await SettleAfterSilentBetaAsync(silent).ConfigureAwait(true);
@@ -2282,8 +2304,40 @@ public sealed partial class MainViewModel : ObservableObject
 
         RefreshStatus();
 
+        EnsureMelonLoaderForDualStores(preferTarget: current);
+
         var silent = _branchSwitch.TrySilentSetBeta(current);
         await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
+    }
+
+    void EnsureMelonLoaderForDualStores(GameBranch? preferTarget = null)
+    {
+        try
+        {
+            var cfg = _branchSwitch.LoadConfig();
+            if (string.IsNullOrWhiteSpace(cfg.OfficialStorePath) || string.IsNullOrWhiteSpace(cfg.BetaStorePath))
+                return;
+
+            var result = _melonDualSync.EnsureOnBothStores(cfg.OfficialStorePath, cfg.BetaStorePath);
+            if (!string.IsNullOrWhiteSpace(result.Message))
+                AppendLog(result.Message);
+
+            if (!result.Success)
+            {
+                var warn = LocalizationService.T("NotifyMelonLoaderDualStoreIncomplete");
+                AppendLog(warn);
+                _notify(warn);
+            }
+            else if (preferTarget is not null)
+            {
+                // Refresh after ensuring the currently linked path is ready.
+                RefreshStatus();
+            }
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"补齐双服 MelonLoader 失败：{ex.Message}");
+        }
     }
 
     async Task<bool> RunTeardownCoreAsync(bool deleteOtherStore)

@@ -323,4 +323,5 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam またはゲームが動作中です（steamwebhelper 含む）。タスクマネージャーで終了してから再試行してください。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>フォルダ切替に失敗しました。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>すでにこのブランチです（フォルダと Steam ベータは整合済み）。切替不要。</value></data>
+  <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>正式/テストのどちらかに MelonLoader がありません。インストーラーで MelonLoader を入れるか、先に Loader がある方へ入れてください。</value></data>
 </root>
