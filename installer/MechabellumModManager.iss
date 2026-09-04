@@ -74,6 +74,14 @@ begin
   WizardForm.Update;
 end;
 
+function PowerShellExe: string;
+begin
+  { Prefer System32 PowerShell; avoid bare "powershell.exe" PATH issues under Setup. }
+  Result := ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe');
+  if not FileExists(Result) then
+    Result := 'powershell.exe';
+end;
+
 function PsFromSrc(const ScriptName, ExtraArgs: string): Integer;
 var
   ResultCode: Integer;
@@ -81,8 +89,15 @@ var
   ScriptPath: string;
 begin
   ScriptPath := ExpandConstant('{app}') + '\installer-scripts\' + ScriptName;
-  Cmd := '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '" ' + ExtraArgs;
-  if not Exec('powershell.exe', Cmd, '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+  if not FileExists(ScriptPath) then
+  begin
+    Result := -2;
+    exit;
+  end;
+  { Hidden + NonInteractive reduces 0xc0000142 / desktop-heap failures under elevated Setup. }
+  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' +
+         ScriptPath + '" ' + ExtraArgs;
+  if not Exec(PowerShellExe(), Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
   begin
     Result := -1;
     exit;
@@ -96,6 +111,105 @@ begin
             FileExists(AddBackslash(Path) + 'GameAssembly.dll');
 end;
 
+function JsonUnescapePath(const S: string): string;
+begin
+  Result := S;
+  StringChangeEx(Result, '\\', '\', True);
+end;
+
+{ Best-effort extract of "steamLinkPath":"..." from branch-switch.json without PowerShell. }
+function TryReadSteamLinkFromBranchSwitch: string;
+var
+  BranchFile, Content, Key, Marker: string;
+  ContentA: AnsiString;
+  P, Q: Integer;
+begin
+  Result := '';
+  BranchFile := ExpandConstant('{userappdata}\MechabellumModManager\branch-switch.json');
+  if not FileExists(BranchFile) then
+    exit;
+  if not LoadStringFromFile(BranchFile, ContentA) then
+    exit;
+  Content := string(ContentA);
+  Key := '"steamLinkPath"';
+  P := Pos(Key, Content);
+  if P = 0 then
+  begin
+    Key := '"SteamLinkPath"';
+    P := Pos(Key, Content);
+  end;
+  if P = 0 then
+    exit;
+  Marker := Copy(Content, P + Length(Key), Length(Content));
+  P := Pos('"', Marker);
+  if P = 0 then
+    exit;
+  Marker := Copy(Marker, P + 1, Length(Marker));
+  Q := Pos('"', Marker);
+  if Q <= 1 then
+    exit;
+  Result := JsonUnescapePath(Copy(Marker, 1, Q - 1));
+  if not LooksLikeGame(Result) then
+    Result := '';
+end;
+
+function EscapeJsonPath(const Path: string): string;
+begin
+  Result := Path;
+  StringChangeEx(Result, '\', '\\', True);
+  StringChangeEx(Result, '"', '\"', True);
+end;
+
+function WriteManagerConfigNative(const GamePath: string): Boolean;
+var
+  Root, ConfigPath, ProfilePath, Json, Resolved, Link: string;
+  ProfileJson: AnsiString;
+begin
+  Result := False;
+  Resolved := GamePath;
+  Link := TryReadSteamLinkFromBranchSwitch();
+  if Link <> '' then
+    Resolved := Link;
+
+  if not LooksLikeGame(Resolved) then
+    exit;
+
+  Root := ExpandConstant('{userappdata}\MechabellumModManager');
+  if not ForceDirectories(Root) then
+    exit;
+  ForceDirectories(Root + '\library\mods');
+  ForceDirectories(Root + '\library\plugins');
+  ForceDirectories(Root + '\library\userlibs');
+  ForceDirectories(Root + '\library\userdata');
+  ForceDirectories(Root + '\profiles');
+  ForceDirectories(Root + '\logs');
+
+  ConfigPath := Root + '\config.json';
+  Json :=
+    '{' + #13#10 +
+    '  "gamePath": "' + EscapeJsonPath(Resolved) + '",' + #13#10 +
+    '  "launchMode": 0,' + #13#10 +
+    '  "activeProfileId": "default",' + #13#10 +
+    '  "dataRoot": null' + #13#10 +
+    '}' + #13#10;
+  if not SaveStringToFile(ConfigPath, Json, False) then
+    exit;
+
+  ProfilePath := Root + '\profiles\default.json';
+  if not FileExists(ProfilePath) then
+  begin
+    ProfileJson :=
+      '{' + #13#10 +
+      '  "id": "default",' + #13#10 +
+      '  "name": "default",' + #13#10 +
+      '  "enabledPackageIds": []' + #13#10 +
+      '}' + #13#10;
+    SaveStringToFile(ProfilePath, ProfileJson, False);
+  end;
+
+  Result := True;
+end;
+
 function DetectGamePathViaScript: string;
 var
   ResultCode: Integer;
@@ -107,8 +221,11 @@ begin
   ScriptFile := ExpandConstant('{tmp}\Detect-GamePath.ps1');
   OutFile := ExpandConstant('{tmp}\mmm-detected-game-path.txt');
   DeleteFile(OutFile);
-  Cmd := '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptFile + '" -OutFile "' + OutFile + '"';
-  if not Exec('powershell.exe', Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' +
+         ScriptFile + '" -OutFile "' + OutFile + '"';
+  if not Exec(PowerShellExe(), Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    exit;
+  if ResultCode <> 0 then
     exit;
   if not FileExists(OutFile) then
     exit;
@@ -125,7 +242,17 @@ function TrySteamGuess(): string;
 var
   SteamPath: string;
   Candidate: string;
+  Link: string;
 begin
+  { 1) Previous dual-folder link (no PowerShell) }
+  Link := TryReadSteamLinkFromBranchSwitch();
+  if (Link <> '') and LooksLikeGame(Link) then
+  begin
+    Result := Link;
+    exit;
+  end;
+
+  { 2) PowerShell scan (optional; may fail with 0xc0000142 on some PCs) }
   Result := DetectGamePathViaScript();
   if (Result <> '') and LooksLikeGame(Result) then
     exit;
@@ -157,6 +284,12 @@ begin
   end;
   Candidate := 'D:\steam\steamapps\common\Mechabellum';
   if LooksLikeGame(Candidate) then
+  begin
+    Result := Candidate;
+    exit;
+  end;
+  Candidate := 'D:\steam\steamapps\common\Mechabellum_official';
+  if LooksLikeGame(Candidate) then
     Result := Candidate;
 end;
 
@@ -166,11 +299,14 @@ var
   OutFile, Cmd, S: string;
   Line: AnsiString;
 begin
-  Result := False;
+  { Default: assume busy so we never write Melon into an active download folder if PS fails. }
+  Result := True;
   OutFile := ExpandConstant('{tmp}\mmm-steam-busy.txt');
   DeleteFile(OutFile);
-  Cmd := '-NoProfile -ExecutionPolicy Bypass -Command "if (Get-Process steam,steamwebhelper -ErrorAction SilentlyContinue) { Set-Content -Path ''' + OutFile + ''' -Value busy } else { Set-Content -Path ''' + OutFile + ''' -Value idle }"';
-  if not Exec('powershell.exe', Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command "' +
+         'if (Get-Process steam,steamwebhelper -ErrorAction SilentlyContinue) { Set-Content -LiteralPath ''' +
+         OutFile + ''' -Value busy } else { Set-Content -LiteralPath ''' + OutFile + ''' -Value idle }"';
+  if not Exec(PowerShellExe(), Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
     exit;
   if FileExists(OutFile) and LoadStringFromFile(OutFile, Line) then
   begin
@@ -232,29 +368,30 @@ begin
 
   GamePath := GamePathPage.Values[0];
   Redist := ExpandConstant('{app}\installer-redist');
-  SteamBusy := QuerySteamBusyViaPs();
 
-  { Write config + restore dual-folder path from previous AppData record.
+  { Native config write first — does not require PowerShell (avoids 0xc0000142).
     Does NOT exit Steam / rewrite BetaKey / swap junction. }
   SetStatus('正在写入管理器配置（保留双服记录，不打断 Steam）…');
+  if not WriteManagerConfigNative(GamePath) then
+    MsgBox('写入管理器配置失败。可稍后在管理器「设置」中手动指定游戏路径。', mbError, MB_OK);
+
+  { Optional extras via PowerShell; failures are non-fatal. }
   Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
   Code := PsFromSrc('Restore-DualFolderConfig.ps1', Args);
   if Code <> 0 then
-  begin
-    { Fallback to plain config write }
-    Args := '-GamePath "' + GamePath + '"';
-    Code := PsFromSrc('Write-ManagerConfig.ps1', Args);
-    if Code <> 0 then
-      MsgBox('写入管理器配置失败（exit ' + IntToStr(Code) + '）。可稍后在管理器「设置」中手动指定游戏路径。', mbError, MB_OK);
-  end;
+    SetStatus('可选恢复脚本未运行（不影响安装；配置已用内置方式写入）。');
+
+  SteamBusy := QuerySteamBusyViaPs();
 
   if WizardIsComponentSelected('dotnet8') then
   begin
     SetStatus('正在准备 .NET 8 Desktop Runtime（下载约 55-60 MB；安装后约 150-200 MB；已安装则跳过）…');
     Args := '-Major 8 -RedistDir "' + Redist + '"';
     Code := PsFromSrc('Install-Prereqs.ps1', Args);
-    if (Code <> 0) and (Code <> 3010) then
+    if (Code <> 0) and (Code <> 3010) and (Code <> -1) then
       MsgBox('.NET 8 Desktop Runtime 安装未成功（exit ' + IntToStr(Code) + '）。请稍后从 https://dotnet.microsoft.com/download/dotnet/8.0 手动安装。', mbError, MB_OK)
+    else if Code = -1 then
+      SetStatus('无法启动 PowerShell，已跳过 .NET 8 自动安装（可稍后手动安装）。')
     else
       SetStatus('.NET 8 Desktop Runtime 已完成（或已跳过）。');
   end;
@@ -264,8 +401,10 @@ begin
     SetStatus('正在准备 .NET 6 Desktop Runtime（下载约 50-55 MB；安装后约 140-180 MB；已安装则跳过）…');
     Args := '-Major 6 -RedistDir "' + Redist + '"';
     Code := PsFromSrc('Install-Prereqs.ps1', Args);
-    if (Code <> 0) and (Code <> 3010) then
+    if (Code <> 0) and (Code <> 3010) and (Code <> -1) then
       MsgBox('.NET 6 Desktop Runtime 安装未成功（exit ' + IntToStr(Code) + '）。请稍后从 https://dotnet.microsoft.com/download/dotnet/6.0 手动安装。', mbError, MB_OK)
+    else if Code = -1 then
+      SetStatus('无法启动 PowerShell，已跳过 .NET 6 自动安装（可稍后手动安装）。')
     else
       SetStatus('.NET 6 Desktop Runtime 已完成（或已跳过）。');
   end;
@@ -274,14 +413,16 @@ begin
   begin
     if SteamBusy then
     begin
-      SetStatus('检测到 Steam 正在运行/下载：跳过向当前游戏目录写入 MelonLoader，以免打断下载（正式服目录已在恢复步骤中尽量补齐）。');
+      SetStatus('检测到 Steam 正在运行/下载，或无法确认：跳过向游戏目录写入 MelonLoader，以免打断下载。');
     end
     else
     begin
       SetStatus('正在检测/安装 MelonLoader（已安装则跳过；优先内嵌离线包）…');
       Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
       Code := PsFromSrc('Install-MelonLoader.ps1', Args);
-      if Code <> 0 then
+      if Code = -1 then
+        SetStatus('无法启动 PowerShell，已跳过 MelonLoader 自动安装（可稍后手动安装）。')
+      else if Code <> 0 then
         MsgBox(
           'MelonLoader 安装未成功（exit ' + IntToStr(Code) + '）。' + #13#10 + #13#10 +
           'exit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整。' + #13#10 + #13#10 +
