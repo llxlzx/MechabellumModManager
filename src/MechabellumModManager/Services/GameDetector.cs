@@ -40,6 +40,15 @@ public sealed class GameDetector
                 Message = "MelonLoader 安装不完整（需要 MelonLoader 目录以及 version.dll 或 winhttp.dll）。请重新运行安装包勾选 MelonLoader，或手动补全。"
             };
 
+        if (!HasIl2CppAssemblies(gamePath))
+            return new GameStatus
+            {
+                Kind = GameStatusKind.LoaderPresentAssembliesMissing,
+                GamePath = gamePath,
+                Message = "MelonLoader 框架已安装，但尚未生成 Il2Cpp 程序集。将尝试自动生成（首次可能需要一两分钟）。",
+                MelonLoaderVersion = TryReadMelonVersion(gamePath)
+            };
+
         return new GameStatus
         {
             Kind = GameStatusKind.Ready,
@@ -48,6 +57,9 @@ public sealed class GameDetector
             MelonLoaderVersion = TryReadMelonVersion(gamePath)
         };
     }
+
+    public static bool HasIl2CppAssemblies(string gamePath) =>
+        File.Exists(Path.Combine(gamePath, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"));
 
     static string? TryReadMelonVersion(string gamePath)
     {

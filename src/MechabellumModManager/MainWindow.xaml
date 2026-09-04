@@ -168,16 +168,9 @@
                                        Orientation="Horizontal"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center">
-                                <Button Content="{Binding Ui.ApplyProfile}"
-                                        Command="{Binding ApplyProfileCommand}"
-                                        IsEnabled="{Binding IsReady}"
-                                        Style="{StaticResource AccentButtonStyle}"
-                                        Margin="0,0,8,4"
-                                        MinWidth="96"
-                                        Padding="12,6" />
                                 <Button Content="{Binding Ui.ApplyAndLaunch}"
                                         Command="{Binding ApplyAndLaunchCommand}"
-                                        IsEnabled="{Binding IsReady}"
+                                        IsEnabled="{Binding CanDeployOrLaunch}"
                                         Style="{StaticResource PrimaryButtonStyle}"
                                         Margin="0,0,8,4"
                                         MinWidth="108"
@@ -420,9 +413,11 @@
             <!-- Catalog browser strip -->
             <Border Grid.Row="2"
                     Background="#E0161B20"
-                    BorderBrush="{StaticResource SteelEdgeBrush}"
-                    BorderThickness="0,0,0,1"
+                    BorderBrush="{StaticResource AccentAmberBrush}"
+                    BorderThickness="1"
                     Padding="18,12"
+                    Margin="10,0,10,0"
+                    CornerRadius="2"
                     Visibility="{Binding CatalogExpanded, Converter={StaticResource BoolToVis}}">
                 <DockPanel MaxHeight="420">
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
@@ -435,6 +430,13 @@
                                        Style="{StaticResource SectionLabelStyle}"
                                        Margin="0"
                                        VerticalAlignment="Center" />
+                            <Button Content="▾"
+                                    ToolTip="折叠 Mod 浏览"
+                                    Command="{Binding ToggleCatalogCommand}"
+                                    Margin="10,0,0,0"
+                                    MinWidth="32"
+                                    Padding="6,2"
+                                    Style="{StaticResource GhostButtonStyle}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right"
@@ -687,11 +689,22 @@
                                     MinWidth="120"
                                     Padding="12,8"
                                     Style="{StaticResource GhostButtonStyle}" />
+                            <Button Content="{Binding Ui.ApplyProfile}"
+                                    Command="{Binding ApplyProfileCommand}"
+                                    IsEnabled="{Binding CanApplyProfile}"
+                                    MinHeight="32"
+                                    MinWidth="96"
+                                    Margin="8,0,0,0"
+                                    Padding="12,8"
+                                    Style="{StaticResource AccentButtonStyle}" />
                         </DockPanel>
 
                         <DataGrid Grid.Row="2"
+                                  x:Name="LibraryModsGrid"
                                   ItemsSource="{Binding LibraryModsView}"
                                   SelectedItem="{Binding SelectedLibraryMod}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="LibraryModsGrid_SelectionChanged"
                                   IsReadOnly="False"
                                   HeadersVisibility="Column"
                                   MinHeight="140">

@@ -19,6 +19,11 @@ public sealed class MelonLoaderDualStoreSync
         "CrashReports"
     };
 
+    static readonly HashSet<string> SkipFileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Latest.log"
+    };
+
     readonly GameDetector _detector;
     readonly MelonLoaderConfigOptimizer _optimizer;
 
@@ -36,7 +41,7 @@ public sealed class MelonLoaderDualStoreSync
             return Fail("目标游戏目录无效。");
 
         var status = _detector.Detect(gamePath);
-        if (status.Kind == GameStatusKind.Ready)
+        if (status.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
             return new MelonLoaderInstallResult { Success = true, Message = "MelonLoader 已就绪，无需补齐。" };
 
         var zip = ResolveLocalZip(localZipPath);
@@ -152,16 +157,19 @@ public sealed class MelonLoaderDualStoreSync
             MelonLoaderInstaller.CopyExtractedPayloadForSync(extract, gamePath, written);
 
             var status = _detector.Detect(gamePath);
-            if (status.Kind != GameStatusKind.Ready)
+            if (status.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing))
                 return Fail($"已从压缩包写入，但检测仍为：{status.Message}");
 
             var optimize = _optimizer.ApplyRecommendedSettings(gamePath);
+            var assembliesNote = status.Kind == GameStatusKind.LoaderPresentAssembliesMissing
+                ? "\n首次启动该服时 MelonLoader 会重新生成程序集，可能需要一两分钟。"
+                : "";
             return new MelonLoaderInstallResult
             {
                 Success = true,
                 Message = "已从本地 MelonLoader 压缩包安装到该服目录。"
                           + (optimize.Changed ? "\n" + optimize.Message : "")
-                          + "\n首次启动该服时 MelonLoader 会重新生成程序集，可能需要一两分钟。"
+                          + assembliesNote
             };
         }
         catch (Exception ex)
@@ -202,16 +210,16 @@ public sealed class MelonLoaderDualStoreSync
             CopyDirectoryFiltered(srcMelon, destMelon);
 
             var status = _detector.Detect(destGamePath);
-            if (status.Kind != GameStatusKind.Ready)
+            if (status.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing))
                 return Fail($"已从另一服复制 Loader，但检测仍为：{status.Message}");
 
             var optimize = _optimizer.ApplyRecommendedSettings(destGamePath);
             return new MelonLoaderInstallResult
             {
                 Success = true,
-                Message = "已从另一服复制 MelonLoader（未复制 Il2CppAssemblies）。"
+                Message = "已从另一服复制 MelonLoader（未复制 Il2CppAssemblies / Latest.log）。"
                           + (optimize.Changed ? "\n" + optimize.Message : "")
-                          + "\n首次启动该服时会重新生成程序集，可能需要一两分钟。"
+                          + "\n将尝试自动生成程序集，或首次启动时由 MelonLoader 生成。"
             };
         }
         catch (Exception ex)
@@ -225,7 +233,10 @@ public sealed class MelonLoaderDualStoreSync
         Directory.CreateDirectory(destDir);
         foreach (var file in Directory.GetFiles(sourceDir))
         {
-            File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+            var name = Path.GetFileName(file);
+            if (SkipFileNames.Contains(name))
+                continue;
+            File.Copy(file, Path.Combine(destDir, name), overwrite: true);
         }
 
         foreach (var dir in Directory.GetDirectories(sourceDir))

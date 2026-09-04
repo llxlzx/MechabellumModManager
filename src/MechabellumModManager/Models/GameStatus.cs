@@ -1,6 +1,13 @@
 namespace MechabellumModManager.Models;
 
-public enum GameStatusKind { GameMissing, GameOkLoaderMissing, LoaderPartial, Ready }
+public enum GameStatusKind
+{
+    GameMissing,
+    GameOkLoaderMissing,
+    LoaderPartial,
+    LoaderPresentAssembliesMissing,
+    Ready
+}
 
 public sealed class GameStatus
 {

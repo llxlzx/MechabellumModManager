@@ -26,7 +26,7 @@ public class MelonLoaderInstallerTests
             result.Success.Should().BeTrue(result.Message);
             Directory.Exists(Path.Combine(game, "MelonLoader")).Should().BeTrue();
             File.Exists(Path.Combine(game, "version.dll")).Should().BeTrue();
-            new GameDetector().Detect(game).Kind.Should().Be(GameStatusKind.Ready);
+            new GameDetector().Detect(game).Kind.Should().Be(GameStatusKind.LoaderPresentAssembliesMissing);
         }
         finally
         {

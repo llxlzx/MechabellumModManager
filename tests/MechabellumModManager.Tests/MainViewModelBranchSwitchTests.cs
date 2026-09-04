@@ -31,6 +31,7 @@ public class MainViewModelBranchSwitchTests
         vm.IsReady.Should().BeTrue();
         vm.CanDeployOrLaunch.Should().BeTrue();
         vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeTrue();
+        vm.IsDirty = true;
         vm.ApplyProfileCommand.CanExecute(null).Should().BeTrue();
     }
 
@@ -909,7 +910,8 @@ public class MainViewModelBranchSwitchTests
             Directory.CreateDirectory(root);
             File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
             File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
-            Directory.CreateDirectory(Path.Combine(root, "MelonLoader"));
+            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "Il2CppAssemblies"));
+            File.WriteAllText(Path.Combine(root, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
             File.WriteAllText(Path.Combine(root, "version.dll"), "");
         }
 
@@ -919,7 +921,8 @@ public class MainViewModelBranchSwitchTests
             File.WriteAllText(Path.Combine(dir, "Mechabellum.exe"), "exe");
             File.WriteAllText(Path.Combine(dir, "GameAssembly.dll"), "dll");
             File.WriteAllText(Path.Combine(dir, "marker.txt"), marker);
-            Directory.CreateDirectory(Path.Combine(dir, "MelonLoader"));
+            Directory.CreateDirectory(Path.Combine(dir, "MelonLoader", "Il2CppAssemblies"));
+            File.WriteAllText(Path.Combine(dir, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
             File.WriteAllText(Path.Combine(dir, "version.dll"), "");
         }
     }
