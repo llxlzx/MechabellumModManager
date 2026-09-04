@@ -315,6 +315,38 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void Teardown_move_fail_restores_junction_and_keeps_enabled()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        File.Delete(Path.Combine(h.OfficialStore, "Mechabellum.exe"));
+
+        var result = h.Svc.TryTeardown(deleteOtherStore: false);
+
+        result.Success.Should().BeFalse();
+        h.Junctions.IsJunction(h.SteamLink).Should().BeTrue();
+        h.Junctions.ResolveTarget(h.SteamLink).Should().Be(Path.GetFullPath(h.OfficialStore));
+        Directory.Exists(h.OfficialStore).Should().BeTrue();
+        h.Svc.LoadConfig().Enabled.Should().BeTrue();
+        File.Exists(h.Paths.BranchSwitchJournalPath).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Teardown_rollback_fail_writes_journal()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        File.Delete(Path.Combine(h.OfficialStore, "Mechabellum.exe"));
+        h.Junctions.RemainingCreateFailures = 1;
+
+        var result = h.Svc.TryTeardown(deleteOtherStore: false);
+
+        result.Success.Should().BeFalse();
+        h.Svc.LoadConfig().Enabled.Should().BeTrue();
+        File.Exists(h.Paths.BranchSwitchJournalPath).Should().BeTrue();
+        h.Junctions.IsJunction(h.SteamLink).Should().BeFalse();
+        Directory.Exists(h.OfficialStore).Should().BeTrue();
+    }
+
+    [Fact]
     public void ArchiveCurrentAs_already_junction_onto_dest_unlinks_only()
     {
         using var h = Harness.CreateReadyDualFolder();

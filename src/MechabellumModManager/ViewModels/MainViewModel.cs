@@ -174,6 +174,15 @@ public sealed partial class MainViewModel : ObservableObject
         var config = LoadConfig();
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
 
+        try
+        {
+            LoadBranchSwitchState();
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"双服配置读取失败，已忽略：{ex.Message}");
+        }
+
         _gamePath = ResolveInitialGamePath(config.GamePath);
         _launchMode = config.LaunchMode;
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
@@ -184,7 +193,20 @@ public sealed partial class MainViewModel : ObservableObject
             SaveConfig(config);
         }
 
-        ReloadProfiles(selectId: config.ActiveProfileId);
+        var selectId = config.ActiveProfileId;
+        if (BranchSwitchEnabled)
+            selectId = ActiveGameBranch == GameBranch.Official ? OfficialProfileId : BetaProfileId;
+
+        _suppressBranchSwitchSave = true;
+        try
+        {
+            ReloadProfiles(selectId: selectId);
+            SelectBoundProfile(ActiveGameBranch);
+        }
+        finally
+        {
+            _suppressBranchSwitchSave = false;
+        }
         RefreshStatus();
         ReloadMods();
         RebuildFilterOptionLabels();
@@ -195,15 +217,6 @@ public sealed partial class MainViewModel : ObservableObject
         UpdateFirstAssemblyWarning();
         TryAutoImportFromGame();
 
-        try
-        {
-            LoadBranchSwitchState();
-        }
-        catch (Exception ex)
-        {
-            AppendLog($"双服配置读取失败，已忽略：{ex.Message}");
-        }
-
         if (string.IsNullOrWhiteSpace(_gamePath))
             AppendLog("未自动找到游戏目录。请在「设置」中浏览选择 Mechabellum 安装路径。");
         else if (!SteamGameLocator.LooksLikeGameRoot(_gamePath))
@@ -212,14 +225,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     string ResolveInitialGamePath(string? configured)
     {
+        var branchCfg = _branchSwitch.LoadConfig();
+        var skipLocator = BranchSwitchEnabled
+            || IsBranchWizardBlocking
+            || File.Exists(_paths.BranchSwitchJournalPath);
+
+        if ((BranchSwitchEnabled || skipLocator) && !string.IsNullOrWhiteSpace(branchCfg.SteamLinkPath))
+            return Path.GetFullPath(branchCfg.SteamLinkPath);
+
         if (SteamGameLocator.LooksLikeGameRoot(configured))
             return Path.GetFullPath(configured!);
 
-        var found = _steamLocator.TryFind();
-        if (!string.IsNullOrWhiteSpace(found))
+        if (!skipLocator)
         {
-            AppendLog($"已自动定位游戏目录：{found}");
-            return found;
+            var found = _steamLocator.TryFind();
+            if (!string.IsNullOrWhiteSpace(found))
+            {
+                AppendLog($"已自动定位游戏目录：{found}");
+                return found;
+            }
         }
 
         return configured?.Trim() ?? "";
@@ -245,6 +269,20 @@ public sealed partial class MainViewModel : ObservableObject
         IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
 
     public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
+
+    public bool CanSwitchGameBranch =>
+        BranchSwitchEnabled && !IsAwaitingSteamSettle && !IsBranchSwitchBusy;
+
+    public bool CanStartBranchWizard =>
+        !IsAwaitingSteamSettle && !IsBranchSwitchBusy;
+
+    public bool CanTeardownBranchSwitch =>
+        BranchSwitchEnabled && !IsAwaitingSteamSettle && !IsBranchSwitchBusy;
+
+    public string SettleConfirmButtonText =>
+        DegradeToManualBeta
+            ? LocalizationService.T("BranchSwitchConfirmManual")
+            : LocalizationService.T("BranchSwitchConfirmSettle");
 
     public bool IsBranchWizardBlocking =>
         BranchWizardStep is not BranchWizardStep.None and not BranchWizardStep.Ready;
@@ -777,7 +815,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     async Task StartBranchWizard()
     {
-        if (IsBranchSwitchBusy) return;
+        if (IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
 
         IsBranchSwitchBusy = true;
         try
@@ -818,7 +856,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     async Task TeardownBranchSwitch()
     {
-        if (!BranchSwitchEnabled || IsBranchSwitchBusy) return;
+        if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
         if (!Confirm("确定解除双服配置？当前旁路会改回游戏目录，须退出 Steam 与游戏。"))
             return;
 
@@ -845,9 +883,20 @@ public sealed partial class MainViewModel : ObservableObject
         _confirmChoice?.Invoke(message, defaultResult) ?? _confirm(message);
 
     [RelayCommand]
-    void ConfirmManualBeta()
+    async Task ConfirmManualBeta()
     {
         if (!IsAwaitingSteamSettle && !DegradeToManualBeta) return;
+
+        for (var i = 0; i < 8 && _processProbe.IsSteamRunning(); i++)
+            await _delay(TimeSpan.FromMilliseconds(250)).ConfigureAwait(true);
+
+        if (_processProbe.IsSteamRunning())
+        {
+            _notify("Steam 仍在运行，请等待结算完成后再部署。");
+            if (!Confirm("Steam 仍在运行。仍要部署？文件可能被占用。"))
+                return;
+        }
+
         DeployBoundProfileAndClearSettle();
     }
 
@@ -1982,7 +2031,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     async Task SwitchToBranchAsync(GameBranch target)
     {
-        if (!BranchSwitchEnabled || IsBranchSwitchBusy) return;
+        if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
         if (!Confirm("切换游戏分支需要退出 Steam 和游戏。是否继续？"))
             return;
 
@@ -2012,19 +2061,7 @@ public sealed partial class MainViewModel : ObservableObject
             SelectBoundProfile(target);
 
             var silent = _branchSwitch.TrySilentSetBeta(target);
-            TryStartSteam();
-            EnterSteamSettle();
-
-            if (!silent.Success || silent.DegradeToManualBeta)
-            {
-                DegradeToManualBeta = true;
-                AppendLog(string.IsNullOrWhiteSpace(silent.Message)
-                    ? "未能自动对齐 Steam Beta，请在 Steam 中手动选择分支后确认。"
-                    : silent.Message);
-                return;
-            }
-
-            DegradeToManualBeta = false;
+            SettleAfterSilentBeta(silent);
         }
         catch (Exception ex)
         {
@@ -2216,20 +2253,7 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshStatus();
 
         var silent = _branchSwitch.TrySilentSetBeta(current);
-        TryStartSteam();
-        EnterSteamSettle();
-
-        if (!silent.Success || silent.DegradeToManualBeta)
-        {
-            DegradeToManualBeta = true;
-            AppendLog(string.IsNullOrWhiteSpace(silent.Message)
-                ? "未能自动对齐 Steam Beta，请在 Steam 中手动选择分支后确认。"
-                : silent.Message);
-            return;
-        }
-
-        DegradeToManualBeta = false;
-        AppendLog("双服配置向导已完成，正在等待 Steam 结算。");
+        SettleAfterSilentBeta(silent, "双服配置向导已完成，正在等待 Steam 结算。");
     }
 
     async Task<bool> RunTeardownCoreAsync(bool deleteOtherStore)
@@ -2359,6 +2383,27 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshBranchStatusText();
     }
 
+    void SettleAfterSilentBeta(BranchOperationResult silent, string? successLog = null)
+    {
+        EnterSteamSettle();
+        if (!silent.Success || silent.DegradeToManualBeta)
+        {
+            DegradeToManualBeta = true;
+            if (!string.IsNullOrWhiteSpace(silent.Message))
+                AppendLog(silent.Message);
+            const string noStart =
+                "未能自动对齐 Steam Beta。请先手动选择分支后再启动 Steam；对齐完成前请勿启动 Steam。";
+            AppendLog(noStart);
+            _notify(noStart);
+            return;
+        }
+
+        DegradeToManualBeta = false;
+        TryStartSteam();
+        if (!string.IsNullOrWhiteSpace(successLog))
+            AppendLog(successLog);
+    }
+
     void DeployBoundProfileAndClearSettle()
     {
         SelectBoundProfile(ActiveGameBranch);
@@ -2407,6 +2452,9 @@ public sealed partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(CanDeployOrLaunch));
         OnPropertyChanged(nameof(IsBranchWizardBlocking));
+        OnPropertyChanged(nameof(CanSwitchGameBranch));
+        OnPropertyChanged(nameof(CanStartBranchWizard));
+        OnPropertyChanged(nameof(CanTeardownBranchSwitch));
         ApplyProfileCommand.NotifyCanExecuteChanged();
         ApplyAndLaunchCommand.NotifyCanExecuteChanged();
     }
@@ -2440,8 +2488,11 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowConfirmManualBeta));
     }
 
-    partial void OnDegradeToManualBetaChanged(bool value) =>
+    partial void OnDegradeToManualBetaChanged(bool value)
+    {
         OnPropertyChanged(nameof(ShowConfirmManualBeta));
+        OnPropertyChanged(nameof(SettleConfirmButtonText));
+    }
 
     partial void OnIsBranchSwitchBusyChanged(bool value) => NotifyBranchGates();
 

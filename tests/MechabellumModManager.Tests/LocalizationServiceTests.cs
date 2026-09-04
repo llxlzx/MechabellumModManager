@@ -47,6 +47,7 @@ public class LocalizationServiceTests
     [InlineData("BranchSwitchStartWizard")]
     [InlineData("BranchSwitchTeardown")]
     [InlineData("BranchSwitchConfirmManual")]
+    [InlineData("BranchSwitchConfirmSettle")]
     [InlineData("BranchSwitchHint")]
     [InlineData("BranchStatusUnconfigured")]
     [InlineData("BranchStatusIncomplete")]

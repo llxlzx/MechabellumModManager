@@ -83,6 +83,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string BranchSwitchStartWizard => T("BranchSwitchStartWizard");
     public string BranchSwitchTeardown => T("BranchSwitchTeardown");
     public string BranchSwitchConfirmManual => T("BranchSwitchConfirmManual");
+    public string BranchSwitchConfirmSettle => T("BranchSwitchConfirmSettle");
     public string BranchSwitchHint => T("BranchSwitchHint");
 
     public string CategoryLabel(Models.ModCategory category) => category switch

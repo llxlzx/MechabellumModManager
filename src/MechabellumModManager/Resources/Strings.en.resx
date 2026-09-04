@@ -209,6 +209,7 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Confirm manual Beta</value></data>
+  <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Confirm Steam is aligned</value></data>
   <data name="BranchSwitchHint" xml:space="preserve"><value>Uses about two copies of the game; Steam must exit; will try to auto-align Beta and fall back to manual selection</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>

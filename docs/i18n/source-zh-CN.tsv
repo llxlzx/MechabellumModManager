@@ -80,6 +80,7 @@ BranchSwitchToBeta	切换到测试服
 BranchSwitchStartWizard	开始双服配置向导
 BranchSwitchTeardown	解除双服配置
 BranchSwitchConfirmManual	已手选 Beta，继续
+BranchSwitchConfirmSettle	确认 Steam 已对齐，继续
 BranchSwitchHint	约两份游戏空间；须退出 Steam；将尝试自动对齐 Beta，失败可手选
 BranchStatusUnconfigured	未配置
 BranchStatusIncomplete	配置未完成
