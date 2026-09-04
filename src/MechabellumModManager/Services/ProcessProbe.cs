@@ -2,7 +2,12 @@ using System.Diagnostics;
 
 namespace MechabellumModManager.Services;
 
-public sealed class ProcessProbe
+public interface ISteamRunningProbe
+{
+    bool IsSteamRunning();
+}
+
+public sealed class ProcessProbe : ISteamRunningProbe
 {
     public bool IsGameRunning()
     {
