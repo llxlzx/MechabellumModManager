@@ -48,8 +48,13 @@ public sealed class BranchSwitchService
         _betaEditor = betaEditor;
     }
 
-    public BranchSwitchConfig LoadConfig() =>
-        _store.LoadOrDefault(_paths.BranchSwitchConfigPath, () => new BranchSwitchConfig());
+    public BranchSwitchConfig LoadConfig()
+    {
+        var cfg = _store.LoadOrDefault(_paths.BranchSwitchConfigPath, () => new BranchSwitchConfig());
+        if (string.IsNullOrWhiteSpace(cfg.BetaBranchName))
+            cfg.BetaBranchName = BranchSwitchConfig.DefaultSteamBetaBranchName;
+        return cfg;
+    }
 
     public void SaveConfig(BranchSwitchConfig config) =>
         _store.Save(_paths.BranchSwitchConfigPath, config);

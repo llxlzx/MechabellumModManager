@@ -201,7 +201,7 @@
   <data name="ExtraTagsHint" xml:space="preserve"><value>Доп. теги (через запятую)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Официальная / Тестовая</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Имя тестовой ветки (как в свойствах Steam)</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Имя беты (по умолчанию public_test; меняйте редко)</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
@@ -210,7 +210,7 @@
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Тестовая выбрана в Steam — продолжить</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam завершил переключение — продолжить</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Нужно около двух полных копий игры. Сначала закройте Steam и игру. Попробуем автоматически сменить тестовую ветку Steam; при неудаче выберите её вручную в Steam.</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Нужно около двух копий игры. Имя беты по умолчанию public_test (Steam → Свойства → Бета; обычно не меняйте). Сначала сохраняется текущая установка — официальная не перезаписывается.</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Ожидание завершения Steam</value></data>
@@ -275,9 +275,13 @@
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Удалить профиль «{0}»? Это нельзя отменить.</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>Удалить «{0}» из библиотеки? Также уберётся из всех профилей.</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Для смены ветки нужно закрыть Steam и игру. Продолжить?</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Для двух каталогов нужно около двух полных копий игры; сначала закройте Steam и игру. Начать?</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Официальная и тестовая ветки хранятся в отдельных папках (около двух полных копий).
+Имя бета Steam по умолчанию public_test (можно изменить в настройках).
+Сначала сохраняется текущая установка, затем скачивается другая — тестовая не перезапишет официальную.
+Сначала закройте Steam и игру. Начать?</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Сейчас установлена официальная ветка? «Нет» значит, что сейчас тестовая.</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Скачайте другую ветку в Steam. После загрузки закройте Steam и нажмите «Да». «Нет» приостановит мастер (можно продолжить позже).</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Текущая установка перенесена в отдельную папку. В Steam скачайте другую ветку (пишет в путь игры Steam).
+После загрузки закройте Steam и нажмите «Да». «Нет» приостановит мастер.</value></data>
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Не удалось автоматически выставить тестовый канал Steam для другой ветки. Выберите вручную в Steam, затем скачайте.</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Мастер двух каталогов приостановлен; можно продолжить позже.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка официальная/тестовая снята.</value></data>
@@ -301,7 +305,7 @@
   <data name="TipToggleHighRisk" xml:space="preserve"><value>Нажмите, чтобы временно переключить риск; после обновления снова по ключевым словам в имени</value></data>
   <data name="TipDeleteFromLibrary" xml:space="preserve"><value>Удалить пакет из библиотеки</value></data>
   <data name="AppVersionFormat" xml:space="preserve"><value>Версия {0}</value></data>
-  <data name="PromptBetaBranchName" xml:space="preserve"><value>Введите имя тестовой ветки (как в Steam → Свойства → Бета)</value></data>
+  <data name="PromptBetaBranchName" xml:space="preserve"><value>Имя тестовой/бета-ветки Steam (обычно public_test; не путь к папке). Меняйте только если отличается от Steam → Свойства → Бета.</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>Имя тестовой ветки не указано; мастер отменён.</value></data>
   <data name="LabelSummary" xml:space="preserve"><value>Описание</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Путь к игре должен быть в steamapps\common\Mechabellum.</value></data>

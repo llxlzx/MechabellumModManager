@@ -201,7 +201,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Stichwörter (kommagetrennt)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Offiziell / Test</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Testzweig-Name (wie in Steam-Eigenschaften)</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Beta-Name (Standard public_test; nur bei Bedarf ändern)</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
@@ -210,7 +210,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Testzweig in Steam gewählt — weiter</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam-Wechsel fertig — weiter</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Benötigt etwa zwei volle Spielinstallationen Speicherplatz. Steam und Spiel vorher beenden. Versucht automatischen Testzweig-Wechsel; sonst manuell in Steam wählen.</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Etwa zwei Installationen Speicherplatz. Beta-Name standardmäßig public_test (Steam → Eigenschaften → Betas; meist belassen). Zuerst wird die aktuelle Installation gesichert — Offiziell wird nicht überschrieben.</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Warte auf Steam-Abschluss</value></data>
@@ -275,9 +275,13 @@ GitHub-Releases-Seite öffnen?</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Profil „{0}“ löschen? Dies kann nicht rückgängig gemacht werden.</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>„{0}“ aus der Bibliothek entfernen? Wird auch aus allen Profilen entfernt.</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Zum Wechseln des Spielzweigs Steam und Spiel beenden. Fortfahren?</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Offiziell/Test-Doppelordner benötigen etwa zwei volle Spielinstallationen. Steam und Spiel vorher beenden. Starten?</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Für Offiziell und Test werden getrennte Ordner behalten (etwa zwei volle Installationen).
+Steam-Beta-Name standardmäßig public_test (in den Einstellungen änderbar).
+Zuerst wird die aktuelle Installation gesichert, danach der andere Zweig geladen — Test überschreibt Offiziell nicht.
+Steam und Spiel vorher beenden. Starten?</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Ist die aktuelle Installation Offiziell? Nein = aktuell Test.</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Laden Sie den anderen Zweig in Steam. Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten (später fortsetzbar).</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Die aktuelle Installation wurde in einen eigenen Ordner verschoben. Laden Sie den anderen Zweig in Steam (schreibt in den Steam-Spielepfad).
+Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></data>
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Der Steam-Testzweig des anderen Zweigs konnte nicht automatisch gesetzt werden. In Steam manuell wählen, dann laden.</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Doppelordner-Assistent pausiert; später fortsetzbar.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Offiziell/Test-Doppelordner entfernt.</value></data>
@@ -301,7 +305,7 @@ GitHub-Releases-Seite öffnen?</value></data>
   <data name="TipToggleHighRisk" xml:space="preserve"><value>Klicken zum vorübergehenden Umschalten; nach Aktualisierung erneut aus Namens-Stichworten</value></data>
   <data name="TipDeleteFromLibrary" xml:space="preserve"><value>Dieses Paket aus der Bibliothek entfernen</value></data>
   <data name="AppVersionFormat" xml:space="preserve"><value>Version {0}</value></data>
-  <data name="PromptBetaBranchName" xml:space="preserve"><value>Testzweig-Name eingeben (genau wie unter Steam → Eigenschaften → Betas)</value></data>
+  <data name="PromptBetaBranchName" xml:space="preserve"><value>Steam-Beta-/Testzweig-Name (meist public_test; kein Ordnerpfad). Nur ändern, wenn abweichend von Steam → Eigenschaften → Betas.</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>Kein Testzweig-Name; Assistent abgebrochen.</value></data>
   <data name="LabelSummary" xml:space="preserve"><value>Beschreibung</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Der Spielepfad muss unter steamapps\common\Mechabellum liegen.</value></data>
