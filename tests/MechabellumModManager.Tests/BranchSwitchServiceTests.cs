@@ -122,7 +122,9 @@ public class BranchSwitchServiceTests
 	"buildid"		"200"
 	"TargetBuildID"		"100"
 	"BytesToDownload"		"123"
+	"BytesDownloaded"		"1"
 	"BytesToStage"		"456"
+	"BytesStaged"		"2"
 	"UserConfig"
 	{
 		"language"		"english"
@@ -131,6 +133,31 @@ public class BranchSwitchServiceTests
 """);
         h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Success.Should().BeFalse();
         File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Snapshot_accepts_completed_transfer_counters()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        File.WriteAllText(h.AcfPath, """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"100"
+	"TargetBuildID"		"100"
+	"BytesToDownload"		"6523182176"
+	"BytesDownloaded"		"6523182176"
+	"BytesToStage"		"13781515715"
+	"BytesStaged"		"13781515715"
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+}
+""");
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Success.Should().BeTrue();
+        File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official)).Should().BeTrue();
     }
 
     [Fact]
