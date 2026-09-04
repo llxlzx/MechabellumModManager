@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Windows;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -35,6 +36,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly AssemblyInspector _assemblyInspector;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
+    readonly Func<string, MessageBoxResult, bool>? _confirmChoice;
     readonly Action<string> _notify;
     readonly Func<string?>? _browseFolder;
     readonly Func<string?>? _openDll;
@@ -95,7 +97,8 @@ public sealed partial class MainViewModel : ObservableObject
         IProcessProbe? processProbe = null,
         IProcessStarter? processStarter = null,
         Func<TimeSpan, Task>? delay = null,
-        TimeSpan? steamExitTimeout = null)
+        TimeSpan? steamExitTimeout = null,
+        Func<string, MessageBoxResult, bool>? confirmChoice = null)
     {
         _paths = paths;
         _store = store;
@@ -114,6 +117,7 @@ public sealed partial class MainViewModel : ObservableObject
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
+        _confirmChoice = confirmChoice;
         _notify = notify ?? (_ => { });
         _browseFolder = browseFolder;
         _openDll = openDll;
@@ -714,7 +718,7 @@ public sealed partial class MainViewModel : ObservableObject
                 var prompt =
                     "检测到游戏目录中已有非本管理器托管的同名文件。\n" +
                     "确认覆盖并接管这些文件？\n\n" + sample + more;
-                if (_confirm(prompt))
+                if (Confirm(prompt))
                     result = _deploy.Apply(
                         profile,
                         packages,
@@ -780,7 +784,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             if (BranchSwitchEnabled)
             {
-                if (!_confirm("已启用双服。重建将先安全解除（保留另一旁路），再重新配置。是否继续？"))
+                if (!Confirm("已启用双服。重建将先安全解除（保留另一旁路），再重新配置。是否继续？"))
                     return;
                 if (!await RunTeardownCoreAsync(deleteOtherStore: false).ConfigureAwait(true))
                     return;
@@ -815,10 +819,10 @@ public sealed partial class MainViewModel : ObservableObject
     async Task TeardownBranchSwitch()
     {
         if (!BranchSwitchEnabled || IsBranchSwitchBusy) return;
-        if (!_confirm("确定解除双服配置？当前旁路会改回游戏目录，须退出 Steam 与游戏。"))
+        if (!Confirm("确定解除双服配置？当前旁路会改回游戏目录，须退出 Steam 与游戏。"))
             return;
 
-        var deleteOther = _confirm("是否删除另一旁路目录？未使用的服文件将被永久删除。（建议选否）");
+        var deleteOther = Confirm("是否删除另一旁路目录？未使用的服文件将被永久删除。（建议选否）", MessageBoxResult.No);
         IsBranchSwitchBusy = true;
         try
         {
@@ -836,6 +840,9 @@ public sealed partial class MainViewModel : ObservableObject
             RefreshBranchStatusText();
         }
     }
+
+    bool Confirm(string message, MessageBoxResult defaultResult = MessageBoxResult.Yes) =>
+        _confirmChoice?.Invoke(message, defaultResult) ?? _confirm(message);
 
     [RelayCommand]
     void ConfirmManualBeta()
@@ -892,7 +899,7 @@ public sealed partial class MainViewModel : ObservableObject
         var picked = _promptReport?.Invoke(modName);
         if (picked is null) return Task.CompletedTask;
 
-        if (!_confirm(Ui.ReportConfirm))
+        if (!Confirm(Ui.ReportConfirm))
             return Task.CompletedTask;
 
         _reporting = true;
@@ -959,7 +966,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (!_promptSubmitGuide())
                 return;
         }
-        else if (!_confirm(Ui.SubmitModConfirm))
+        else if (!Confirm(Ui.SubmitModConfirm))
         {
             return;
         }
@@ -1271,13 +1278,13 @@ public sealed partial class MainViewModel : ObservableObject
             if (result.Kind == UpdateCheckKind.UpdateAvailable && !string.IsNullOrWhiteSpace(result.SetupUrl))
             {
                 var detail = $"{result.Message}\n\n{result.Notes}\n\n是否打开下载链接？\n{result.SetupUrl}";
-                if (_confirm(detail))
+                if (Confirm(detail))
                     TryOpenUrl(result.SetupUrl!);
             }
             else if (result.Kind == UpdateCheckKind.Failed)
             {
                 var fallback = $"https://github.com/{UpdateChecker.Owner}/{UpdateChecker.Repo}/releases/latest";
-                if (_confirm($"{result.Message}\n\n是否打开 GitHub Releases 页面？"))
+                if (Confirm($"{result.Message}\n\n是否打开 GitHub Releases 页面？"))
                     TryOpenUrl(fallback);
             }
         }
@@ -1383,7 +1390,7 @@ public sealed partial class MainViewModel : ObservableObject
     void DeleteProfile()
     {
         if (SelectedProfile is null) return;
-        if (!_confirm($"确定删除方案「{SelectedProfile.Name}」？此操作不可撤销。"))
+        if (!Confirm($"确定删除方案「{SelectedProfile.Name}」？此操作不可撤销。"))
             return;
         try
         {
@@ -1404,7 +1411,7 @@ public sealed partial class MainViewModel : ObservableObject
     void DeleteMod(ModItemViewModel? mod)
     {
         if (mod is null) return;
-        if (!_confirm($"确定从库中删除「{mod.DisplayName}」？将同时从所有方案中移除。"))
+        if (!Confirm($"确定从库中删除「{mod.DisplayName}」？将同时从所有方案中移除。"))
             return;
         try
         {
@@ -1976,7 +1983,7 @@ public sealed partial class MainViewModel : ObservableObject
     async Task SwitchToBranchAsync(GameBranch target)
     {
         if (!BranchSwitchEnabled || IsBranchSwitchBusy) return;
-        if (!_confirm("切换游戏分支需要退出 Steam 和游戏。是否继续？"))
+        if (!Confirm("切换游戏分支需要退出 Steam 和游戏。是否继续？"))
             return;
 
         IsBranchSwitchBusy = true;
@@ -2033,10 +2040,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     async Task RunWizardFromStartAsync()
     {
-        if (!_confirm("双服配置需要约两份游戏磁盘空间，并且必须退出 Steam 与游戏。是否开始？"))
+        if (!Confirm("双服配置需要约两份游戏磁盘空间，并且必须退出 Steam 与游戏。是否开始？"))
             return;
 
-        var current = _confirm("当前安装的是正式服吗？选「否」表示当前是测试服。")
+        var current = Confirm("当前安装的是正式服吗？选「否」表示当前是测试服。")
             ? GameBranch.Official
             : GameBranch.Beta;
 
@@ -2157,7 +2164,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         TryStartSteam();
 
-        if (!_confirm("请在 Steam 中下载另一服。下载完成后请退出 Steam，再点确定继续。取消将暂停向导（稍后可继续）。"))
+        if (!Confirm("请在 Steam 中下载另一服。下载完成后请退出 Steam，再点确定继续。取消将暂停向导（稍后可继续）。"))
         {
             AppendLog("双服向导已暂停，可稍后继续。");
             return;
