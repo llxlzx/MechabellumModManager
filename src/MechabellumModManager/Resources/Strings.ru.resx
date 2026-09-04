@@ -274,7 +274,8 @@
 Открыть страницу GitHub Releases?</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Удалить профиль «{0}»? Это нельзя отменить.</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>Удалить «{0}» из библиотеки? Также уберётся из всех профилей.</value></data>
-  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Для смены ветки нужно закрыть Steam и игру. Продолжить?</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Смена официальной/тестовой ветки закроет Steam и игру, затем сменит связь папки и бета Steam.
+Убедитесь, что Steam не скачивает/не обновляет игру — принудительный выход во время загрузки может сломать клиент Steam. Продолжить?</value></data>
   <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Официальная и тестовая ветки хранятся в отдельных папках (около двух полных копий).
 Имя бета Steam по умолчанию public_test (можно изменить в настройках).
 Сначала сохраняется текущая установка, затем скачивается другая — тестовая не перезапишет официальную.
@@ -319,6 +320,7 @@
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Не удалось снять двухкаталожную настройку.</value></data>
   <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Мастер двух каталогов завершён; ожидаем завершения смены ветки в Steam.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Не удалось запросить выход из Steam: {0}</value></data>
-  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam или игра ещё запущены; смена ветки прервана.</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam или игра ещё запущены (включая steamwebhelper). Завершите процессы в диспетчере задач и повторите.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Не удалось переключить папки.</value></data>
+  <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Уже на этой ветке (папка и бета Steam совпадают). Переключение не нужно.</value></data>
 </root>

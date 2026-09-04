@@ -276,7 +276,8 @@
 是否打开 GitHub Releases 页面？</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>确定删除方案「{0}」？此操作不可撤销。</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>确定从库中删除「{0}」？将同时从所有方案中移除。</value></data>
-  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>切换游戏分支需要退出 Steam 和游戏。是否继续？</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>切换正式/测试服会先退出 Steam 与游戏，再改目录联接与 Steam 测试分支设置。
+请确认 Steam 没有正在下载或更新本游戏；下载中途强制退出可能导致 Steam 异常。是否继续？</value></data>
   <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>将为正式服与测试服各保留一份独立游戏目录（约需两份安装空间）。
 测试分支默认使用 Steam 名称 public_test（可在设置中修改）。
 步骤：先保存你现在的这一份，再下载另一服；不会用测试服覆盖掉正式服。
@@ -321,6 +322,7 @@
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>解除双目录配置失败。</value></data>
   <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>双目录向导已完成，正在等待 Steam 完成分支切换。</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>请求退出 Steam 失败：{0}</value></data>
-  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 或游戏仍在运行，已中止切服。</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 或游戏仍在运行（含 steamwebhelper）。请在任务管理器中结束相关进程后再切服。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
+  <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>当前已是该服（目录与 Steam 测试分支已对齐），无需再次切换。</value></data>
 </root>

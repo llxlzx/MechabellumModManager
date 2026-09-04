@@ -130,6 +130,20 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void SilentSetBeta_skips_rewrite_when_key_already_matches()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Cfg.BetaBranchName = "oldbeta";
+        h.Svc.SaveConfig(h.Cfg);
+        var before = File.ReadAllText(h.AcfPath);
+
+        var result = h.Svc.TrySilentSetBeta(GameBranch.Beta);
+
+        result.Success.Should().BeTrue();
+        File.ReadAllText(h.AcfPath).Should().Be(before);
+    }
+
+    [Fact]
     public void SilentSetBeta_clears_beta_key_for_official()
     {
         using var h = Harness.CreateReadyDualFolder();

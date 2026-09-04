@@ -86,8 +86,13 @@ public class MainViewModelBranchSwitchTests
             ActiveBranch = GameBranch.Official,
             OfficialProfileId = "default",
             BetaProfileId = "default",
-            BetaBranchName = ""
+            BetaBranchName = "public_test"
         });
+
+        // Force silent Beta write failure (manifest missing).
+        var acf = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(fx.SteamLink))!, "appmanifest_669330.acf");
+        if (File.Exists(acf))
+            File.Delete(acf);
 
         var starter = new RecordingStarter();
         var notes = new List<string>();
@@ -121,7 +126,7 @@ public class MainViewModelBranchSwitchTests
             ActiveBranch = GameBranch.Official,
             OfficialProfileId = "default",
             BetaProfileId = "default",
-            BetaBranchName = ""
+            BetaBranchName = "public_test"
         });
 
         var vm = fx.CreateVm(confirm: _ => true);
@@ -176,6 +181,50 @@ public class MainViewModelBranchSwitchTests
         vm.IsAwaitingSteamSettle.Should().BeFalse();
         File.ReadAllText(Path.Combine(fx.SteamLink, "marker.txt")).Should().Be("official");
         File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SwitchToBeta_when_already_aligned_skips_steam_restart()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.Junctions.DeleteJunction(fx.SteamLink);
+        fx.Junctions.CreateJunction(fx.SteamLink, fx.BetaStore);
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(fx.SteamLink))!, "appmanifest_669330.acf"),
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"UserConfig"
+            	{
+            		"language"		"english"
+            		"BetaKey"		"public_test"
+            	}
+            }
+            """);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Beta,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var starter = new RecordingStarter();
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirm: _ => true, starter: starter, notify: notes.Add);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+
+        starter.Starts.Should().BeEmpty();
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
+        (vm.LogText + string.Join('\n', notes)).Should().Contain("已是该服");
     }
 
     [Fact]
@@ -286,7 +335,8 @@ public class MainViewModelBranchSwitchTests
         var vm = fx.CreateVm(
             confirm: msg =>
             {
-                if (msg.Contains("下载", StringComparison.Ordinal))
+                if (msg.Contains("点「是」继续", StringComparison.Ordinal)
+                    || msg.Contains("click Yes", StringComparison.OrdinalIgnoreCase))
                 {
                     Directory.Exists(fx.SteamLink).Should().BeFalse();
                     fx.Junctions.IsJunction(fx.SteamLink).Should().BeFalse();
@@ -298,6 +348,7 @@ public class MainViewModelBranchSwitchTests
             },
             promptText: _ => "publicbeta");
         vm.GamePath = fx.SteamLink;
+        vm.BetaBranchName = "publicbeta";
 
         await vm.StartBranchWizardCommand.ExecuteAsync(null);
 
@@ -807,8 +858,10 @@ public class MainViewModelBranchSwitchTests
                 branchSwitch: _branchSwitch,
                 processProbe: Probe,
                 processStarter: starter ?? new RecordingStarter(),
-                delay: delay,
-                steamExitTimeout: steamExitTimeout,
+                delay: delay ?? (_ => Task.CompletedTask),
+                steamExitTimeout: steamExitTimeout ?? TimeSpan.FromMilliseconds(50),
+                steamExitCooldown: TimeSpan.Zero,
+                steamRestartCooldown: TimeSpan.Zero,
                 confirmChoice: confirmChoice);
         }
 
