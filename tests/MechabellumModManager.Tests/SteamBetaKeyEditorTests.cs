@@ -130,8 +130,49 @@ public class SteamBetaKeyEditorTests
             text.Should().Contain("\"language\"\t\t\"schinese\"");
             text.Should().Contain("\"DisabledDLC\"\t\t\"none\"");
             text.Should().Contain("\"MountedConfig\"");
-            RegexCount(text, "\"BetaKey\"").Should().Be(1);
+            RegexCount(text, "\"BetaKey\"").Should().Be(2);
             editor.ReadBetaKey(acf).Should().Be("publicbeta");
+            editor.ReadMountedBetaKey(acf).Should().Be("publicbeta");
+        }
+        finally
+        {
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact]
+    public void SetBetaKey_syncs_MountedConfig_BetaKey()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "mmm-acf-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var acf = Path.Combine(dir, "appmanifest_669330.acf");
+            File.WriteAllText(acf, """
+"AppState"
+{
+	"appid"		"669330"
+	"UserConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"public_test"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"public_test"
+	}
+}
+""");
+            var editor = new SteamBetaKeyEditor(new FakeProbe { SteamRunning = false });
+
+            editor.BackupAndSetBetaKey(acf, null, Path.Combine(dir, "bak")).Success.Should().BeTrue();
+
+            var text = File.ReadAllText(acf);
+            text.Should().NotContain("BetaKey");
+            editor.ReadBetaKey(acf).Should().BeNull();
+            editor.ReadMountedBetaKey(acf).Should().BeNull();
         }
         finally
         {

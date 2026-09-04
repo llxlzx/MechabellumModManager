@@ -22,6 +22,12 @@ public sealed class PathsService
     public string BranchSwitchConfigPath => Path.Combine(DataRoot, "branch-switch.json");
     public string BranchSwitchJournalPath => Path.Combine(DataRoot, "branch-switch-journal.json");
     public string LogsDir => Path.Combine(DataRoot, "logs");
+    public string SteamAcfSnapshotsDir => Path.Combine(DataRoot, "steam-acf-snapshots");
+
+    public string GetSteamAcfSnapshotPath(GameBranch branch) =>
+        Path.Combine(
+            SteamAcfSnapshotsDir,
+            branch == GameBranch.Official ? "official.acf" : "beta.acf");
 
     public string GetDeployManifestPath(GameBranch? branch, bool enabled)
     {

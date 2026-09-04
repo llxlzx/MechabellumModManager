@@ -2089,6 +2089,12 @@ public sealed partial class MainViewModel : ObservableObject
             if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
                 return;
 
+            // Capture leaving branch depot metadata while ACF still matches that store.
+            var leaveBranch = ActiveGameBranch;
+            var snap = _branchSwitch.TrySnapshotSettledAcf(leaveBranch);
+            if (!snap.Success && !string.IsNullOrWhiteSpace(snap.Message))
+                AppendLog($"切服前未保存 {leaveBranch} ACF 快照：{snap.Message}");
+
             var swap = _branchSwitch.TrySwapJunction(target);
             if (!swap.Success)
             {
@@ -2110,7 +2116,13 @@ public sealed partial class MainViewModel : ObservableObject
 
             EnsureMelonLoaderForDualStores(preferTarget: target);
 
-            var silent = _branchSwitch.TrySilentSetBeta(target);
+            var silent = _branchSwitch.TryPrepareSteamBranchMetadata(target);
+            if (silent.Success
+                && string.Equals(silent.Message, "restored-acf-snapshot", StringComparison.Ordinal))
+            {
+                AppendLog("已恢复目标服 Steam 清单快照（避免重复下载）");
+            }
+
             await SettleAfterSilentBetaAsync(silent).ConfigureAwait(true);
         }
         catch (Exception ex)
@@ -2503,6 +2515,11 @@ public sealed partial class MainViewModel : ObservableObject
     {
         SelectBoundProfile(ActiveGameBranch);
         ApplyProfile(ignoreBranchGate: true);
+        var snap = _branchSwitch.TrySnapshotSettledAcf(ActiveGameBranch);
+        if (snap.Success)
+            AppendLog($"已保存 {ActiveGameBranch} Steam 清单快照，供下次切服免下载");
+        else if (!string.IsNullOrWhiteSpace(snap.Message))
+            AppendLog($"结算后未保存 ACF 快照：{snap.Message}");
         ClearSteamSettle();
     }
 

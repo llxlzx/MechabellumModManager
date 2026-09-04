@@ -1,6 +1,6 @@
 {
   "version": "1.0.7",
-  "notes": "1.0.7: 安装器配置写入改为内置方式，避免 PowerShell 0xc0000142 中断；自动检索游戏路径；重装恢复双服记录且不打断 Steam；双端 Melon 补齐；切服加固。 / Setup writes config natively (no PS crash); auto-detect game path; restore dual-folder without interrupting Steam; Melon sync; safer switch.",
+  "notes": "1.0.7: 切服按分支保存/恢复 Steam ACF（避免每次重下）；同步 MountedConfig；安装器内置写配置；双端 Melon/切服加固。 / Per-branch Steam ACF snapshots to avoid re-download; sync MountedConfig; native Setup config write; Melon sync.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.7/MechabellumModManager_Setup_v1.0.7.exe",
-  "publishedAt": "2026-09-04T13:11:52Z"
+  "publishedAt": "2026-09-04T13:21:45Z"
 }

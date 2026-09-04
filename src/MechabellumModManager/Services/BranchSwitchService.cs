@@ -205,12 +205,93 @@ public sealed class BranchSwitchService
             return false;
 
         var currentKey = _betaEditor.ReadBetaKey(acf);
+        var mountedKey = _betaEditor.ReadMountedBetaKey(acf);
+        var hasMounted = _betaEditor.HasMountedConfigBlock(acf);
         if (target == GameBranch.Official)
-            return string.IsNullOrWhiteSpace(currentKey);
+        {
+            return string.IsNullOrWhiteSpace(currentKey)
+                   && (!hasMounted || string.IsNullOrWhiteSpace(mountedKey));
+        }
 
         var expected = cfg.BetaBranchName?.Trim() ?? "";
-        return !string.IsNullOrWhiteSpace(expected)
-               && string.Equals(currentKey ?? "", expected, StringComparison.Ordinal);
+        if (string.IsNullOrWhiteSpace(expected)
+            || !string.Equals(currentKey ?? "", expected, StringComparison.Ordinal))
+            return false;
+
+        return !hasMounted || string.Equals(mountedKey ?? "", expected, StringComparison.Ordinal);
+    }
+
+    public BranchOperationResult TrySnapshotSettledAcf(GameBranch branch)
+    {
+        if (_probe.IsGameOrSteamRunning())
+            return BranchOperationResult.Fail("Game or Steam is running.");
+
+        var cfg = LoadConfig();
+        if (string.IsNullOrWhiteSpace(cfg.SteamLinkPath))
+            return BranchOperationResult.Fail("Steam link path is not configured.");
+
+        var store = StorePath(cfg, branch);
+        if (string.IsNullOrWhiteSpace(store) || !LooksLikeGameRoot(store))
+            return BranchOperationResult.Fail("Branch store is not a valid game root.");
+
+        var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
+        if (!File.Exists(acf))
+            return BranchOperationResult.Fail("Manifest not found.");
+
+        var text = File.ReadAllText(acf);
+        if (!SteamBetaKeyEditor.LooksSettledForSnapshot(text))
+            return BranchOperationResult.Fail("Manifest is not settled; skip snapshot.");
+
+        var snapshotPath = _paths.GetSteamAcfSnapshotPath(branch);
+        Directory.CreateDirectory(Path.GetDirectoryName(snapshotPath)!);
+        File.Copy(acf, snapshotPath, overwrite: true);
+        return BranchOperationResult.Ok(snapshotPath);
+    }
+
+    public BranchOperationResult TryRestoreAcfSnapshot(GameBranch branch)
+    {
+        if (_probe.IsGameOrSteamRunning())
+            return BranchOperationResult.Fail("Game or Steam is running.");
+
+        var cfg = LoadConfig();
+        if (string.IsNullOrWhiteSpace(cfg.SteamLinkPath))
+            return BranchOperationResult.Fail("Steam link path is not configured.");
+
+        var snapshotPath = _paths.GetSteamAcfSnapshotPath(branch);
+        if (!File.Exists(snapshotPath))
+            return BranchOperationResult.Fail("No ACF snapshot for target branch.");
+
+        var snapshotText = File.ReadAllText(snapshotPath);
+        if (!SteamBetaKeyEditor.LooksSettledForSnapshot(snapshotText))
+            return BranchOperationResult.Fail("ACF snapshot is not settled.");
+
+        var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
+        if (!File.Exists(acf) && !Directory.Exists(Path.GetDirectoryName(acf)))
+            return BranchOperationResult.Fail("Manifest directory missing.");
+
+        var backupDir = Path.Combine(_paths.DataRoot, "steam-manifest-backups");
+        Directory.CreateDirectory(backupDir);
+        if (File.Exists(acf))
+        {
+            var backupPath = Path.Combine(
+                backupDir,
+                SteamBetaKeyEditor.ManifestFileName + "." + DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"));
+            File.Copy(acf, backupPath, overwrite: false);
+            cfg.ManifestBackupPath = backupPath;
+            SaveConfig(cfg);
+        }
+
+        File.Copy(snapshotPath, acf, overwrite: true);
+        return BranchOperationResult.Ok();
+    }
+
+    public BranchOperationResult TryPrepareSteamBranchMetadata(GameBranch target)
+    {
+        var restored = TryRestoreAcfSnapshot(target);
+        if (restored.Success)
+            return BranchOperationResult.Ok("restored-acf-snapshot");
+
+        return TrySilentSetBeta(target);
     }
 
     public BranchOperationResult TryRepairFromJournal()
