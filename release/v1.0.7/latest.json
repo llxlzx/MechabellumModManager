@@ -1,6 +1,6 @@
 {
   "version": "1.0.7",
-  "notes": "1.0.7: 切服按分支保存/恢复 Steam ACF（避免每次重下）；同步 MountedConfig；安装器内置写配置；双端 Melon/切服加固。 / Per-branch Steam ACF snapshots to avoid re-download; sync MountedConfig; native Setup config write; Melon sync.",
+  "notes": "1.0.7：ACF 快照定居修复（BytesToDownload 等于 BytesDownloaded 视为已完成）；安装器原生写配置。 / ACF snapshot settle: accept BytesToDownload==BytesDownloaded; installer native config write.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.7/MechabellumModManager_Setup_v1.0.7.exe",
-  "publishedAt": "2026-09-04T13:21:45Z"
+  "publishedAt": "2026-09-04T14:35:45Z"
 }

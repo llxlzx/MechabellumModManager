@@ -94,8 +94,12 @@ public sealed class SteamBetaKeyEditor
         if (string.IsNullOrWhiteSpace(acfText))
             return false;
 
+        // Steam often leaves BytesToDownload as the last completed transfer size (not "0").
+        // Treat completed when remaining is zero OR downloaded already equals to-download.
         var bytesToDownload = ReadQuotedValue(acfText, "BytesToDownload") ?? "0";
-        if (!string.Equals(bytesToDownload, "0", StringComparison.Ordinal))
+        var bytesDownloaded = ReadQuotedValue(acfText, "BytesDownloaded") ?? "0";
+        if (!string.Equals(bytesToDownload, "0", StringComparison.Ordinal)
+            && !string.Equals(bytesToDownload, bytesDownloaded, StringComparison.Ordinal))
             return false;
 
         var bytesToStage = ReadQuotedValue(acfText, "BytesToStage");
@@ -113,13 +117,14 @@ public sealed class SteamBetaKeyEditor
             return false;
 
         var stateFlags = ReadQuotedValue(acfText, "StateFlags");
-        // 4 = Fully Installed. Reject known updating/downloading masks when present.
+        // Prefer Fully Installed (4). Reject known updating/downloading masks.
         if (!string.IsNullOrWhiteSpace(stateFlags)
             && stateFlags != "4"
             && (stateFlags.Contains('6', StringComparison.Ordinal)
                 || stateFlags == "1190"
                 || stateFlags == "1026"
-                || stateFlags == "1538"))
+                || stateFlags == "1538"
+                || stateFlags == "1158"))
             return false;
 
         return true;
