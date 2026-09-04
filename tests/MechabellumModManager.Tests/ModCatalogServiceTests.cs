@@ -54,6 +54,17 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
+    public void DeserializeCatalog_reads_category_and_tags()
+    {
+        var json = """
+        {"updatedAt":"t","mods":[{"id":"show-grid","name":"G","file":"mods/show-grid/ShowGrid.dll","category":"OverlayUI","tags":["grid","hud"]}]}
+        """;
+        var root = ModCatalogService.DeserializeCatalog(json);
+        root.Mods[0].Category.Should().Be("OverlayUI");
+        root.Mods[0].Tags.Should().Equal("grid", "hud");
+    }
+
+    [Fact]
     public void GetRawUrl_and_PreviewUrl_build_raw_github_urls()
     {
         ModCatalogService.GetRawUrl("mods/cam/preview.png").Should().Be(

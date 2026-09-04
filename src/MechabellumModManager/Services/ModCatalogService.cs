@@ -43,6 +43,12 @@ public sealed class CatalogMod
 
     [JsonPropertyName("type")]
     public string? Type { get; set; }
+
+    [JsonPropertyName("category")]
+    public string? Category { get; set; }
+
+    [JsonPropertyName("tags")]
+    public List<string>? Tags { get; set; }
 }
 
 /// <summary>
