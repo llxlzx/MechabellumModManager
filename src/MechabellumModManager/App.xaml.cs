@@ -131,8 +131,7 @@ public partial class App : Application
     {
         var dialog = new PromptDialog(title)
         {
-            Owner = owner,
-            Title = title
+            Owner = owner
         };
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }

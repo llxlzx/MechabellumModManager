@@ -327,7 +327,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private SortModeOption? _selectedLibrarySortMode;
     [ObservableProperty] private bool _branchSwitchEnabled;
     [ObservableProperty] private GameBranch _activeGameBranch = GameBranch.Official;
-    [ObservableProperty] private string _betaBranchName = "";
+    [ObservableProperty] private string _betaBranchName = BranchSwitchConfig.DefaultSteamBetaBranchName;
     [ObservableProperty] private string _officialProfileId = "default";
     [ObservableProperty] private string _betaProfileId = "default";
     [ObservableProperty] private string _branchStatusText = "未配置";
@@ -2014,7 +2014,9 @@ public sealed partial class MainViewModel : ObservableObject
             var cfg = _branchSwitch.LoadConfig();
             BranchSwitchEnabled = cfg.Enabled;
             ActiveGameBranch = cfg.ActiveBranch;
-            BetaBranchName = cfg.BetaBranchName ?? "";
+            BetaBranchName = string.IsNullOrWhiteSpace(cfg.BetaBranchName)
+                ? BranchSwitchConfig.DefaultSteamBetaBranchName
+                : cfg.BetaBranchName;
             OfficialProfileId = string.IsNullOrWhiteSpace(cfg.OfficialProfileId) ? "default" : cfg.OfficialProfileId;
             BetaProfileId = string.IsNullOrWhiteSpace(cfg.BetaProfileId) ? "default" : cfg.BetaProfileId;
             BranchWizardStep = cfg.WizardStep;
@@ -2095,9 +2097,9 @@ public sealed partial class MainViewModel : ObservableObject
             ? GameBranch.Official
             : GameBranch.Beta;
 
-        var betaName = _promptText?.Invoke(LocalizationService.T("PromptBetaBranchName"));
-        if (string.IsNullOrWhiteSpace(betaName))
-            betaName = BetaBranchName;
+        var betaName = string.IsNullOrWhiteSpace(BetaBranchName)
+            ? BranchSwitchConfig.DefaultSteamBetaBranchName
+            : BetaBranchName.Trim();
         if (string.IsNullOrWhiteSpace(betaName))
         {
             FailWizard(LocalizationService.T("FailWizardNoBetaName"));

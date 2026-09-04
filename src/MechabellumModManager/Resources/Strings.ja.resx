@@ -201,7 +201,7 @@
   <data name="ExtraTagsHint" xml:space="preserve"><value>追加タグ（カンマ区切り）</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>正式版 / テスト版</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>テスト版ブランチ名（Steam のプロパティに表示される名前）</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>テスト分岐名（既定 public_test。通常そのままで可）</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
@@ -210,7 +210,7 @@
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Steam でテスト版を選択済み — 続行</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam の切替完了 — 続行</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>ゲーム本体約2部の容量が必要です。操作前に Steam とゲームを終了。Steam のテストブランチ切替を自動試行し、失敗時は Steam で手動選択してください。</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>約2部の容量が必要。分岐名は既定 public_test（Steam「プロパティ → ベータ」。通常変更不要）。現在のインストールを先に退避してからもう一方を取得し、正式版は上書きされません。</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Steam の切替完了を待機</value></data>
@@ -275,9 +275,13 @@ GitHub Releases ページを開きますか？</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>プロファイル「{0}」を削除しますか？元に戻せません。</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>ライブラリから「{0}」を削除しますか？すべてのプロファイルからも外します。</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>ゲームブランチ切替には Steam とゲームの終了が必要です。続行しますか？</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>正式/テスト二系統にはゲーム約2部の容量が必要で、先に Steam とゲームを終了する必要があります。開始しますか？</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>正式版とテスト版を別フォルダで保持します（本体約2部の容量）。
+Steam の分岐名は既定で public_test（設定で変更可）。
+今あるインストールを先に退避してからもう一方をダウンロードし、テスト版で正式版を上書きしません。
+先に Steam とゲームを終了。開始しますか？</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>現在のインストールは正式版ですか？「いいえ」は現在がテスト版であることを意味します。</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Steam でもう一方をダウンロードし、完了後 Steam を終了して「はい」で続行。「いいえ」でウィザードを一時停止（後で再開可）。</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>現在のインストールは別フォルダへ退避済みです。Steam でもう一方をダウンロード（Steam のゲームパスへ書き込み）。
+完了後 Steam を終了し「はい」で続行。「いいえ」で一時停止（後で再開可）。</value></data>
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>他方の Steam テストブランチを自動設定できませんでした。Steam で手動選択してからダウンロードしてください。</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>二系統ウィザードを一時停止しました。後で続行できます。</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>正式/テスト二系統設定を解除しました。</value></data>
@@ -301,7 +305,7 @@ GitHub Releases ページを開きますか？</value></data>
   <data name="TipToggleHighRisk" xml:space="preserve"><value>クリックで一時切替。一覧更新後は名前キーワードで再判定</value></data>
   <data name="TipDeleteFromLibrary" xml:space="preserve"><value>このパッケージをライブラリから削除</value></data>
   <data name="AppVersionFormat" xml:space="preserve"><value>バージョン {0}</value></data>
-  <data name="PromptBetaBranchName" xml:space="preserve"><value>テスト版ブランチ名を入力（Steam「プロパティ → ベータ」と同じ表記）</value></data>
+  <data name="PromptBetaBranchName" xml:space="preserve"><value>Steam のテスト/ベータ分岐名（通常は public_test。フォルダパスではない）。Steam「プロパティ → ベータ」と違う場合のみ変更。</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>テスト版ブランチ名が未入力のためウィザードを中止しました。</value></data>
   <data name="LabelSummary" xml:space="preserve"><value>機能</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>ゲームパスは steamapps\common\Mechabellum 配下である必要があります。</value></data>

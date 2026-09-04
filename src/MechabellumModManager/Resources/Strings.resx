@@ -203,7 +203,7 @@
 
   <data name="BranchSwitchTitle" xml:space="preserve"><value>正式服 / 测试服</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>当前分支</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>测试服分支名（Steam 属性中的名称）</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>测试分支名（默认 public_test，一般不用改）</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>正式服方案</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>测试服方案</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>切换到正式服</value></data>
@@ -212,7 +212,7 @@
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>解除双服配置</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>我已在 Steam 中选好测试服，继续</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam 已切换完成，继续</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>需要约两份游戏安装空间。操作前请退出 Steam 与游戏。将尝试自动切换 Steam 测试分支；失败时可在 Steam 中手动选择。</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>需要约两份游戏空间。测试分支名默认 public_test（与 Steam「属性 → 测试」一致，一般不用改）。向导会先另存当前服，再下载另一服，正式服不会被覆盖。</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>未配置</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>配置未完成</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>等待 Steam 完成切换</value></data>
@@ -248,7 +248,7 @@
   <data name="DialogOk" xml:space="preserve"><value>确定</value></data>
   <data name="PreviewImageTitle" xml:space="preserve"><value>预览图</value></data>
   <data name="PreviewImageHint" xml:space="preserve"><value>点击任意处关闭</value></data>
-  <data name="PromptDialogTitle" xml:space="preserve"><value>输入</value></data>
+  <data name="PromptDialogTitle" xml:space="preserve"><value>请输入</value></data>
   <data name="DialogYes" xml:space="preserve"><value>是</value></data>
   <data name="DialogNo" xml:space="preserve"><value>否</value></data>
   <data name="FileFilterDll" xml:space="preserve"><value>Melon Mod DLL|*.dll|所有文件|*.*</value></data>
@@ -277,9 +277,13 @@
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>确定删除方案「{0}」？此操作不可撤销。</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>确定从库中删除「{0}」？将同时从所有方案中移除。</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>切换游戏分支需要退出 Steam 和游戏。是否继续？</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>正式服/测试服双目录需要约两份游戏安装空间，并且必须先退出 Steam 与游戏。是否开始？</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>将为正式服与测试服各保留一份独立游戏目录（约需两份安装空间）。
+测试分支默认使用 Steam 名称 public_test（可在设置中修改）。
+步骤：先保存你现在的这一份，再下载另一服；不会用测试服覆盖掉正式服。
+开始前请退出 Steam 与游戏。是否开始？</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>当前安装的是正式服吗？选「否」表示当前是测试服。</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>请在 Steam 中下载另一服。下载完成后请退出 Steam，再点「是」继续。点「否」将暂停向导（稍后可继续）。</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>当前这一服已另存到独立目录。请在 Steam 中下载另一服（下载会写到 Steam 的游戏路径）。
+下载完成后请退出 Steam，再点「是」继续。点「否」将暂停向导（稍后可继续）。</value></data>
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>未能自动设置另一服的 Steam 测试分支。请在 Steam 中手动选择后再下载。</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>双目录向导已暂停，可稍后继续。</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>已解除正式服/测试服双目录配置。</value></data>
@@ -303,7 +307,7 @@
   <data name="TipToggleHighRisk" xml:space="preserve"><value>点击可临时切换风险标记；刷新列表后会按名称关键词重新判定</value></data>
   <data name="TipDeleteFromLibrary" xml:space="preserve"><value>从本地库删除此包</value></data>
   <data name="AppVersionFormat" xml:space="preserve"><value>版本 {0}</value></data>
-  <data name="PromptBetaBranchName" xml:space="preserve"><value>请输入测试服分支名（与 Steam「属性 → 测试」里显示的名称一致）</value></data>
+  <data name="PromptBetaBranchName" xml:space="preserve"><value>请填写 Steam 测试分支名（默认一般为 public_test；不是文件夹路径）。仅在与 Steam「属性 → 测试」不一致时才需要改。</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>未填写测试服分支名，已中止向导。</value></data>
   <data name="LabelSummary" xml:space="preserve"><value>功能</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>游戏路径须位于 steamapps\common\Mechabellum。</value></data>
