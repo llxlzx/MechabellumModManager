@@ -1,4 +1,4 @@
-﻿# 钢铁指挥官 Mod 管理器 — GitHub Release 更新说明
+# 钢铁指挥官 Mod 管理器 — GitHub Release 更新说明
 
 Mechabellum Mod Manager — GitHub Release guide
 
@@ -17,7 +17,7 @@ For maintainers: how to build the Setup and publish a GitHub Release.
 
 ### v1.0.5
 
-- 投稿 / 更新 / 举报 / 建议改为邮件 **llxmod@foxmail.com**（标准主题前缀 + 正文模板；mailto）。
+- 投稿 / 更新 / 举报 / 建议改为邮件 **llxmod@foxmail.com**（标准主题前缀 + 正文模板；应用内复制到剪贴板并打开网页邮箱）。
 - 作者无需 Fork/PR；维护者审核后上传 MechabellumMods。
 - Mod 库 Author 列（若上一版已含则延续）。
 
@@ -210,7 +210,7 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 ## 6. v1.0.5 本版要点 (中文)
 
-- **邮件优先（现行）**：投稿 / 更新 / 举报 / 建议发往 **llxmod@foxmail.com**（标准主题前缀 + 正文模板；应用内 mailto）。作者**无需** Fork/PR。
+- **邮件优先（现行）**：投稿 / 更新 / 举报 / 建议发往 **llxmod@foxmail.com**（标准主题前缀 + 正文模板；应用内复制到剪贴板并打开网页邮箱）。作者**无需** Fork/PR。
 - **处理时效**：维护者将在合理时间内审阅；受日常生活与个人事务安排影响，或有短暂延误，请勿重复发送同一内容。
 - **免责与法律说明**：应用内「关于与声明」已扩展；仓库根目录见 `NOTICE.md` 与 MIT `LICENSE`。
 - **MechabellumMods 侧**：邮件投稿指南 + `docs/submit.html`；`catalog.json` CI 校验仍保留。
@@ -405,7 +405,7 @@ Author flow: bilingual beginner guide in the MechabellumMods `README.md`.
 
 ## 6. v1.0.5 highlights (English)
 
-- **Email-first (current):** submit / update / report / feedback to **llxmod@foxmail.com** (standard subject prefixes + templates; in-app mailto). Authors do **not** need Fork/PR.
+- **Email-first (current):** submit / update / report / feedback to **llxmod@foxmail.com** (standard subject prefixes + templates; in-app clipboard copy + webmail). Authors do **not** need Fork/PR.
 - **Processing time:** review within a reasonable time; brief delays may occur due to daily life and personal schedule — please do not resend the same request.
 - **Disclaimer / legal:** expanded in-app Credits; see repo root `NOTICE.md` and MIT `LICENSE`.
 - **MechabellumMods:** email guide + `docs/submit.html`; `catalog.json` CI validation remains.

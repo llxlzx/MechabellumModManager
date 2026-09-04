@@ -366,11 +366,14 @@
                     </StackPanel>
 
                     <DockPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10,0,0">
-                        <TextBlock Text="{Binding AppVersion, StringFormat=版本 {0}}"
-                                   VerticalAlignment="Center"
+                        <TextBlock VerticalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    DockPanel.Dock="Left"
-                                   Margin="0,0,12,0" />
+                                   Margin="0,0,12,0">
+                            <Run Text="{Binding Ui.LabelVersion, Mode=OneWay}" />
+                            <Run Text=" " />
+                            <Run Text="{Binding AppVersion, Mode=OneWay}" />
+                        </TextBlock>
                         <Button Content="{Binding Ui.CheckUpdates}"
                                 Command="{Binding CheckForUpdatesCommand}"
                                 DockPanel.Dock="Left"
@@ -509,11 +512,16 @@
                                            Foreground="{StaticResource TextMutedBrush}"
                                            FontSize="12"
                                            TextWrapping="Wrap">
-                                    <Run Text="作者：" />
+                                    <Run Text="{Binding Ui.LabelAuthor, Mode=OneWay}" />
+                                    <Run Text="：" />
                                     <Run Text="{Binding SelectedCatalogMod.Author, Mode=OneWay}" />
-                                    <Run Text="  ·  版本：" />
+                                    <Run Text="  ·  " />
+                                    <Run Text="{Binding Ui.LabelVersion, Mode=OneWay}" />
+                                    <Run Text="：" />
                                     <Run Text="{Binding SelectedCatalogMod.Version, Mode=OneWay}" />
-                                    <Run Text="  ·  更新：" />
+                                    <Run Text="  ·  " />
+                                    <Run Text="{Binding Ui.LabelUpdated, Mode=OneWay}" />
+                                    <Run Text="：" />
                                     <Run Text="{Binding SelectedCatalogMod.UpdatedAt, Mode=OneWay}" />
                                 </TextBlock>
                                 <TextBlock Margin="0,8,0,0"
@@ -540,23 +548,23 @@
                               HeadersVisibility="Column"
                               MaxHeight="180">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="名称"
+                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnName, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 Binding="{Binding Name}"
                                                 Width="*"
                                                 MinWidth="120" />
                             <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 Binding="{Binding EffectiveCategoryDisplay}"
                                                 Width="100" />
-                            <DataGridTextColumn Header="作者"
+                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 Binding="{Binding Author}"
                                                 Width="90" />
-                            <DataGridTextColumn Header="版本"
+                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnVersion, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 Binding="{Binding Version}"
                                                 Width="70" />
-                            <DataGridTextColumn Header="更新"
+                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnUpdated, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 Binding="{Binding UpdatedAt}"
                                                 Width="100" />
-                            <DataGridTextColumn Header="状态"
+                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 Binding="{Binding StatusText}"
                                                 Width="72" />
                         </DataGrid.Columns>
@@ -688,7 +696,7 @@
                                   HeadersVisibility="Column"
                                   MinHeight="140">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="启用" Width="56">
+                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnEnabled, RelativeSource={RelativeSource AncestorType=Window}}" Width="56">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
@@ -697,7 +705,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="名称"
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnName, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding DisplayName}"
                                                     IsReadOnly="True"
                                                     Width="*"
@@ -706,20 +714,20 @@
                                                     Binding="{Binding EffectiveCategoryDisplay}"
                                                     IsReadOnly="True"
                                                     Width="100" />
-                                <DataGridTextColumn Header="作者"
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding Author}"
                                                     IsReadOnly="True"
                                                     Width="110"
                                                     MinWidth="80" />
-                                  <DataGridTextColumn Header="类型"
+                                  <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnType, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding TypeLabel}"
                                                     IsReadOnly="True"
                                                     Width="90" />
-                                <DataGridTextColumn Header="版本"
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnVersion, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding Version}"
                                                     IsReadOnly="True"
                                                     Width="80" />
-                                <DataGridTemplateColumn Header="风险" Width="88">
+                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnRisk, RelativeSource={RelativeSource AncestorType=Window}}" Width="88">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="{Binding HighRiskLabel}"
@@ -728,11 +736,11 @@
                                                     Padding="10,6"
                                                     MinHeight="30"
                                                     FontSize="12"
-                                                    ToolTip="点击临时切换；刷新后按名称关键词重算" />
+                                                    ToolTip="{Binding DataContext.Ui.TipToggleHighRisk, RelativeSource={RelativeSource AncestorType=Window}}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="加载器" Width="100">
+                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnLoader, RelativeSource={RelativeSource AncestorType=Window}}" Width="100">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding RequiredMelonLoaderVersion}"
@@ -745,13 +753,13 @@
                                 <DataGridTemplateColumn Header="" Width="64">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="删除"
+                                            <Button Content="{Binding DataContext.Ui.ActionDelete, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Command="{Binding DataContext.DeleteModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
                                                     Padding="10,6"
                                                     MinHeight="30"
                                                     FontSize="12"
-                                                    ToolTip="从库中删除此包" />
+                                                    ToolTip="{Binding DataContext.Ui.TipDeleteFromLibrary, RelativeSource={RelativeSource AncestorType=Window}}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -779,7 +787,7 @@
                                                     FontSize="12"
                                                     Margin="0,0,0,6"
                                                     Style="{StaticResource GhostButtonStyle}" />
-                                            <Button Content="收起介绍"
+                                            <Button Content="{Binding Ui.ActionCollapseDetail}"
                                                     Command="{Binding ClearLibraryModSelectionCommand}"
                                                     MinWidth="72"
                                                     Padding="10,6"
@@ -806,25 +814,32 @@
                                                                FontSize="13"
                                                                TextWrapping="Wrap"
                                                                Foreground="{StaticResource TextPrimaryBrush}">
-                                                        <Run Text="名称：" />
+                                                        <Run Text="{Binding Ui.LabelName, Mode=OneWay}" />
+                                                        <Run Text="：" />
                                                         <Run Text="{Binding SelectedLibraryMod.DisplayName, Mode=OneWay}" />
                                                     </TextBlock>
                                                     <TextBlock Margin="0,4,0,0"
                                                                Foreground="{StaticResource TextMutedBrush}"
                                                                FontSize="12"
                                                                TextWrapping="Wrap">
-                                                        <Run Text="作者：" />
+                                                        <Run Text="{Binding Ui.LabelAuthor, Mode=OneWay}" />
+                                                        <Run Text="：" />
                                                         <Run Text="{Binding SelectedLibraryMod.Author, Mode=OneWay}" />
-                                                        <Run Text="  ·  版本：" />
+                                                        <Run Text="  ·  " />
+                                                        <Run Text="{Binding Ui.LabelVersion, Mode=OneWay}" />
+                                                        <Run Text="：" />
                                                         <Run Text="{Binding SelectedLibraryMod.Version, Mode=OneWay}" />
-                                                        <Run Text="  ·  更新：" />
+                                                        <Run Text="  ·  " />
+                                                        <Run Text="{Binding Ui.LabelUpdated, Mode=OneWay}" />
+                                                        <Run Text="：" />
                                                         <Run Text="{Binding SelectedLibraryMod.CatalogUpdatedAt, Mode=OneWay}" />
                                                     </TextBlock>
                                                     <TextBlock Margin="0,6,0,0"
                                                                Foreground="{StaticResource TextPrimaryBrush}"
                                                                FontSize="12"
                                                                TextWrapping="Wrap">
-                                                        <Run Text="功能：" />
+                                                        <Run Text="{Binding Ui.LabelSummary, Mode=OneWay}" />
+                                                        <Run Text="：" />
                                                         <Run Text="{Binding SelectedLibraryMod.Summary, Mode=OneWay}" />
                                                     </TextBlock>
                                                     <TextBlock Margin="0,6,0,0"

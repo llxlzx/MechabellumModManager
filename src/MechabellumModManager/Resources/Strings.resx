@@ -25,7 +25,7 @@
     <value>导入 Zip</value>
   </data>
   <data name="ImportFolder" xml:space="preserve">
-    <value>导入 文件夹</value>
+    <value>导入文件夹</value>
   </data>
   <data name="ApplyProfile" xml:space="preserve">
     <value>应用方案</value>
@@ -61,7 +61,7 @@
     <value>举报</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>将打开邮件客户端发送举报至 llxmod@foxmail.com（正文已复制到剪贴板作备份）。虚假举报可能影响审核。是否继续？</value>
+    <value>将把举报内容复制到剪贴板，并打开网页邮箱（管理器为中文时打开 QQ 邮箱，其他语言打开 Gmail）。请新建邮件、粘贴后发送至 llxmod@foxmail.com。虚假举报可能影响审核。是否继续？</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>作弊</value>
@@ -79,22 +79,22 @@
     <value>请说明原因（必填）</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>已打开邮件客户端；举报正文已复制到剪贴板。请确认收件人为 llxmod@foxmail.com 后发送。若未弹出邮件程序，请手动发信并粘贴正文。</value>
+    <value>已复制举报内容并打开网页邮箱。请粘贴后发送至 llxmod@foxmail.com。若网页未打开，请手动发信并粘贴剪贴板内容。</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>无法打开邮件客户端</value>
+    <value>无法打开网页邮箱或完成举报准备</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>投稿 Mod</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>将打开发送投稿邮件（llxmod@foxmail.com），是否继续？</value>
+    <value>将把投稿模板复制到剪贴板，并打开网页邮箱以便发送至 llxmod@foxmail.com。是否继续？</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>已打开邮件客户端。请填写模板、附加 .dll（可选 preview.png）后发送至 llxmod@foxmail.com。</value>
+    <value>已复制投稿模板并打开网页邮箱。请粘贴、附加 .dll（可选 preview.png）后发送至 llxmod@foxmail.com。</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>无法打开邮件客户端</value>
+    <value>无法打开网页邮箱或完成投稿准备</value>
   </data>
   <data name="SubmitMailOpenedDomestic" xml:space="preserve">
     <value>已复制主题与正文；已打开 QQ 邮箱网页，请新建邮件粘贴并添加附件后发送至 llxmod@foxmail.com。</value>
@@ -127,13 +127,13 @@
 （高级用户仍可自行提 PR。）</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>点击下方按钮后，管理器会复制主题与正文，并打开 QQ 邮箱网页（中文界面）或 Gmail 写信页（其他语言）。请粘贴、附加 .dll（可选 preview.png）后发送。附件过大（约 &gt;40MB）请在正文写网盘链接。不要主动发送源码。</value>
+    <value>点「打开发送投稿邮件」后，管理器会复制主题与正文，并按当前语言打开网页邮箱：中文打开 QQ 邮箱，其他语言打开 Gmail。请粘贴、附加 .dll（可选 preview.png）后发送。附件过大（约超过 40MB）请在正文写网盘链接。请勿主动发送源码。</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>打开完整教程</value>
   </data>
   <data name="SubmitGuideOpenEmail" xml:space="preserve">
-    <value>打开发送投稿邮件</value>
+    <value>复制模板并打开邮箱</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>确认</value>
@@ -163,7 +163,7 @@
     <value>启动方式</value>
   </data>
   <data name="PortableDataRoot" xml:space="preserve">
-    <value>便携数据根（程序目录/data，需重启生效）</value>
+    <value>便携数据目录（程序旁的 data 文件夹，更改后需重启）</value>
   </data>
   <data name="Profiles" xml:space="preserve">
     <value>方案</value>
@@ -197,28 +197,28 @@
   <data name="CategoryReplayDebug" xml:space="preserve"><value>回放与调试</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>其他</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>未分类</value></data>
-  <data name="EditModTaxonomy" xml:space="preserve"><value>编辑分类/标签</value></data>
-  <data name="CategoryFollowCatalog" xml:space="preserve"><value>跟随目录</value></data>
-  <data name="ExtraTagsHint" xml:space="preserve"><value>额外标签（逗号分隔）</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>编辑分类与标签</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>使用目录分类</value></data>
+  <data name="ExtraTagsHint" xml:space="preserve"><value>额外标签（用英文逗号分隔）</value></data>
 
   <data name="BranchSwitchTitle" xml:space="preserve"><value>正式服 / 测试服</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>当前分支</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>测试服分支名</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>测试服分支名（Steam 属性中的名称）</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>正式服方案</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>测试服方案</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>切换到正式服</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>切换到测试服</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>开始双服配置向导</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>解除双服配置</value></data>
-  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>已手选测试服，继续</value></data>
-  <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>确认 Steam 已对齐，继续</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>约两份游戏空间；须退出 Steam；将尝试自动对齐测试服，失败可手选</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>我已在 Steam 中选好测试服，继续</value></data>
+  <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam 已切换完成，继续</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>需要约两份游戏安装空间。操作前请退出 Steam 与游戏。将尝试自动切换 Steam 测试分支；失败时可在 Steam 中手动选择。</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>未配置</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>配置未完成</value></data>
-  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>等待 Steam</value></data>
+  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>等待 Steam 完成切换</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>正式服</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>测试服</value></data>
-  <data name="Tag_calc" xml:space="preserve"><value>计算</value></data>
+  <data name="Tag_calc" xml:space="preserve"><value>数值计算</value></data>
   <data name="Tag_camera" xml:space="preserve"><value>相机</value></data>
   <data name="Tag_combat" xml:space="preserve"><value>对局</value></data>
   <data name="Tag_damage" xml:space="preserve"><value>伤害</value></data>
@@ -226,7 +226,7 @@
   <data name="Tag_economy" xml:space="preserve"><value>经济</value></data>
   <data name="Tag_grid" xml:space="preserve"><value>网格</value></data>
   <data name="Tag_hotkey" xml:space="preserve"><value>快捷键</value></data>
-  <data name="Tag_hud" xml:space="preserve"><value>抬头显示</value></data>
+  <data name="Tag_hud" xml:space="preserve"><value>界面显示</value></data>
   <data name="Tag_items" xml:space="preserve"><value>物品</value></data>
   <data name="Tag_replay" xml:space="preserve"><value>回放</value></data>
   <data name="Tag_speed" xml:space="preserve"><value>速度</value></data>
@@ -258,13 +258,13 @@
   <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
 …共 {0} 个</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>已取消覆盖非托管文件。</value></data>
-  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>已启用双服。重建将先安全解除（保留另一旁路），再重新配置。是否继续？</value></data>
-  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>确定解除双服配置？当前旁路会改回游戏目录，须退出 Steam 与游戏。</value></data>
-  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>是否删除另一旁路目录？未使用的服文件将被永久删除。（建议选否）</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>已启用正式服/测试服双目录。重建将先安全解除当前配置（保留另一目录中的游戏文件），再重新设置。是否继续？</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>确定解除正式服/测试服双目录配置？当前使用的目录会重新作为 Steam 游戏路径；须先退出 Steam 与游戏。</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>是否同时删除另一服的独立游戏目录？其中文件将永久删除。（建议选「否」）</value></data>
   <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>双服向导失败：{0}</value></data>
   <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>解除双服配置失败：{0}</value></data>
-  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam 仍在运行，请等待结算完成后再部署。</value></data>
-  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam 仍在运行。仍要部署？文件可能被占用。</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam 仍在运行。请等待它完成分支切换后再部署。</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam 仍在运行。仍要部署吗？游戏文件可能被占用。</value></data>
   <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
 
 {1}
@@ -277,12 +277,46 @@
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>确定删除方案「{0}」？此操作不可撤销。</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>确定从库中删除「{0}」？将同时从所有方案中移除。</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>切换游戏分支需要退出 Steam 和游戏。是否继续？</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>双服配置需要约两份游戏磁盘空间，并且必须退出 Steam 与游戏。是否开始？</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>正式服/测试服双目录需要约两份游戏安装空间，并且必须先退出 Steam 与游戏。是否开始？</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>当前安装的是正式服吗？选「否」表示当前是测试服。</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>请在 Steam 中下载另一服。下载完成后请退出 Steam，再点确定继续。取消将暂停向导（稍后可继续）。</value></data>
-  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>未能自动写入另一服 Beta，请在 Steam 中手选后再下载。</value></data>
-  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>双服向导已暂停，可稍后继续。</value></data>
-  <data name="LogBranchTeardownDone" xml:space="preserve"><value>已解除双服配置。</value></data>
-  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>已解除双服配置。请在 Steam 中确认游戏分支。</value></data>
-  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>未能自动对齐 Steam Beta。请先手动选择分支后再启动 Steam；对齐完成前请勿启动 Steam。</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>请在 Steam 中下载另一服。下载完成后请退出 Steam，再点「是」继续。点「否」将暂停向导（稍后可继续）。</value></data>
+  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>未能自动设置另一服的 Steam 测试分支。请在 Steam 中手动选择后再下载。</value></data>
+  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>双目录向导已暂停，可稍后继续。</value></data>
+  <data name="LogBranchTeardownDone" xml:space="preserve"><value>已解除正式服/测试服双目录配置。</value></data>
+  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>已解除双目录配置。请在 Steam 中确认当前游戏分支是否正确。</value></data>
+  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>未能自动对齐 Steam 测试分支。请先在 Steam 中手动选好分支；对齐完成前请勿启动 Steam。</value></data>
+  <data name="ColumnName" xml:space="preserve"><value>名称</value></data>
+  <data name="ColumnAuthor" xml:space="preserve"><value>作者</value></data>
+  <data name="ColumnVersion" xml:space="preserve"><value>版本</value></data>
+  <data name="ColumnUpdated" xml:space="preserve"><value>更新</value></data>
+  <data name="ColumnStatus" xml:space="preserve"><value>状态</value></data>
+  <data name="ColumnEnabled" xml:space="preserve"><value>启用</value></data>
+  <data name="ColumnType" xml:space="preserve"><value>类型</value></data>
+  <data name="ColumnRisk" xml:space="preserve"><value>风险</value></data>
+  <data name="ColumnLoader" xml:space="preserve"><value>加载器</value></data>
+  <data name="LabelAuthor" xml:space="preserve"><value>作者</value></data>
+  <data name="LabelVersion" xml:space="preserve"><value>版本</value></data>
+  <data name="LabelUpdated" xml:space="preserve"><value>更新</value></data>
+  <data name="LabelName" xml:space="preserve"><value>名称</value></data>
+  <data name="ActionDelete" xml:space="preserve"><value>删除</value></data>
+  <data name="ActionCollapseDetail" xml:space="preserve"><value>收起介绍</value></data>
+  <data name="TipToggleHighRisk" xml:space="preserve"><value>点击可临时切换风险标记；刷新列表后会按名称关键词重新判定</value></data>
+  <data name="TipDeleteFromLibrary" xml:space="preserve"><value>从本地库删除此包</value></data>
+  <data name="AppVersionFormat" xml:space="preserve"><value>版本 {0}</value></data>
+  <data name="PromptBetaBranchName" xml:space="preserve"><value>请输入测试服分支名（与 Steam「属性 → 测试」里显示的名称一致）</value></data>
+  <data name="FailWizardNoBetaName" xml:space="preserve"><value>未填写测试服分支名，已中止向导。</value></data>
+  <data name="LabelSummary" xml:space="preserve"><value>功能</value></data>
+  <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>游戏路径须位于 steamapps\common\Mechabellum。</value></data>
+  <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>当前游戏路径无效，无法开始双目录向导。</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>另一服的独立目录已存在，无法归档：{0}</value></data>
+  <data name="FailWizardNoAppManifest" xml:space="preserve"><value>未找到 appmanifest_669330.acf，无法对齐 Steam 测试分支。</value></data>
+  <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>无法读取 Steam 清单（可能需要提权或迁库）：{0}</value></data>
+  <data name="FailWizardArchiveCurrentFailed" xml:space="preserve"><value>归档当前服失败。</value></data>
+  <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>归档另一服失败。</value></data>
+  <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>创建目录联接失败。</value></data>
+  <data name="FailWizardTeardownFailed" xml:space="preserve"><value>解除双目录配置失败。</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>双目录向导已完成，正在等待 Steam 完成分支切换。</value></data>
+  <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>请求退出 Steam 失败：{0}</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 或游戏仍在运行，已中止切服。</value></data>
+  <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
 </root>
