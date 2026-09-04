@@ -51,7 +51,7 @@ public sealed partial class ModItemViewModel : ObservableObject
     public IReadOnlyList<string> EffectiveTags =>
         ModTaxonomy.ResolveEffectiveTags(Package.CatalogTags, Package.ExtraTags);
 
-    public string EffectiveCategoryDisplay => EffectiveCategory.ToString();
+    public string EffectiveCategoryDisplay => _owner.Ui.CategoryLabel(EffectiveCategory);
 
     public string EffectiveTagsText => EffectiveTags.Count == 0 ? "" : string.Join(", ", EffectiveTags);
 

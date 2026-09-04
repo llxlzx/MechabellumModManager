@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MechabellumModManager.Models;
@@ -42,6 +44,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string?>? _openFolder;
     readonly Func<string, (ReportCategory Category, string Notes)?>? _promptReport;
     readonly Func<bool>? _promptSubmitGuide;
+    readonly Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? _promptEditTaxonomy;
     readonly Action<string>? _copyText;
     bool _loggedMelonOptimize;
     bool _checkingUpdates;
@@ -50,6 +53,7 @@ public sealed partial class MainViewModel : ObservableObject
     bool _autoImportedFromGame;
     bool _suppressLanguageSave;
     bool _reporting;
+    bool _suppressFilterRefresh;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -79,6 +83,7 @@ public sealed partial class MainViewModel : ObservableObject
         Func<string?>? openFolder = null,
         Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
         Func<bool>? promptSubmitGuide = null,
+        Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? promptEditTaxonomy = null,
         Action<string>? copyText = null)
     {
         _paths = paths;
@@ -107,6 +112,7 @@ public sealed partial class MainViewModel : ObservableObject
         _openFolder = openFolder;
         _promptReport = promptReport;
         _promptSubmitGuide = promptSubmitGuide;
+        _promptEditTaxonomy = promptEditTaxonomy;
         _copyText = copyText;
         ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => IsReady);
 
@@ -114,6 +120,12 @@ public sealed partial class MainViewModel : ObservableObject
         Profiles = new ObservableCollection<ProfileItemViewModel>();
         Mods = new ObservableCollection<ModItemViewModel>();
         CatalogMods = new ObservableCollection<CatalogModItemViewModel>();
+        CatalogModsView = CollectionViewSource.GetDefaultView(CatalogMods);
+        CatalogModsView.Filter = FilterCatalogItem;
+        LibraryModsView = CollectionViewSource.GetDefaultView(Mods);
+        LibraryModsView.Filter = FilterLibraryItem;
+        CatalogAvailableTagOptions = new ObservableCollection<TagFilterOption>();
+        LibraryAvailableTagOptions = new ObservableCollection<TagFilterOption>();
         RiskBanner = RiskGate.BannerText;
         LaunchModeOptions = new[]
         {
@@ -150,6 +162,9 @@ public sealed partial class MainViewModel : ObservableObject
         ReloadProfiles(selectId: config.ActiveProfileId);
         RefreshStatus();
         ReloadMods();
+        RebuildFilterOptionLabels();
+        RefreshCatalogView();
+        RefreshLibraryView();
         RecomputeDirty();
         UpdateLoaderVersionWarning();
         UpdateFirstAssemblyWarning();
@@ -179,6 +194,13 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<ProfileItemViewModel> Profiles { get; }
     public ObservableCollection<ModItemViewModel> Mods { get; }
     public ObservableCollection<CatalogModItemViewModel> CatalogMods { get; }
+    public ICollectionView CatalogModsView { get; }
+    public ICollectionView LibraryModsView { get; }
+    public ObservableCollection<TagFilterOption> CatalogAvailableTagOptions { get; }
+    public ObservableCollection<TagFilterOption> LibraryAvailableTagOptions { get; }
+    public IReadOnlyList<CategoryFilterOption> CatalogCategoryFilterOptions { get; private set; } = Array.Empty<CategoryFilterOption>();
+    public IReadOnlyList<CategoryFilterOption> LibraryCategoryFilterOptions { get; private set; } = Array.Empty<CategoryFilterOption>();
+    public IReadOnlyList<SortModeOption> SortModeOptions { get; private set; } = Array.Empty<SortModeOption>();
     public IReadOnlyList<LaunchModeOption> LaunchModeOptions { get; }
     public IReadOnlyList<LanguageOption> LanguageOptions { get; }
     public UiStrings Ui { get; }
@@ -215,6 +237,47 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
     [ObservableProperty] private string _updateStatus = "";
     [ObservableProperty] private string _selectedUiLanguageCode = "system";
+    [ObservableProperty] private string _catalogSearchText = "";
+    [ObservableProperty] private CategoryFilterOption? _selectedCatalogCategoryFilter;
+    [ObservableProperty] private TagFilterOption? _selectedCatalogTagFilter;
+    [ObservableProperty] private SortModeOption? _selectedCatalogSortMode;
+    [ObservableProperty] private string _librarySearchText = "";
+    [ObservableProperty] private CategoryFilterOption? _selectedLibraryCategoryFilter;
+    [ObservableProperty] private TagFilterOption? _selectedLibraryTagFilter;
+    [ObservableProperty] private SortModeOption? _selectedLibrarySortMode;
+
+    partial void OnCatalogSearchTextChanged(string value)
+    {
+        if (!_suppressFilterRefresh) RefreshCatalogView();
+    }
+    partial void OnSelectedCatalogCategoryFilterChanged(CategoryFilterOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshCatalogView();
+    }
+    partial void OnSelectedCatalogTagFilterChanged(TagFilterOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshCatalogView();
+    }
+    partial void OnSelectedCatalogSortModeChanged(SortModeOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshCatalogView();
+    }
+    partial void OnLibrarySearchTextChanged(string value)
+    {
+        if (!_suppressFilterRefresh) RefreshLibraryView();
+    }
+    partial void OnSelectedLibraryCategoryFilterChanged(CategoryFilterOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshLibraryView();
+    }
+    partial void OnSelectedLibraryTagFilterChanged(TagFilterOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshLibraryView();
+    }
+    partial void OnSelectedLibrarySortModeChanged(SortModeOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshLibraryView();
+    }
 
     partial void OnSelectedUiLanguageCodeChanged(string value)
     {
@@ -249,7 +312,10 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         if (refreshUi)
+        {
             Ui.Refresh();
+            RebuildFilterOptionLabels();
+        }
     }
 
     partial void OnGameStatusChanged(GameStatus? value)
@@ -643,6 +709,24 @@ public sealed partial class MainViewModel : ObservableObject
             "library").ConfigureAwait(true);
     }
 
+    bool CanEditLibraryTaxonomy() =>
+        SelectedLibraryMod is not null && !SelectedLibraryMod.IsMissing;
+
+    [RelayCommand(CanExecute = nameof(CanEditLibraryTaxonomy))]
+    void EditLibraryModTaxonomy()
+    {
+        var mod = SelectedLibraryMod;
+        if (mod is null || mod.IsMissing) return;
+        var result = _promptEditTaxonomy?.Invoke(mod.Package);
+        if (result is null) return;
+        mod.Package.CategoryOverride = result.Value.Override;
+        mod.Package.ExtraTags = result.Value.ExtraTags.ToList();
+        PersistPackageMeta(mod.Package);
+        mod.NotifyDetailChanged();
+        RefreshLibraryView();
+        AppendLog($"已更新分类/标签：{mod.DisplayName}");
+    }
+
     Task ReportAsync(string modId, string modName, string source)
     {
         if (_reporting) return Task.CompletedTask;
@@ -778,6 +862,9 @@ public sealed partial class MainViewModel : ObservableObject
             if (SelectedLibraryMod is not null)
                 UpdateLibraryModDetail();
 
+            RefreshCatalogView();
+            RefreshLibraryView();
+
             var updated = string.IsNullOrWhiteSpace(root.UpdatedAt) ? "未知" : root.UpdatedAt;
             CatalogStatus = $"已加载 {CatalogMods.Count} 个条目（目录更新：{updated}）";
             AppendLog(CatalogStatus);
@@ -907,8 +994,11 @@ public sealed partial class MainViewModel : ObservableObject
         _ = value?.LoadPreviewImageAsync();
     }
 
-    partial void OnSelectedLibraryModChanged(ModItemViewModel? value) =>
+    partial void OnSelectedLibraryModChanged(ModItemViewModel? value)
+    {
+        EditLibraryModTaxonomyCommand.NotifyCanExecuteChanged();
         UpdateLibraryModDetail();
+    }
 
     [RelayCommand]
     void ClearLibraryModSelection() => SelectedLibraryMod = null;
@@ -956,6 +1046,8 @@ public sealed partial class MainViewModel : ObservableObject
             EnrichModsFromCatalog();
             if (SelectedLibraryMod is not null)
                 UpdateLibraryModDetail();
+            RefreshCatalogView();
+            RefreshLibraryView();
         }
         catch
         {
@@ -1307,6 +1399,215 @@ public sealed partial class MainViewModel : ObservableObject
         {
             MissingEnabledPackagesWarning = "";
         }
+
+        RefreshLibraryView();
+        RefreshCatalogView();
+    }
+
+    void RebuildFilterOptionLabels()
+    {
+        _suppressFilterRefresh = true;
+        try
+        {
+            var allLabel = Ui.FilterAll;
+            var categoryOptions = new List<CategoryFilterOption>
+            {
+                new(null, allLabel)
+            };
+            foreach (var cat in ModTaxonomy.AllFilterCategories)
+                categoryOptions.Add(new CategoryFilterOption(cat, Ui.CategoryLabel(cat)));
+
+            CatalogCategoryFilterOptions = categoryOptions;
+            LibraryCategoryFilterOptions = categoryOptions;
+            OnPropertyChanged(nameof(CatalogCategoryFilterOptions));
+            OnPropertyChanged(nameof(LibraryCategoryFilterOptions));
+
+            SortModeOptions = new[]
+            {
+                new SortModeOption(ModSortMode.NameAsc, Ui.SortByName),
+                new SortModeOption(ModSortMode.UpdatedAtDesc, Ui.SortByUpdatedAtDesc)
+            };
+            OnPropertyChanged(nameof(SortModeOptions));
+
+            SelectedCatalogCategoryFilter ??= CatalogCategoryFilterOptions[0];
+            SelectedLibraryCategoryFilter ??= LibraryCategoryFilterOptions[0];
+            SelectedCatalogSortMode ??= SortModeOptions[0];
+            SelectedLibrarySortMode ??= SortModeOptions[0];
+
+            SelectedCatalogCategoryFilter = CatalogCategoryFilterOptions.FirstOrDefault(o =>
+                o.Category == SelectedCatalogCategoryFilter?.Category) ?? CatalogCategoryFilterOptions[0];
+            SelectedLibraryCategoryFilter = LibraryCategoryFilterOptions.FirstOrDefault(o =>
+                o.Category == SelectedLibraryCategoryFilter?.Category) ?? LibraryCategoryFilterOptions[0];
+            SelectedCatalogSortMode = SortModeOptions.FirstOrDefault(o =>
+                o.Mode == SelectedCatalogSortMode?.Mode) ?? SortModeOptions[0];
+            SelectedLibrarySortMode = SortModeOptions.FirstOrDefault(o =>
+                o.Mode == SelectedLibrarySortMode?.Mode) ?? SortModeOptions[0];
+
+            RebuildCatalogTagOptions();
+            RebuildLibraryTagOptions();
+        }
+        finally
+        {
+            _suppressFilterRefresh = false;
+        }
+
+        RefreshCatalogView();
+        RefreshLibraryView();
+    }
+
+    void RebuildCatalogTagOptions()
+    {
+        var previous = SelectedCatalogTagFilter?.Tag;
+        var tags = CatalogMods
+            .SelectMany(m => m.EffectiveTags)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        CatalogAvailableTagOptions.Clear();
+        CatalogAvailableTagOptions.Add(new TagFilterOption(null, Ui.FilterAll));
+        foreach (var tag in tags)
+            CatalogAvailableTagOptions.Add(new TagFilterOption(tag, tag));
+
+        var suppress = _suppressFilterRefresh;
+        _suppressFilterRefresh = true;
+        try
+        {
+            SelectedCatalogTagFilter = CatalogAvailableTagOptions.FirstOrDefault(o =>
+                string.Equals(o.Tag, previous, StringComparison.Ordinal))
+                ?? CatalogAvailableTagOptions[0];
+        }
+        finally
+        {
+            _suppressFilterRefresh = suppress;
+        }
+    }
+
+    void RebuildLibraryTagOptions()
+    {
+        var previous = SelectedLibraryTagFilter?.Tag;
+        var tags = Mods
+            .Where(m => !m.IsMissing)
+            .SelectMany(m => m.EffectiveTags)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        LibraryAvailableTagOptions.Clear();
+        LibraryAvailableTagOptions.Add(new TagFilterOption(null, Ui.FilterAll));
+        foreach (var tag in tags)
+            LibraryAvailableTagOptions.Add(new TagFilterOption(tag, tag));
+
+        var suppress = _suppressFilterRefresh;
+        _suppressFilterRefresh = true;
+        try
+        {
+            SelectedLibraryTagFilter = LibraryAvailableTagOptions.FirstOrDefault(o =>
+                string.Equals(o.Tag, previous, StringComparison.Ordinal))
+                ?? LibraryAvailableTagOptions[0];
+        }
+        finally
+        {
+            _suppressFilterRefresh = suppress;
+        }
+    }
+
+    void RefreshCatalogView()
+    {
+        if (_suppressFilterRefresh) return;
+        _suppressFilterRefresh = true;
+        try
+        {
+            RebuildCatalogTagOptions();
+            ApplySort(CatalogModsView, SelectedCatalogSortMode?.Mode ?? ModSortMode.NameAsc, catalog: true);
+        }
+        finally
+        {
+            _suppressFilterRefresh = false;
+        }
+        CatalogModsView.Refresh();
+    }
+
+    void RefreshLibraryView()
+    {
+        if (_suppressFilterRefresh) return;
+        _suppressFilterRefresh = true;
+        try
+        {
+            RebuildLibraryTagOptions();
+            ApplySort(LibraryModsView, SelectedLibrarySortMode?.Mode ?? ModSortMode.NameAsc, catalog: false);
+        }
+        finally
+        {
+            _suppressFilterRefresh = false;
+        }
+        LibraryModsView.Refresh();
+    }
+
+    static void ApplySort(ICollectionView view, ModSortMode mode, bool catalog)
+    {
+        if (view is not ListCollectionView lcv) return;
+        lcv.CustomSort = mode switch
+        {
+            ModSortMode.UpdatedAtDesc when catalog =>
+                Comparer<object>.Create((a, b) =>
+                {
+                    var ca = (CatalogModItemViewModel)a!;
+                    var cb = (CatalogModItemViewModel)b!;
+                    var cmp = ModListFilter.CompareUpdatedAtDesc(ca.UpdatedAt, cb.UpdatedAt);
+                    return cmp != 0
+                        ? cmp
+                        : string.Compare(ca.Name, cb.Name, StringComparison.CurrentCultureIgnoreCase);
+                }),
+            ModSortMode.UpdatedAtDesc =>
+                Comparer<object>.Create((a, b) =>
+                {
+                    var ca = (ModItemViewModel)a!;
+                    var cb = (ModItemViewModel)b!;
+                    var cmp = ModListFilter.CompareUpdatedAtDesc(ca.CatalogUpdatedAt, cb.CatalogUpdatedAt);
+                    return cmp != 0
+                        ? cmp
+                        : string.Compare(ca.DisplayName, cb.DisplayName, StringComparison.CurrentCultureIgnoreCase);
+                }),
+            _ when catalog =>
+                Comparer<object>.Create((a, b) =>
+                    string.Compare(
+                        ((CatalogModItemViewModel)a!).Name,
+                        ((CatalogModItemViewModel)b!).Name,
+                        StringComparison.CurrentCultureIgnoreCase)),
+            _ =>
+                Comparer<object>.Create((a, b) =>
+                    string.Compare(
+                        ((ModItemViewModel)a!).DisplayName,
+                        ((ModItemViewModel)b!).DisplayName,
+                        StringComparison.CurrentCultureIgnoreCase))
+        };
+    }
+
+    bool FilterCatalogItem(object obj)
+    {
+        if (obj is not CatalogModItemViewModel item) return false;
+        if (!ModListFilter.MatchesSearch(
+                CatalogSearchText, item.Name, item.Author, item.Summary, item.Id))
+            return false;
+        if (!ModListFilter.MatchesCategory(SelectedCatalogCategoryFilter?.Category, item.EffectiveCategory))
+            return false;
+        if (!ModListFilter.MatchesTag(SelectedCatalogTagFilter?.Tag, item.EffectiveTags))
+            return false;
+        return true;
+    }
+
+    bool FilterLibraryItem(object obj)
+    {
+        if (obj is not ModItemViewModel item) return false;
+        if (!ModListFilter.MatchesSearch(
+                LibrarySearchText, item.DisplayName, item.Author, item.Summary, item.Package.Id))
+            return false;
+        if (!ModListFilter.MatchesCategory(SelectedLibraryCategoryFilter?.Category, item.EffectiveCategory))
+            return false;
+        if (!ModListFilter.MatchesTag(SelectedLibraryTagFilter?.Tag, item.EffectiveTags))
+            return false;
+        return true;
     }
 
     void RecomputeDirty()

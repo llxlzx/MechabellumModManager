@@ -181,4 +181,26 @@ After you continue, the manager copies the template and opens QQ Mail (Chinese U
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>维护者将在合理时间内审阅并处理您的来信。受日常生活与个人事务安排影响，处理进度或有短暂延误，敬请谅解并耐心等待。请勿重复发送同一内容。
 The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+
+  <data name="FilterSearch" xml:space="preserve"><value>搜索</value></data>
+  <data name="FilterCategory" xml:space="preserve"><value>分类</value></data>
+  <data name="FilterTag" xml:space="preserve"><value>标签</value></data>
+  <data name="FilterSort" xml:space="preserve"><value>排序</value></data>
+  <data name="FilterAll" xml:space="preserve"><value>全部</value></data>
+  <data name="SortByName" xml:space="preserve"><value>名称</value></data>
+  <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>更新（新→旧）</value></data>
+  <data name="ColumnCategory" xml:space="preserve"><value>分类</value></data>
+  <data name="TagsLabel" xml:space="preserve"><value>标签</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>界面覆盖</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>生活质量</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>镜头</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>战斗辅助</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>经济</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>回放调试</value></data>
+  <data name="CategoryMisc" xml:space="preserve"><value>杂项</value></data>
+  <data name="CategoryUncategorized" xml:space="preserve"><value>未分类</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>编辑分类/标签</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>跟随目录</value></data>
+  <data name="ExtraTagsHint" xml:space="preserve"><value>额外标签（逗号分隔）</value></data>
+
 </root>

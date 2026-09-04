@@ -349,6 +349,28 @@
                         </StackPanel>
                     </DockPanel>
 
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8" LastChildFill="False">
+                        <TextBox Width="160" Height="28" Margin="0,0,8,0"
+                                 VerticalContentAlignment="Center"
+                                 ToolTip="{Binding Ui.FilterSearch}"
+                                 Text="{Binding CatalogSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                        <ComboBox Width="140" Height="28" Margin="0,0,8,0"
+                                  ToolTip="{Binding Ui.FilterCategory}"
+                                  ItemsSource="{Binding CatalogCategoryFilterOptions}"
+                                  SelectedItem="{Binding SelectedCatalogCategoryFilter}"
+                                  DisplayMemberPath="Label" />
+                        <ComboBox Width="120" Height="28" Margin="0,0,8,0"
+                                  ToolTip="{Binding Ui.FilterTag}"
+                                  ItemsSource="{Binding CatalogAvailableTagOptions}"
+                                  SelectedItem="{Binding SelectedCatalogTagFilter}"
+                                  DisplayMemberPath="Label" />
+                        <ComboBox Width="140" Height="28"
+                                  ToolTip="{Binding Ui.FilterSort}"
+                                  ItemsSource="{Binding SortModeOptions}"
+                                  SelectedItem="{Binding SelectedCatalogSortMode}"
+                                  DisplayMemberPath="Label" />
+                    </DockPanel>
+
                     <TextBlock DockPanel.Dock="Bottom"
                                Margin="0,8,0,0"
                                Text="{Binding CatalogStatus}"
@@ -392,11 +414,20 @@
                                            Foreground="{StaticResource TextPrimaryBrush}"
                                            TextWrapping="Wrap"
                                            FontSize="12" />
+                                <TextBlock Margin="0,6,0,0"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding SelectedCatalogMod.EffectiveTagsText, Converter={StaticResource NonEmptyVis}}">
+                                    <Run Text="{Binding Ui.TagsLabel, Mode=OneWay}" />
+                                    <Run Text="：" />
+                                    <Run Text="{Binding SelectedCatalogMod.EffectiveTagsText, Mode=OneWay}" />
+                                </TextBlock>
                             </StackPanel>
                         </DockPanel>
                     </Border>
 
-                    <DataGrid ItemsSource="{Binding CatalogMods}"
+                    <DataGrid ItemsSource="{Binding CatalogModsView}"
                               SelectedItem="{Binding SelectedCatalogMod}"
                               IsReadOnly="True"
                               HeadersVisibility="Column"
@@ -406,6 +437,9 @@
                                                 Binding="{Binding Name}"
                                                 Width="*"
                                                 MinWidth="120" />
+                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                Binding="{Binding EffectiveCategoryDisplay}"
+                                                Width="100" />
                             <DataGridTextColumn Header="作者"
                                                 Binding="{Binding Author}"
                                                 Width="90" />
@@ -475,11 +509,12 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" MinHeight="140" />
                             <RowDefinition Height="Auto" MaxHeight="180" />
                         </Grid.RowDefinitions>
 
-                        <DockPanel Grid.Row="0" Margin="0,0,0,12" LastChildFill="False">
+                        <DockPanel Grid.Row="0" Margin="0,0,0,8" LastChildFill="False">
                             <StackPanel Orientation="Horizontal"
                                         VerticalAlignment="Center"
                                         DockPanel.Dock="Left"
@@ -511,8 +546,35 @@
                             </WrapPanel>
                         </DockPanel>
 
-                        <DataGrid Grid.Row="1"
-                                  ItemsSource="{Binding Mods}"
+                        <DockPanel Grid.Row="1" Margin="0,0,0,8" LastChildFill="False">
+                            <TextBox Width="160" Height="28" Margin="0,0,8,0"
+                                     VerticalContentAlignment="Center"
+                                     ToolTip="{Binding Ui.FilterSearch}"
+                                     Text="{Binding LibrarySearchText, UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox Width="140" Height="28" Margin="0,0,8,0"
+                                      ToolTip="{Binding Ui.FilterCategory}"
+                                      ItemsSource="{Binding LibraryCategoryFilterOptions}"
+                                      SelectedItem="{Binding SelectedLibraryCategoryFilter}"
+                                      DisplayMemberPath="Label" />
+                            <ComboBox Width="120" Height="28" Margin="0,0,8,0"
+                                      ToolTip="{Binding Ui.FilterTag}"
+                                      ItemsSource="{Binding LibraryAvailableTagOptions}"
+                                      SelectedItem="{Binding SelectedLibraryTagFilter}"
+                                      DisplayMemberPath="Label" />
+                            <ComboBox Width="140" Height="28" Margin="0,0,8,0"
+                                      ToolTip="{Binding Ui.FilterSort}"
+                                      ItemsSource="{Binding SortModeOptions}"
+                                      SelectedItem="{Binding SelectedLibrarySortMode}"
+                                      DisplayMemberPath="Label" />
+                            <Button Content="{Binding Ui.EditModTaxonomy}"
+                                    Command="{Binding EditLibraryModTaxonomyCommand}"
+                                    Height="28"
+                                    MinWidth="110"
+                                    Style="{StaticResource GhostButtonStyle}" />
+                        </DockPanel>
+
+                        <DataGrid Grid.Row="2"
+                                  ItemsSource="{Binding LibraryModsView}"
                                   SelectedItem="{Binding SelectedLibraryMod}"
                                   IsReadOnly="False"
                                   HeadersVisibility="Column"
@@ -532,6 +594,10 @@
                                                     IsReadOnly="True"
                                                     Width="*"
                                                     MinWidth="140" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding EffectiveCategoryDisplay}"
+                                                    IsReadOnly="True"
+                                                    Width="100" />
                                 <DataGridTextColumn Header="作者"
                                                     Binding="{Binding Author}"
                                                     IsReadOnly="True"
@@ -582,7 +648,7 @@
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <Border Grid.Row="2"
+                        <Border Grid.Row="3"
                                 Margin="0,12,0,0"
                                 Padding="0,10,0,0"
                                 MaxHeight="160"
@@ -645,6 +711,15 @@
                                                                TextWrapping="Wrap">
                                                         <Run Text="功能：" />
                                                         <Run Text="{Binding SelectedLibraryMod.Summary, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                    <TextBlock Margin="0,6,0,0"
+                                                               Foreground="{StaticResource TextMutedBrush}"
+                                                               FontSize="12"
+                                                               TextWrapping="Wrap"
+                                                               Visibility="{Binding SelectedLibraryMod.EffectiveTagsText, Converter={StaticResource NonEmptyVis}}">
+                                                        <Run Text="{Binding Ui.TagsLabel, Mode=OneWay}" />
+                                                        <Run Text="：" />
+                                                        <Run Text="{Binding SelectedLibraryMod.EffectiveTagsText, Mode=OneWay}" />
                                                     </TextBlock>
                                                 </StackPanel>
                                             </DockPanel>

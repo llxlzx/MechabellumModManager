@@ -54,6 +54,7 @@ public partial class App : Application
             openFolder: () => BrowseImportFolder(owner),
             promptReport: modName => PromptReport(owner, modName),
             promptSubmitGuide: () => PromptSubmitGuide(owner),
+            promptEditTaxonomy: pkg => PromptEditTaxonomy(owner, pkg),
             copyText: text => Clipboard.SetText(text));
     }
 
@@ -129,5 +130,14 @@ public partial class App : Application
     {
         var dialog = new SubmitGuideDialog { Owner = owner };
         return dialog.ShowDialog() == true;
+    }
+
+    static (string? Override, IReadOnlyList<string> ExtraTags)? PromptEditTaxonomy(Window owner, ModPackage package)
+    {
+        var ui = (owner.DataContext as MainViewModel)?.Ui ?? new UiStrings();
+        var dialog = new EditModTaxonomyDialog(package, ui) { Owner = owner };
+        if (dialog.ShowDialog() != true)
+            return null;
+        return dialog.Result;
     }
 }

@@ -34,7 +34,17 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public IReadOnlyList<string> EffectiveTags =>
         ModTaxonomy.NormalizeTags(Mod.Tags);
 
-    public string EffectiveCategoryDisplay => EffectiveCategory.ToString();
+    public string EffectiveCategoryDisplay => LocalizationService.T(EffectiveCategory switch
+    {
+        ModCategory.OverlayUI => "CategoryOverlayUI",
+        ModCategory.QoL => "CategoryQoL",
+        ModCategory.Camera => "CategoryCamera",
+        ModCategory.CombatAssist => "CategoryCombatAssist",
+        ModCategory.Economy => "CategoryEconomy",
+        ModCategory.ReplayDebug => "CategoryReplayDebug",
+        ModCategory.Misc => "CategoryMisc",
+        _ => "CategoryUncategorized"
+    });
 
     public string EffectiveTagsText => EffectiveTags.Count == 0 ? "" : string.Join(", ", EffectiveTags);
 
