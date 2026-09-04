@@ -36,9 +36,17 @@ public sealed class DeployService
         Profile profile,
         IReadOnlyDictionary<string, ModPackage> packages,
         string gamePath,
-        bool allowOverwriteUnmanaged)
+        bool allowOverwriteUnmanaged,
+        string? manifestPath = null,
+        string? manifestPrevPath = null)
     {
         var emptyPlan = new DeployPlan();
+        var resolvedManifest = string.IsNullOrWhiteSpace(manifestPath)
+            ? _paths.DeployManifestPath
+            : manifestPath;
+        var resolvedPrev = string.IsNullOrWhiteSpace(manifestPrevPath)
+            ? _paths.DeployManifestPrevPath
+            : manifestPrevPath;
 
         if (_processProbe.IsGameRunning())
             return Fail("游戏正在运行，请先关闭 Mechabellum 后再部署。", emptyPlan);
@@ -47,7 +55,7 @@ public sealed class DeployService
         if (status.Kind != GameStatusKind.Ready)
             return Fail(status.Message, emptyPlan);
 
-        var existing = _store.LoadOrDefault(_paths.DeployManifestPath, () => new DeployManifest());
+        var existing = _store.LoadOrDefault(resolvedManifest, () => new DeployManifest());
         var plan = _planner.Build(gamePath, profile, packages, existing, allowOverwriteUnmanaged);
 
         if (plan.IntraProfileNameCollisions.Count > 0)
@@ -57,7 +65,7 @@ public sealed class DeployService
             return Fail("存在非托管同名文件，默认拒绝覆盖。", plan);
 
         var prev = CloneManifest(existing);
-        _store.Save(_paths.DeployManifestPrevPath, prev);
+        _store.Save(resolvedPrev, prev);
 
         EnsureGameDirs(gamePath);
 
@@ -82,7 +90,7 @@ public sealed class DeployService
         }
         catch (Exception ex)
         {
-            Rollback(prev, writtenThisAttempt, packages, gamePath);
+            Rollback(prev, writtenThisAttempt, packages, gamePath, resolvedManifest);
             return Fail($"部署失败并已回滚：{ex.Message}", plan);
         }
 
@@ -97,7 +105,7 @@ public sealed class DeployService
                 Sha256 = c.Sha256
             }).ToList()
         };
-        _store.Save(_paths.DeployManifestPath, newManifest);
+        _store.Save(resolvedManifest, newManifest);
 
         return new DeployResult
         {
@@ -111,7 +119,8 @@ public sealed class DeployService
         DeployManifest prev,
         List<string> writtenThisAttempt,
         IReadOnlyDictionary<string, ModPackage> packages,
-        string gamePath)
+        string gamePath,
+        string manifestPath)
     {
         try
         {
@@ -150,7 +159,7 @@ public sealed class DeployService
                     File.Copy(source, dest, overwrite: true);
                 }
 
-                _store.Save(_paths.DeployManifestPath, prev);
+                _store.Save(manifestPath, prev);
             }
             else
             {
@@ -160,7 +169,7 @@ public sealed class DeployService
                         File.Delete(written);
                 }
 
-                _store.Save(_paths.DeployManifestPath, new DeployManifest());
+                _store.Save(manifestPath, new DeployManifest());
             }
         }
         catch
