@@ -325,4 +325,5 @@
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 或游戏仍在运行（含 steamwebhelper）。请在任务管理器中结束相关进程后再切服。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>当前已是该服（目录与 Steam 测试分支已对齐），无需再次切换。</value></data>
+  <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>双服目录中仍有服缺少 MelonLoader。请重新运行安装包勾选 MelonLoader，或先在有 Loader 的那一服装好。</value></data>
 </root>

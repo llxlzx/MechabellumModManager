@@ -323,4 +323,5 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam oder Spiel läuft noch (inkl. steamwebhelper). Prozesse im Task-Manager beenden, dann erneut versuchen.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Ordnerwechsel fehlgeschlagen.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Bereits auf diesem Zweig (Ordner und Steam-Beta stimmen). Kein Wechsel nötig.</value></data>
+  <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>In einem Offiziell/Test-Ordner fehlt noch MelonLoader. Setup erneut mit MelonLoader, oder zuerst auf dem Ordner mit Loader installieren.</value></data>
 </root>

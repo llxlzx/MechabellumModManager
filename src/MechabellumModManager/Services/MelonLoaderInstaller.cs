@@ -263,6 +263,10 @@ public sealed class MelonLoaderInstaller
         return $"{bytes / (1024.0 * 1024.0):0.00} MB";
     }
 
+    /// <summary>Used by <see cref="MelonLoaderDualStoreSync"/> to install from a local zip.</summary>
+    public static void CopyExtractedPayloadForSync(string extractDir, string gamePath, List<string> written)
+        => CopyExtractedPayload(extractDir, gamePath, written);
+
     static void CopyExtractedPayload(string extractDir, string gamePath, List<string> written)
     {
         // Prefer contents of a top-level MelonLoader folder layout from the zip root.
