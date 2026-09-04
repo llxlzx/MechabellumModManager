@@ -1,0 +1,6 @@
+{
+  "version": "1.0.8",
+  "notes": "1.0.8: Melon程序集自动生成；双服向导 Access Denied/选服 UX；安装器用户协议；主界面多选/折叠/应用方案。 / Auto Melon assemblies; wizard Access Denied + branch pick; installer EULA; multi-select/collapse/Apply.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.8/MechabellumModManager_Setup_v1.0.8.exe",
+  "publishedAt": "2026-09-04T22:49:27Z"
+}

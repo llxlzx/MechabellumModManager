@@ -56,6 +56,7 @@ public partial class App : Application
             openZip: () => OpenFile(owner, LocalizationService.T("FileFilterZip")),
             promptText: title => Prompt(owner, title),
             pickPackageType: () => PickPackageType(owner),
+            pickCurrentBranch: () => PickCurrentBranch(owner),
             openFolder: () => BrowseImportFolder(owner),
             promptReport: modName => PromptReport(owner, modName),
             promptSubmitGuide: () => PromptSubmitGuide(owner),
@@ -139,6 +140,15 @@ public partial class App : Application
     static ModPackageType? PickPackageType(Window owner)
     {
         var dialog = new TypePickDialog
+        {
+            Owner = owner
+        };
+        return dialog.ShowDialog() == true ? dialog.Result : null;
+    }
+
+    static GameBranch? PickCurrentBranch(Window owner)
+    {
+        var dialog = new BranchPickDialog
         {
             Owner = owner
         };

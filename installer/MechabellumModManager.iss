@@ -1,9 +1,9 @@
-; 钢铁指挥官 Mod 管理器 — Inno Setup 6
+﻿; 钢铁指挥官 Mod 管理器 — Inno Setup 6
 ; Compile with: ISCC.exe MechabellumModManager.iss
 ; Or run: build-installer.bat
 
 #define MyAppName "钢铁指挥官 Mod 管理器"
-#define MyAppVersion "1.0.7"
+#define MyAppVersion "1.0.8"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -30,7 +30,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 SetupLogging=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
-LicenseFile=
+LicenseFile=EULA.zh-CN.txt
 InfoBeforeFile=
 
 [Languages]
@@ -341,8 +341,7 @@ begin
   RiskLabel.Width := WizardForm.WelcomePage.Width - ScaleX(40);
   RiskLabel.Height := ScaleY(80);
   RiskLabel.WordWrap := True;
-  RiskLabel.Caption :=
-    '风险提示：本工具用于客户端 QoL Mod。修改战斗逻辑可能导致 Data Error 与处罚；官方未支持 Mod，风险自负。';
+  RiskLabel.Caption := '请仔细阅读下一页用户协议；同意后方可继续安装。';
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;

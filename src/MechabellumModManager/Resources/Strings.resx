@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -326,4 +326,5 @@
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>当前已是该服（目录与 Steam 测试分支已对齐），无需再次切换。</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>双服目录中仍有服缺少 MelonLoader。请重新运行安装包勾选 MelonLoader，或先在有 Loader 的那一服装好。</value></data>
+  <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>当前安装的是哪一服？请直接选择正式服或测试服。</value></data>
 </root>

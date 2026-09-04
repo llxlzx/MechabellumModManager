@@ -102,12 +102,13 @@ public class DeployServiceBranchManifestTests
         };
     }
 
-    static void CreateReadyGame(string root)
-    {
-        Directory.CreateDirectory(root);
-        File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
-        File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
-        Directory.CreateDirectory(Path.Combine(root, "MelonLoader"));
-        File.WriteAllText(Path.Combine(root, "version.dll"), "");
-    }
+        static void CreateReadyGame(string root)
+        {
+            Directory.CreateDirectory(root);
+            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
+            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
+            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "Il2CppAssemblies"));
+            File.WriteAllText(Path.Combine(root, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
+            File.WriteAllText(Path.Combine(root, "version.dll"), "");
+        }
 }

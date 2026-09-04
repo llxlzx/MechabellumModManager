@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -324,4 +324,5 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>One Official/Test folder is still missing MelonLoader. Re-run Setup and tick MelonLoader, or install it on the folder that already has a loader.</value></data>
+  <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>Which branch is currently installed? Choose Official or Test.</value></data>
 </root>

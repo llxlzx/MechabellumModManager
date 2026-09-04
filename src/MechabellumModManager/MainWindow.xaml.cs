@@ -15,6 +15,12 @@ public partial class MainWindow : Window
         TryApplyBrandAssets();
     }
 
+    void LibraryModsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is ViewModels.MainViewModel vm && sender is DataGrid grid)
+            vm.LibrarySelectionCount = grid.SelectedItems.Count;
+    }
+
     void ModPreviewImage_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Image { Source: not null } image)

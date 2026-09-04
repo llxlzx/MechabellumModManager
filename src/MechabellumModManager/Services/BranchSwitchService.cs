@@ -398,6 +398,9 @@ public sealed class BranchSwitchService
                 if (PathExists(dest))
                     return BranchOperationResult.Fail("Store path already exists.");
 
+                if (!TryProbeDirectoryWritable(link, out var probeError))
+                    return BranchOperationResult.Fail(probeError);
+
                 Directory.Move(link, dest);
             }
             else
@@ -415,7 +418,7 @@ public sealed class BranchSwitchService
         }
         catch (Exception ex)
         {
-            return BranchOperationResult.Fail(ex.Message);
+            return BranchOperationResult.Fail(MapArchiveException(ex));
         }
     }
 
@@ -442,6 +445,9 @@ public sealed class BranchSwitchService
 
         try
         {
+            if (!TryProbeDirectoryWritable(link, out var probeError))
+                return BranchOperationResult.Fail(probeError);
+
             Directory.Move(link, dest);
             if (PathExists(link))
                 return BranchOperationResult.Fail("Steam link path still exists after archive.");
@@ -453,7 +459,7 @@ public sealed class BranchSwitchService
         }
         catch (Exception ex)
         {
-            return BranchOperationResult.Fail(ex.Message);
+            return BranchOperationResult.Fail(MapArchiveException(ex));
         }
     }
 
@@ -774,6 +780,44 @@ public sealed class BranchSwitchService
         && Directory.Exists(path)
         && File.Exists(Path.Combine(path, "Mechabellum.exe"))
         && File.Exists(Path.Combine(path, "GameAssembly.dll"));
+
+    static bool TryProbeDirectoryWritable(string dir, out string error)
+    {
+        error = "";
+        try
+        {
+            if (!Directory.Exists(dir))
+            {
+                error = "目录不存在。";
+                return false;
+            }
+
+            var probe = Path.Combine(dir, ".mmm_write_probe_" + Guid.NewGuid().ToString("N"));
+            File.WriteAllText(probe, "ok");
+            File.Delete(probe);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = MapArchiveException(ex);
+            return false;
+        }
+    }
+
+    internal static string MapArchiveException(Exception ex)
+    {
+        var msg = ex.Message ?? "";
+        if (ex is UnauthorizedAccessException
+            || msg.Contains("denied", StringComparison.OrdinalIgnoreCase)
+            || msg.Contains("拒绝访问", StringComparison.OrdinalIgnoreCase))
+        {
+            return "无法移动游戏目录（访问被拒绝）。请确认已完全退出 Steam 与游戏（含 steamwebhelper），"
+                   + "临时关闭对该目录的杀软占用，检查文件夹只读属性；仍失败时请以管理员身份运行管理器后重试。\n"
+                   + "原始信息：" + msg;
+        }
+
+        return msg;
+    }
 
     static bool PathExists(string path)
     {

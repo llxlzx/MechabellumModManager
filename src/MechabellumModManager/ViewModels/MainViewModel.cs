@@ -30,6 +30,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly RiskGate _riskGate;
     readonly MelonLoaderConfigOptimizer _melonOptimizer;
     readonly MelonLoaderDualStoreSync _melonDualSync;
+    readonly MelonLoaderAssemblyGenerator _melonAssemblyGenerator;
     readonly RiskHeuristic _riskHeuristic;
     readonly SteamGameLocator _steamLocator;
     readonly UpdateChecker _updateChecker;
@@ -44,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string?>? _openZip;
     readonly Func<string, string?>? _promptText;
     readonly Func<ModPackageType?>? _pickPackageType;
+    readonly Func<GameBranch?>? _pickCurrentBranch;
     readonly Func<string?>? _openFolder;
     readonly Func<string, (ReportCategory Category, string Notes)?>? _promptReport;
     readonly Func<bool>? _promptSubmitGuide;
@@ -79,6 +81,7 @@ public sealed partial class MainViewModel : ObservableObject
         RiskGate riskGate,
         MelonLoaderConfigOptimizer? melonOptimizer = null,
         MelonLoaderDualStoreSync? melonDualSync = null,
+        MelonLoaderAssemblyGenerator? melonAssemblyGenerator = null,
         RiskHeuristic? riskHeuristic = null,
         SteamGameLocator? steamLocator = null,
         UpdateChecker? updateChecker = null,
@@ -92,6 +95,7 @@ public sealed partial class MainViewModel : ObservableObject
         Func<string?>? openZip = null,
         Func<string, string?>? promptText = null,
         Func<ModPackageType?>? pickPackageType = null,
+        Func<GameBranch?>? pickCurrentBranch = null,
         Func<string?>? openFolder = null,
         Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
         Func<bool>? promptSubmitGuide = null,
@@ -116,6 +120,7 @@ public sealed partial class MainViewModel : ObservableObject
         _riskGate = riskGate;
         _melonOptimizer = melonOptimizer ?? new MelonLoaderConfigOptimizer();
         _melonDualSync = melonDualSync ?? new MelonLoaderDualStoreSync();
+        _melonAssemblyGenerator = melonAssemblyGenerator ?? new MelonLoaderAssemblyGenerator();
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         _steamLocator = steamLocator ?? new SteamGameLocator();
         _updateChecker = updateChecker ?? new UpdateChecker();
@@ -131,6 +136,7 @@ public sealed partial class MainViewModel : ObservableObject
         _openZip = openZip;
         _promptText = promptText;
         _pickPackageType = pickPackageType;
+        _pickCurrentBranch = pickCurrentBranch;
         _openFolder = openFolder;
         _promptReport = promptReport;
         _promptSubmitGuide = promptSubmitGuide;
@@ -148,7 +154,7 @@ public sealed partial class MainViewModel : ObservableObject
             _processProbe,
             new JunctionService(),
             new SteamBetaKeyEditor(_processProbe));
-        ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => CanDeployOrLaunch);
+        ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => CanApplyProfile);
 
         Ui = new UiStrings();
         Profiles = new ObservableCollection<ProfileItemViewModel>();
@@ -277,6 +283,11 @@ public sealed partial class MainViewModel : ObservableObject
     public bool CanDeployOrLaunch =>
         IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
 
+    public bool CanApplyProfile =>
+        CanDeployOrLaunch && (IsDirty || LibrarySelectionCount > 0);
+
+    [ObservableProperty] private int _librarySelectionCount;
+
     public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
 
     public bool CanSwitchGameBranch =>
@@ -299,6 +310,7 @@ public sealed partial class MainViewModel : ObservableObject
     public string StatusKindLabel => GameStatus?.Kind switch
     {
         GameStatusKind.Ready => "就绪",
+        GameStatusKind.LoaderPresentAssembliesMissing => "待生成程序集",
         GameStatusKind.GameOkLoaderMissing => "缺少 Loader",
         GameStatusKind.LoaderPartial => "Loader 不完整",
         GameStatusKind.GameMissing => "未找到游戏",
@@ -431,7 +443,18 @@ public sealed partial class MainViewModel : ObservableObject
         NotifyBranchGates();
     }
 
-    partial void OnIsDirtyChanged(bool value) => OnPropertyChanged(nameof(DirtyHint));
+    partial void OnIsDirtyChanged(bool value)
+    {
+        OnPropertyChanged(nameof(DirtyHint));
+        OnPropertyChanged(nameof(CanApplyProfile));
+        ApplyProfileCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnLibrarySelectionCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(CanApplyProfile));
+        ApplyProfileCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnGamePathChanged(string value)
     {
@@ -740,6 +763,12 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         RefreshStatus();
+        if (GameStatus?.Kind == GameStatusKind.LoaderPresentAssembliesMissing)
+        {
+            EnsureMelonAssembliesForStore(GamePath);
+            RefreshStatus();
+        }
+
         if (GameStatus?.Kind != GameStatusKind.Ready)
         {
             AppendLog(GameStatus?.Message ?? "游戏状态未就绪，无法部署。");
@@ -2142,9 +2171,21 @@ public sealed partial class MainViewModel : ObservableObject
         if (!Confirm(LocalizationService.T("ConfirmStartDualBranchWizard")))
             return;
 
-        var current = Confirm(LocalizationService.T("ConfirmCurrentIsOfficial"))
-            ? GameBranch.Official
-            : GameBranch.Beta;
+        GameBranch current;
+        if (_pickCurrentBranch is not null)
+        {
+            var picked = _pickCurrentBranch();
+            if (picked is null)
+                return;
+            current = picked.Value;
+        }
+        else
+        {
+            // Tests / headless fallback: Yes=Official, No=Beta (legacy).
+            current = Confirm(LocalizationService.T("ConfirmCurrentIsOfficial"))
+                ? GameBranch.Official
+                : GameBranch.Beta;
+        }
 
         var betaName = string.IsNullOrWhiteSpace(BetaBranchName)
             ? BranchSwitchConfig.DefaultSteamBetaBranchName
@@ -2340,9 +2381,15 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog(warn);
                 _notify(warn);
             }
-            else if (preferTarget is not null)
+            else
             {
-                // Refresh after ensuring the currently linked path is ready.
+                var targetPath = preferTarget switch
+                {
+                    GameBranch.Official => cfg.OfficialStorePath,
+                    GameBranch.Beta => cfg.BetaStorePath,
+                    _ => string.IsNullOrWhiteSpace(GamePath) ? cfg.SteamLinkPath : GamePath
+                };
+                EnsureMelonAssembliesForStore(targetPath);
                 RefreshStatus();
             }
         }
@@ -2350,6 +2397,23 @@ public sealed partial class MainViewModel : ObservableObject
         {
             AppendLog($"补齐双服 MelonLoader 失败：{ex.Message}");
         }
+    }
+
+    void EnsureMelonAssembliesForStore(string? storePath)
+    {
+        if (string.IsNullOrWhiteSpace(storePath))
+            return;
+        if (_detector.Detect(storePath).Kind is not GameStatusKind.LoaderPresentAssembliesMissing)
+            return;
+
+        AppendLog($"正在为「{Path.GetFileName(storePath)}」生成 MelonLoader 程序集…");
+        var gen = _melonAssemblyGenerator.EnsureAssemblies(
+            storePath,
+            progress: msg => AppendLog(msg));
+        if (!string.IsNullOrWhiteSpace(gen.Message))
+            AppendLog(gen.Message);
+        if (!gen.Success && !gen.Skipped)
+            _notify(gen.Message);
     }
 
     async Task<bool> RunTeardownCoreAsync(bool deleteOtherStore)
@@ -2563,6 +2627,7 @@ public sealed partial class MainViewModel : ObservableObject
     void NotifyBranchGates()
     {
         OnPropertyChanged(nameof(CanDeployOrLaunch));
+        OnPropertyChanged(nameof(CanApplyProfile));
         OnPropertyChanged(nameof(IsBranchWizardBlocking));
         OnPropertyChanged(nameof(CanSwitchGameBranch));
         OnPropertyChanged(nameof(CanStartBranchWizard));

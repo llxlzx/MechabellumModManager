@@ -117,7 +117,7 @@ public sealed class MelonLoaderInstaller
             }
 
             var status = new GameDetector().Detect(gamePath);
-            if (status.Kind != Models.GameStatusKind.Ready)
+            if (status.Kind is not (Models.GameStatusKind.Ready or Models.GameStatusKind.LoaderPresentAssembliesMissing))
             {
                 return new MelonLoaderInstallResult
                 {
@@ -345,6 +345,7 @@ public sealed class MelonLoaderInstaller
     static string Describe(Models.GameStatusKind kind) => kind switch
     {
         Models.GameStatusKind.Ready => "就绪",
+        Models.GameStatusKind.LoaderPresentAssembliesMissing => "待生成程序集",
         Models.GameStatusKind.GameOkLoaderMissing => "缺少 Loader",
         Models.GameStatusKind.LoaderPartial => "Loader 不完整",
         Models.GameStatusKind.GameMissing => "未找到游戏",

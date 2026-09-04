@@ -25,7 +25,31 @@ public class MelonLoaderDualStoreSyncTests
             Directory.Exists(Path.Combine(dst, "MelonLoader", "net6")).Should().BeTrue();
             File.Exists(Path.Combine(dst, "MelonLoader", "net6", "MelonLoader.dll")).Should().BeTrue();
             Directory.Exists(Path.Combine(dst, "MelonLoader", "Il2CppAssemblies")).Should().BeFalse();
-            new GameDetector().Detect(dst).Kind.Should().Be(MechabellumModManager.Models.GameStatusKind.Ready);
+            new GameDetector().Detect(dst).Kind.Should().Be(MechabellumModManager.Models.GameStatusKind.LoaderPresentAssembliesMissing);
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
+    public void EnsureOnStore_does_not_copy_Latest_log()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-log-" + Guid.NewGuid().ToString("N"));
+        var src = Path.Combine(root, "src");
+        var dst = Path.Combine(root, "dst");
+        try
+        {
+            SeedGame(src);
+            SeedGame(dst);
+            SeedLoader(src);
+            File.WriteAllText(Path.Combine(src, "MelonLoader", "Latest.log"), "from-src");
+
+            var result = new MelonLoaderDualStoreSync().EnsureOnStore(dst, siblingGamePath: src);
+
+            result.Success.Should().BeTrue();
+            File.Exists(Path.Combine(dst, "MelonLoader", "Latest.log")).Should().BeFalse();
         }
         finally
         {
@@ -48,8 +72,8 @@ public class MelonLoaderDualStoreSyncTests
             var result = new MelonLoaderDualStoreSync().EnsureOnBothStores(official, beta);
 
             result.Success.Should().BeTrue();
-            new GameDetector().Detect(official).Kind.Should().Be(MechabellumModManager.Models.GameStatusKind.Ready);
-            new GameDetector().Detect(beta).Kind.Should().Be(MechabellumModManager.Models.GameStatusKind.Ready);
+            new GameDetector().Detect(official).Kind.Should().Be(MechabellumModManager.Models.GameStatusKind.LoaderPresentAssembliesMissing);
+            new GameDetector().Detect(beta).Kind.Should().Be(MechabellumModManager.Models.GameStatusKind.LoaderPresentAssembliesMissing);
         }
         finally
         {
