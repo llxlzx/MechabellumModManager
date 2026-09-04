@@ -45,6 +45,16 @@ public sealed partial class ModItemViewModel : ObservableObject
     public string? Preview => Package.Preview;
     public string? PreviewUrl { get; private set; }
 
+    public ModCategory EffectiveCategory =>
+        ModTaxonomy.ResolveEffectiveCategory(Package.CategoryOverride, Package.CatalogCategory);
+
+    public IReadOnlyList<string> EffectiveTags =>
+        ModTaxonomy.ResolveEffectiveTags(Package.CatalogTags, Package.ExtraTags);
+
+    public string EffectiveCategoryDisplay => EffectiveCategory.ToString();
+
+    public string EffectiveTagsText => EffectiveTags.Count == 0 ? "" : string.Join(", ", EffectiveTags);
+
     [ObservableProperty]
     private BitmapImage? _previewImage;
 
@@ -81,6 +91,10 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(CatalogUpdatedAt));
         OnPropertyChanged(nameof(Preview));
         OnPropertyChanged(nameof(PreviewUrl));
+        OnPropertyChanged(nameof(EffectiveCategory));
+        OnPropertyChanged(nameof(EffectiveTags));
+        OnPropertyChanged(nameof(EffectiveCategoryDisplay));
+        OnPropertyChanged(nameof(EffectiveTagsText));
     }
 
     public void RefreshCatalogFieldsFromPackage()
@@ -104,6 +118,13 @@ public sealed partial class ModItemViewModel : ObservableObject
             Package.CatalogUpdatedAt = catalog.UpdatedAt;
         if (!string.IsNullOrWhiteSpace(catalog.Preview))
             Package.Preview = catalog.Preview;
+        Package.CatalogCategory = catalog.Category;
+        Package.CatalogTags = catalog.Tags is null ? null : new List<string>(catalog.Tags);
+        if (!string.IsNullOrWhiteSpace(catalog.Category) &&
+            !ModTaxonomy.TryParseCategory(catalog.Category, out _))
+        {
+            _owner.LogTaxonomyWarning($"Mod '{Package.Id}': invalid catalog category '{catalog.Category}', treating as Uncategorized.");
+        }
         RefreshCatalogFieldsFromPackage();
     }
 
