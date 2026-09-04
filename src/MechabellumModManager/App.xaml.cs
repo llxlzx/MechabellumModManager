@@ -49,6 +49,7 @@ public partial class App : Application
             assemblyInspector: inspector,
             confirmHighRisk: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Warning),
             confirm: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question),
+            confirmChoice: (msg, defaultResult) => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question, defaultResult),
             notify: msg => MessageBox.Show(owner, msg, LocalizationService.T("Notice"), MessageBoxButton.OK, MessageBoxImage.Information),
             browseFolder: () => BrowseFolder(owner),
             openDll: () => OpenFile(owner, "Melon Mod DLL|*.dll|所有文件|*.*"),
@@ -74,8 +75,8 @@ public partial class App : Application
         return appData;
     }
 
-    static bool Confirm(Window owner, string message, string title, MessageBoxImage icon) =>
-        MessageBox.Show(owner, message, title, MessageBoxButton.YesNo, icon) == MessageBoxResult.Yes;
+    static bool Confirm(Window owner, string message, string title, MessageBoxImage icon, MessageBoxResult defaultResult = MessageBoxResult.Yes) =>
+        MessageBox.Show(owner, message, title, MessageBoxButton.YesNo, icon, defaultResult) == MessageBoxResult.Yes;
 
     static string? BrowseFolder(Window owner)
     {

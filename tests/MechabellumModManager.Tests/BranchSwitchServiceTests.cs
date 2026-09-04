@@ -198,6 +198,25 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void CreateLinkTo_existing_junction_to_target_is_success()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Cfg.Enabled = false;
+        h.Cfg.WizardStep = BranchWizardStep.Linked;
+        h.Svc.SaveConfig(h.Cfg);
+
+        var result = h.Svc.CreateLinkTo(GameBranch.Official);
+
+        result.Success.Should().BeTrue();
+        h.Junctions.IsJunction(h.SteamLink).Should().BeTrue();
+        h.Junctions.ResolveTarget(h.SteamLink).Should().Be(Path.GetFullPath(h.OfficialStore));
+        var cfg = h.Svc.LoadConfig();
+        cfg.WizardStep.Should().Be(BranchWizardStep.Linked);
+        cfg.Enabled.Should().BeFalse();
+        cfg.ActiveBranch.Should().Be(GameBranch.Official);
+    }
+
+    [Fact]
     public void MigrateLegacyManifestIfNeeded_copies_once()
     {
         using var h = Harness.CreateReadyDualFolder();

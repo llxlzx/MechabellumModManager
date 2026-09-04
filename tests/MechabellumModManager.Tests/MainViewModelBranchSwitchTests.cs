@@ -2,6 +2,7 @@ using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 using MechabellumModManager.ViewModels;
+using System.Windows;
 
 public class MainViewModelBranchSwitchTests
 {
@@ -347,6 +348,75 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task Resume_from_Linked_with_existing_junction_enables()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.Linked,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        var vm = fx.CreateVm(confirm: _ => true);
+        vm.GamePath = fx.SteamLink;
+        vm.BranchSwitchEnabled.Should().BeFalse();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.Linked);
+
+        await vm.StartBranchWizardCommand.ExecuteAsync(null);
+
+        vm.BranchSwitchEnabled.Should().BeTrue();
+        fx.LoadBranchConfig().Enabled.Should().BeTrue();
+        fx.Junctions.IsJunction(fx.SteamLink).Should().BeTrue();
+        fx.Junctions.ResolveTarget(fx.SteamLink).Should().Be(Path.GetFullPath(fx.OfficialStore));
+        Directory.Exists(fx.OfficialStore).Should().BeTrue();
+        Directory.Exists(fx.BetaStore).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Teardown_delete_other_confirm_defaults_to_no()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        MessageBoxResult? deleteDefault = null;
+        var vm = fx.CreateVm(confirmChoice: (msg, defaultResult) =>
+        {
+            if (msg.Contains("删除另一", StringComparison.Ordinal))
+            {
+                deleteDefault = defaultResult;
+                return false;
+            }
+
+            return true;
+        });
+        vm.GamePath = fx.SteamLink;
+
+        await vm.TeardownBranchSwitchCommand.ExecuteAsync(null);
+
+        deleteDefault.Should().Be(MessageBoxResult.No);
+        Directory.Exists(fx.BetaStore).Should().BeTrue();
+        vm.BranchSwitchEnabled.Should().BeFalse();
+    }
+
+    [Fact]
     public void Branch_switch_commands_exist()
     {
         using var fx = Fixture.CreateReady();
@@ -526,7 +596,8 @@ public class MainViewModelBranchSwitchTests
             Func<TimeSpan, Task>? delay = null,
             TimeSpan? steamExitTimeout = null,
             Func<string, string?>? promptText = null,
-            Action<string>? notify = null)
+            Action<string>? notify = null,
+            Func<string, MessageBoxResult, bool>? confirmChoice = null)
         {
             var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
             return new MainViewModel(
@@ -546,7 +617,8 @@ public class MainViewModelBranchSwitchTests
                 processProbe: Probe,
                 processStarter: starter ?? new RecordingStarter(),
                 delay: delay,
-                steamExitTimeout: steamExitTimeout);
+                steamExitTimeout: steamExitTimeout,
+                confirmChoice: confirmChoice);
         }
 
         public void WriteBranchConfig(BranchSwitchConfig cfg) =>

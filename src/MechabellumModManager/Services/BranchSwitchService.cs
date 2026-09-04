@@ -341,6 +341,23 @@ public sealed class BranchSwitchService
         if (string.IsNullOrWhiteSpace(link) || string.IsNullOrWhiteSpace(store))
             return BranchOperationResult.Fail("Branch switch paths are not configured.");
 
+        store = Path.GetFullPath(store);
+        link = Path.GetFullPath(link);
+
+        if (_junctions.IsJunction(link))
+        {
+            var live = _junctions.ResolveTarget(link);
+            if (!string.IsNullOrWhiteSpace(live) && PathsEqual(live, store))
+            {
+                cfg.ActiveBranch = branch;
+                cfg.WizardStep = BranchWizardStep.Linked;
+                SaveConfig(cfg);
+                return BranchOperationResult.Ok();
+            }
+
+            return BranchOperationResult.Fail("Steam link path already exists.");
+        }
+
         if (PathExists(link))
             return BranchOperationResult.Fail("Steam link path already exists.");
 
