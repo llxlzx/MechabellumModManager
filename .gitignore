@@ -19,3 +19,5 @@ installer/redist/**/*.zip
 /钢铁指挥官Mod管理器.exe
 
 # release artifacts for v1 distribution are tracked under release/
+
+.worktrees/
