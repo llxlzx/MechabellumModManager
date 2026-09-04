@@ -29,6 +29,12 @@ public sealed class ModPackage
     /// <summary>Runtime-only catalog tags from last enrichment.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public List<string>? CatalogTags { get; set; }
+    /// <summary>Runtime-only default catalog name (top-level name) from last enrichment.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? CatalogDisplayName { get; set; }
+    /// <summary>Runtime-only catalog locales from last enrichment (for localized display).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Dictionary<string, CatalogModLocale>? CatalogLocales { get; set; }
     public List<DeployableFile> Files { get; set; } = new();
     public string PackageDirectory { get; set; } = ""; // absolute under library
 }

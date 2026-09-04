@@ -100,40 +100,40 @@
     <value>件名と本文をコピーし、QQ メールの Web を開きました。新規作成して貼り付け、添付して llxmod@foxmail.com へ送信してください。</value>
   </data>
   <data name="SubmitMailOpenedInternational" xml:space="preserve">
-    <value>件名と本文をコピーし、Gmail の作成画面を開きました。.dll（任意で preview.png）を添付して llxmod@foxmail.com へ送信してください。</value>
+    <value>件名と本文をコピーし、Gmail 作成を開きました。.dll（任意で preview.png）を添付して llxmod@foxmail.com へ送信してください。</value>
   </data>
   <data name="ReportMailOpenedDomestic" xml:space="preserve">
     <value>件名と本文をコピーし、QQ メールの Web を開きました。新規作成して貼り付け、llxmod@foxmail.com へ通報を送信してください。</value>
   </data>
   <data name="ReportMailOpenedInternational" xml:space="preserve">
-    <value>件名と本文をコピーし、Gmail の作成画面を開きました。内容を確認して llxmod@foxmail.com へ通報を送信してください。</value>
+    <value>件名と本文をコピーし、Gmail 作成を開きました。確認のうえ通報を llxmod@foxmail.com へ送信してください。</value>
   </data>
   <data name="MailOpenFailed" xml:space="preserve">
     <value>Web メールを開けませんでした。件名と本文はクリップボードにあります。llxmod@foxmail.com へ手動で貼り付けて送信してください。</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
-    <value>投稿 / Submit</value>
+    <value>投稿</value>
   </data>
   <data name="SubmitGuideIntro" xml:space="preserve">
-    <value>投稿メール / Inbox</value>
+    <value>投稿メール</value>
   </data>
   <data name="SubmitGuideBody" xml:space="preserve">
-    <value>件名は次のいずれかの接頭辞で始めてください / Subject must start with:
+    <value>件名は次のいずれかの接頭辞で始めてください（コピー可）：
 • [Mod投稿/Submit] 新規
 • [Mod更新/Update] 更新
 • [Mod举报/Report] 通報
-• [管理器建议/Feedback] 提案
-1通のメール＝1件。メンテナが審査後カタログへ掲載。Fork/PR は不要です。
-（上級者は従来どおり PR も可。）</value>
+• [管理器建议/Feedback] フィードバック
+1 通のメールで 1 件。管理者が確認後カタログへ掲載。Fork/PR は不要です。
+（上級者は引き続き PR も可。）</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>続行後、管理器はテンプレートをコピーし、QQ メール Web（中国語 UI）または Gmail 作成画面（その他）を開きます。貼り付けて .dll（任意で preview.png）を添付して送信してください。添付が大きい場合（約 &gt;40MB）は本文にネットディスクのリンクを書いてください。ソースは依頼がない限り送らないでください。</value>
+    <value>続行すると、管理者が件名と本文をコピーし、QQ メール Web（中国語 UI）または Gmail 作成（その他言語）を開きます。貼り付け、.dll（任意で preview.png）を添付して送信。添付が大きい場合（約 &gt;40MB）は本文にネットディスクのリンクを。依頼がない限りソースは送らないでください。</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
-    <value>完全ガイドを開く / Open full guide</value>
+    <value>詳細ガイドを開く</value>
   </data>
   <data name="SubmitGuideOpenEmail" xml:space="preserve">
-    <value>投稿メールを開く / Open submit email</value>
+    <value>投稿メールを開く</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>確認</value>
@@ -178,8 +178,7 @@
     <value>現在のプロファイル</value>
   </data>
 
-  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>メンテナーは合理的な期間内にご連絡を確認・対応します。日常生活や個人の都合により対応が一時的に遅れる場合があります。ご理解とご待機をお願いします。同一内容の再送はご遠慮ください。
-The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+  <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>メンテナーは合理的な期間内にご連絡を確認・対応します。日常生活や個人の都合により対応が一時的に遅れる場合があります。ご理解とご待機をお願いします。同一内容の再送はご遠慮ください。</value></data>
   <data name="FilterSearch" xml:space="preserve"><value>検索</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>カテゴリ</value></data>
   <data name="FilterTag" xml:space="preserve"><value>タグ</value></data>
@@ -189,12 +188,12 @@ The maintainer will review and process your message within a reasonable time. Ha
   <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>更新（新→旧）</value></data>
   <data name="ColumnCategory" xml:space="preserve"><value>カテゴリ</value></data>
   <data name="TagsLabel" xml:space="preserve"><value>タグ</value></data>
-  <data name="CategoryOverlayUI" xml:space="preserve"><value>オーバーレイUI</value></data>
-  <data name="CategoryQoL" xml:space="preserve"><value>QoL</value></data>
-  <data name="CategoryCamera" xml:space="preserve"><value>カメラ</value></data>
-  <data name="CategoryCombatAssist" xml:space="preserve"><value>戦闘補助</value></data>
-  <data name="CategoryEconomy" xml:space="preserve"><value>経済</value></data>
-  <data name="CategoryReplayDebug" xml:space="preserve"><value>リプレイ/デバッグ</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>UI・オーバーレイ</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>体験改善</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>カメラ・視点</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>マッチ補助</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>資源・経済</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>リプレイ・診断</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>その他</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>未分類</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>分類/タグを編集</value></data>
@@ -202,19 +201,86 @@ The maintainer will review and process your message within a reasonable time. Ha
   <data name="ExtraTagsHint" xml:space="preserve"><value>追加タグ（カンマ区切り）</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Official / Beta</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Beta branch name</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>テスト版ブランチ名</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
-  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Confirm manual Beta</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>テスト版を手動選択済み、続行</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Confirm Steam is aligned</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Uses about two copies of the game; Steam must exit; will try to auto-align Beta and fall back to manual selection</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>ゲーム約2部の容量が必要。Steam を終了してください。テスト版の自動整合を試し、失敗時は手動選択できます</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam</value></data>
-  <data name="BranchStatusOfficial" xml:space="preserve"><value>Official</value></data>
-  <data name="BranchStatusBeta" xml:space="preserve"><value>Beta</value></data>
+  <data name="BranchStatusOfficial" xml:space="preserve"><value>正式版</value></data>
+  <data name="BranchStatusBeta" xml:space="preserve"><value>テスト版</value></data>
+  <data name="Tag_calc" xml:space="preserve"><value>計算</value></data>
+  <data name="Tag_camera" xml:space="preserve"><value>カメラ</value></data>
+  <data name="Tag_combat" xml:space="preserve"><value>戦闘</value></data>
+  <data name="Tag_damage" xml:space="preserve"><value>ダメージ</value></data>
+  <data name="Tag_debug" xml:space="preserve"><value>デバッグ</value></data>
+  <data name="Tag_economy" xml:space="preserve"><value>経済</value></data>
+  <data name="Tag_grid" xml:space="preserve"><value>グリッド</value></data>
+  <data name="Tag_hotkey" xml:space="preserve"><value>ショートカット</value></data>
+  <data name="Tag_hud" xml:space="preserve"><value>画面表示</value></data>
+  <data name="Tag_items" xml:space="preserve"><value>アイテム</value></data>
+  <data name="Tag_replay" xml:space="preserve"><value>リプレイ</value></data>
+  <data name="Tag_speed" xml:space="preserve"><value>速度</value></data>
+  <data name="Tag_undo" xml:space="preserve"><value>取り消し</value></data>
+  <data name="CatalogStatusInLibrary" xml:space="preserve"><value>ライブラリ内</value></data>
+  <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>未インストール</value></data>
+  <data name="PackageMissing" xml:space="preserve"><value>欠落</value></data>
+  <data name="PackageMissingNameFormat" xml:space="preserve"><value>（欠落）{0}</value></data>
+  <data name="PackageTypeMelonMod" xml:space="preserve"><value>拡張</value></data>
+  <data name="PackageTypeMelonPlugin" xml:space="preserve"><value>プラグイン</value></data>
+  <data name="PackageTypeMelonUserLibs" xml:space="preserve"><value>ユーザーライブラリ</value></data>
+  <data name="PackageTypeMelonUserData" xml:space="preserve"><value>ユーザーデータ</value></data>
+  <data name="HighRiskYes" xml:space="preserve"><value>高リスク</value></data>
+  <data name="HighRiskNo" xml:space="preserve"><value>—</value></data>
+  <data name="RequiredMelonLoaderFormat" xml:space="preserve"><value>MelonLoader {0} が必要</value></data>
+  <data name="TypePickTitle" xml:space="preserve"><value>パッケージ種類を選択</value></data>
+  <data name="TypePickPrompt" xml:space="preserve"><value>種類を自動判定できませんでした。選択してください：</value></data>
+  <data name="DialogCancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="DialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="PreviewImageTitle" xml:space="preserve"><value>プレビュー</value></data>
+  <data name="PreviewImageHint" xml:space="preserve"><value>どこかをクリックして閉じる</value></data>
+  <data name="PromptDialogTitle" xml:space="preserve"><value>入力</value></data>
+  <data name="DialogYes" xml:space="preserve"><value>はい</value></data>
+  <data name="DialogNo" xml:space="preserve"><value>いいえ</value></data>
+  <data name="FileFilterDll" xml:space="preserve"><value>Melon Mod DLL|*.dll|すべてのファイル|*.*</value></data>
+  <data name="FileFilterZip" xml:space="preserve"><value>Mod ZIP|*.zip|すべてのファイル|*.*</value></data>
+  <data name="ConfirmOverwriteUnmanaged" xml:space="preserve"><value>ゲームフォルダに管理対象外の同名ファイルがあります。
+上書きして引き継ぎますか？</value></data>
+  <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
+…合計 {0} 件</value></data>
+  <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>管理対象外ファイルの上書きをキャンセルしました。</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>二系統は既に有効です。再構築は先に安全解除（他系統は保持）してから再設定します。続行しますか？</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>二系統設定を解除しますか？現在のジャンクションが再びゲームフォルダになります。Steam とゲームを終了してください。</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>もう一方の系統フォルダも削除しますか？未使用ファイルは完全削除されます。（推奨：いいえ）</value></data>
+  <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>二系統ウィザード失敗：{0}</value></data>
+  <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>二系統解除に失敗：{0}</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam がまだ動作中です。完了を待ってから配置してください。</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam が動作中です。それでも配置しますか？ファイルがロックされる可能性があります。</value></data>
+  <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
+
+{1}
+
+ダウンロードリンクを開きますか？
+{2}</value></data>
+  <data name="ConfirmOpenGitHubReleases" xml:space="preserve"><value>{0}
+
+GitHub Releases ページを開きますか？</value></data>
+  <data name="ConfirmDeleteProfile" xml:space="preserve"><value>プロファイル「{0}」を削除しますか？元に戻せません。</value></data>
+  <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>ライブラリから「{0}」を削除しますか？すべてのプロファイルからも外します。</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>ゲームブランチ切替には Steam とゲームの終了が必要です。続行しますか？</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>二系統設定にはゲーム約2部の容量が必要で、Steam とゲームを終了する必要があります。開始しますか？</value></data>
+  <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>現在のインストールは正式版ですか？「いいえ」はテスト版です。</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Steam でもう一方をダウンロードし、完了後 Steam を終了して「はい」で続行。キャンセルでウィザード一時停止。</value></data>
+  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>他系統の Beta を自動設定できませんでした。Steam で手動選択してからダウンロードしてください。</value></data>
+  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>二系統ウィザードを一時停止しました。後で続行できます。</value></data>
+  <data name="LogBranchTeardownDone" xml:space="preserve"><value>二系統設定を解除しました。</value></data>
+  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>二系統を解除しました。Steam でゲームブランチを確認してください。</value></data>
+  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam Beta を自動整合できませんでした。Steam 起動前に手動でブランチを選び、整合完了まで Steam を起動しないでください。</value></data>
 </root>

@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using MechabellumModManager.Dialogs;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
@@ -50,10 +50,10 @@ public partial class App : Application
             confirmHighRisk: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Warning),
             confirm: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question),
             confirmChoice: (msg, defaultResult) => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question, defaultResult),
-            notify: msg => MessageBox.Show(owner, msg, LocalizationService.T("Notice"), MessageBoxButton.OK, MessageBoxImage.Information),
+            notify: msg => Notify(owner, msg),
             browseFolder: () => BrowseFolder(owner),
-            openDll: () => OpenFile(owner, "Melon Mod DLL|*.dll|所有文件|*.*"),
-            openZip: () => OpenFile(owner, "Mod 压缩包|*.zip|所有文件|*.*"),
+            openDll: () => OpenFile(owner, LocalizationService.T("FileFilterDll")),
+            openZip: () => OpenFile(owner, LocalizationService.T("FileFilterZip")),
             promptText: title => Prompt(owner, title),
             pickPackageType: () => PickPackageType(owner),
             openFolder: () => BrowseImportFolder(owner),
@@ -75,8 +75,28 @@ public partial class App : Application
         return appData;
     }
 
-    static bool Confirm(Window owner, string message, string title, MessageBoxImage icon, MessageBoxResult defaultResult = MessageBoxResult.Yes) =>
-        MessageBox.Show(owner, message, title, MessageBoxButton.YesNo, icon, defaultResult) == MessageBoxResult.Yes;
+    static bool Confirm(Window owner, string message, string title, MessageBoxImage icon, MessageBoxResult defaultResult = MessageBoxResult.Yes)
+    {
+        _ = icon;
+        var dialog = new ConfirmDialog(
+            message,
+            title,
+            yesNo: true,
+            defaultYes: defaultResult != MessageBoxResult.No)
+        {
+            Owner = owner
+        };
+        return dialog.ShowDialog() == true;
+    }
+
+    static void Notify(Window owner, string message)
+    {
+        var dialog = new ConfirmDialog(message, LocalizationService.T("Notice"), yesNo: false)
+        {
+            Owner = owner
+        };
+        dialog.ShowDialog();
+    }
 
     static string? BrowseFolder(Window owner)
     {

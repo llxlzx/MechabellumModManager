@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using MechabellumModManager.Models;
+using MechabellumModManager.Services;
 
 namespace MechabellumModManager.Dialogs;
 
@@ -9,13 +10,33 @@ public partial class TypePickDialog : Window
     public TypePickDialog(string? prompt = null)
     {
         InitializeComponent();
-        if (!string.IsNullOrWhiteSpace(prompt))
-            PromptText.Text = prompt;
+        Title = LocalizationService.T("TypePickTitle");
+        PromptText.Text = string.IsNullOrWhiteSpace(prompt)
+            ? LocalizationService.T("TypePickPrompt")
+            : prompt;
+        CancelButton.Content = LocalizationService.T("DialogCancel");
+        OkButton.Content = LocalizationService.T("DialogOk");
 
-        TypeCombo.Items.Add(new ComboBoxItem { Content = "MelonMod", Tag = ModPackageType.MelonMod });
-        TypeCombo.Items.Add(new ComboBoxItem { Content = "MelonPlugin", Tag = ModPackageType.MelonPlugin });
-        TypeCombo.Items.Add(new ComboBoxItem { Content = "MelonUserLibs", Tag = ModPackageType.MelonUserLibs });
-        TypeCombo.Items.Add(new ComboBoxItem { Content = "MelonUserData", Tag = ModPackageType.MelonUserData });
+        TypeCombo.Items.Add(new ComboBoxItem
+        {
+            Content = LocalizationService.T("PackageTypeMelonMod"),
+            Tag = ModPackageType.MelonMod
+        });
+        TypeCombo.Items.Add(new ComboBoxItem
+        {
+            Content = LocalizationService.T("PackageTypeMelonPlugin"),
+            Tag = ModPackageType.MelonPlugin
+        });
+        TypeCombo.Items.Add(new ComboBoxItem
+        {
+            Content = LocalizationService.T("PackageTypeMelonUserLibs"),
+            Tag = ModPackageType.MelonUserLibs
+        });
+        TypeCombo.Items.Add(new ComboBoxItem
+        {
+            Content = LocalizationService.T("PackageTypeMelonUserData"),
+            Tag = ModPackageType.MelonUserData
+        });
         TypeCombo.SelectedIndex = 0;
     }
 

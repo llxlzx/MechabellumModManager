@@ -406,6 +406,12 @@ public sealed partial class MainViewModel : ObservableObject
             Ui.Refresh();
             RebuildFilterOptionLabels();
             RefreshBranchStatusText();
+            foreach (var mod in Mods)
+                mod.NotifyDetailChanged();
+            foreach (var mod in CatalogMods)
+                mod.NotifyDisplayChanged();
+            RefreshCatalogView();
+            RefreshLibraryView();
         }
     }
 
@@ -751,11 +757,12 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 var sample = string.Join("\n", result.Plan.ConflictsUnmanaged.Take(8).Select(Path.GetFileName));
                 var more = result.Plan.ConflictsUnmanaged.Count > 8
-                    ? $"\n…共 {result.Plan.ConflictsUnmanaged.Count} 个"
+                    ? string.Format(
+                        LocalizationService.T("ConfirmOverwriteUnmanagedMore"),
+                        result.Plan.ConflictsUnmanaged.Count)
                     : "";
                 var prompt =
-                    "检测到游戏目录中已有非本管理器托管的同名文件。\n" +
-                    "确认覆盖并接管这些文件？\n\n" + sample + more;
+                    LocalizationService.T("ConfirmOverwriteUnmanaged") + "\n\n" + sample + more;
                 if (Confirm(prompt))
                     result = _deploy.Apply(
                         profile,
@@ -766,7 +773,7 @@ public sealed partial class MainViewModel : ObservableObject
                         manifestPrevPath: manifestPrevPath);
                 else
                 {
-                    AppendLog("已取消覆盖非托管文件。");
+                    AppendLog(LocalizationService.T("LogCancelledOverwriteUnmanaged"));
                     return false;
                 }
             }
@@ -822,7 +829,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             if (BranchSwitchEnabled)
             {
-                if (!Confirm("已启用双服。重建将先安全解除（保留另一旁路），再重新配置。是否继续？"))
+                if (!Confirm(LocalizationService.T("ConfirmBranchRebuildWizard")))
                     return;
                 if (!await RunTeardownCoreAsync(deleteOtherStore: false).ConfigureAwait(true))
                     return;
@@ -843,7 +850,7 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppendLog($"双服向导失败：{ex.Message}");
-            _notify($"双服向导失败：{ex.Message}");
+            _notify(string.Format(LocalizationService.T("NotifyBranchWizardFailed"), ex.Message));
         }
         finally
         {
@@ -857,10 +864,10 @@ public sealed partial class MainViewModel : ObservableObject
     async Task TeardownBranchSwitch()
     {
         if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
-        if (!Confirm("确定解除双服配置？当前旁路会改回游戏目录，须退出 Steam 与游戏。"))
+        if (!Confirm(LocalizationService.T("ConfirmBranchTeardown")))
             return;
 
-        var deleteOther = Confirm("是否删除另一旁路目录？未使用的服文件将被永久删除。（建议选否）", MessageBoxResult.No);
+        var deleteOther = Confirm(LocalizationService.T("ConfirmBranchDeleteOtherStore"), MessageBoxResult.No);
         IsBranchSwitchBusy = true;
         try
         {
@@ -869,7 +876,7 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppendLog($"解除双服配置失败：{ex.Message}");
-            _notify($"解除双服配置失败：{ex.Message}");
+            _notify(string.Format(LocalizationService.T("NotifyBranchTeardownFailed"), ex.Message));
         }
         finally
         {
@@ -892,8 +899,8 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (_processProbe.IsSteamRunning())
         {
-            _notify("Steam 仍在运行，请等待结算完成后再部署。");
-            if (!Confirm("Steam 仍在运行。仍要部署？文件可能被占用。"))
+            _notify(LocalizationService.T("NotifySteamStillRunningSettle"));
+            if (!Confirm(LocalizationService.T("ConfirmDeployWhileSteamRunning")))
                 return;
         }
 
@@ -1116,7 +1123,7 @@ public sealed partial class MainViewModel : ObservableObject
             var probe = new ModPackage
             {
                 Id = item.Id,
-                DisplayName = item.Name,
+                DisplayName = item.Mod.Name,
                 Author = item.Author,
                 Files =
                 {
@@ -1154,7 +1161,7 @@ public sealed partial class MainViewModel : ObservableObject
                         pkg.Id,
                         author: item.Author,
                         version: item.Version,
-                        summary: item.Summary,
+                        summary: item.Mod.Summary,
                         catalogUpdatedAt: item.UpdatedAt,
                         preview: item.Mod.Preview);
                 }
@@ -1326,14 +1333,18 @@ public sealed partial class MainViewModel : ObservableObject
 
             if (result.Kind == UpdateCheckKind.UpdateAvailable && !string.IsNullOrWhiteSpace(result.SetupUrl))
             {
-                var detail = $"{result.Message}\n\n{result.Notes}\n\n是否打开下载链接？\n{result.SetupUrl}";
+                var detail = string.Format(
+                    LocalizationService.T("ConfirmOpenDownloadLink"),
+                    result.Message,
+                    result.Notes ?? "",
+                    result.SetupUrl);
                 if (Confirm(detail))
                     TryOpenUrl(result.SetupUrl!);
             }
             else if (result.Kind == UpdateCheckKind.Failed)
             {
                 var fallback = $"https://github.com/{UpdateChecker.Owner}/{UpdateChecker.Repo}/releases/latest";
-                if (Confirm($"{result.Message}\n\n是否打开 GitHub Releases 页面？"))
+                if (Confirm(string.Format(LocalizationService.T("ConfirmOpenGitHubReleases"), result.Message)))
                     TryOpenUrl(fallback);
             }
         }
@@ -1439,7 +1450,7 @@ public sealed partial class MainViewModel : ObservableObject
     void DeleteProfile()
     {
         if (SelectedProfile is null) return;
-        if (!Confirm($"确定删除方案「{SelectedProfile.Name}」？此操作不可撤销。"))
+        if (!Confirm(string.Format(LocalizationService.T("ConfirmDeleteProfile"), SelectedProfile.Name)))
             return;
         try
         {
@@ -1460,7 +1471,7 @@ public sealed partial class MainViewModel : ObservableObject
     void DeleteMod(ModItemViewModel? mod)
     {
         if (mod is null) return;
-        if (!Confirm($"确定从库中删除「{mod.DisplayName}」？将同时从所有方案中移除。"))
+        if (!Confirm(string.Format(LocalizationService.T("ConfirmDeleteModFromLibrary"), mod.DisplayName)))
             return;
         try
         {
@@ -1675,13 +1686,13 @@ public sealed partial class MainViewModel : ObservableObject
         var tags = CatalogMods
             .SelectMany(m => m.EffectiveTags)
             .Distinct(StringComparer.Ordinal)
-            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(t => ModTaxonomy.GetTagDisplayName(t), StringComparer.CurrentCultureIgnoreCase)
             .ToList();
 
         CatalogAvailableTagOptions.Clear();
         CatalogAvailableTagOptions.Add(new TagFilterOption(null, Ui.FilterAll));
         foreach (var tag in tags)
-            CatalogAvailableTagOptions.Add(new TagFilterOption(tag, tag));
+            CatalogAvailableTagOptions.Add(new TagFilterOption(tag, ModTaxonomy.GetTagDisplayName(tag)));
 
         var suppress = _suppressFilterRefresh;
         _suppressFilterRefresh = true;
@@ -1704,13 +1715,13 @@ public sealed partial class MainViewModel : ObservableObject
             .Where(m => !m.IsMissing)
             .SelectMany(m => m.EffectiveTags)
             .Distinct(StringComparer.Ordinal)
-            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(t => ModTaxonomy.GetTagDisplayName(t), StringComparer.CurrentCultureIgnoreCase)
             .ToList();
 
         LibraryAvailableTagOptions.Clear();
         LibraryAvailableTagOptions.Add(new TagFilterOption(null, Ui.FilterAll));
         foreach (var tag in tags)
-            LibraryAvailableTagOptions.Add(new TagFilterOption(tag, tag));
+            LibraryAvailableTagOptions.Add(new TagFilterOption(tag, ModTaxonomy.GetTagDisplayName(tag)));
 
         var suppress = _suppressFilterRefresh;
         _suppressFilterRefresh = true;
@@ -2032,7 +2043,7 @@ public sealed partial class MainViewModel : ObservableObject
     async Task SwitchToBranchAsync(GameBranch target)
     {
         if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
-        if (!Confirm("切换游戏分支需要退出 Steam 和游戏。是否继续？"))
+        if (!Confirm(LocalizationService.T("ConfirmSwitchGameBranch")))
             return;
 
         IsBranchSwitchBusy = true;
@@ -2077,10 +2088,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     async Task RunWizardFromStartAsync()
     {
-        if (!Confirm("双服配置需要约两份游戏磁盘空间，并且必须退出 Steam 与游戏。是否开始？"))
+        if (!Confirm(LocalizationService.T("ConfirmStartDualBranchWizard")))
             return;
 
-        var current = Confirm("当前安装的是正式服吗？选「否」表示当前是测试服。")
+        var current = Confirm(LocalizationService.T("ConfirmCurrentIsOfficial"))
             ? GameBranch.Official
             : GameBranch.Beta;
 
@@ -2195,15 +2206,15 @@ public sealed partial class MainViewModel : ObservableObject
         if (!silentOther.Success)
         {
             _notify(string.IsNullOrWhiteSpace(silentOther.Message)
-                ? "未能自动写入另一服 Beta，请在 Steam 中手选后再下载。"
+                ? LocalizationService.T("NotifySilentBetaFailedOther")
                 : silentOther.Message);
         }
 
         TryStartSteam();
 
-        if (!Confirm("请在 Steam 中下载另一服。下载完成后请退出 Steam，再点确定继续。取消将暂停向导（稍后可继续）。"))
+        if (!Confirm(LocalizationService.T("ConfirmDownloadOtherBranchContinue")))
         {
-            AppendLog("双服向导已暂停，可稍后继续。");
+            AppendLog(LocalizationService.T("LogDualBranchWizardPaused"));
             return;
         }
 
@@ -2284,8 +2295,8 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshStatus();
         NotifyBranchGates();
         RefreshBranchStatusText();
-        AppendLog("已解除双服配置。");
-        _notify("已解除双服配置。请在 Steam 中确认游戏分支。");
+        AppendLog(LocalizationService.T("LogBranchTeardownDone"));
+        _notify(LocalizationService.T("NotifyBranchTeardownDone"));
         return true;
     }
 
@@ -2391,8 +2402,7 @@ public sealed partial class MainViewModel : ObservableObject
             DegradeToManualBeta = true;
             if (!string.IsNullOrWhiteSpace(silent.Message))
                 AppendLog(silent.Message);
-            const string noStart =
-                "未能自动对齐 Steam Beta。请先手动选择分支后再启动 Steam；对齐完成前请勿启动 Steam。";
+            var noStart = LocalizationService.T("NotifySilentBetaNoStart");
             AppendLog(noStart);
             _notify(noStart);
             return;

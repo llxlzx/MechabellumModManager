@@ -39,14 +39,14 @@
                 <Button x:Name="CancelButton"
                         Content="取消"
                         Width="88"
-                        Height="30"
+                        MinHeight="32"
                         Margin="0,0,8,0"
                         IsCancel="True"
                         Click="Cancel_Click" />
                 <Button x:Name="OkButton"
                         Content="确定"
                         Width="88"
-                        Height="30"
+                        MinHeight="32"
                         IsDefault="True"
                         Style="{StaticResource AccentButtonStyle}"
                         Click="Ok_Click" />

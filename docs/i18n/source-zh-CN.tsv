@@ -59,31 +59,61 @@ SortByName	名称
 SortByUpdatedAtDesc	更新（新→旧）
 ColumnCategory	分类
 TagsLabel	标签
-CategoryOverlayUI	界面覆盖
-CategoryQoL	生活质量
-CategoryCamera	镜头
-CategoryCombatAssist	战斗辅助
-CategoryEconomy	经济
-CategoryReplayDebug	回放调试
-CategoryMisc	杂项
+CategoryOverlayUI	界面与叠加层
+CategoryQoL	体验优化
+CategoryCamera	视角与相机
+CategoryCombatAssist	对局辅助
+CategoryEconomy	资源与经济
+CategoryReplayDebug	回放与调试
+CategoryMisc	其他
 CategoryUncategorized	未分类
 EditModTaxonomy	编辑分类/标签
 CategoryFollowCatalog	跟随目录
 ExtraTagsHint	额外标签（逗号分隔）
 BranchSwitchTitle	正式服 / 测试服
 BranchSwitchStatus	当前分支
-BranchSwitchBetaName	测试服 Beta 分支名
+BranchSwitchBetaName	测试服分支名
 BranchSwitchOfficialProfile	正式服方案
 BranchSwitchBetaProfile	测试服方案
 BranchSwitchToOfficial	切换到正式服
 BranchSwitchToBeta	切换到测试服
 BranchSwitchStartWizard	开始双服配置向导
 BranchSwitchTeardown	解除双服配置
-BranchSwitchConfirmManual	已手选 Beta，继续
+BranchSwitchConfirmManual	已手选测试服，继续
 BranchSwitchConfirmSettle	确认 Steam 已对齐，继续
-BranchSwitchHint	约两份游戏空间；须退出 Steam；将尝试自动对齐 Beta，失败可手选
+BranchSwitchHint	约两份游戏空间；须退出 Steam；将尝试自动对齐测试服，失败可手选
 BranchStatusUnconfigured	未配置
 BranchStatusIncomplete	配置未完成
 BranchStatusWaitingSteam	等待 Steam
 BranchStatusOfficial	正式服
 BranchStatusBeta	测试服
+Tag_calc	计算
+Tag_camera	相机
+Tag_combat	对局
+Tag_damage	伤害
+Tag_debug	调试
+Tag_economy	经济
+Tag_grid	网格
+Tag_hotkey	快捷键
+Tag_hud	抬头显示
+Tag_items	物品
+Tag_replay	回放
+Tag_speed	速度
+Tag_undo	撤销
+CatalogStatusInLibrary	已在库
+CatalogStatusNotInstalled	未安装
+PackageMissing	缺失
+PackageMissingNameFormat	（缺失）{0}
+PackageTypeMelonMod	模组
+PackageTypeMelonPlugin	插件
+PackageTypeMelonUserLibs	用户库
+PackageTypeMelonUserData	用户数据
+HighRiskYes	高风险
+HighRiskNo	—
+RequiredMelonLoaderFormat	需要 MelonLoader {0}
+TypePickTitle	选择模组类型
+TypePickPrompt	无法自动识别类型，请选择：
+DialogCancel	取消
+DialogOk	确定
+PreviewImageTitle	预览图
+PreviewImageHint	点击任意处关闭

@@ -20,11 +20,11 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     }
 
     public string Id => Mod.Id;
-    public string Name => Mod.Name;
+    public string Name => CatalogLocaleResolver.ResolveName(Mod);
     public string? Author => Mod.Author;
     public string? Version => Mod.Version;
     public string? UpdatedAt => Mod.UpdatedAt;
-    public string? Summary => Mod.Summary;
+    public string? Summary => CatalogLocaleResolver.ResolveSummary(Mod);
     public string File => Mod.File;
     public string? Type => Mod.Type;
 
@@ -46,7 +46,7 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
         _ => "CategoryUncategorized"
     });
 
-    public string EffectiveTagsText => EffectiveTags.Count == 0 ? "" : string.Join(", ", EffectiveTags);
+    public string EffectiveTagsText => ModTaxonomy.FormatTagsDisplay(EffectiveTags);
 
     public string? PreviewUrl { get; }
 
@@ -57,7 +57,18 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(StatusText))]
     private bool _isInLibrary;
 
-    public string StatusText => IsInLibrary ? "已在库" : "未安装";
+    public string StatusText => IsInLibrary
+        ? LocalizationService.T("CatalogStatusInLibrary")
+        : LocalizationService.T("CatalogStatusNotInstalled");
+
+    public void NotifyDisplayChanged()
+    {
+        OnPropertyChanged(nameof(Name));
+        OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(EffectiveCategoryDisplay));
+        OnPropertyChanged(nameof(EffectiveTagsText));
+        OnPropertyChanged(nameof(StatusText));
+    }
 
     public async Task LoadPreviewImageAsync()
     {

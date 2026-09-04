@@ -56,4 +56,38 @@ public static class ModTaxonomy
         IEnumerable<string>? catalogTags,
         IEnumerable<string>? extraTags) =>
         NormalizeTags((catalogTags ?? Array.Empty<string>()).Concat(extraTags ?? Array.Empty<string>()));
+
+    /// <summary>
+    /// Resource key for a catalog/library tag (stable English id → Tag_damage).
+    /// </summary>
+    public static string TagResourceKey(string tag)
+    {
+        var trimmed = (tag ?? "").Trim();
+        if (trimmed.Length == 0) return "Tag_";
+        var chars = trimmed.ToLowerInvariant().Select(c =>
+            char.IsLetterOrDigit(c) ? c : '_').ToArray();
+        return "Tag_" + new string(chars).Trim('_');
+    }
+
+    /// <summary>
+    /// Localized label for a tag id. Uses current UI culture; falls back to the raw tag if untranslated.
+    /// </summary>
+    public static string GetTagDisplayName(string tag)
+    {
+        var trimmed = (tag ?? "").Trim();
+        if (trimmed.Length == 0) return "";
+        var key = TagResourceKey(trimmed);
+        var localized = LocalizationService.T(key);
+        if (string.IsNullOrWhiteSpace(localized) ||
+            string.Equals(localized, key, StringComparison.Ordinal))
+            return trimmed;
+        return localized;
+    }
+
+    public static string FormatTagsDisplay(IEnumerable<string>? tags)
+    {
+        var list = NormalizeTags(tags);
+        if (list.Count == 0) return "";
+        return string.Join(", ", list.Select(GetTagDisplayName));
+    }
 }

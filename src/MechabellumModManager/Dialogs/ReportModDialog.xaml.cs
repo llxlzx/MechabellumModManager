@@ -44,12 +44,11 @@ public partial class ReportModDialog : Window
 
         if (Category == ReportCategory.Other && string.IsNullOrWhiteSpace(Notes))
         {
-            MessageBox.Show(
-                this,
-                LocalizationService.T("ReportOtherHint"),
-                LocalizationService.T("Report"),
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            new ConfirmDialog(
+                    LocalizationService.T("ReportOtherHint"),
+                    LocalizationService.T("Report"),
+                    yesNo: false)
+                { Owner = this }.ShowDialog();
             return;
         }
 
