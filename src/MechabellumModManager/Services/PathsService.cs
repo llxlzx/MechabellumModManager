@@ -1,4 +1,5 @@
 using System.IO;
+using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
 
@@ -18,7 +19,27 @@ public sealed class PathsService
     public string ProfilesDir => Path.Combine(DataRoot, "profiles");
     public string DeployManifestPath => Path.Combine(DataRoot, "deploy-manifest.json");
     public string DeployManifestPrevPath => Path.Combine(DataRoot, "deploy-manifest.prev.json");
+    public string BranchSwitchConfigPath => Path.Combine(DataRoot, "branch-switch.json");
+    public string BranchSwitchJournalPath => Path.Combine(DataRoot, "branch-switch-journal.json");
     public string LogsDir => Path.Combine(DataRoot, "logs");
+
+    public string GetDeployManifestPath(GameBranch? branch, bool enabled)
+    {
+        if (!enabled || branch is null)
+            return DeployManifestPath;
+        return branch == GameBranch.Official
+            ? Path.Combine(DataRoot, "deploy-manifest.official.json")
+            : Path.Combine(DataRoot, "deploy-manifest.beta.json");
+    }
+
+    public string GetDeployManifestPrevPath(GameBranch? branch, bool enabled)
+    {
+        if (!enabled || branch is null)
+            return DeployManifestPrevPath;
+        return branch == GameBranch.Official
+            ? Path.Combine(DataRoot, "deploy-manifest.official.prev.json")
+            : Path.Combine(DataRoot, "deploy-manifest.beta.prev.json");
+    }
 
     public void EnsureCreated()
     {
