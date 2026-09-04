@@ -200,4 +200,20 @@ The maintainer will review and process your message within a reasonable time. Ha
   <data name="EditModTaxonomy" xml:space="preserve"><value>Kategorie/Tags bearbeiten</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>Katalog folgen</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Tags (kommagetrennt)</value></data>
+  <data name="BranchSwitchTitle" xml:space="preserve"><value>Official / Beta</value></data>
+  <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Beta branch name</value></data>
+  <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
+  <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
+  <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
+  <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
+  <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
+  <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Confirm manual Beta</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Uses about two copies of the game; Steam must exit; will try to auto-align Beta and fall back to manual selection</value></data>
+  <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
+  <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
+  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam</value></data>
+  <data name="BranchStatusOfficial" xml:space="preserve"><value>Official</value></data>
+  <data name="BranchStatusBeta" xml:space="preserve"><value>Beta</value></data>
 </root>

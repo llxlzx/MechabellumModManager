@@ -73,6 +73,18 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string CategoryFollowCatalog => T("CategoryFollowCatalog");
     public string ExtraTagsHint => T("ExtraTagsHint");
 
+    public string BranchSwitchTitle => T("BranchSwitchTitle");
+    public string BranchSwitchStatus => T("BranchSwitchStatus");
+    public string BranchSwitchBetaName => T("BranchSwitchBetaName");
+    public string BranchSwitchOfficialProfile => T("BranchSwitchOfficialProfile");
+    public string BranchSwitchBetaProfile => T("BranchSwitchBetaProfile");
+    public string BranchSwitchToOfficial => T("BranchSwitchToOfficial");
+    public string BranchSwitchToBeta => T("BranchSwitchToBeta");
+    public string BranchSwitchStartWizard => T("BranchSwitchStartWizard");
+    public string BranchSwitchTeardown => T("BranchSwitchTeardown");
+    public string BranchSwitchConfirmManual => T("BranchSwitchConfirmManual");
+    public string BranchSwitchHint => T("BranchSwitchHint");
+
     public string CategoryLabel(Models.ModCategory category) => category switch
     {
         Models.ModCategory.OverlayUI => T("CategoryOverlayUI"),

@@ -203,4 +203,20 @@ The maintainer will review and process your message within a reasonable time. Ha
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>跟随目录</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>额外标签（逗号分隔）</value></data>
 
+  <data name="BranchSwitchTitle" xml:space="preserve"><value>正式服 / 测试服</value></data>
+  <data name="BranchSwitchStatus" xml:space="preserve"><value>当前分支</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>测试服 Beta 分支名</value></data>
+  <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>正式服方案</value></data>
+  <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>测试服方案</value></data>
+  <data name="BranchSwitchToOfficial" xml:space="preserve"><value>切换到正式服</value></data>
+  <data name="BranchSwitchToBeta" xml:space="preserve"><value>切换到测试服</value></data>
+  <data name="BranchSwitchStartWizard" xml:space="preserve"><value>开始双服配置向导</value></data>
+  <data name="BranchSwitchTeardown" xml:space="preserve"><value>解除双服配置</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>已手选 Beta，继续</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>约两份游戏空间；须退出 Steam；将尝试自动对齐 Beta，失败可手选</value></data>
+  <data name="BranchStatusUnconfigured" xml:space="preserve"><value>未配置</value></data>
+  <data name="BranchStatusIncomplete" xml:space="preserve"><value>配置未完成</value></data>
+  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>等待 Steam</value></data>
+  <data name="BranchStatusOfficial" xml:space="preserve"><value>正式服</value></data>
+  <data name="BranchStatusBeta" xml:space="preserve"><value>测试服</value></data>
 </root>

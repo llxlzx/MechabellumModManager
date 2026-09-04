@@ -35,4 +35,29 @@ public class LocalizationServiceTests
         s.Should().NotBeNullOrWhiteSpace();
         s.Should().BeOneOf("设置", "Settings"); // resource may or may not embed in test host
     }
+
+    [Theory]
+    [InlineData("BranchSwitchTitle")]
+    [InlineData("BranchSwitchStatus")]
+    [InlineData("BranchSwitchBetaName")]
+    [InlineData("BranchSwitchOfficialProfile")]
+    [InlineData("BranchSwitchBetaProfile")]
+    [InlineData("BranchSwitchToOfficial")]
+    [InlineData("BranchSwitchToBeta")]
+    [InlineData("BranchSwitchStartWizard")]
+    [InlineData("BranchSwitchTeardown")]
+    [InlineData("BranchSwitchConfirmManual")]
+    [InlineData("BranchSwitchHint")]
+    [InlineData("BranchStatusUnconfigured")]
+    [InlineData("BranchStatusIncomplete")]
+    [InlineData("BranchStatusWaitingSteam")]
+    [InlineData("BranchStatusOfficial")]
+    [InlineData("BranchStatusBeta")]
+    public void GetString_returns_localized_branch_switch_keys(string key)
+    {
+        LocalizationService.Apply("zh-CN");
+        var s = LocalizationService.GetString(key);
+        s.Should().NotBeNullOrWhiteSpace();
+        s.Should().NotBe(key, "missing resx entries fall back to the key itself");
+    }
 }
