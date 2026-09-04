@@ -60,6 +60,30 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string ModLibrary => T("ModLibrary");
     public string SyncLog => T("SyncLog");
     public string CurrentProfile => T("CurrentProfile");
+    public string FilterSearch => T("FilterSearch");
+    public string FilterCategory => T("FilterCategory");
+    public string FilterTag => T("FilterTag");
+    public string FilterSort => T("FilterSort");
+    public string FilterAll => T("FilterAll");
+    public string SortByName => T("SortByName");
+    public string SortByUpdatedAtDesc => T("SortByUpdatedAtDesc");
+    public string ColumnCategory => T("ColumnCategory");
+    public string TagsLabel => T("TagsLabel");
+    public string EditModTaxonomy => T("EditModTaxonomy");
+    public string CategoryFollowCatalog => T("CategoryFollowCatalog");
+    public string ExtraTagsHint => T("ExtraTagsHint");
+
+    public string CategoryLabel(Models.ModCategory category) => category switch
+    {
+        Models.ModCategory.OverlayUI => T("CategoryOverlayUI"),
+        Models.ModCategory.QoL => T("CategoryQoL"),
+        Models.ModCategory.Camera => T("CategoryCamera"),
+        Models.ModCategory.CombatAssist => T("CategoryCombatAssist"),
+        Models.ModCategory.Economy => T("CategoryEconomy"),
+        Models.ModCategory.ReplayDebug => T("CategoryReplayDebug"),
+        Models.ModCategory.Misc => T("CategoryMisc"),
+        _ => T("CategoryUncategorized")
+    };
 
     public void Refresh()
     {
