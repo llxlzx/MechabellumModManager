@@ -155,6 +155,14 @@ public sealed class BranchSwitchService
             return BranchOperationResult.Fail("Beta branch name is not configured.", degradeToManualBeta: true);
 
         var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
+        if (!File.Exists(acf))
+            return BranchOperationResult.Fail("Manifest not found.", degradeToManualBeta: true);
+
+        var currentKey = _betaEditor.ReadBetaKey(acf);
+        var desiredKey = string.IsNullOrWhiteSpace(betaKey) ? null : betaKey.Trim();
+        if (string.Equals(currentKey ?? "", desiredKey ?? "", StringComparison.Ordinal))
+            return BranchOperationResult.Ok();
+
         var backupDir = Path.Combine(_paths.DataRoot, "steam-manifest-backups");
         try
         {
@@ -170,6 +178,39 @@ public sealed class BranchSwitchService
         {
             return BranchOperationResult.Fail(ex.Message, degradeToManualBeta: true);
         }
+    }
+
+    /// <summary>
+    /// True when the Steam link junction and appmanifest BetaKey already match <paramref name="target"/>.
+    /// </summary>
+    public bool IsAlignedWith(GameBranch target)
+    {
+        var cfg = LoadConfig();
+        if (string.IsNullOrWhiteSpace(cfg.SteamLinkPath))
+            return false;
+
+        var targetStore = StorePath(cfg, target);
+        if (string.IsNullOrWhiteSpace(targetStore) || !LooksLikeGameRoot(targetStore))
+            return false;
+
+        if (!_junctions.IsJunction(cfg.SteamLinkPath))
+            return false;
+
+        var live = _junctions.ResolveTarget(cfg.SteamLinkPath);
+        if (live is null || !PathsEqual(live, targetStore))
+            return false;
+
+        var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
+        if (!File.Exists(acf))
+            return false;
+
+        var currentKey = _betaEditor.ReadBetaKey(acf);
+        if (target == GameBranch.Official)
+            return string.IsNullOrWhiteSpace(currentKey);
+
+        var expected = cfg.BetaBranchName?.Trim() ?? "";
+        return !string.IsNullOrWhiteSpace(expected)
+               && string.Equals(currentKey ?? "", expected, StringComparison.Ordinal);
     }
 
     public BranchOperationResult TryRepairFromJournal()

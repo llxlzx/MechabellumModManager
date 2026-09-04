@@ -274,7 +274,8 @@ Open the download link?
 Open the GitHub Releases page?</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Delete profile “{0}”? This cannot be undone.</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>Remove “{0}” from the library? It will also be removed from all profiles.</value></data>
-  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Switching game branch requires exiting Steam and the game. Continue?</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Switching Official/Test will exit Steam and the game, then change the folder link and Steam beta setting.
+Make sure Steam is not downloading/updating this game — forcing exit mid-download can break the Steam client. Continue?</value></data>
   <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>This keeps separate folders for Official and Test (about two full installs of disk space).
 The Steam beta name defaults to public_test (editable in Settings).
 It first saves your current install, then downloads the other branch — Test will not overwrite Official.
@@ -319,6 +320,7 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Failed to remove dual-folder setup.</value></data>
   <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished; waiting for Steam to finish switching branches.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Failed to request Steam exit: {0}</value></data>
-  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam or the game is still running; branch switch aborted.</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam or the game is still running (including steamwebhelper). End those processes in Task Manager, then try again.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
+  <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
 </root>

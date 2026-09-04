@@ -274,7 +274,8 @@
 GitHub Releases ページを開きますか？</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>プロファイル「{0}」を削除しますか？元に戻せません。</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>ライブラリから「{0}」を削除しますか？すべてのプロファイルからも外します。</value></data>
-  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>ゲームブランチ切替には Steam とゲームの終了が必要です。続行しますか？</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>正式/テスト切替は先に Steam とゲームを終了し、フォルダ連結と Steam ベータ設定を変更します。
+本ゲームのダウンロード/更新中でないことを確認してください。途中強制終了は Steam 異常の原因になります。続行しますか？</value></data>
   <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>正式版とテスト版を別フォルダで保持します（本体約2部の容量）。
 Steam の分岐名は既定で public_test（設定で変更可）。
 今あるインストールを先に退避してからもう一方をダウンロードし、テスト版で正式版を上書きしません。
@@ -319,6 +320,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>二系統設定の解除に失敗しました。</value></data>
   <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>二系統ウィザード完了。Steam のブランチ切替完了を待機中。</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Steam 終了要求に失敗：{0}</value></data>
-  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam またはゲームが動作中のため切替を中止しました。</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam またはゲームが動作中です（steamwebhelper 含む）。タスクマネージャーで終了してから再試行してください。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>フォルダ切替に失敗しました。</value></data>
+  <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>すでにこのブランチです（フォルダと Steam ベータは整合済み）。切替不要。</value></data>
 </root>

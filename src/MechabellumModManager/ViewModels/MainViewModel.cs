@@ -53,6 +53,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly IProcessStarter _processStarter;
     readonly Func<TimeSpan, Task> _delay;
     readonly TimeSpan _steamExitTimeout;
+    readonly TimeSpan _steamExitCooldown;
+    readonly TimeSpan _steamRestartCooldown;
     bool _loggedMelonOptimize;
     bool _suppressBranchSwitchSave;
     bool _checkingUpdates;
@@ -98,6 +100,8 @@ public sealed partial class MainViewModel : ObservableObject
         IProcessStarter? processStarter = null,
         Func<TimeSpan, Task>? delay = null,
         TimeSpan? steamExitTimeout = null,
+        TimeSpan? steamExitCooldown = null,
+        TimeSpan? steamRestartCooldown = null,
         Func<string, MessageBoxResult, bool>? confirmChoice = null)
     {
         _paths = paths;
@@ -132,7 +136,9 @@ public sealed partial class MainViewModel : ObservableObject
         _processProbe = processProbe ?? new ProcessProbe();
         _processStarter = processStarter ?? new ShellProcessStarter();
         _delay = delay ?? (span => Task.Delay(span));
-        _steamExitTimeout = steamExitTimeout ?? TimeSpan.FromSeconds(30);
+        _steamExitTimeout = steamExitTimeout ?? TimeSpan.FromSeconds(45);
+        _steamExitCooldown = steamExitCooldown ?? TimeSpan.FromSeconds(3);
+        _steamRestartCooldown = steamRestartCooldown ?? TimeSpan.FromSeconds(2);
         _branchSwitch = branchSwitch ?? new BranchSwitchService(
             paths,
             store,
@@ -2045,6 +2051,15 @@ public sealed partial class MainViewModel : ObservableObject
     async Task SwitchToBranchAsync(GameBranch target)
     {
         if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
+
+        if (_branchSwitch.IsAlignedWith(target))
+        {
+            var already = LocalizationService.T("NotifyAlreadyOnGameBranch");
+            AppendLog(already);
+            _notify(already);
+            return;
+        }
+
         if (!Confirm(LocalizationService.T("ConfirmSwitchGameBranch")))
             return;
 
@@ -2074,7 +2089,7 @@ public sealed partial class MainViewModel : ObservableObject
             SelectBoundProfile(target);
 
             var silent = _branchSwitch.TrySilentSetBeta(target);
-            SettleAfterSilentBeta(silent);
+            await SettleAfterSilentBetaAsync(silent).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -2183,7 +2198,7 @@ public sealed partial class MainViewModel : ObservableObject
         var current = cfg.ActiveBranch;
         if (cfg.WizardStep is BranchWizardStep.ArchivedB or BranchWizardStep.Linked)
         {
-            FinishWizardAfterStoresReady(current);
+            await FinishWizardAfterStoresReadyAsync(current).ConfigureAwait(true);
             return;
         }
 
@@ -2197,7 +2212,7 @@ public sealed partial class MainViewModel : ObservableObject
         var otherStore = other == GameBranch.Official ? cfg.OfficialStorePath : cfg.BetaStorePath;
         if (SteamGameLocator.LooksLikeGameRoot(otherStore))
         {
-            FinishWizardAfterStoresReady(current);
+            await FinishWizardAfterStoresReadyAsync(current).ConfigureAwait(true);
             return;
         }
 
@@ -2212,6 +2227,8 @@ public sealed partial class MainViewModel : ObservableObject
                 : silentOther.Message);
         }
 
+        if (_steamRestartCooldown > TimeSpan.Zero)
+            await _delay(_steamRestartCooldown).ConfigureAwait(true);
         TryStartSteam();
 
         if (!Confirm(LocalizationService.T("ConfirmDownloadOtherBranchContinue")))
@@ -2230,10 +2247,10 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        FinishWizardAfterStoresReady(current);
+        await FinishWizardAfterStoresReadyAsync(current).ConfigureAwait(true);
     }
 
-    void FinishWizardAfterStoresReady(GameBranch current)
+    async Task FinishWizardAfterStoresReadyAsync(GameBranch current)
     {
         var link = _branchSwitch.CreateLinkTo(current);
         if (!link.Success)
@@ -2266,7 +2283,7 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshStatus();
 
         var silent = _branchSwitch.TrySilentSetBeta(current);
-        SettleAfterSilentBeta(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam"));
+        await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
     }
 
     async Task<bool> RunTeardownCoreAsync(bool deleteOtherStore)
@@ -2372,6 +2389,16 @@ public sealed partial class MainViewModel : ObservableObject
             return false;
         }
 
+        if (_steamExitCooldown > TimeSpan.Zero)
+            await _delay(_steamExitCooldown).ConfigureAwait(true);
+
+        // Re-check after cooldown: steamwebhelper often lags behind steam.exe.
+        if (_processProbe.IsGameOrSteamRunning())
+        {
+            AppendLog(LocalizationService.T("LogSteamOrGameStillRunning"));
+            return false;
+        }
+
         return true;
     }
 
@@ -2396,7 +2423,7 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshBranchStatusText();
     }
 
-    void SettleAfterSilentBeta(BranchOperationResult silent, string? successLog = null)
+    async Task SettleAfterSilentBetaAsync(BranchOperationResult silent, string? successLog = null)
     {
         EnterSteamSettle();
         if (!silent.Success || silent.DegradeToManualBeta)
@@ -2411,6 +2438,8 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         DegradeToManualBeta = false;
+        if (_steamRestartCooldown > TimeSpan.Zero)
+            await _delay(_steamRestartCooldown).ConfigureAwait(true);
         TryStartSteam();
         if (!string.IsNullOrWhiteSpace(successLog))
             AppendLog(successLog);

@@ -274,7 +274,8 @@ Download-Link öffnen?
 GitHub-Releases-Seite öffnen?</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Profil „{0}“ löschen? Dies kann nicht rückgängig gemacht werden.</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>„{0}“ aus der Bibliothek entfernen? Wird auch aus allen Profilen entfernt.</value></data>
-  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Zum Wechseln des Spielzweigs Steam und Spiel beenden. Fortfahren?</value></data>
+  <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Offiziell/Test wechseln beendet Steam und Spiel und ändert Verknüpfung sowie Steam-Beta.
+Steam sollte dieses Spiel nicht gerade laden/aktualisieren — Abbruch mitten im Download kann Steam beschädigen. Fortfahren?</value></data>
   <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Für Offiziell und Test werden getrennte Ordner behalten (etwa zwei volle Installationen).
 Steam-Beta-Name standardmäßig public_test (in den Einstellungen änderbar).
 Zuerst wird die aktuelle Installation gesichert, danach der andere Zweig geladen — Test überschreibt Offiziell nicht.
@@ -319,6 +320,7 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Entfernen des Doppelordners fehlgeschlagen.</value></data>
   <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Doppelordner-Assistent fertig; warte auf Steam-Zweigwechsel.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Steam-Beenden fehlgeschlagen: {0}</value></data>
-  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam oder Spiel läuft noch; Zweigwechsel abgebrochen.</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam oder Spiel läuft noch (inkl. steamwebhelper). Prozesse im Task-Manager beenden, dann erneut versuchen.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Ordnerwechsel fehlgeschlagen.</value></data>
+  <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Bereits auf diesem Zweig (Ordner und Steam-Beta stimmen). Kein Wechsel nötig.</value></data>
 </root>

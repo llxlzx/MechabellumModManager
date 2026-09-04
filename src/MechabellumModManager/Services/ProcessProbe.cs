@@ -17,7 +17,21 @@ public sealed class ProcessProbe : IProcessProbe
 {
     public bool IsGameRunning()
     {
-        var processes = Process.GetProcessesByName("Mechabellum");
+        return HasProcess("Mechabellum");
+    }
+
+    public bool IsSteamRunning()
+    {
+        // steam.exe can exit briefly while steamwebhelper is still shutting down / holding files.
+        // Editing appmanifest in that window commonly crashes the Steam client on next start.
+        return HasProcess("steam") || HasProcess("steamwebhelper");
+    }
+
+    public bool IsGameOrSteamRunning() => IsGameRunning() || IsSteamRunning();
+
+    static bool HasProcess(string processName)
+    {
+        var processes = Process.GetProcessesByName(processName);
         try
         {
             return processes.Length > 0;
@@ -28,14 +42,4 @@ public sealed class ProcessProbe : IProcessProbe
                 process.Dispose();
         }
     }
-
-    public bool IsSteamRunning()
-    {
-        // Steam main process name is "steam" on Windows
-        var processes = Process.GetProcessesByName("steam");
-        try { return processes.Length > 0; }
-        finally { foreach (var p in processes) p.Dispose(); }
-    }
-
-    public bool IsGameOrSteamRunning() => IsGameRunning() || IsSteamRunning();
 }
