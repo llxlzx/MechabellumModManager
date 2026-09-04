@@ -19,6 +19,16 @@ public sealed class ModPackage
     public string? CatalogUpdatedAt { get; set; }
     /// <summary>Relative path in MechabellumMods repo, e.g. mods/show-grid/preview.png.</summary>
     public string? Preview { get; set; }
+    /// <summary>Local override of catalog category (writable enum string); null = follow catalog.</summary>
+    public string? CategoryOverride { get; set; }
+    /// <summary>Local extra tags merged with catalog tags.</summary>
+    public List<string>? ExtraTags { get; set; }
+    /// <summary>Runtime-only catalog category from last enrichment.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? CatalogCategory { get; set; }
+    /// <summary>Runtime-only catalog tags from last enrichment.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<string>? CatalogTags { get; set; }
     public List<DeployableFile> Files { get; set; } = new();
     public string PackageDirectory { get; set; } = ""; // absolute under library
 }

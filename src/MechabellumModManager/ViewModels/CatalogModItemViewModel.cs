@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Media.Imaging;
+using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 
 namespace MechabellumModManager.ViewModels;
@@ -26,6 +27,17 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public string? Summary => Mod.Summary;
     public string File => Mod.File;
     public string? Type => Mod.Type;
+
+    public ModCategory EffectiveCategory =>
+        ModTaxonomy.ParseCategoryOrUncategorized(Mod.Category);
+
+    public IReadOnlyList<string> EffectiveTags =>
+        ModTaxonomy.NormalizeTags(Mod.Tags);
+
+    public string EffectiveCategoryDisplay => EffectiveCategory.ToString();
+
+    public string EffectiveTagsText => EffectiveTags.Count == 0 ? "" : string.Join(", ", EffectiveTags);
+
     public string? PreviewUrl { get; }
 
     [ObservableProperty]

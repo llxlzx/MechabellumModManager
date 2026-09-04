@@ -391,6 +391,13 @@ public sealed class ModLibraryService
         return pkg;
     }
 
+    /// <summary>Rewrites package.json from the in-memory package (including taxonomy overrides).</summary>
+    public void SavePackageMeta(ModPackage pkg)
+    {
+        ArgumentNullException.ThrowIfNull(pkg);
+        WritePackageJson(pkg);
+    }
+
     ModPackageType ResolveType(string stagingPath, string? primaryDll, ModPackageType? pathHint, ModPackageType? forceType)
     {
         var packageJsonPath = Path.Combine(stagingPath, "package.json");
@@ -525,6 +532,8 @@ public sealed class ModLibraryService
             Summary = pkg.Summary,
             CatalogUpdatedAt = pkg.CatalogUpdatedAt,
             Preview = pkg.Preview,
+            CategoryOverride = pkg.CategoryOverride,
+            ExtraTags = pkg.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(pkg.ExtraTags).ToList(),
             Files = pkg.Files
         };
         var json = JsonSerializer.Serialize(meta, PackageJsonOptions);
@@ -556,6 +565,8 @@ public sealed class ModLibraryService
                 Summary = meta.Summary,
                 CatalogUpdatedAt = meta.CatalogUpdatedAt,
                 Preview = meta.Preview,
+                CategoryOverride = meta.CategoryOverride,
+                ExtraTags = meta.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(meta.ExtraTags).ToList(),
                 Files = meta.Files ?? new List<DeployableFile>(),
                 PackageDirectory = dir
             };
@@ -822,6 +833,8 @@ public sealed class ModLibraryService
         public string? Summary { get; set; }
         public string? CatalogUpdatedAt { get; set; }
         public string? Preview { get; set; }
+        public string? CategoryOverride { get; set; }
+        public List<string>? ExtraTags { get; set; }
         public List<DeployableFile>? Files { get; set; }
     }
 

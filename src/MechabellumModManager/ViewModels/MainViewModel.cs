@@ -764,6 +764,7 @@ public sealed partial class MainViewModel : ObservableObject
             CatalogMods.Clear();
             foreach (var mod in root.Mods)
             {
+                LogInvalidCatalogCategory(mod);
                 var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
                 CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
             }
@@ -947,6 +948,7 @@ public sealed partial class MainViewModel : ObservableObject
             CatalogMods.Clear();
             foreach (var mod in root.Mods)
             {
+                LogInvalidCatalogCategory(mod);
                 var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
                 CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
             }
@@ -1276,7 +1278,14 @@ public sealed partial class MainViewModel : ObservableObject
 
         Mods.Clear();
         foreach (var pkg in library.OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase))
+        {
+            if (!string.IsNullOrWhiteSpace(pkg.CategoryOverride) &&
+                !ModTaxonomy.TryParseCategory(pkg.CategoryOverride, out _))
+            {
+                AppendLog($"本地包 '{pkg.Id}': 无效分类覆盖 '{pkg.CategoryOverride}'，按目录/未分类处理。");
+            }
             Mods.Add(new ModItemViewModel(this, pkg, enabled.Contains(pkg.Id)));
+        }
 
         EnrichModsFromCatalog();
 
@@ -1454,6 +1463,8 @@ public sealed partial class MainViewModel : ObservableObject
             summary = pkg.Summary,
             catalogUpdatedAt = pkg.CatalogUpdatedAt,
             preview = pkg.Preview,
+            categoryOverride = pkg.CategoryOverride,
+            extraTags = pkg.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(pkg.ExtraTags).ToList(),
             files = pkg.Files
         };
         var json = JsonSerializer.Serialize(meta, PackageJsonOptions);
@@ -1470,6 +1481,17 @@ public sealed partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(message)) return;
         var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
         LogText = string.IsNullOrEmpty(LogText) ? line : LogText + Environment.NewLine + line;
+    }
+
+    internal void LogTaxonomyWarning(string message) => AppendLog(message);
+
+    void LogInvalidCatalogCategory(CatalogMod mod)
+    {
+        if (!string.IsNullOrWhiteSpace(mod.Category) &&
+            !ModTaxonomy.TryParseCategory(mod.Category, out _))
+        {
+            AppendLog($"目录条目 '{mod.Id}': 无效分类 '{mod.Category}'，按未分类处理。");
+        }
     }
 
     static bool IsPortableRoot(string? dataRoot)
