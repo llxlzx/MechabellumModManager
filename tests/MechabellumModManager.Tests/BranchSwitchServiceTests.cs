@@ -231,6 +231,87 @@ public class BranchSwitchServiceTests
         loaded.Enabled.Should().BeTrue();
     }
 
+    [Fact]
+    public void Repair_live_junction_on_target_syncs_ActiveBranch()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Junctions.DeleteJunction(h.SteamLink);
+        h.Junctions.CreateJunction(h.SteamLink, h.BetaStore);
+        h.Cfg.ActiveBranch = GameBranch.Official;
+        h.Svc.SaveConfig(h.Cfg);
+        h.Store.Save(h.Paths.BranchSwitchJournalPath, new BranchSwitchJournal
+        {
+            Phase = "unlinked",
+            PreviousBranch = GameBranch.Official,
+            TargetBranch = GameBranch.Beta,
+            SteamLinkPath = Path.GetFullPath(h.SteamLink),
+            PreviousStorePath = Path.GetFullPath(h.OfficialStore),
+            TargetStorePath = Path.GetFullPath(h.BetaStore)
+        });
+
+        var repair = h.Svc.TryRepairFromJournal();
+
+        repair.Success.Should().BeTrue();
+        h.Svc.LoadConfig().ActiveBranch.Should().Be(GameBranch.Beta);
+        File.Exists(h.Paths.BranchSwitchJournalPath).Should().BeFalse();
+        h.Junctions.ResolveTarget(h.SteamLink).Should().Be(Path.GetFullPath(h.BetaStore));
+    }
+
+    [Fact]
+    public void ArchiveCurrentAs_already_junction_onto_dest_unlinks_only()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+
+        var result = h.Svc.ArchiveCurrentAs(GameBranch.Official);
+
+        result.Success.Should().BeTrue();
+        h.Junctions.IsJunction(h.SteamLink).Should().BeFalse();
+        Directory.Exists(h.SteamLink).Should().BeFalse();
+        File.ReadAllText(Path.Combine(h.OfficialStore, "marker.txt")).Should().Be("official");
+        File.Exists(Path.Combine(h.OfficialStore, "Mechabellum.exe")).Should().BeTrue();
+        h.Svc.LoadConfig().WizardStep.Should().Be(BranchWizardStep.ArchivedA);
+    }
+
+    [Fact]
+    public void Repair_corrupt_journal_is_not_deleted()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        const string garbage = "{not-json";
+        File.WriteAllText(h.Paths.BranchSwitchJournalPath, garbage);
+
+        var repair = h.Svc.TryRepairFromJournal();
+
+        repair.Success.Should().BeFalse();
+        File.Exists(h.Paths.BranchSwitchJournalPath).Should().BeTrue();
+        File.ReadAllText(h.Paths.BranchSwitchJournalPath).Should().Be(garbage);
+        h.Junctions.ResolveTarget(h.SteamLink).Should().Be(Path.GetFullPath(h.OfficialStore));
+    }
+
+    [Fact]
+    public void Repair_does_not_fall_back_to_target_when_previous_is_broken()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Junctions.DeleteJunction(h.SteamLink);
+        var journalPath = h.Paths.BranchSwitchJournalPath;
+        h.Store.Save(journalPath, new BranchSwitchJournal
+        {
+            Phase = "unlinked",
+            PreviousBranch = GameBranch.Official,
+            TargetBranch = GameBranch.Beta,
+            SteamLinkPath = Path.GetFullPath(h.SteamLink),
+            PreviousStorePath = Path.Combine(h.Root, "missing-previous"),
+            TargetStorePath = Path.GetFullPath(h.BetaStore)
+        });
+
+        var repair = h.Svc.TryRepairFromJournal();
+
+        repair.Success.Should().BeFalse();
+        File.Exists(journalPath).Should().BeTrue();
+        h.Junctions.IsJunction(h.SteamLink).Should().BeFalse();
+        Directory.Exists(h.SteamLink).Should().BeFalse();
+        File.ReadAllText(Path.Combine(h.BetaStore, "marker.txt")).Should().Be("beta");
+    }
+
     static void SeedGameRoot(string dir, string marker)
     {
         Directory.CreateDirectory(dir);
