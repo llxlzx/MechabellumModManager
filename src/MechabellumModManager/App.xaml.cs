@@ -30,8 +30,12 @@ public partial class App : Application
         var planner = new DeployPlanner();
         var probe = new ProcessProbe();
         var deploy = new DeployService(paths, store, planner, detector, probe);
-        var launcher = new GameLauncher(new ShellProcessStarter(), probe);
+        var starter = new ShellProcessStarter();
+        var launcher = new GameLauncher(starter, probe);
         var riskGate = new RiskGate();
+        var junctions = new JunctionService();
+        var betaEditor = new SteamBetaKeyEditor(probe);
+        var branchSwitch = new BranchSwitchService(paths, store, probe, junctions, betaEditor);
 
         return new MainViewModel(
             paths,
@@ -55,7 +59,10 @@ public partial class App : Application
             promptReport: modName => PromptReport(owner, modName),
             promptSubmitGuide: () => PromptSubmitGuide(owner),
             promptEditTaxonomy: pkg => PromptEditTaxonomy(owner, pkg),
-            copyText: text => Clipboard.SetText(text));
+            copyText: text => Clipboard.SetText(text),
+            branchSwitch: branchSwitch,
+            processProbe: probe,
+            processStarter: starter);
     }
 
     static PathsService ResolvePaths(JsonStore store)
