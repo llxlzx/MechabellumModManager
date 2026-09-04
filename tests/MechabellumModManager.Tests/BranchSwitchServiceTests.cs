@@ -258,6 +258,44 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void Teardown_restores_current_store_to_steam_link_and_legacy_manifest()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        var branchManifest = h.Paths.GetDeployManifestPath(GameBranch.Official, enabled: true);
+        File.WriteAllText(branchManifest, """{"gamePath":"official-branch"}""");
+        File.WriteAllText(h.Paths.DeployManifestPath, """{"gamePath":"stale"}""");
+
+        var result = h.Svc.TryTeardown(deleteOtherStore: false);
+
+        result.Success.Should().BeTrue();
+        h.Junctions.IsJunction(h.SteamLink).Should().BeFalse();
+        Directory.Exists(h.SteamLink).Should().BeTrue();
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("official");
+        File.Exists(Path.Combine(h.SteamLink, "Mechabellum.exe")).Should().BeTrue();
+        Directory.Exists(h.OfficialStore).Should().BeFalse();
+        Directory.Exists(h.BetaStore).Should().BeTrue();
+        File.ReadAllText(Path.Combine(h.BetaStore, "marker.txt")).Should().Be("beta");
+        File.ReadAllText(h.Paths.DeployManifestPath).Should().Be("""{"gamePath":"official-branch"}""");
+        var cfg = h.Svc.LoadConfig();
+        cfg.Enabled.Should().BeFalse();
+        cfg.WizardStep.Should().Be(BranchWizardStep.None);
+    }
+
+    [Fact]
+    public void Teardown_refuses_when_steam_running()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Probe.SteamRunning = true;
+
+        var result = h.Svc.TryTeardown(deleteOtherStore: false);
+
+        result.Success.Should().BeFalse();
+        h.Junctions.IsJunction(h.SteamLink).Should().BeTrue();
+        h.Junctions.ResolveTarget(h.SteamLink).Should().Be(Path.GetFullPath(h.OfficialStore));
+        h.Svc.LoadConfig().Enabled.Should().BeTrue();
+    }
+
+    [Fact]
     public void ArchiveCurrentAs_already_junction_onto_dest_unlinks_only()
     {
         using var h = Harness.CreateReadyDualFolder();

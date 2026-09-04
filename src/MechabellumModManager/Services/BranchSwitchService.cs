@@ -367,16 +367,114 @@ public sealed class BranchSwitchService
         CopyOnce(_paths.DeployManifestPrevPath, _paths.GetDeployManifestPrevPath(current, enabled: true));
     }
 
+    public BranchOperationResult TryTeardown(bool deleteOtherStore)
+    {
+        if (_probe.IsGameOrSteamRunning())
+            return BranchOperationResult.Fail("Game or Steam is running.");
+
+        var cfg = LoadConfig();
+        var link = cfg.SteamLinkPath;
+        if (string.IsNullOrWhiteSpace(link))
+            return BranchOperationResult.Fail("Steam link path is not configured.");
+
+        link = Path.GetFullPath(link);
+        var currentStore = StorePath(cfg, cfg.ActiveBranch);
+        if (!string.IsNullOrWhiteSpace(currentStore))
+            currentStore = Path.GetFullPath(currentStore);
+
+        try
+        {
+            if (_junctions.IsJunction(link))
+            {
+                var live = _junctions.ResolveTarget(link);
+                if (!string.IsNullOrWhiteSpace(live))
+                    currentStore = Path.GetFullPath(live);
+                _junctions.DeleteJunction(link);
+            }
+
+            if (!string.IsNullOrWhiteSpace(currentStore) && Directory.Exists(currentStore))
+            {
+                if (!PathExists(link))
+                    Directory.Move(currentStore, link);
+                else if (!PathsEqual(currentStore, link))
+                    return BranchOperationResult.Fail("Steam link path already exists.");
+            }
+
+            if (!LooksLikeGameRoot(link))
+                return BranchOperationResult.Fail("Restored path is not a valid game root.");
+
+            var currentBranch = cfg.ActiveBranch;
+            if (!string.IsNullOrWhiteSpace(currentStore))
+            {
+                if (!string.IsNullOrWhiteSpace(cfg.OfficialStorePath) && PathsEqual(currentStore, cfg.OfficialStorePath))
+                    currentBranch = GameBranch.Official;
+                else if (!string.IsNullOrWhiteSpace(cfg.BetaStorePath) && PathsEqual(currentStore, cfg.BetaStorePath))
+                    currentBranch = GameBranch.Beta;
+            }
+
+            var otherStore = OtherStorePath(cfg, currentStore);
+            if (deleteOtherStore
+                && !string.IsNullOrWhiteSpace(otherStore)
+                && Directory.Exists(otherStore)
+                && !PathsEqual(otherStore, link))
+            {
+                Directory.Delete(otherStore, recursive: true);
+            }
+
+            RestoreLegacyManifestFrom(currentBranch);
+
+            cfg.Enabled = false;
+            cfg.WizardStep = BranchWizardStep.None;
+            cfg.OfficialStorePath = "";
+            cfg.BetaStorePath = "";
+            cfg.SteamLinkPath = link;
+            SaveConfig(cfg);
+            ClearJournal();
+            return BranchOperationResult.Ok();
+        }
+        catch (Exception ex)
+        {
+            return BranchOperationResult.Fail(ex.Message);
+        }
+    }
+
+    void RestoreLegacyManifestFrom(GameBranch current)
+    {
+        CopyOverwrite(_paths.GetDeployManifestPath(current, enabled: true), _paths.DeployManifestPath);
+        CopyOverwrite(_paths.GetDeployManifestPrevPath(current, enabled: true), _paths.DeployManifestPrevPath);
+    }
+
+    static string OtherStorePath(BranchSwitchConfig cfg, string? currentStore)
+    {
+        if (!string.IsNullOrWhiteSpace(currentStore))
+        {
+            if (!string.IsNullOrWhiteSpace(cfg.OfficialStorePath) && PathsEqual(currentStore, cfg.OfficialStorePath))
+                return cfg.BetaStorePath;
+            if (!string.IsNullOrWhiteSpace(cfg.BetaStorePath) && PathsEqual(currentStore, cfg.BetaStorePath))
+                return cfg.OfficialStorePath;
+        }
+
+        return cfg.ActiveBranch == GameBranch.Official ? cfg.BetaStorePath : cfg.OfficialStorePath;
+    }
+
     static void CopyOnce(string source, string dest)
     {
         if (File.Exists(dest) || !File.Exists(source))
+            return;
+
+        CopyOverwrite(source, dest);
+    }
+
+    static void CopyOverwrite(string source, string dest)
+    {
+        if (!File.Exists(source))
             return;
 
         var dir = Path.GetDirectoryName(dest);
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
 
-        File.Copy(source, dest);
+        File.Copy(source, dest, overwrite: true);
     }
 
     void TryRestoreLink(string link, string previousStore)

@@ -243,7 +243,6 @@ public sealed partial class MainViewModel : ObservableObject
     public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
 
     public bool IsBranchWizardBlocking =>
-        BranchSwitchEnabled &&
         BranchWizardStep is not BranchWizardStep.None and not BranchWizardStep.Ready;
 
     public string StatusKindLabel => GameStatus?.Kind switch
@@ -772,44 +771,69 @@ public sealed partial class MainViewModel : ObservableObject
     async Task SwitchToBeta() => await SwitchToBranchAsync(GameBranch.Beta);
 
     [RelayCommand]
-    void StartBranchWizard()
+    async Task StartBranchWizard()
     {
-        AppendLog("双服配置向导尚未完成，请等待后续版本。");
+        if (IsBranchSwitchBusy) return;
+
+        IsBranchSwitchBusy = true;
+        try
+        {
+            if (BranchSwitchEnabled)
+            {
+                if (!_confirm("已启用双服。重建将先安全解除（保留另一旁路），再重新配置。是否继续？"))
+                    return;
+                if (!await RunTeardownCoreAsync(deleteOtherStore: false).ConfigureAwait(true))
+                    return;
+            }
+
+            var existing = _branchSwitch.LoadConfig();
+            if (existing.WizardStep is BranchWizardStep.ArchivedA
+                or BranchWizardStep.WaitingDownloadB
+                or BranchWizardStep.ArchivedB
+                or BranchWizardStep.Linked)
+            {
+                await ResumeWizardAsync(existing).ConfigureAwait(true);
+                return;
+            }
+
+            await RunWizardFromStartAsync().ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"双服向导失败：{ex.Message}");
+            _notify($"双服向导失败：{ex.Message}");
+        }
+        finally
+        {
+            IsBranchSwitchBusy = false;
+            NotifyBranchGates();
+            RefreshBranchStatusText();
+        }
     }
 
     [RelayCommand]
-    void TeardownBranchSwitch()
+    async Task TeardownBranchSwitch()
     {
-        if (!BranchSwitchEnabled) return;
-        if (!_confirm("确定解除双服配置？此操作不会删除旁路目录。"))
+        if (!BranchSwitchEnabled || IsBranchSwitchBusy) return;
+        if (!_confirm("确定解除双服配置？当前旁路会改回游戏目录，须退出 Steam 与游戏。"))
             return;
 
+        var deleteOther = _confirm("是否删除另一旁路目录？未使用的服文件将被永久删除。（建议选否）");
+        IsBranchSwitchBusy = true;
         try
         {
-            var cfg = _branchSwitch.LoadConfig();
-            cfg.Enabled = false;
-            cfg.WizardStep = BranchWizardStep.None;
-            _branchSwitch.SaveConfig(cfg);
-            _suppressBranchSwitchSave = true;
-            try
-            {
-                BranchSwitchEnabled = false;
-                BranchWizardStep = BranchWizardStep.None;
-                IsAwaitingSteamSettle = false;
-                DegradeToManualBeta = false;
-            }
-            finally
-            {
-                _suppressBranchSwitchSave = false;
-            }
-
-            RefreshBranchStatusText();
-            NotifyBranchGates();
-            AppendLog("已解除双服配置。");
+            await RunTeardownCoreAsync(deleteOther).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
             AppendLog($"解除双服配置失败：{ex.Message}");
+            _notify($"解除双服配置失败：{ex.Message}");
+        }
+        finally
+        {
+            IsBranchSwitchBusy = false;
+            NotifyBranchGates();
+            RefreshBranchStatusText();
         }
     }
 
@@ -2005,6 +2029,279 @@ public sealed partial class MainViewModel : ObservableObject
             NotifyBranchGates();
             RefreshBranchStatusText();
         }
+    }
+
+    async Task RunWizardFromStartAsync()
+    {
+        if (!_confirm("双服配置需要约两份游戏磁盘空间，并且必须退出 Steam 与游戏。是否开始？"))
+            return;
+
+        var current = _confirm("当前安装的是正式服吗？选「否」表示当前是测试服。")
+            ? GameBranch.Official
+            : GameBranch.Beta;
+
+        var betaName = _promptText?.Invoke("请输入测试服 Beta 分支名（Steam 属性里看到的名称）");
+        if (string.IsNullOrWhiteSpace(betaName))
+            betaName = BetaBranchName;
+        if (string.IsNullOrWhiteSpace(betaName))
+        {
+            FailWizard("未填写测试服 Beta 分支名，已中止向导。");
+            return;
+        }
+
+        if (!TryResolveSteamLayout(GamePath, out var steamLink, out var officialStore, out var betaStore))
+        {
+            FailWizard("游戏路径须位于 steamapps\\common\\Mechabellum。");
+            return;
+        }
+
+        if (!SteamGameLocator.LooksLikeGameRoot(steamLink))
+        {
+            FailWizard("当前游戏路径无效，无法开始双服向导。");
+            return;
+        }
+
+        var destA = current == GameBranch.Official ? officialStore : betaStore;
+        if (Path.Exists(destA) && !PathsEqual(destA, steamLink))
+        {
+            FailWizard($"旁路目录已存在，无法归档：{destA}");
+            return;
+        }
+
+        var acf = SteamBetaKeyEditor.FindAppManifestPath(steamLink);
+        if (!File.Exists(acf))
+        {
+            FailWizard("未找到 appmanifest_669330.acf，无法对齐 Steam Beta。");
+            return;
+        }
+
+        try
+        {
+            using var _ = File.OpenRead(acf);
+        }
+        catch (Exception ex)
+        {
+            FailWizard($"无法读取 Steam 清单（可能需要提权或迁库）：{ex.Message}");
+            return;
+        }
+
+        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+            return;
+
+        var cfg = _branchSwitch.LoadConfig();
+        cfg.SteamLinkPath = steamLink;
+        cfg.OfficialStorePath = officialStore;
+        cfg.BetaStorePath = betaStore;
+        cfg.ActiveBranch = current;
+        cfg.BetaBranchName = betaName.Trim();
+        cfg.Enabled = false;
+        cfg.WizardStep = BranchWizardStep.Declared;
+        _branchSwitch.SaveConfig(cfg);
+
+        _suppressBranchSwitchSave = true;
+        try
+        {
+            BetaBranchName = cfg.BetaBranchName;
+            ActiveGameBranch = current;
+            BranchWizardStep = BranchWizardStep.Declared;
+        }
+        finally
+        {
+            _suppressBranchSwitchSave = false;
+        }
+
+        var archiveA = _branchSwitch.ArchiveCurrentAs(current);
+        if (!archiveA.Success)
+        {
+            FailWizard(string.IsNullOrWhiteSpace(archiveA.Message) ? "归档当前服失败。" : archiveA.Message);
+            return;
+        }
+
+        SetWizardStep(BranchWizardStep.WaitingDownloadB);
+        await ContinueWizardAfterArchiveAAsync(current).ConfigureAwait(true);
+    }
+
+    async Task ResumeWizardAsync(BranchSwitchConfig cfg)
+    {
+        var current = cfg.ActiveBranch;
+        if (cfg.WizardStep is BranchWizardStep.ArchivedB or BranchWizardStep.Linked)
+        {
+            FinishWizardAfterStoresReady(current);
+            return;
+        }
+
+        await ContinueWizardAfterArchiveAAsync(current).ConfigureAwait(true);
+    }
+
+    async Task ContinueWizardAfterArchiveAAsync(GameBranch current)
+    {
+        var other = current == GameBranch.Official ? GameBranch.Beta : GameBranch.Official;
+        var cfg = _branchSwitch.LoadConfig();
+        var otherStore = other == GameBranch.Official ? cfg.OfficialStorePath : cfg.BetaStorePath;
+        if (SteamGameLocator.LooksLikeGameRoot(otherStore))
+        {
+            FinishWizardAfterStoresReady(current);
+            return;
+        }
+
+        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+            return;
+
+        var silentOther = _branchSwitch.TrySilentSetBeta(other);
+        if (!silentOther.Success)
+        {
+            _notify(string.IsNullOrWhiteSpace(silentOther.Message)
+                ? "未能自动写入另一服 Beta，请在 Steam 中手选后再下载。"
+                : silentOther.Message);
+        }
+
+        TryStartSteam();
+
+        if (!_confirm("请在 Steam 中下载另一服。下载完成后请退出 Steam，再点确定继续。取消将暂停向导（稍后可继续）。"))
+        {
+            AppendLog("双服向导已暂停，可稍后继续。");
+            return;
+        }
+
+        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+            return;
+
+        var archiveB = _branchSwitch.ArchiveDownloadedAs(other);
+        if (!archiveB.Success)
+        {
+            FailWizard(string.IsNullOrWhiteSpace(archiveB.Message) ? "归档另一服失败。" : archiveB.Message);
+            return;
+        }
+
+        FinishWizardAfterStoresReady(current);
+    }
+
+    void FinishWizardAfterStoresReady(GameBranch current)
+    {
+        var link = _branchSwitch.CreateLinkTo(current);
+        if (!link.Success)
+        {
+            FailWizard(string.IsNullOrWhiteSpace(link.Message) ? "创建目录联接失败。" : link.Message);
+            return;
+        }
+
+        _branchSwitch.MigrateLegacyManifestIfNeeded(current);
+
+        _suppressBranchSwitchSave = true;
+        try
+        {
+            BranchSwitchEnabled = true;
+            ActiveGameBranch = current;
+            BranchWizardStep = BranchWizardStep.Linked;
+        }
+        finally
+        {
+            _suppressBranchSwitchSave = false;
+        }
+
+        TryUpdateBranchConfig(cfg =>
+        {
+            cfg.Enabled = true;
+            cfg.ActiveBranch = current;
+            cfg.WizardStep = BranchWizardStep.Linked;
+        });
+
+        RefreshStatus();
+
+        var silent = _branchSwitch.TrySilentSetBeta(current);
+        TryStartSteam();
+        EnterSteamSettle();
+
+        if (!silent.Success || silent.DegradeToManualBeta)
+        {
+            DegradeToManualBeta = true;
+            AppendLog(string.IsNullOrWhiteSpace(silent.Message)
+                ? "未能自动对齐 Steam Beta，请在 Steam 中手动选择分支后确认。"
+                : silent.Message);
+            return;
+        }
+
+        DegradeToManualBeta = false;
+        AppendLog("双服配置向导已完成，正在等待 Steam 结算。");
+    }
+
+    async Task<bool> RunTeardownCoreAsync(bool deleteOtherStore)
+    {
+        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+            return false;
+
+        var result = _branchSwitch.TryTeardown(deleteOtherStore);
+        if (!result.Success)
+        {
+            FailWizard(string.IsNullOrWhiteSpace(result.Message) ? "解除双服配置失败。" : result.Message);
+            return false;
+        }
+
+        _suppressBranchSwitchSave = true;
+        try
+        {
+            BranchSwitchEnabled = false;
+            BranchWizardStep = BranchWizardStep.None;
+            IsAwaitingSteamSettle = false;
+            DegradeToManualBeta = false;
+        }
+        finally
+        {
+            _suppressBranchSwitchSave = false;
+        }
+
+        RefreshStatus();
+        NotifyBranchGates();
+        RefreshBranchStatusText();
+        AppendLog("已解除双服配置。");
+        _notify("已解除双服配置。请在 Steam 中确认游戏分支。");
+        return true;
+    }
+
+    void SetWizardStep(BranchWizardStep step)
+    {
+        BranchWizardStep = step;
+        TryUpdateBranchConfig(cfg => cfg.WizardStep = step);
+        NotifyBranchGates();
+        RefreshBranchStatusText();
+    }
+
+    void FailWizard(string message)
+    {
+        AppendLog(message);
+        _notify(message);
+    }
+
+    static bool TryResolveSteamLayout(string gamePath, out string steamLink, out string officialStore, out string betaStore)
+    {
+        steamLink = "";
+        officialStore = "";
+        betaStore = "";
+        if (string.IsNullOrWhiteSpace(gamePath))
+            return false;
+
+        try
+        {
+            steamLink = Path.GetFullPath(gamePath);
+        }
+        catch
+        {
+            return false;
+        }
+
+        var common = Path.GetDirectoryName(steamLink);
+        if (string.IsNullOrEmpty(common)
+            || !string.Equals(Path.GetFileName(common), "common", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var steamapps = Path.GetDirectoryName(common);
+        if (string.IsNullOrEmpty(steamapps)
+            || !string.Equals(Path.GetFileName(steamapps), "steamapps", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        officialStore = Path.Combine(common, "Mechabellum_official");
+        betaStore = Path.Combine(common, "Mechabellum_beta");
+        return true;
     }
 
     async Task<bool> WaitForSteamAndGameExitAsync()
