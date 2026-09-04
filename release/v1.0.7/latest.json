@@ -1,6 +1,6 @@
 {
   "version": "1.0.7",
-  "notes": "1.0.7: 双服切换加固（等待 steamwebhelper、退出后冷却、已对齐则不强制重启 Steam）；默认 public_test；分类 locales；文案校准。 Harden Official/Beta switch (wait for steamwebhelper, post-exit cooldown, skip restart when already aligned); default public_test; locales; copy fixes.",
+  "notes": "1.0.7: 双服自动补齐 MelonLoader；切服加固；默认 public_test；locales/文案。 Auto-sync MelonLoader across Official/Test; safer switch; default public_test; locales/copy fixes.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.7/MechabellumModManager_Setup_v1.0.7.exe",
-  "publishedAt": "2026-09-04T11:53:56Z"
+  "publishedAt": "2026-09-04T12:06:27Z"
 }
