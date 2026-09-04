@@ -329,50 +329,33 @@
                         <WrapPanel>
                             <Button Content="{Binding Ui.BranchSwitchToOfficial}"
                                     Command="{Binding SwitchToOfficialCommand}"
+                                    IsEnabled="{Binding CanSwitchGameBranch}"
+                                    Style="{StaticResource GhostButtonStyle}"
                                     MinWidth="108"
                                     Margin="0,0,8,4"
-                                    Padding="12,6">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
-                                        <Setter Property="IsEnabled" Value="{Binding BranchSwitchEnabled}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsBranchSwitchBusy}" Value="True">
-                                                <Setter Property="IsEnabled" Value="False" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
+                                    Padding="12,6" />
                             <Button Content="{Binding Ui.BranchSwitchToBeta}"
                                     Command="{Binding SwitchToBetaCommand}"
+                                    IsEnabled="{Binding CanSwitchGameBranch}"
+                                    Style="{StaticResource GhostButtonStyle}"
                                     MinWidth="108"
                                     Margin="0,0,8,4"
-                                    Padding="12,6">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
-                                        <Setter Property="IsEnabled" Value="{Binding BranchSwitchEnabled}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsBranchSwitchBusy}" Value="True">
-                                                <Setter Property="IsEnabled" Value="False" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
+                                    Padding="12,6" />
                             <Button Content="{Binding Ui.BranchSwitchStartWizard}"
                                     Command="{Binding StartBranchWizardCommand}"
+                                    IsEnabled="{Binding CanStartBranchWizard}"
                                     Style="{StaticResource GhostButtonStyle}"
                                     MinWidth="120"
                                     Margin="0,0,8,4"
                                     Padding="12,6" />
                             <Button Content="{Binding Ui.BranchSwitchTeardown}"
                                     Command="{Binding TeardownBranchSwitchCommand}"
-                                    IsEnabled="{Binding BranchSwitchEnabled}"
+                                    IsEnabled="{Binding CanTeardownBranchSwitch}"
                                     Style="{StaticResource GhostButtonStyle}"
                                     MinWidth="120"
                                     Margin="0,0,8,4"
                                     Padding="12,6" />
-                            <Button Content="{Binding Ui.BranchSwitchConfirmManual}"
+                            <Button Content="{Binding SettleConfirmButtonText}"
                                     Command="{Binding ConfirmManualBetaCommand}"
                                     Style="{StaticResource AccentButtonStyle}"
                                     Visibility="{Binding ShowConfirmManualBeta, Converter={StaticResource BoolToVis}}"

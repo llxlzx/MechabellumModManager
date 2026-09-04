@@ -399,59 +399,120 @@ public sealed class BranchSwitchService
         if (!string.IsNullOrWhiteSpace(currentStore))
             currentStore = Path.GetFullPath(currentStore);
 
+        var unlinkedStore = currentStore;
+        var deletedJunction = false;
+
         try
         {
             if (_junctions.IsJunction(link))
             {
                 var live = _junctions.ResolveTarget(link);
                 if (!string.IsNullOrWhiteSpace(live))
+                {
                     currentStore = Path.GetFullPath(live);
+                    unlinkedStore = currentStore;
+                }
                 _junctions.DeleteJunction(link);
+                deletedJunction = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(currentStore) && Directory.Exists(currentStore))
+            try
             {
-                if (!PathExists(link))
-                    Directory.Move(currentStore, link);
-                else if (!PathsEqual(currentStore, link))
-                    return BranchOperationResult.Fail("Steam link path already exists.");
+                if (!string.IsNullOrWhiteSpace(currentStore) && Directory.Exists(currentStore))
+                {
+                    if (!PathExists(link))
+                        Directory.Move(currentStore, link);
+                    else if (!PathsEqual(currentStore, link))
+                    {
+                        RollbackTeardownLink(link, unlinkedStore, deletedJunction);
+                        return BranchOperationResult.Fail("Steam link path already exists.");
+                    }
+                }
+
+                if (!LooksLikeGameRoot(link))
+                {
+                    RollbackTeardownLink(link, unlinkedStore, deletedJunction);
+                    return BranchOperationResult.Fail("Restored path is not a valid game root.");
+                }
+
+                var currentBranch = cfg.ActiveBranch;
+                if (!string.IsNullOrWhiteSpace(currentStore))
+                {
+                    if (!string.IsNullOrWhiteSpace(cfg.OfficialStorePath) && PathsEqual(currentStore, cfg.OfficialStorePath))
+                        currentBranch = GameBranch.Official;
+                    else if (!string.IsNullOrWhiteSpace(cfg.BetaStorePath) && PathsEqual(currentStore, cfg.BetaStorePath))
+                        currentBranch = GameBranch.Beta;
+                }
+
+                var otherStore = OtherStorePath(cfg, currentStore);
+                if (deleteOtherStore
+                    && !string.IsNullOrWhiteSpace(otherStore)
+                    && Directory.Exists(otherStore)
+                    && !PathsEqual(otherStore, link))
+                {
+                    Directory.Delete(otherStore, recursive: true);
+                }
+
+                RestoreLegacyManifestFrom(currentBranch);
+
+                cfg.Enabled = false;
+                cfg.WizardStep = BranchWizardStep.None;
+                cfg.OfficialStorePath = "";
+                cfg.BetaStorePath = "";
+                cfg.SteamLinkPath = link;
+                SaveConfig(cfg);
+                ClearJournal();
+                return BranchOperationResult.Ok();
             }
-
-            if (!LooksLikeGameRoot(link))
-                return BranchOperationResult.Fail("Restored path is not a valid game root.");
-
-            var currentBranch = cfg.ActiveBranch;
-            if (!string.IsNullOrWhiteSpace(currentStore))
+            catch (Exception ex)
             {
-                if (!string.IsNullOrWhiteSpace(cfg.OfficialStorePath) && PathsEqual(currentStore, cfg.OfficialStorePath))
-                    currentBranch = GameBranch.Official;
-                else if (!string.IsNullOrWhiteSpace(cfg.BetaStorePath) && PathsEqual(currentStore, cfg.BetaStorePath))
-                    currentBranch = GameBranch.Beta;
+                RollbackTeardownLink(link, unlinkedStore, deletedJunction);
+                return BranchOperationResult.Fail(ex.Message);
             }
-
-            var otherStore = OtherStorePath(cfg, currentStore);
-            if (deleteOtherStore
-                && !string.IsNullOrWhiteSpace(otherStore)
-                && Directory.Exists(otherStore)
-                && !PathsEqual(otherStore, link))
-            {
-                Directory.Delete(otherStore, recursive: true);
-            }
-
-            RestoreLegacyManifestFrom(currentBranch);
-
-            cfg.Enabled = false;
-            cfg.WizardStep = BranchWizardStep.None;
-            cfg.OfficialStorePath = "";
-            cfg.BetaStorePath = "";
-            cfg.SteamLinkPath = link;
-            SaveConfig(cfg);
-            ClearJournal();
-            return BranchOperationResult.Ok();
         }
         catch (Exception ex)
         {
             return BranchOperationResult.Fail(ex.Message);
+        }
+    }
+
+    void RollbackTeardownLink(string link, string? store, bool deletedJunction)
+    {
+        if (!deletedJunction || string.IsNullOrWhiteSpace(store))
+            return;
+
+        try
+        {
+            if (PathExists(link) && !_junctions.IsJunction(link) && !PathExists(store))
+                Directory.Move(link, store);
+
+            if (!PathExists(link) && Directory.Exists(store))
+            {
+                _junctions.CreateJunction(link, store);
+                return;
+            }
+        }
+        catch
+        {
+            // Fall through to journal so a hollow link can be repaired later.
+        }
+
+        try
+        {
+            var cfg = LoadConfig();
+            SaveJournal(new BranchSwitchJournal
+            {
+                Phase = PhaseUnlinked,
+                PreviousBranch = cfg.ActiveBranch,
+                TargetBranch = cfg.ActiveBranch,
+                SteamLinkPath = Path.GetFullPath(link),
+                PreviousStorePath = Path.GetFullPath(store),
+                TargetStorePath = Path.GetFullPath(store)
+            });
+        }
+        catch
+        {
+            // Best-effort journal.
         }
     }
 
