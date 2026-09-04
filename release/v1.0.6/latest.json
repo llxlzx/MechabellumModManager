@@ -1,0 +1,6 @@
+{
+  "version": "1.0.6",
+  "notes": "1.0.6: Browse/Library filter bar (search + category + tags + sort); catalog category/tags; local categoryOverride/extraTags; Category column and tags in detail; submit template adds category/tags. MelonLoader Type column unchanged.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.6/MechabellumModManager_Setup_v1.0.6.exe",
+  "publishedAt": "2026-09-04T00:28:07Z"
+}
