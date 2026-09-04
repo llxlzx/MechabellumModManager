@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
@@ -20,6 +21,12 @@ public sealed class BranchSwitchService
 {
     const string PhaseUnlinking = "unlinking";
     const string PhaseUnlinked = "unlinked";
+
+    static readonly JsonSerializerOptions JournalJsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     readonly PathsService _paths;
     readonly JsonStore _store;
@@ -64,10 +71,11 @@ public sealed class BranchSwitchService
         if (!LooksLikeGameRoot(targetStore))
             return BranchOperationResult.Fail("Target store is not a valid game root.");
 
+        string? liveTarget = null;
         if (_junctions.IsJunction(link))
         {
-            var current = _junctions.ResolveTarget(link);
-            if (current is not null && PathsEqual(current, targetStore))
+            liveTarget = _junctions.ResolveTarget(link);
+            if (liveTarget is not null && PathsEqual(liveTarget, targetStore))
             {
                 cfg.ActiveBranch = target;
                 SaveConfig(cfg);
@@ -84,8 +92,19 @@ public sealed class BranchSwitchService
             return BranchOperationResult.Fail("Steam link path is missing.");
         }
 
+        if (!string.IsNullOrWhiteSpace(liveTarget))
+            previousStore = liveTarget;
+
         if (string.IsNullOrWhiteSpace(previousStore) || !LooksLikeGameRoot(previousStore))
             return BranchOperationResult.Fail("Current store is not a valid game root.");
+
+        if (!string.IsNullOrWhiteSpace(liveTarget))
+        {
+            if (PathsEqual(liveTarget, StorePath(cfg, GameBranch.Official)))
+                previousBranch = GameBranch.Official;
+            else if (PathsEqual(liveTarget, StorePath(cfg, GameBranch.Beta)))
+                previousBranch = GameBranch.Beta;
+        }
 
         var journal = new BranchSwitchJournal
         {
@@ -156,32 +175,53 @@ public sealed class BranchSwitchService
         if (!File.Exists(_paths.BranchSwitchJournalPath))
             return BranchOperationResult.Ok();
 
-        var journal = _store.LoadOrDefault(_paths.BranchSwitchJournalPath, () => new BranchSwitchJournal());
+        if (!TryReadJournal(out var journal, out var journalError) || journal is null)
+            return BranchOperationResult.Fail(journalError ?? "Journal cannot be applied.");
+
         var link = journal.SteamLinkPath;
         if (string.IsNullOrWhiteSpace(link))
-        {
-            ClearJournal();
+            link = LoadConfig().SteamLinkPath;
+        if (string.IsNullOrWhiteSpace(link))
             return BranchOperationResult.Fail("Journal is missing the Steam link path.");
-        }
 
         if (_junctions.IsJunction(link))
         {
-            ClearJournal();
-            return BranchOperationResult.Ok();
+            var live = _junctions.ResolveTarget(link);
+            if (live is not null && !string.IsNullOrWhiteSpace(journal.PreviousStorePath)
+                && PathsEqual(live, journal.PreviousStorePath))
+            {
+                var cfg = LoadConfig();
+                cfg.ActiveBranch = journal.PreviousBranch;
+                SaveConfig(cfg);
+                ClearJournal();
+                return BranchOperationResult.Ok();
+            }
+
+            if (live is not null && !string.IsNullOrWhiteSpace(journal.TargetStorePath)
+                && PathsEqual(live, journal.TargetStorePath))
+            {
+                var cfg = LoadConfig();
+                cfg.ActiveBranch = journal.TargetBranch;
+                SaveConfig(cfg);
+                ClearJournal();
+                return BranchOperationResult.Ok();
+            }
+
+            return BranchOperationResult.Fail("Live junction does not match journal store paths.");
         }
 
         if (PathExists(link))
             return BranchOperationResult.Fail("Steam link path exists and is not a junction.");
 
-        var restore = LooksLikeGameRoot(journal.PreviousStorePath)
-            ? journal.PreviousStorePath
-            : journal.TargetStorePath;
-        if (!LooksLikeGameRoot(restore))
-            return BranchOperationResult.Fail("Journal store paths are not valid game roots.");
+        if (!LooksLikeGameRoot(journal.PreviousStorePath))
+            return BranchOperationResult.Fail("Journal previous store is not a valid game root.");
 
         try
         {
-            _junctions.CreateJunction(link, restore);
+            _junctions.CreateJunction(link, journal.PreviousStorePath);
+            var cfg = LoadConfig();
+            cfg.ActiveBranch = journal.PreviousBranch;
+            SaveConfig(cfg);
             ClearJournal();
             return BranchOperationResult.Ok();
         }
@@ -203,8 +243,6 @@ public sealed class BranchSwitchService
             return BranchOperationResult.Fail("Branch switch paths are not configured.");
 
         dest = Path.GetFullPath(dest);
-        if (PathExists(dest))
-            return BranchOperationResult.Fail("Store path already exists.");
 
         try
         {
@@ -214,12 +252,25 @@ public sealed class BranchSwitchService
                 if (string.IsNullOrWhiteSpace(real) || !Directory.Exists(real))
                     return BranchOperationResult.Fail("Junction target is missing.");
 
-                _junctions.DeleteJunction(link);
-                if (!PathsEqual(real, dest))
+                real = Path.GetFullPath(real);
+                if (PathExists(dest))
+                {
+                    if (!PathsEqual(real, dest))
+                        return BranchOperationResult.Fail("Store path already exists.");
+
+                    _junctions.DeleteJunction(link);
+                }
+                else
+                {
+                    _junctions.DeleteJunction(link);
                     Directory.Move(real, dest);
+                }
             }
             else if (Directory.Exists(link))
             {
+                if (PathExists(dest))
+                    return BranchOperationResult.Fail("Store path already exists.");
+
                 Directory.Move(link, dest);
             }
             else
@@ -344,8 +395,52 @@ public sealed class BranchSwitchService
         }
     }
 
-    void SaveJournal(BranchSwitchJournal journal) =>
-        _store.Save(_paths.BranchSwitchJournalPath, journal);
+    bool TryReadJournal(out BranchSwitchJournal? journal, out string? error)
+    {
+        journal = null;
+        error = null;
+        try
+        {
+            var json = File.ReadAllText(_paths.BranchSwitchJournalPath);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                error = "Journal is empty.";
+                return false;
+            }
+
+            journal = JsonSerializer.Deserialize<BranchSwitchJournal>(json, JournalJsonOptions);
+            if (journal is null)
+            {
+                error = "Journal is corrupt.";
+                return false;
+            }
+
+            return true;
+        }
+        catch (JsonException)
+        {
+            error = "Journal is corrupt.";
+            return false;
+        }
+        catch (IOException ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+    }
+
+    void SaveJournal(BranchSwitchJournal journal)
+    {
+        var path = _paths.BranchSwitchJournalPath;
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        var json = JsonSerializer.Serialize(journal, JournalJsonOptions);
+        var temp = path + ".tmp";
+        File.WriteAllText(temp, json);
+        File.Move(temp, path, overwrite: true);
+    }
 
     void ClearJournal()
     {
