@@ -275,6 +275,78 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task Wizard_archive_A_leaves_steam_link_empty_before_download_B()
+    {
+        using var fx = Fixture.CreateWizardStart();
+        File.WriteAllText(fx.Paths.DeployManifestPath, """{"gamePath":"legacy"}""");
+        var sawEmptyLink = false;
+        var vm = fx.CreateVm(
+            confirm: msg =>
+            {
+                if (msg.Contains("下载", StringComparison.Ordinal))
+                {
+                    Directory.Exists(fx.SteamLink).Should().BeFalse();
+                    fx.Junctions.IsJunction(fx.SteamLink).Should().BeFalse();
+                    sawEmptyLink = true;
+                    Fixture.SeedGameRoot(fx.SteamLink, "downloaded");
+                }
+
+                return !msg.Contains("删除另一", StringComparison.Ordinal);
+            },
+            promptText: _ => "publicbeta");
+        vm.GamePath = fx.SteamLink;
+
+        await vm.StartBranchWizardCommand.ExecuteAsync(null);
+
+        sawEmptyLink.Should().BeTrue();
+        fx.Junctions.IsJunction(fx.SteamLink).Should().BeTrue();
+        fx.Junctions.ResolveTarget(fx.SteamLink).Should().Be(Path.GetFullPath(fx.OfficialStore));
+        File.ReadAllText(Path.Combine(fx.OfficialStore, "marker.txt")).Should().Be("current");
+        File.ReadAllText(Path.Combine(fx.BetaStore, "marker.txt")).Should().Be("downloaded");
+        vm.BranchSwitchEnabled.Should().BeTrue();
+        vm.ActiveGameBranch.Should().Be(GameBranch.Official);
+        vm.BetaBranchName.Should().Be("publicbeta");
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        File.ReadAllText(fx.Paths.GetDeployManifestPath(GameBranch.Official, enabled: true))
+            .Should().Be("""{"gamePath":"legacy"}""");
+    }
+
+    [Fact]
+    public async Task Teardown_restores_current_store_and_legacy_manifest()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+        var branchManifest = fx.Paths.GetDeployManifestPath(GameBranch.Official, enabled: true);
+        File.WriteAllText(branchManifest, """{"gamePath":"official-branch"}""");
+
+        var vm = fx.CreateVm(confirm: msg => !msg.Contains("删除另一", StringComparison.Ordinal));
+        vm.GamePath = fx.SteamLink;
+
+        await vm.TeardownBranchSwitchCommand.ExecuteAsync(null);
+
+        vm.BranchSwitchEnabled.Should().BeFalse();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.None);
+        fx.Junctions.IsJunction(fx.SteamLink).Should().BeFalse();
+        Directory.Exists(fx.SteamLink).Should().BeTrue();
+        File.ReadAllText(Path.Combine(fx.SteamLink, "marker.txt")).Should().Be("official");
+        Directory.Exists(fx.BetaStore).Should().BeTrue();
+        File.ReadAllText(fx.Paths.DeployManifestPath).Should().Be("""{"gamePath":"official-branch"}""");
+        fx.LoadBranchConfig().Enabled.Should().BeFalse();
+        fx.LoadBranchConfig().WizardStep.Should().Be(BranchWizardStep.None);
+    }
+
+    [Fact]
     public void Branch_switch_commands_exist()
     {
         using var fx = Fixture.CreateReady();
@@ -304,11 +376,11 @@ public class MainViewModelBranchSwitchTests
         public JsonStore Store { get; }
         public ProfileService Profiles { get; }
         public FakeProcessProbe Probe { get; } = new();
+        public JunctionService Junctions { get; } = new();
         readonly ModLibraryService _library;
         readonly GameDetector _detector;
         readonly DeployService _deploy;
         readonly BranchSwitchService _branchSwitch;
-        readonly JunctionService _junctions = new();
 
         Fixture(string dataRoot, string gameRoot)
         {
@@ -323,7 +395,7 @@ public class MainViewModelBranchSwitchTests
             _detector = new GameDetector();
             _deploy = new DeployService(Paths, Store, new DeployPlanner(), _detector, new ProcessProbe());
             _branchSwitch = new BranchSwitchService(
-                Paths, Store, Probe, _junctions, new SteamBetaKeyEditor(Probe));
+                Paths, Store, Probe, Junctions, new SteamBetaKeyEditor(Probe));
         }
 
         public static Fixture CreateReady()
@@ -363,7 +435,48 @@ public class MainViewModelBranchSwitchTests
             fx.SteamLink = steamLink;
             fx.OfficialStore = official;
             fx.BetaStore = beta;
-            fx._junctions.CreateJunction(steamLink, official);
+            fx.Junctions.CreateJunction(steamLink, official);
+            File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
+                """
+                "AppState"
+                {
+                	"appid"		"669330"
+                	"UserConfig"
+                	{
+                		"language"		"english"
+                		"BetaKey"		"oldbeta"
+                	}
+                }
+                """);
+
+            SeedLibrary(fx);
+            fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
+            {
+                GamePath = steamLink,
+                ActiveProfileId = "default",
+                LaunchMode = LaunchMode.ExeOnly
+            });
+            return fx;
+        }
+
+        public static Fixture CreateWizardStart()
+        {
+            var root = Path.Combine(Path.GetTempPath(), "mmm-bsvm-w-" + Guid.NewGuid().ToString("N"));
+            var dataRoot = Path.Combine(root, "data");
+            var steamapps = Path.Combine(root, "steamapps");
+            var common = Path.Combine(steamapps, "common");
+            Directory.CreateDirectory(common);
+
+            var steamLink = Path.Combine(common, "Mechabellum");
+            var official = Path.Combine(common, "Mechabellum_official");
+            var beta = Path.Combine(common, "Mechabellum_beta");
+            SeedGameRoot(steamLink, "current");
+            CreateReadyGame(steamLink);
+
+            var fx = new Fixture(dataRoot, steamLink);
+            fx.SteamLink = steamLink;
+            fx.OfficialStore = official;
+            fx.BetaStore = beta;
             File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
                 """
                 "AppState"
@@ -411,7 +524,9 @@ public class MainViewModelBranchSwitchTests
             Func<string, bool>? confirm = null,
             IProcessStarter? starter = null,
             Func<TimeSpan, Task>? delay = null,
-            TimeSpan? steamExitTimeout = null)
+            TimeSpan? steamExitTimeout = null,
+            Func<string, string?>? promptText = null,
+            Action<string>? notify = null)
         {
             var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
             return new MainViewModel(
@@ -425,6 +540,8 @@ public class MainViewModelBranchSwitchTests
                 new RiskGate(),
                 confirmHighRisk: _ => true,
                 confirm: confirm ?? (_ => false),
+                notify: notify,
+                promptText: promptText,
                 branchSwitch: _branchSwitch,
                 processProbe: Probe,
                 processStarter: starter ?? new RecordingStarter(),
@@ -441,8 +558,8 @@ public class MainViewModelBranchSwitchTests
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(SteamLink) && _junctions.IsJunction(SteamLink))
-                    _junctions.DeleteJunction(SteamLink);
+                if (!string.IsNullOrWhiteSpace(SteamLink) && Junctions.IsJunction(SteamLink))
+                    Junctions.DeleteJunction(SteamLink);
             }
             catch
             {
@@ -478,6 +595,16 @@ public class MainViewModelBranchSwitchTests
             File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
             Directory.CreateDirectory(Path.Combine(root, "MelonLoader"));
             File.WriteAllText(Path.Combine(root, "version.dll"), "");
+        }
+
+        public static void SeedGameRoot(string dir, string marker)
+        {
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "Mechabellum.exe"), "exe");
+            File.WriteAllText(Path.Combine(dir, "GameAssembly.dll"), "dll");
+            File.WriteAllText(Path.Combine(dir, "marker.txt"), marker);
+            Directory.CreateDirectory(Path.Combine(dir, "MelonLoader"));
+            File.WriteAllText(Path.Combine(dir, "version.dll"), "");
         }
     }
 }
