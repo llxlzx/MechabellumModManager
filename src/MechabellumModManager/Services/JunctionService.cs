@@ -18,9 +18,8 @@ public sealed class JunctionService
     const uint FsctlGetReparsePoint = 0x000900A8;
     const uint IoReparseTagMountPoint = 0xA0000003;
     const uint IoReparseTagSymlink = 0xA000000C;
-    const int SymbolicLinkFlagDirectory = 0x1;
-    const int SymbolicLinkFlagAllowUnprivilegedCreate = 0x2;
     const int MaximumReparseDataBufferSize = 16 * 1024;
+    const int MklinkTimeoutMs = 15_000;
 
     static readonly IntPtr InvalidHandleValue = new(-1);
 
@@ -49,21 +48,19 @@ public sealed class JunctionService
         var fullLink = Path.GetFullPath(linkPath);
         var fullTarget = Path.GetFullPath(targetPath);
 
-        EnsureNtfs(fullLink);
-        EnsureNtfs(fullTarget);
+        EnsureSameNtfsVolume(fullLink, fullTarget);
 
         if (PathExists(fullLink))
             throw new IOException($"Link path already exists: {fullLink}");
 
-        if (!TryCreateSymbolicLink(fullLink, fullTarget)
-            && !TryCreateJunctionWithMklink(fullLink, fullTarget))
+        if (!TryCreateJunctionWithMklink(fullLink, fullTarget))
         {
             throw new InvalidOperationException(
-                $"Failed to create directory link from '{fullLink}' to '{fullTarget}'.");
+                $"Failed to create directory junction from '{fullLink}' to '{fullTarget}'.");
         }
 
-        if (!IsJunction(fullLink))
-            throw new InvalidOperationException($"Created path is not a junction: {fullLink}");
+        if (!TryReadReparse(fullLink, out var tag, out _) || tag != IoReparseTagMountPoint)
+            throw new InvalidOperationException($"Created path is not a mount-point junction: {fullLink}");
     }
 
     public void DeleteJunction(string linkPath)
@@ -117,14 +114,28 @@ public sealed class JunctionService
         }
     }
 
-    static void EnsureNtfs(string path)
+    static void EnsureSameNtfsVolume(string linkPath, string targetPath)
+    {
+        var linkSerial = QueryNtfsVolumeSerial(linkPath);
+        var targetSerial = QueryNtfsVolumeSerial(targetPath);
+        if (linkSerial != targetSerial)
+        {
+            throw new InvalidOperationException(
+                $"Junction link and target must be on the same volume ('{linkPath}' vs '{targetPath}').");
+        }
+    }
+
+    static uint QueryNtfsVolumeSerial(string path)
     {
         var root = Path.GetPathRoot(path);
         if (string.IsNullOrEmpty(root))
             throw new InvalidOperationException($"Cannot determine volume for '{path}'.");
 
+        if (!root.EndsWith("\\", StringComparison.Ordinal))
+            root += "\\";
+
         var fsName = new StringBuilder(32);
-        if (!GetVolumeInformationW(root, null, 0, out _, out _, out _, fsName, fsName.Capacity))
+        if (!GetVolumeInformationW(root, null, 0, out var serial, out _, out _, fsName, fsName.Capacity))
         {
             throw new Win32Exception(
                 Marshal.GetLastWin32Error(),
@@ -136,12 +147,8 @@ public sealed class JunctionService
             throw new InvalidOperationException(
                 $"Junctions require an NTFS volume (found '{fsName}' on '{root}').");
         }
-    }
 
-    static bool TryCreateSymbolicLink(string linkPath, string targetPath)
-    {
-        return CreateSymbolicLinkW(linkPath, targetPath, SymbolicLinkFlagDirectory | SymbolicLinkFlagAllowUnprivilegedCreate)
-               || CreateSymbolicLinkW(linkPath, targetPath, SymbolicLinkFlagDirectory);
+        return serial;
     }
 
     static bool TryCreateJunctionWithMklink(string linkPath, string targetPath)
@@ -153,14 +160,28 @@ public sealed class JunctionService
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden
         };
 
         using var process = Process.Start(psi);
         if (process is null)
             return false;
 
-        process.WaitForExit();
+        if (!process.WaitForExit(MklinkTimeoutMs))
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort abort if mklink hangs.
+            }
+
+            return false;
+        }
+
         return process.ExitCode == 0 && Directory.Exists(linkPath);
     }
 
@@ -270,10 +291,6 @@ public sealed class JunctionService
 
         return full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, ExactSpelling = true)]
-    [return: MarshalAs(UnmanagedType.U1)]
-    static extern bool CreateSymbolicLinkW(string lpSymlinkFileName, string lpTargetFileName, int dwFlags);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, ExactSpelling = true)]
     static extern bool RemoveDirectoryW(string lpPathName);
