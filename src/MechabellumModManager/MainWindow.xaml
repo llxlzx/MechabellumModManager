@@ -302,7 +302,7 @@
                         <TextBlock Text="{Binding Ui.CreditsTitle}"
                                    Style="{StaticResource SectionLabelStyle}"
                                    Margin="0,0,0,6" />
-                        <TextBox Text="{Binding Ui.CreditsBody}"
+                        <TextBox Text="{Binding Ui.CreditsBody, Mode=OneWay}"
                                  Style="{StaticResource SelectableReadOnlyTextStyle}"
                                  FontSize="12"
                                  Foreground="{StaticResource TextMutedBrush}" />
