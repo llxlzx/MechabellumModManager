@@ -40,7 +40,7 @@
     <value>Sprache</value>
   </data>
   <data name="LanguageSystem" xml:space="preserve">
-    <value>System</value>
+    <value>System folgen</value>
   </data>
   <data name="CreditsTitle" xml:space="preserve">
     <value>Credits &amp; Hinweis</value>
@@ -61,7 +61,7 @@
     <value>Melden</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>Öffnet Ihr E-Mail-Programm an llxmod@foxmail.com (Text auch in die Zwischenablage). Falsche Meldungen schaden der Prüfung. Fortfahren?</value>
+    <value>Der Meldetext wird in die Zwischenablage kopiert und eine Webmail-Seite geöffnet (QQ-Mail bei chinesischer UI, sonst Gmail). In eine neue Nachricht einfügen und an llxmod@foxmail.com senden. Falsche Meldungen können die Prüfung beeinträchtigen. Fortfahren?</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>Cheat</value>
@@ -79,22 +79,22 @@
     <value>Bitte Grund angeben (Pflicht)</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>E-Mail-Programm geöffnet; Meldetext in die Zwischenablage kopiert. An llxmod@foxmail.com senden. Falls kein Mail-Client startet, Text manuell einfügen.</value>
+    <value>Meldetext kopiert und Webmail geöffnet. Einfügen und an llxmod@foxmail.com senden. Falls keine Seite öffnet: manuell mailen und Zwischenablage einfügen.</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>E-Mail-Programm konnte nicht geöffnet werden</value>
+    <value>Webmail konnte nicht geöffnet oder die Meldung nicht vorbereitet werden</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>Mod einreichen</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>E-Mail zum Einreichen an llxmod@foxmail.com öffnen?</value>
+    <value>Die Einreichungsvorlage wird kopiert und Webmail geöffnet, damit Sie an llxmod@foxmail.com senden können. Fortfahren?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>E-Mail-Programm geöffnet. Vorlage ausfüllen, .dll anhängen (optional preview.png) und an llxmod@foxmail.com senden.</value>
+    <value>Vorlage kopiert und Webmail geöffnet. Einfügen, .dll anhängen (optional preview.png) und an llxmod@foxmail.com senden.</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>E-Mail-Programm konnte nicht geöffnet werden</value>
+    <value>Webmail konnte nicht geöffnet oder die Einreichung nicht vorbereitet werden</value>
   </data>
   <data name="SubmitMailOpenedDomestic" xml:space="preserve">
     <value>Betreff &amp; Text kopiert; QQ-Mail-Web geöffnet — neue Nachricht erstellen, einfügen, anhängen und an llxmod@foxmail.com senden.</value>
@@ -127,13 +127,13 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
 (Fortgeschrittene dürfen weiterhin PRs öffnen.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>Danach kopiert der Manager die Vorlage und öffnet QQ-Mail-Web (chinesische UI) oder Gmail-Verfassen (andere Sprachen). Einfügen, .dll anhängen (optional preview.png) und senden. Bei sehr großen Anhängen (~&gt;40MB) Netdisk-Link in den Text. Quellcode nur auf Anfrage senden.</value>
+    <value>Nach „Submit-E-Mail öffnen“ kopiert der Manager Betreff/Text und öffnet Webmail je Sprache: QQ-Mail bei Chinesisch, sonst Gmail. Einfügen, .dll anhängen (optional preview.png). Bei sehr großen Anhängen (~über 40MB) Netdisk-Link. Quellcode nur auf Anfrage.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>Vollständige Anleitung öffnen</value>
   </data>
   <data name="SubmitGuideOpenEmail" xml:space="preserve">
-    <value>Submit-E-Mail öffnen</value>
+    <value>Vorlage kopieren &amp; Mail öffnen</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Bestätigen</value>
@@ -163,7 +163,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
     <value>Startmodus</value>
   </data>
   <data name="PortableDataRoot" xml:space="preserve">
-    <value>Portable Daten (app/data, Neustart nötig)</value>
+    <value>Portabler Datenordner (data neben der App; Neustart nach Änderung)</value>
   </data>
   <data name="Profiles" xml:space="preserve">
     <value>Profile</value>
@@ -196,24 +196,24 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Wiederholung &amp; Diagnose</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Sonstiges</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Unkategorisiert</value></data>
-  <data name="EditModTaxonomy" xml:space="preserve"><value>Kategorie/Tags bearbeiten</value></data>
-  <data name="CategoryFollowCatalog" xml:space="preserve"><value>Katalog folgen</value></data>
-  <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Tags (kommagetrennt)</value></data>
-  <data name="BranchSwitchTitle" xml:space="preserve"><value>Official / Beta</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>Kategorie &amp; Stichwörter</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>Katalog-Kategorie</value></data>
+  <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Stichwörter (kommagetrennt)</value></data>
+  <data name="BranchSwitchTitle" xml:space="preserve"><value>Offiziell / Test</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Name des Testzweigs</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Testzweig-Name (wie in Steam-Eigenschaften)</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
-  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Testzweig manuell gewählt, weiter</value></data>
-  <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Confirm Steam is aligned</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Benötigt etwa zwei Spielkopien; Steam muss beendet sein; versucht automatische Testzweig-Ausrichtung, sonst manuelle Auswahl</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Testzweig in Steam gewählt — weiter</value></data>
+  <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam-Wechsel fertig — weiter</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Benötigt etwa zwei volle Spielinstallationen Speicherplatz. Steam und Spiel vorher beenden. Versucht automatischen Testzweig-Wechsel; sonst manuell in Steam wählen.</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
-  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam</value></data>
+  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Warte auf Steam-Abschluss</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Offiziell</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>Test</value></data>
   <data name="Tag_calc" xml:space="preserve"><value>Berechnung</value></data>
@@ -224,7 +224,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="Tag_economy" xml:space="preserve"><value>Wirtschaft</value></data>
   <data name="Tag_grid" xml:space="preserve"><value>Raster</value></data>
   <data name="Tag_hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
-  <data name="Tag_hud" xml:space="preserve"><value>Anzeige</value></data>
+  <data name="Tag_hud" xml:space="preserve"><value>Bildschirmanzeige</value></data>
   <data name="Tag_items" xml:space="preserve"><value>Gegenstände</value></data>
   <data name="Tag_replay" xml:space="preserve"><value>Wiederholung</value></data>
   <data name="Tag_speed" xml:space="preserve"><value>Geschwindigkeit</value></data>
@@ -256,13 +256,13 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
 …insgesamt {0}</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Überschreiben nicht verwalteter Dateien abgebrochen.</value></data>
-  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Zweizweig ist bereits aktiv. Neuaufbau hebt zuerst sicher auf (anderer Speicher bleibt) und richtet neu ein. Fortfahren?</value></data>
-  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Zweizweig-Einrichtung entfernen? Die aktuelle Verknüpfung wird wieder zum Spieleordner. Steam und Spiel beenden.</value></data>
-  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Den anderen Zweig-Speicher auch löschen? Ungenutzte Dateien werden dauerhaft entfernt. (Empfohlen: Nein)</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Offiziell/Test-Doppelordner ist bereits aktiv. Neuaufbau hebt die aktuelle Einrichtung sicher auf (Dateien im anderen Ordner bleiben) und richtet neu ein. Fortfahren?</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Offiziell/Test-Doppelordner entfernen? Der genutzte Ordner wird wieder der Steam-Spielepfad. Steam und Spiel vorher beenden.</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Den separaten Spieleordner des anderen Zweigs auch löschen? Dateien werden dauerhaft entfernt. (Empfohlen: Nein)</value></data>
   <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>Zweizweig-Assistent fehlgeschlagen: {0}</value></data>
   <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>Entfernen der Zweizweig-Einrichtung fehlgeschlagen: {0}</value></data>
-  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam läuft noch. Warten Sie auf den Abschluss, bevor Sie deployen.</value></data>
-  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam läuft noch. Trotzdem deployen? Dateien können gesperrt sein.</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam läuft noch. Warten Sie auf den abgeschlossenen Zweigwechsel, bevor Sie deployen.</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam läuft noch. Trotzdem deployen? Spieldateien können gesperrt sein.</value></data>
   <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
 
 {1}
@@ -275,12 +275,46 @@ GitHub-Releases-Seite öffnen?</value></data>
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Profil „{0}“ löschen? Dies kann nicht rückgängig gemacht werden.</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>„{0}“ aus der Bibliothek entfernen? Wird auch aus allen Profilen entfernt.</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Zum Wechseln des Spielzweigs Steam und Spiel beenden. Fortfahren?</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Zweizweig benötigt etwa zwei Spielkopien Speicherplatz; Steam und Spiel müssen beendet sein. Starten?</value></data>
-  <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Ist die aktuelle Installation Offiziell? Nein = Testzweig.</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Laden Sie den anderen Zweig in Steam. Danach Steam beenden und Ja wählen. Abbrechen pausiert den Assistenten.</value></data>
-  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Anderer Zweig-Beta konnte nicht automatisch gesetzt werden. In Steam manuell wählen, dann laden.</value></data>
-  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Zweizweig-Assistent pausiert; später fortsetzbar.</value></data>
-  <data name="LogBranchTeardownDone" xml:space="preserve"><value>Zweizweig-Einrichtung entfernt.</value></data>
-  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Zweizweig entfernt. Bitte Spielzweig in Steam prüfen.</value></data>
-  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam-Beta konnte nicht automatisch ausgerichtet werden. Zweig manuell wählen, bevor Sie Steam starten; bis dahin Steam nicht starten.</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Offiziell/Test-Doppelordner benötigen etwa zwei volle Spielinstallationen. Steam und Spiel vorher beenden. Starten?</value></data>
+  <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Ist die aktuelle Installation Offiziell? Nein = aktuell Test.</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Laden Sie den anderen Zweig in Steam. Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten (später fortsetzbar).</value></data>
+  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Der Steam-Testzweig des anderen Zweigs konnte nicht automatisch gesetzt werden. In Steam manuell wählen, dann laden.</value></data>
+  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Doppelordner-Assistent pausiert; später fortsetzbar.</value></data>
+  <data name="LogBranchTeardownDone" xml:space="preserve"><value>Offiziell/Test-Doppelordner entfernt.</value></data>
+  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Doppelordner entfernt. In Steam prüfen, ob der aktuelle Spielzweig stimmt.</value></data>
+  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam-Testzweig konnte nicht automatisch ausgerichtet werden. Zweig zuerst manuell in Steam wählen; Steam bis dahin nicht starten.</value></data>
+  <data name="ColumnName" xml:space="preserve"><value>Name</value></data>
+  <data name="ColumnAuthor" xml:space="preserve"><value>Autor</value></data>
+  <data name="ColumnVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="ColumnUpdated" xml:space="preserve"><value>Aktualisiert</value></data>
+  <data name="ColumnStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="ColumnEnabled" xml:space="preserve"><value>An</value></data>
+  <data name="ColumnType" xml:space="preserve"><value>Typ</value></data>
+  <data name="ColumnRisk" xml:space="preserve"><value>Risiko</value></data>
+  <data name="ColumnLoader" xml:space="preserve"><value>Loader</value></data>
+  <data name="LabelAuthor" xml:space="preserve"><value>Autor</value></data>
+  <data name="LabelVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="LabelUpdated" xml:space="preserve"><value>Aktualisiert</value></data>
+  <data name="LabelName" xml:space="preserve"><value>Name</value></data>
+  <data name="ActionDelete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="ActionCollapseDetail" xml:space="preserve"><value>Details ausblenden</value></data>
+  <data name="TipToggleHighRisk" xml:space="preserve"><value>Klicken zum vorübergehenden Umschalten; nach Aktualisierung erneut aus Namens-Stichworten</value></data>
+  <data name="TipDeleteFromLibrary" xml:space="preserve"><value>Dieses Paket aus der Bibliothek entfernen</value></data>
+  <data name="AppVersionFormat" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="PromptBetaBranchName" xml:space="preserve"><value>Testzweig-Name eingeben (genau wie unter Steam → Eigenschaften → Betas)</value></data>
+  <data name="FailWizardNoBetaName" xml:space="preserve"><value>Kein Testzweig-Name; Assistent abgebrochen.</value></data>
+  <data name="LabelSummary" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Der Spielepfad muss unter steamapps\common\Mechabellum liegen.</value></data>
+  <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>Aktueller Spielepfad ungültig; Doppelordner-Assistent nicht startbar.</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Separater Ordner des anderen Zweigs existiert bereits; Archivieren nicht möglich: {0}</value></data>
+  <data name="FailWizardNoAppManifest" xml:space="preserve"><value>appmanifest_669330.acf nicht gefunden; Steam-Testzweig nicht ausrichtbar.</value></data>
+  <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>Steam-Manifest nicht lesbar (ggf. Rechte oder Bibliotheksumzug): {0}</value></data>
+  <data name="FailWizardArchiveCurrentFailed" xml:space="preserve"><value>Archivieren des aktuellen Zweigs fehlgeschlagen.</value></data>
+  <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>Archivieren des anderen Zweigs fehlgeschlagen.</value></data>
+  <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>Verzeichnisverknüpfung fehlgeschlagen.</value></data>
+  <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Entfernen des Doppelordners fehlgeschlagen.</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Doppelordner-Assistent fertig; warte auf Steam-Zweigwechsel.</value></data>
+  <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Steam-Beenden fehlgeschlagen: {0}</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam oder Spiel läuft noch; Zweigwechsel abgebrochen.</value></data>
+  <data name="LogSwapFolderFailed" xml:space="preserve"><value>Ordnerwechsel fehlgeschlagen.</value></data>
 </root>

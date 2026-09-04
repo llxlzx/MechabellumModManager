@@ -40,7 +40,7 @@
     <value>Язык</value>
   </data>
   <data name="LanguageSystem" xml:space="preserve">
-    <value>Системный</value>
+    <value>Как в системе</value>
   </data>
   <data name="CreditsTitle" xml:space="preserve">
     <value>Авторы и отказ</value>
@@ -61,7 +61,7 @@
     <value>Пожаловаться</value>
   </data>
   <data name="ReportConfirm" xml:space="preserve">
-    <value>Откроется почтовый клиент для письма на llxmod@foxmail.com (текст также скопирован). Ложные жалобы вредят проверке. Продолжить?</value>
+    <value>Текст жалобы будет скопирован в буфер, откроется веб-почта (QQ Mail при китайском языке интерфейса, иначе Gmail). Вставьте в новое письмо и отправьте на llxmod@foxmail.com. Ложные жалобы могут повлиять на проверку. Продолжить?</value>
   </data>
   <data name="ReportCategoryCheat" xml:space="preserve">
     <value>Читы</value>
@@ -79,22 +79,22 @@
     <value>Опишите причину (обязательно)</value>
   </data>
   <data name="ReportSuccess" xml:space="preserve">
-    <value>Почтовый клиент открыт; текст жалобы скопирован. Отправьте на llxmod@foxmail.com. Если клиент не открылся — вставьте текст вручную.</value>
+    <value>Текст жалобы скопирован, веб-почта открыта. Вставьте и отправьте на llxmod@foxmail.com. Если страница не открылась — отправьте вручную, вставив из буфера.</value>
   </data>
   <data name="ReportFailed" xml:space="preserve">
-    <value>Не удалось открыть почтовый клиент</value>
+    <value>Не удалось открыть веб-почту или подготовить жалобу</value>
   </data>
   <data name="SubmitMod" xml:space="preserve">
     <value>Отправить мод</value>
   </data>
   <data name="SubmitModConfirm" xml:space="preserve">
-    <value>Открыть письмо для публикации на llxmod@foxmail.com?</value>
+    <value>Шаблон заявки будет скопирован, откроется веб-почта для отправки на llxmod@foxmail.com. Продолжить?</value>
   </data>
   <data name="SubmitModSuccess" xml:space="preserve">
-    <value>Почтовый клиент открыт. Заполните шаблон, приложите .dll (опционально preview.png) и отправьте на llxmod@foxmail.com.</value>
+    <value>Шаблон скопирован, веб-почта открыта. Вставьте, приложите .dll (по желанию preview.png) и отправьте на llxmod@foxmail.com.</value>
   </data>
   <data name="SubmitModFailed" xml:space="preserve">
-    <value>Не удалось открыть почтовый клиент</value>
+    <value>Не удалось открыть веб-почту или подготовить заявку</value>
   </data>
   <data name="SubmitMailOpenedDomestic" xml:space="preserve">
     <value>Тема и текст скопированы; открыт QQ Mail в браузере — создайте письмо, вставьте, приложите файлы и отправьте на llxmod@foxmail.com.</value>
@@ -127,13 +127,13 @@
 (Продвинутые пользователи могут по-прежнему открывать PR.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>После продолжения менеджер скопирует шаблон и откроет QQ Mail (кит. UI) или Gmail (другие языки). Вставьте текст, приложите .dll (по желанию preview.png) и отправьте. При очень больших вложениях (~&gt;40MB) укажите ссылку на облако. Исходники не присылайте без запроса.</value>
+    <value>После «Открыть письмо для отправки» менеджер скопирует тему и текст и откроет веб-почту по языку: QQ Mail для китайского UI, иначе Gmail. Вставьте, приложите .dll (по желанию preview.png). При очень больших вложениях (~&gt;40 МБ) укажите ссылку на облако. Исходники не присылайте без запроса.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>Открыть полное руководство</value>
   </data>
   <data name="SubmitGuideOpenEmail" xml:space="preserve">
-    <value>Открыть письмо для отправки</value>
+    <value>Скопировать шаблон и открыть почту</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Подтвердить</value>
@@ -163,7 +163,7 @@
     <value>Режим запуска</value>
   </data>
   <data name="PortableDataRoot" xml:space="preserve">
-    <value>Портативные данные (app/data, нужен перезапуск)</value>
+    <value>Переносные данные (папка data рядом с программой; нужен перезапуск)</value>
   </data>
   <data name="Profiles" xml:space="preserve">
     <value>Профили</value>
@@ -196,27 +196,27 @@
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Реплей и отладка</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Прочее</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Без категории</value></data>
-  <data name="EditModTaxonomy" xml:space="preserve"><value>Изменить категорию/теги</value></data>
-  <data name="CategoryFollowCatalog" xml:space="preserve"><value>По каталогу</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>Категория и теги</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>Как в каталоге</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>Доп. теги (через запятую)</value></data>
-  <data name="BranchSwitchTitle" xml:space="preserve"><value>Official / Beta</value></data>
+  <data name="BranchSwitchTitle" xml:space="preserve"><value>Официальная / Тестовая</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
-  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Имя тестовой ветки</value></data>
+  <data name="BranchSwitchBetaName" xml:space="preserve"><value>Имя тестовой ветки (как в свойствах Steam)</value></data>
   <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
-  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Тестовая выбрана вручную, продолжить</value></data>
-  <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Confirm Steam is aligned</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Нужно около двух копий игры; Steam должен быть закрыт; попробуем автоматически выровнять тестовую ветку, иначе — вручную</value></data>
+  <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Тестовая выбрана в Steam — продолжить</value></data>
+  <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam завершил переключение — продолжить</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Нужно около двух полных копий игры. Сначала закройте Steam и игру. Попробуем автоматически сменить тестовую ветку Steam; при неудаче выберите её вручную в Steam.</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
-  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam</value></data>
+  <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Ожидание завершения Steam</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Официальная</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>Тестовая</value></data>
-  <data name="Tag_calc" xml:space="preserve"><value>Расчёт</value></data>
+  <data name="Tag_calc" xml:space="preserve"><value>Расчёты</value></data>
   <data name="Tag_camera" xml:space="preserve"><value>Камера</value></data>
   <data name="Tag_combat" xml:space="preserve"><value>Бой</value></data>
   <data name="Tag_damage" xml:space="preserve"><value>Урон</value></data>
@@ -224,7 +224,7 @@
   <data name="Tag_economy" xml:space="preserve"><value>Экономика</value></data>
   <data name="Tag_grid" xml:space="preserve"><value>Сетка</value></data>
   <data name="Tag_hotkey" xml:space="preserve"><value>Горячие клавиши</value></data>
-  <data name="Tag_hud" xml:space="preserve"><value>Интерфейс</value></data>
+  <data name="Tag_hud" xml:space="preserve"><value>Экранный интерфейс</value></data>
   <data name="Tag_items" xml:space="preserve"><value>Предметы</value></data>
   <data name="Tag_replay" xml:space="preserve"><value>Повтор</value></data>
   <data name="Tag_speed" xml:space="preserve"><value>Скорость</value></data>
@@ -256,13 +256,13 @@
   <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
 …всего {0}</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Перезапись неуправляемых файлов отменена.</value></data>
-  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Двухветочная схема уже включена. Пересборка сначала безопасно снимет настройку (другой каталог сохранится), затем настроит заново. Продолжить?</value></data>
-  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Снять двухветочную настройку? Текущий junction снова станет папкой игры. Сначала закройте Steam и игру.</value></data>
-  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Также удалить каталог другой ветки? Неиспользуемые файлы будут удалены безвозвратно. (Рекомендуется: Нет)</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Двухкаталожная схема уже включена. Пересборка сначала безопасно снимет текущую настройку (файлы в другом каталоге сохранятся), затем настроит заново. Продолжить?</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Снять двухкаталожную настройку? Используемый каталог снова станет путём игры в Steam. Сначала закройте Steam и игру.</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Также удалить отдельную папку другой ветки? Файлы будут удалены безвозвратно. (Рекомендуется: Нет)</value></data>
   <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>Мастер двух веток не удался: {0}</value></data>
   <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>Не удалось снять двухветочную настройку: {0}</value></data>
-  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam ещё запущен. Дождитесь завершения, затем разворачивайте.</value></data>
-  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam ещё запущен. Всё равно развернуть? Файлы могут быть заняты.</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam ещё запущен. Дождитесь завершения смены ветки, затем разворачивайте.</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam ещё запущен. Всё равно развернуть? Файлы игры могут быть заняты.</value></data>
   <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
 
 {1}
@@ -275,12 +275,46 @@
   <data name="ConfirmDeleteProfile" xml:space="preserve"><value>Удалить профиль «{0}»? Это нельзя отменить.</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>Удалить «{0}» из библиотеки? Также уберётся из всех профилей.</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Для смены ветки нужно закрыть Steam и игру. Продолжить?</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Для двух веток нужно около двух копий игры; закройте Steam и игру. Начать?</value></data>
-  <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Сейчас установлена официальная ветка? «Нет» = тестовая.</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Скачайте другую ветку в Steam. После загрузки закройте Steam и нажмите «Да». «Нет» приостановит мастер.</value></data>
-  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Не удалось автоматически выставить Beta другой ветки. Выберите вручную в Steam, затем скачайте.</value></data>
-  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Мастер двух веток приостановлен; можно продолжить позже.</value></data>
-  <data name="LogBranchTeardownDone" xml:space="preserve"><value>Двухветочная настройка снята.</value></data>
-  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Двухветочная настройка снята. Проверьте ветку игры в Steam.</value></data>
-  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Не удалось автоматически выровнять Steam Beta. Сначала выберите ветку вручную; не запускайте Steam до выравнивания.</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Для двух каталогов нужно около двух полных копий игры; сначала закройте Steam и игру. Начать?</value></data>
+  <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Сейчас установлена официальная ветка? «Нет» значит, что сейчас тестовая.</value></data>
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Скачайте другую ветку в Steam. После загрузки закройте Steam и нажмите «Да». «Нет» приостановит мастер (можно продолжить позже).</value></data>
+  <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Не удалось автоматически выставить тестовый канал Steam для другой ветки. Выберите вручную в Steam, затем скачайте.</value></data>
+  <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Мастер двух каталогов приостановлен; можно продолжить позже.</value></data>
+  <data name="LogBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка официальная/тестовая снята.</value></data>
+  <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка снята. В Steam проверьте, что текущая ветка игры верна.</value></data>
+  <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Не удалось автоматически выровнять тестовую ветку Steam. Сначала выберите ветку вручную; не запускайте Steam до выравнивания.</value></data>
+  <data name="ColumnName" xml:space="preserve"><value>Имя</value></data>
+  <data name="ColumnAuthor" xml:space="preserve"><value>Автор</value></data>
+  <data name="ColumnVersion" xml:space="preserve"><value>Версия</value></data>
+  <data name="ColumnUpdated" xml:space="preserve"><value>Обновлено</value></data>
+  <data name="ColumnStatus" xml:space="preserve"><value>Статус</value></data>
+  <data name="ColumnEnabled" xml:space="preserve"><value>Вкл.</value></data>
+  <data name="ColumnType" xml:space="preserve"><value>Тип</value></data>
+  <data name="ColumnRisk" xml:space="preserve"><value>Риск</value></data>
+  <data name="ColumnLoader" xml:space="preserve"><value>Загрузчик</value></data>
+  <data name="LabelAuthor" xml:space="preserve"><value>Автор</value></data>
+  <data name="LabelVersion" xml:space="preserve"><value>Версия</value></data>
+  <data name="LabelUpdated" xml:space="preserve"><value>Обновлено</value></data>
+  <data name="LabelName" xml:space="preserve"><value>Имя</value></data>
+  <data name="ActionDelete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="ActionCollapseDetail" xml:space="preserve"><value>Скрыть описание</value></data>
+  <data name="TipToggleHighRisk" xml:space="preserve"><value>Нажмите, чтобы временно переключить риск; после обновления снова по ключевым словам в имени</value></data>
+  <data name="TipDeleteFromLibrary" xml:space="preserve"><value>Удалить пакет из библиотеки</value></data>
+  <data name="AppVersionFormat" xml:space="preserve"><value>Версия {0}</value></data>
+  <data name="PromptBetaBranchName" xml:space="preserve"><value>Введите имя тестовой ветки (как в Steam → Свойства → Бета)</value></data>
+  <data name="FailWizardNoBetaName" xml:space="preserve"><value>Имя тестовой ветки не указано; мастер отменён.</value></data>
+  <data name="LabelSummary" xml:space="preserve"><value>Описание</value></data>
+  <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Путь к игре должен быть в steamapps\common\Mechabellum.</value></data>
+  <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>Текущий путь к игре недействителен; мастер двух каталогов нельзя начать.</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Отдельная папка другой ветки уже существует; архивирование невозможно: {0}</value></data>
+  <data name="FailWizardNoAppManifest" xml:space="preserve"><value>Не найден appmanifest_669330.acf; нельзя выровнять тестовую ветку Steam.</value></data>
+  <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>Не удалось прочитать манифест Steam (могут понадобиться права или перенос библиотеки): {0}</value></data>
+  <data name="FailWizardArchiveCurrentFailed" xml:space="preserve"><value>Не удалось архивировать текущую ветку.</value></data>
+  <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>Не удалось архивировать другую ветку.</value></data>
+  <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>Не удалось создать связь каталога.</value></data>
+  <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Не удалось снять двухкаталожную настройку.</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Мастер двух каталогов завершён; ожидаем завершения смены ветки в Steam.</value></data>
+  <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Не удалось запросить выход из Steam: {0}</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam или игра ещё запущены; смена ветки прервана.</value></data>
+  <data name="LogSwapFolderFailed" xml:space="preserve"><value>Не удалось переключить папки.</value></data>
 </root>

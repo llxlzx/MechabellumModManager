@@ -2055,7 +2055,7 @@ public sealed partial class MainViewModel : ObservableObject
             var swap = _branchSwitch.TrySwapJunction(target);
             if (!swap.Success)
             {
-                AppendLog(string.IsNullOrWhiteSpace(swap.Message) ? "切换目录失败。" : swap.Message);
+                AppendLog(string.IsNullOrWhiteSpace(swap.Message) ? LocalizationService.T("LogSwapFolderFailed") : swap.Message);
                 return;
             }
 
@@ -2095,38 +2095,38 @@ public sealed partial class MainViewModel : ObservableObject
             ? GameBranch.Official
             : GameBranch.Beta;
 
-        var betaName = _promptText?.Invoke("请输入测试服 Beta 分支名（Steam 属性里看到的名称）");
+        var betaName = _promptText?.Invoke(LocalizationService.T("PromptBetaBranchName"));
         if (string.IsNullOrWhiteSpace(betaName))
             betaName = BetaBranchName;
         if (string.IsNullOrWhiteSpace(betaName))
         {
-            FailWizard("未填写测试服 Beta 分支名，已中止向导。");
+            FailWizard(LocalizationService.T("FailWizardNoBetaName"));
             return;
         }
 
         if (!TryResolveSteamLayout(GamePath, out var steamLink, out var officialStore, out var betaStore))
         {
-            FailWizard("游戏路径须位于 steamapps\\common\\Mechabellum。");
+            FailWizard(LocalizationService.T("FailWizardGamePathNotSteamCommon"));
             return;
         }
 
         if (!SteamGameLocator.LooksLikeGameRoot(steamLink))
         {
-            FailWizard("当前游戏路径无效，无法开始双服向导。");
+            FailWizard(LocalizationService.T("FailWizardInvalidGamePath"));
             return;
         }
 
         var destA = current == GameBranch.Official ? officialStore : betaStore;
         if (Path.Exists(destA) && !PathsEqual(destA, steamLink))
         {
-            FailWizard($"旁路目录已存在，无法归档：{destA}");
+            FailWizard(string.Format(LocalizationService.T("FailWizardOtherStoreExists"), destA));
             return;
         }
 
         var acf = SteamBetaKeyEditor.FindAppManifestPath(steamLink);
         if (!File.Exists(acf))
         {
-            FailWizard("未找到 appmanifest_669330.acf，无法对齐 Steam Beta。");
+            FailWizard(LocalizationService.T("FailWizardNoAppManifest"));
             return;
         }
 
@@ -2136,7 +2136,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            FailWizard($"无法读取 Steam 清单（可能需要提权或迁库）：{ex.Message}");
+            FailWizard(string.Format(LocalizationService.T("FailWizardCannotReadManifest"), ex.Message));
             return;
         }
 
@@ -2168,7 +2168,7 @@ public sealed partial class MainViewModel : ObservableObject
         var archiveA = _branchSwitch.ArchiveCurrentAs(current);
         if (!archiveA.Success)
         {
-            FailWizard(string.IsNullOrWhiteSpace(archiveA.Message) ? "归档当前服失败。" : archiveA.Message);
+            FailWizard(string.IsNullOrWhiteSpace(archiveA.Message) ? LocalizationService.T("FailWizardArchiveCurrentFailed") : archiveA.Message);
             return;
         }
 
@@ -2224,7 +2224,7 @@ public sealed partial class MainViewModel : ObservableObject
         var archiveB = _branchSwitch.ArchiveDownloadedAs(other);
         if (!archiveB.Success)
         {
-            FailWizard(string.IsNullOrWhiteSpace(archiveB.Message) ? "归档另一服失败。" : archiveB.Message);
+            FailWizard(string.IsNullOrWhiteSpace(archiveB.Message) ? LocalizationService.T("FailWizardArchiveOtherFailed") : archiveB.Message);
             return;
         }
 
@@ -2236,7 +2236,7 @@ public sealed partial class MainViewModel : ObservableObject
         var link = _branchSwitch.CreateLinkTo(current);
         if (!link.Success)
         {
-            FailWizard(string.IsNullOrWhiteSpace(link.Message) ? "创建目录联接失败。" : link.Message);
+            FailWizard(string.IsNullOrWhiteSpace(link.Message) ? LocalizationService.T("FailWizardCreateLinkFailed") : link.Message);
             return;
         }
 
@@ -2264,7 +2264,7 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshStatus();
 
         var silent = _branchSwitch.TrySilentSetBeta(current);
-        SettleAfterSilentBeta(silent, "双服配置向导已完成，正在等待 Steam 结算。");
+        SettleAfterSilentBeta(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam"));
     }
 
     async Task<bool> RunTeardownCoreAsync(bool deleteOtherStore)
@@ -2275,7 +2275,7 @@ public sealed partial class MainViewModel : ObservableObject
         var result = _branchSwitch.TryTeardown(deleteOtherStore);
         if (!result.Success)
         {
-            FailWizard(string.IsNullOrWhiteSpace(result.Message) ? "解除双服配置失败。" : result.Message);
+            FailWizard(string.IsNullOrWhiteSpace(result.Message) ? LocalizationService.T("FailWizardTeardownFailed") : result.Message);
             return false;
         }
 
@@ -2357,7 +2357,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"请求退出 Steam 失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogSteamExitRequestFailed"), ex.Message));
         }
 
         var deadline = DateTime.UtcNow + _steamExitTimeout;
@@ -2366,7 +2366,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (_processProbe.IsGameOrSteamRunning())
         {
-            AppendLog("Steam 或游戏仍在运行，已中止切服。");
+            AppendLog(LocalizationService.T("LogSteamOrGameStillRunning"));
             return false;
         }
 
