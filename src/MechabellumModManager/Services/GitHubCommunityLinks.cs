@@ -192,6 +192,8 @@ public static class GitHubCommunityLinks
             "【版本 / Version】\n" +
             "【一句话简介 / Summary】\n" +
             "【游戏端 / Game】正式服 / 测试服 / 两者（Official / Test / Both）\n" +
+            "【分类 / Category】（OverlayUI / QoL / Camera / CombatAssist / Economy / ReplayDebug / Misc，可空）\n" +
+            "【标签 / Tags】（逗号分隔，可空）\n" +
             "【联系方式 / Contact】（可选）\n" +
             "【备注 / Notes】\n";
     }

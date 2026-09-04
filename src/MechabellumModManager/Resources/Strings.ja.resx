@@ -180,4 +180,24 @@
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>メンテナーは合理的な期間内にご連絡を確認・対応します。日常生活や個人の都合により対応が一時的に遅れる場合があります。ご理解とご待機をお願いします。同一内容の再送はご遠慮ください。
 The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+  <data name="FilterSearch" xml:space="preserve"><value>検索</value></data>
+  <data name="FilterCategory" xml:space="preserve"><value>カテゴリ</value></data>
+  <data name="FilterTag" xml:space="preserve"><value>タグ</value></data>
+  <data name="FilterSort" xml:space="preserve"><value>並び替え</value></data>
+  <data name="FilterAll" xml:space="preserve"><value>すべて</value></data>
+  <data name="SortByName" xml:space="preserve"><value>名前</value></data>
+  <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>更新（新→旧）</value></data>
+  <data name="ColumnCategory" xml:space="preserve"><value>カテゴリ</value></data>
+  <data name="TagsLabel" xml:space="preserve"><value>タグ</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>オーバーレイUI</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>QoL</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>カメラ</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>戦闘補助</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>経済</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>リプレイ/デバッグ</value></data>
+  <data name="CategoryMisc" xml:space="preserve"><value>その他</value></data>
+  <data name="CategoryUncategorized" xml:space="preserve"><value>未分類</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>分類/タグを編集</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>カタログに従う</value></data>
+  <data name="ExtraTagsHint" xml:space="preserve"><value>追加タグ（カンマ区切り）</value></data>
 </root>

@@ -50,3 +50,23 @@ Profiles	方案
 ModLibrary	Mod 库
 SyncLog	同步日志
 CurrentProfile	当前方案
+FilterSearch	搜索
+FilterCategory	分类
+FilterTag	标签
+FilterSort	排序
+FilterAll	全部
+SortByName	名称
+SortByUpdatedAtDesc	更新（新→旧）
+ColumnCategory	分类
+TagsLabel	标签
+CategoryOverlayUI	界面覆盖
+CategoryQoL	生活质量
+CategoryCamera	镜头
+CategoryCombatAssist	战斗辅助
+CategoryEconomy	经济
+CategoryReplayDebug	回放调试
+CategoryMisc	杂项
+CategoryUncategorized	未分类
+EditModTaxonomy	编辑分类/标签
+CategoryFollowCatalog	跟随目录
+ExtraTagsHint	额外标签（逗号分隔）

@@ -180,4 +180,24 @@
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Сопровождающий рассмотрит и обработает ваше сообщение в разумный срок. Обработка может кратко задержаться из‑за повседневных дел и личного расписания; благодарим за терпение. Пожалуйста, не отправляйте повторно одно и то же обращение.
 The maintainer will review and process your message within a reasonable time. Handling may be briefly delayed due to daily life and personal schedule; thank you for your patience. Please do not resend the same request.</value></data>
+  <data name="FilterSearch" xml:space="preserve"><value>Поиск</value></data>
+  <data name="FilterCategory" xml:space="preserve"><value>Категория</value></data>
+  <data name="FilterTag" xml:space="preserve"><value>Тег</value></data>
+  <data name="FilterSort" xml:space="preserve"><value>Сортировка</value></data>
+  <data name="FilterAll" xml:space="preserve"><value>Все</value></data>
+  <data name="SortByName" xml:space="preserve"><value>Имя</value></data>
+  <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>Обновление (новые→старые)</value></data>
+  <data name="ColumnCategory" xml:space="preserve"><value>Категория</value></data>
+  <data name="TagsLabel" xml:space="preserve"><value>Теги</value></data>
+  <data name="CategoryOverlayUI" xml:space="preserve"><value>Оверлей / UI</value></data>
+  <data name="CategoryQoL" xml:space="preserve"><value>QoL</value></data>
+  <data name="CategoryCamera" xml:space="preserve"><value>Камера</value></data>
+  <data name="CategoryCombatAssist" xml:space="preserve"><value>Боевая помощь</value></data>
+  <data name="CategoryEconomy" xml:space="preserve"><value>Экономика</value></data>
+  <data name="CategoryReplayDebug" xml:space="preserve"><value>Реплей / Отладка</value></data>
+  <data name="CategoryMisc" xml:space="preserve"><value>Прочее</value></data>
+  <data name="CategoryUncategorized" xml:space="preserve"><value>Без категории</value></data>
+  <data name="EditModTaxonomy" xml:space="preserve"><value>Изменить категорию/теги</value></data>
+  <data name="CategoryFollowCatalog" xml:space="preserve"><value>По каталогу</value></data>
+  <data name="ExtraTagsHint" xml:space="preserve"><value>Доп. теги (через запятую)</value></data>
 </root>
