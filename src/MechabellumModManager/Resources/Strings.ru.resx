@@ -51,6 +51,30 @@
   <data name="ApplyAndLaunch" xml:space="preserve">
     <value>Применить и запустить</value>
   </data>
+  <data name="DeployBlockedAssembliesMissing" xml:space="preserve">
+    <value>Сборки Il2Cpp ещё не готовы. Запустите игру один раз (или сгенерируйте сборки), затем примените профиль.</value>
+  </data>
+  <data name="DeployBlockedLoaderMissing" xml:space="preserve">
+    <value>MelonLoader не установлен. Сначала нажмите «Установить MelonLoader».</value>
+  </data>
+  <data name="DeployBlockedLoaderPartial" xml:space="preserve">
+    <value>MelonLoader установлен неполностью. Переустановите MelonLoader.</value>
+  </data>
+  <data name="DeployBlockedNotReady" xml:space="preserve">
+    <value>Игра или MelonLoader не готовы; развёртывание недоступно.</value>
+  </data>
+  <data name="DeployBlockedAwaitingSteam" xml:space="preserve">
+    <value>Ожидание подтверждения Steam / переключения веток; развёртывание приостановлено.</value>
+  </data>
+  <data name="DeployBlockedWizardIncomplete" xml:space="preserve">
+    <value>Мастер двойной ветки не завершён. Продолжите или удалите конфигурацию в настройках.</value>
+  </data>
+  <data name="DeployBlockedBusy" xml:space="preserve">
+    <value>Выполняется операция двойной ветки. Подождите.</value>
+  </data>
+  <data name="DeployBlockedGeneric" xml:space="preserve">
+    <value>Развёртывание сейчас недоступно.</value>
+  </data>
   <data name="CheckUpdates" xml:space="preserve">
     <value>Проверить обновления</value>
   </data>
@@ -270,6 +294,7 @@
   <data name="BranchSwitchHint" xml:space="preserve"><value>Нужно около двух копий игры. Имя беты по умолчанию public_test (Steam → Свойства → Бета; обычно не меняйте). Сначала сохраняется текущая установка — официальная не перезаписывается.</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
+  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>Мастер не завершён (деплой OK; продолжить или удалить)</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Ожидание завершения Steam</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Официальная</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>Тестовая</value></data>

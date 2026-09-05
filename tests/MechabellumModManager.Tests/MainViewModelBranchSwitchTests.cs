@@ -36,6 +36,54 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public void Leftover_mid_wizard_with_feature_disabled_does_not_block_deploy()
+    {
+        // StartBranchWizard persists Enabled=false + WizardStep mid-flight while paused.
+        // That must not brick Apply / Apply-and-launch when dual-folder is not enabled.
+        using var fx = Fixture.CreateReady();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.WaitingDownloadB,
+            ActiveBranch = GameBranch.Official
+        });
+
+        var vm = fx.CreateVm();
+
+        vm.BranchSwitchEnabled.Should().BeFalse();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        vm.IsBranchWizardInProgress.Should().BeTrue();
+        vm.IsBranchWizardBlocking.Should().BeFalse();
+        vm.IsReady.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeTrue();
+        vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeTrue();
+        vm.CanTeardownBranchSwitch.Should().BeTrue();
+        vm.DeployBlockedReason.Should().BeEmpty();
+        vm.BranchStatusText.Should().Contain("不影响部署");
+    }
+
+    [Fact]
+    public void Incomplete_wizard_with_feature_enabled_blocks_deploy()
+    {
+        using var fx = Fixture.CreateReady();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Linked,
+            ActiveBranch = GameBranch.Official
+        });
+
+        var vm = fx.CreateVm();
+
+        vm.BranchSwitchEnabled.Should().BeTrue();
+        vm.IsBranchWizardBlocking.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeFalse();
+        vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeFalse();
+        vm.CanTeardownBranchSwitch.Should().BeTrue();
+        vm.DeployBlockedReason.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
     public void Corrupt_branch_switch_json_does_not_throw_in_ctor()
     {
         using var fx = Fixture.CreateReady();
@@ -562,6 +610,7 @@ public class MainViewModelBranchSwitchTests
 
         var vm = fx.CreateVm();
 
+        fx.LoadBranchConfig().WizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
         Path.GetFullPath(vm.GamePath).Should().Be(Path.GetFullPath(fx.SteamLink));
         var persisted = fx.Store.LoadOrDefault(fx.Paths.ConfigPath, () => new AppConfig()).GamePath;
         persisted.Should().NotBeNullOrWhiteSpace();

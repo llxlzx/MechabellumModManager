@@ -51,6 +51,30 @@
   <data name="ApplyAndLaunch" xml:space="preserve">
     <value>Apply &amp; Launch</value>
   </data>
+  <data name="DeployBlockedAssembliesMissing" xml:space="preserve">
+    <value>Il2Cpp assemblies are not ready yet. Launch the game once (or generate assemblies), then apply the profile.</value>
+  </data>
+  <data name="DeployBlockedLoaderMissing" xml:space="preserve">
+    <value>MelonLoader is not installed. Click “Install MelonLoader” first.</value>
+  </data>
+  <data name="DeployBlockedLoaderPartial" xml:space="preserve">
+    <value>MelonLoader is incomplete. Reinstall MelonLoader.</value>
+  </data>
+  <data name="DeployBlockedNotReady" xml:space="preserve">
+    <value>Game or MelonLoader is not ready; deploy is unavailable.</value>
+  </data>
+  <data name="DeployBlockedAwaitingSteam" xml:space="preserve">
+    <value>Waiting for Steam settle / dual-branch confirmation; deploy is paused.</value>
+  </data>
+  <data name="DeployBlockedWizardIncomplete" xml:space="preserve">
+    <value>Dual-branch wizard is incomplete. Continue or tear down dual-branch in Settings.</value>
+  </data>
+  <data name="DeployBlockedBusy" xml:space="preserve">
+    <value>A dual-branch operation is in progress. Please wait.</value>
+  </data>
+  <data name="DeployBlockedGeneric" xml:space="preserve">
+    <value>Deploy is unavailable right now.</value>
+  </data>
   <data name="CheckUpdates" xml:space="preserve">
     <value>Check for Updates</value>
   </data>
@@ -270,6 +294,7 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="BranchSwitchHint" xml:space="preserve"><value>Needs about two game installs of space. Beta name defaults to public_test (Steam → Properties → Betas; usually leave as is). The wizard saves the current install first, then downloads the other — Official is not overwritten.</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
+  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>Wizard paused (deploy OK; continue or remove)</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam to finish</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Official</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>Beta</value></data>

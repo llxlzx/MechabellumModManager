@@ -51,6 +51,30 @@
   <data name="ApplyAndLaunch" xml:space="preserve">
     <value>適用して起動</value>
   </data>
+  <data name="DeployBlockedAssembliesMissing" xml:space="preserve">
+    <value>Il2Cpp アセンブリが未生成です。一度ゲームを起動（または生成）してから適用してください。</value>
+  </data>
+  <data name="DeployBlockedLoaderMissing" xml:space="preserve">
+    <value>MelonLoader が未インストールです。先に「MelonLoader をインストール」してください。</value>
+  </data>
+  <data name="DeployBlockedLoaderPartial" xml:space="preserve">
+    <value>MelonLoader が不完全です。再インストールしてください。</value>
+  </data>
+  <data name="DeployBlockedNotReady" xml:space="preserve">
+    <value>ゲームまたは MelonLoader の準備ができていないため、配置できません。</value>
+  </data>
+  <data name="DeployBlockedAwaitingSteam" xml:space="preserve">
+    <value>Steam の確定 / デュアル構成の確認待ちのため、配置を一時停止しています。</value>
+  </data>
+  <data name="DeployBlockedWizardIncomplete" xml:space="preserve">
+    <value>デュアル構成ウィザードが未完了です。設定で続行するか、構成を解除してください。</value>
+  </data>
+  <data name="DeployBlockedBusy" xml:space="preserve">
+    <value>デュアル構成の処理中です。しばらくお待ちください。</value>
+  </data>
+  <data name="DeployBlockedGeneric" xml:space="preserve">
+    <value>現在は配置できません。</value>
+  </data>
   <data name="CheckUpdates" xml:space="preserve">
     <value>更新を確認</value>
   </data>
@@ -270,6 +294,7 @@
   <data name="BranchSwitchHint" xml:space="preserve"><value>約2部の容量が必要。分岐名は既定 public_test（Steam「プロパティ → ベータ」。通常変更不要）。現在のインストールを先に退避してからもう一方を取得し、正式版は上書きされません。</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
+  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>ウィザード未完了（配置可；続行または解除）</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Steam の切替完了を待機</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>正式版</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>テスト版</value></data>
