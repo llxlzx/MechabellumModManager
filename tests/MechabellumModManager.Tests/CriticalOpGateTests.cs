@@ -17,7 +17,7 @@ public class CriticalOpGateTests
         bool branchSwitchBusy,
         bool recoveryModalPending,
         bool awaitingSteamSettle,
-        bool wizardWaitingSteam,
+        bool wizardInProgress,
         CriticalOpGateLevel expected)
     {
         CriticalOpGate.Classify(
@@ -26,7 +26,7 @@ public class CriticalOpGateTests
                 branchSwitchBusy,
                 recoveryModalPending,
                 awaitingSteamSettle,
-                wizardWaitingSteam)
+                wizardInProgress)
             .Should().Be(expected);
     }
 
@@ -39,7 +39,7 @@ public class CriticalOpGateTests
                 branchSwitchBusy: false,
                 recoveryModalPending: false,
                 awaitingSteamSettle: true,
-                wizardWaitingSteam: true)
+                wizardInProgress: true)
             .Should().Be(CriticalOpGateLevel.HardBlock);
     }
 }
