@@ -1,0 +1,23 @@
+This End User License Agreement ("Agreement") is between you and Mechabellum Mod Manager ("the Tool"). By installing, copying, or using the Tool, you acknowledge that you have read and agree to this Agreement.
+
+1. Intended use
+1.1 The Tool is intended only for installing, managing, and launching client-side Quality-of-Life (QoL) mods.
+1.2 Do not use the Tool to install or enable content that modifies combat logic, undermines fair play, or tampers with online match data.
+
+2. Risks
+2.1 Modifying combat logic or other core gameplay may cause Data Errors, broken matches, and may result in official penalties (including bans).
+2.2 The game publisher does not officially support third-party mods. You use the Tool and any mods at your own risk.
+2.3 MelonLoader, game updates, dual-folder (Official/Test) switching, antivirus software, and similar factors may temporarily prevent mods from loading. Follow in-app guidance and MelonLoader logs when troubleshooting.
+
+3. Dual folders and Steam
+3.1 Official/Test dual-folder mode roughly doubles disk usage and may edit Beta-related fields in the Steam app manifest.
+3.2 Exit Steam and the game before running the dual-folder wizard or switching branches. Do not force operations while Steam is downloading or verifying.
+
+4. Disclaimer
+4.1 The Tool is provided "as is", without warranties of any kind.
+4.2 The developers are not liable for any direct or indirect loss arising from use of the Tool, mods, MelonLoader, or dual-folder features.
+4.3 You must comply with the game's terms of use, applicable laws, and Steam's terms of service.
+
+5. Other
+5.1 If you do not agree, stop installing and delete the Tool immediately.
+5.2 Continuing installation means you have selected and agreed: "I have read and agree to the user agreement."

@@ -168,31 +168,69 @@
                                        Orientation="Horizontal"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center">
-                                <Button Content="{Binding Ui.ApplyAndLaunch}"
-                                        Command="{Binding ApplyAndLaunchCommand}"
+                                <Button Command="{Binding ApplyAndLaunchCommand}"
                                         IsEnabled="{Binding CanDeployOrLaunch}"
                                         Style="{StaticResource PrimaryButtonStyle}"
                                         Margin="0,0,8,4"
                                         MinWidth="108"
-                                        Padding="12,6" />
-                                <Button Content="{Binding Ui.BrowseMods}"
-                                        Command="{Binding ToggleCatalogCommand}"
+                                        Padding="12,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconPlayGeometry}" />
+                                        <TextBlock Text="{Binding Ui.ApplyAndLaunch}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ToggleCatalogCommand}"
                                         Style="{StaticResource GhostButtonStyle}"
                                         Margin="0,0,8,4"
                                         MinWidth="88"
-                                        Padding="12,6" />
-                                <Button Content="{Binding Ui.SubmitMod}"
-                                        Command="{Binding SubmitModCommand}"
+                                        Padding="12,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                            <Path.Style>
+                                                <Style TargetType="Path">
+                                                    <Setter Property="Data" Value="{StaticResource IconChevronDownGeometry}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CatalogExpanded}" Value="True">
+                                                            <Setter Property="Data" Value="{StaticResource IconChevronUpGeometry}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Path.Style>
+                                        </Path>
+                                        <TextBlock Text="{Binding Ui.BrowseMods}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding SubmitModCommand}"
                                         Style="{StaticResource GhostButtonStyle}"
                                         Margin="0,0,8,4"
                                         MinWidth="88"
-                                        Padding="12,6" />
-                                <Button Content="{Binding Ui.Settings}"
-                                        Command="{Binding ToggleSettingsCommand}"
+                                        Padding="12,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconUploadGeometry}" />
+                                        <TextBlock Text="{Binding Ui.SubmitMod}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ToggleSettingsCommand}"
                                         Style="{StaticResource GhostButtonStyle}"
                                         Margin="0,0,0,4"
                                         MinWidth="72"
-                                        Padding="12,6" />
+                                        Padding="12,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconGearGeometry}" />
+                                        <TextBlock Text="{Binding Ui.Settings}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
                             </WrapPanel>
                         </Grid>
                     </Border>
@@ -411,16 +449,52 @@
             </Border>
 
             <!-- Catalog browser strip -->
-            <Border Grid.Row="2"
-                    Background="#E0161B20"
-                    BorderBrush="{StaticResource AccentAmberBrush}"
-                    BorderThickness="1"
-                    Padding="18,12"
-                    Margin="10,0,10,0"
-                    CornerRadius="2"
-                    Visibility="{Binding CatalogExpanded, Converter={StaticResource BoolToVis}}">
-                <DockPanel MaxHeight="420">
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <Grid Grid.Row="2" Margin="10,0,10,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0"
+                        Background="#E0161B20"
+                        BorderBrush="{StaticResource AccentAmberBrush}"
+                        BorderThickness="1"
+                        Padding="18,8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="2" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CatalogExpanded}" Value="True">
+                                    <Setter Property="CornerRadius" Value="2,2,0,0" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <DockPanel>
+                        <Button Command="{Binding ToggleCatalogCommand}"
+                                ToolTip="{Binding CatalogToggleLabel}"
+                                DockPanel.Dock="Right"
+                                MinWidth="88"
+                                Padding="12,6"
+                                Style="{StaticResource GhostButtonStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Width="14" Height="14" Margin="0,0,6,0"
+                                      Stretch="Uniform"
+                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Data" Value="{StaticResource IconChevronDownGeometry}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CatalogExpanded}" Value="True">
+                                                    <Setter Property="Data" Value="{StaticResource IconChevronUpGeometry}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
+                                <TextBlock Text="{Binding CatalogToggleLabel}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Style="{StaticResource AccentBarStyle}"
                                     Height="14"
@@ -430,39 +504,60 @@
                                        Style="{StaticResource SectionLabelStyle}"
                                        Margin="0"
                                        VerticalAlignment="Center" />
-                            <Button Content="▾"
-                                    ToolTip="折叠 Mod 浏览"
-                                    Command="{Binding ToggleCatalogCommand}"
-                                    Margin="10,0,0,0"
-                                    MinWidth="32"
-                                    Padding="6,2"
-                                    Style="{StaticResource GhostButtonStyle}" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal"
-                                    HorizontalAlignment="Right"
-                                    DockPanel.Dock="Right">
-                            <Button Content="{Binding Ui.RefreshCatalog}"
-                                    Command="{Binding RefreshCatalogCommand}"
-                                    Margin="0,0,8,0"
-                                    MinWidth="88"
-                                    Style="{StaticResource GhostButtonStyle}" />
-                            <Button Content="{Binding Ui.AddToLibrary}"
-                                    Command="{Binding AddCatalogModToLibraryCommand}"
-                                    MinWidth="96"
-                                    Margin="0,0,8,0"
-                                    Style="{StaticResource AccentButtonStyle}" />
-                            <Button Content="{Binding Ui.Report}"
-                                    Command="{Binding ReportCatalogModCommand}"
-                                    MinWidth="72"
-                                    Style="{StaticResource GhostButtonStyle}" />
                         </StackPanel>
                     </DockPanel>
+                </Border>
 
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8" LastChildFill="False">
-                        <TextBox Width="160" MinHeight="32" Margin="0,0,8,0"
-                                 VerticalContentAlignment="Center"
-                                 ToolTip="{Binding Ui.FilterSearch}"
-                                 Text="{Binding CatalogSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                <Border Grid.Row="1"
+                        Background="#E0161B20"
+                        BorderBrush="{StaticResource AccentAmberBrush}"
+                        BorderThickness="1,0,1,1"
+                        Padding="18,12"
+                        CornerRadius="0,0,2,2"
+                        Visibility="{Binding CatalogExpanded, Converter={StaticResource BoolToVis}}">
+                    <DockPanel MaxHeight="420">
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        DockPanel.Dock="Right">
+                                <Button Command="{Binding RefreshCatalogCommand}"
+                                        Margin="0,0,8,0"
+                                        MinWidth="88"
+                                        Style="{StaticResource GhostButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconRefreshGeometry}" />
+                                        <TextBlock Text="{Binding Ui.RefreshCatalog}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding AddCatalogModToLibraryCommand}"
+                                        MinWidth="96"
+                                        Style="{StaticResource AccentButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconPlusGeometry}" />
+                                        <TextBlock Text="{Binding Ui.AddToLibrary}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8" LastChildFill="False">
+                        <DockPanel Width="160" MinHeight="32" Margin="0,0,8,0" LastChildFill="True">
+                            <Path Width="14" Height="14" Margin="0,0,6,0"
+                                  Stretch="Uniform"
+                                  VerticalAlignment="Center"
+                                  Fill="{StaticResource TextMutedBrush}"
+                                  DockPanel.Dock="Left"
+                                  Data="{StaticResource IconSearchGeometry}" />
+                            <TextBox VerticalContentAlignment="Center"
+                                     ToolTip="{Binding Ui.FilterSearch}"
+                                     Text="{Binding CatalogSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
                         <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
                                   ToolTip="{Binding Ui.FilterCategory}"
                                   ItemsSource="{Binding CatalogCategoryFilterOptions}"
@@ -494,7 +589,34 @@
                             BorderThickness="0,1,0,0"
                             Visibility="{Binding SelectedCatalogMod, Converter={StaticResource NullToVis}}">
                         <DockPanel>
-                            <Image DockPanel.Dock="Left"
+                            <StackPanel DockPanel.Dock="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="8,0,0,0">
+                                <Button Command="{Binding ReportCatalogModCommand}"
+                                        MinWidth="72"
+                                        Padding="10,6"
+                                        MinHeight="30"
+                                        FontSize="12"
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource GhostButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconFlagGeometry}" />
+                                        <TextBlock Text="{Binding Ui.Report}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Content="{Binding Ui.ActionCollapseDetail}"
+                                        Command="{Binding ClearCatalogModSelectionCommand}"
+                                        MinWidth="72"
+                                        Padding="10,6"
+                                        MinHeight="30"
+                                        FontSize="12"
+                                        Style="{StaticResource GhostButtonStyle}" />
+                            </StackPanel>
+                            <DockPanel>
+                                <Image DockPanel.Dock="Left"
                                    Source="{Binding SelectedCatalogMod.PreviewImage}"
                                    MaxHeight="160"
                                    MaxWidth="240"
@@ -541,15 +663,29 @@
                                     <Run Text="{Binding SelectedCatalogMod.EffectiveTagsText, Mode=OneWay}" />
                                 </TextBlock>
                             </StackPanel>
+                            </DockPanel>
                         </DockPanel>
                     </Border>
 
-                    <DataGrid ItemsSource="{Binding CatalogModsView}"
+                    <DataGrid x:Name="CatalogModsGrid"
+                              ItemsSource="{Binding CatalogModsView}"
                               SelectedItem="{Binding SelectedCatalogMod}"
+                              SelectionMode="Extended"
+                              SelectionChanged="CatalogModsGrid_SelectionChanged"
                               IsReadOnly="True"
                               HeadersVisibility="Column"
                               MaxHeight="180">
                         <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="36">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}, Mode=TwoWay}"
+                                                  PreviewMouseLeftButtonDown="CatalogModCheckBox_PreviewMouseLeftButtonDown" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnName, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 Binding="{Binding Name}"
                                                 Width="*"
@@ -572,7 +708,8 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>
-            </Border>
+                </Border>
+            </Grid>
 
             <!-- Body: profiles | library -->
             <Grid Grid.Row="3" Margin="18,14,18,10">
@@ -648,26 +785,54 @@
                             <WrapPanel Orientation="Horizontal"
                                        HorizontalAlignment="Right"
                                        DockPanel.Dock="Right">
-                                <Button Content="{Binding Ui.ImportDll}"
-                                        Command="{Binding ImportDllCommand}"
+                                <Button Command="{Binding ImportDllCommand}"
                                         Margin="0,0,8,4"
-                                        MinWidth="88" />
-                                <Button Content="{Binding Ui.ImportZip}"
-                                        Command="{Binding ImportZipCommand}"
+                                        MinWidth="88">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconImportGeometry}" />
+                                        <TextBlock Text="{Binding Ui.ImportDll}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ImportZipCommand}"
                                         Margin="0,0,8,4"
-                                        MinWidth="88" />
-                                <Button Content="{Binding Ui.ImportFolder}"
-                                        Command="{Binding ImportFolderCommand}"
+                                        MinWidth="88">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconImportGeometry}" />
+                                        <TextBlock Text="{Binding Ui.ImportZip}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ImportFolderCommand}"
                                         Margin="0,0,0,4"
-                                        MinWidth="88" />
+                                        MinWidth="88">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Width="14" Height="14" Margin="0,0,6,0"
+                                              Stretch="Uniform"
+                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              Data="{StaticResource IconImportGeometry}" />
+                                        <TextBlock Text="{Binding Ui.ImportFolder}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
                             </WrapPanel>
                         </DockPanel>
 
                         <DockPanel Grid.Row="1" Margin="0,0,0,8" LastChildFill="False">
-                            <TextBox Width="160" MinHeight="32" Margin="0,0,8,0"
-                                     VerticalContentAlignment="Center"
-                                     ToolTip="{Binding Ui.FilterSearch}"
-                                     Text="{Binding LibrarySearchText, UpdateSourceTrigger=PropertyChanged}" />
+                            <DockPanel Width="160" MinHeight="32" Margin="0,0,8,0" LastChildFill="True">
+                                <Path Width="14" Height="14" Margin="0,0,6,0"
+                                      Stretch="Uniform"
+                                      VerticalAlignment="Center"
+                                      Fill="{StaticResource TextMutedBrush}"
+                                      DockPanel.Dock="Left"
+                                      Data="{StaticResource IconSearchGeometry}" />
+                                <TextBox VerticalContentAlignment="Center"
+                                         ToolTip="{Binding Ui.FilterSearch}"
+                                         Text="{Binding LibrarySearchText, UpdateSourceTrigger=PropertyChanged}" />
+                            </DockPanel>
                             <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
                                       ToolTip="{Binding Ui.FilterCategory}"
                                       ItemsSource="{Binding LibraryCategoryFilterOptions}"
@@ -689,14 +854,31 @@
                                     MinWidth="120"
                                     Padding="12,8"
                                     Style="{StaticResource GhostButtonStyle}" />
-                            <Button Content="{Binding Ui.ApplyProfile}"
-                                    Command="{Binding ApplyProfileCommand}"
-                                    IsEnabled="{Binding CanApplyProfile}"
+                            <Button Command="{Binding ApplyProfileCommand}"
                                     MinHeight="32"
                                     MinWidth="96"
                                     Margin="8,0,0,0"
-                                    Padding="12,8"
-                                    Style="{StaticResource AccentButtonStyle}" />
+                                    Padding="12,8">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding UseApplyAccent}" Value="True">
+                                                <Setter Property="Background" Value="#FF2A2418" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                                <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Width="14" Height="14" Margin="0,0,6,0"
+                                          Stretch="Uniform"
+                                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          Data="{StaticResource IconCheckGeometry}" />
+                                    <TextBlock Text="{Binding Ui.ApplyProfile}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                         </DockPanel>
 
                         <DataGrid Grid.Row="2"
@@ -792,14 +974,21 @@
                                         <StackPanel DockPanel.Dock="Right"
                                                     VerticalAlignment="Top"
                                                     Margin="8,0,0,0">
-                                            <Button Content="{Binding Ui.Report}"
-                                                    Command="{Binding ReportLibraryModCommand}"
+                                            <Button Command="{Binding ReportLibraryModCommand}"
                                                     MinWidth="72"
                                                     Padding="10,6"
                                                     MinHeight="30"
                                                     FontSize="12"
                                                     Margin="0,0,0,6"
-                                                    Style="{StaticResource GhostButtonStyle}" />
+                                                    Style="{StaticResource GhostButtonStyle}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Path Width="14" Height="14" Margin="0,0,6,0"
+                                                          Stretch="Uniform"
+                                                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                          Data="{StaticResource IconFlagGeometry}" />
+                                                    <TextBlock Text="{Binding Ui.Report}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
                                             <Button Content="{Binding Ui.ActionCollapseDetail}"
                                                     Command="{Binding ClearLibraryModSelectionCommand}"
                                                     MinWidth="72"

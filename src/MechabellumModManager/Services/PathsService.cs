@@ -5,14 +5,23 @@ namespace MechabellumModManager.Services;
 
 public sealed class PathsService
 {
+    public const string AppFolderName = "MechabellumModManager";
+
     public string DataRoot { get; }
 
     public PathsService(string? overrideRoot = null)
     {
         DataRoot = string.IsNullOrWhiteSpace(overrideRoot)
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MechabellumModManager")
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppFolderName)
             : overrideRoot;
     }
+
+    /// <summary>Machine-wide install seed (readable by all users; written by elevated Setup).</summary>
+    public static string CommonDataRoot =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), AppFolderName);
+
+    public static string InstallDefaultsPath =>
+        Path.Combine(CommonDataRoot, "install-defaults.json");
 
     public string ConfigPath => Path.Combine(DataRoot, "config.json");
     public string LibraryRoot => Path.Combine(DataRoot, "library");

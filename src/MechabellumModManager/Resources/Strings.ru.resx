@@ -18,6 +18,12 @@
   <data name="BrowseMods" xml:space="preserve">
     <value>Каталог модов</value>
   </data>
+  <data name="CollapseBrowse" xml:space="preserve">
+    <value>Свернуть обзор</value>
+  </data>
+  <data name="ExpandBrowse" xml:space="preserve">
+    <value>Развернуть обзор</value>
+  </data>
   <data name="ImportDll" xml:space="preserve">
     <value>Импорт DLL</value>
   </data>
@@ -287,6 +293,7 @@
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Мастер двух каталогов приостановлен; можно продолжить позже.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка официальная/тестовая снята.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка снята. В Steam проверьте, что текущая ветка игры верна.</value></data>
+  <data name="NotifyApplySucceeded" xml:space="preserve"><value>Профиль применён к каталогу игры</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Не удалось автоматически выровнять тестовую ветку Steam. Сначала выберите ветку вручную; не запускайте Steam до выравнивания.</value></data>
   <data name="ColumnName" xml:space="preserve"><value>Имя</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>Автор</value></data>
@@ -324,4 +331,11 @@
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Не удалось переключить папки.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Уже на этой ветке (папка и бета Steam совпадают). Переключение не нужно.</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>В одной из папок официальная/тестовая всё ещё нет MelonLoader. Переустановите Setup с MelonLoader или сначала поставьте на папку, где Loader уже есть.</value></data>
+  <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">
+    <value>MelonLoader установлен, но Il2Cpp-сборки ещё не созданы.
+Кратко запустить игру сейчас для генерации? (В первый раз около 1–2 минут. Также можно при применении профиля.)</value>
+  </data>
+  <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
+    <value>Немедленная генерация пропущена. Можно позже через «Применить профиль» или запустить игру вручную.</value>
+  </data>
 </root>

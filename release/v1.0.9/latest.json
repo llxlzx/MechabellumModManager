@@ -1,0 +1,6 @@
+{
+  "version": "1.0.9",
+  "notes": "1.0.9: UI icons; catalog multi-select; apply fix; installer 5 langs + EULA; ProgramData install-defaults + runasoriginaluser; ask before Il2Cpp assembly generate; uiLanguage seed/merge.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.9/MechabellumModManager_Setup_v1.0.9.exe",
+  "publishedAt": "2026-09-05T00:27:09Z"
+}

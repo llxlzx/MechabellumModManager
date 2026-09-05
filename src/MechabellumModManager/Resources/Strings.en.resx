@@ -18,6 +18,12 @@
   <data name="BrowseMods" xml:space="preserve">
     <value>Browse Mods</value>
   </data>
+  <data name="CollapseBrowse" xml:space="preserve">
+    <value>Collapse browser</value>
+  </data>
+  <data name="ExpandBrowse" xml:space="preserve">
+    <value>Expand browser</value>
+  </data>
   <data name="ImportDll" xml:space="preserve">
     <value>Import DLL</value>
   </data>
@@ -287,6 +293,7 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Dual-folder wizard paused; you can continue later.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Official/Test dual-folder setup removed.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Dual-folder setup removed. In Steam, confirm the current game branch is correct.</value></data>
+  <data name="NotifyApplySucceeded" xml:space="preserve"><value>Profile applied to the game folder</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Could not automatically align the Steam test branch. Select the branch manually in Steam first; do not start Steam until it is aligned.</value></data>
   <data name="ColumnName" xml:space="preserve"><value>Name</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>Author</value></data>
@@ -325,4 +332,11 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>One Official/Test folder is still missing MelonLoader. Re-run Setup and tick MelonLoader, or install it on the folder that already has a loader.</value></data>
   <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>Which branch is currently installed? Choose Official or Test.</value></data>
+  <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">
+    <value>MelonLoader is installed, but Il2Cpp assemblies are not generated yet.
+Start the game briefly now to generate them? (About 1–2 minutes the first time. You can also generate later when applying a profile.)</value>
+  </data>
+  <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
+    <value>Skipped generating assemblies now. You can try again via Apply Profile, or launch the game once manually.</value>
+  </data>
 </root>

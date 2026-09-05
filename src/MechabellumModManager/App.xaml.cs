@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using MechabellumModManager.Dialogs;
 using MechabellumModManager.Models;
@@ -19,7 +20,7 @@ public partial class App : Application
         window.Show();
     }
 
-    static MainViewModel ComposeMainViewModel(Window owner)
+    static MainViewModel ComposeMainViewModel(MainWindow window)
     {
         var store = new JsonStore();
         var paths = ResolvePaths(store);
@@ -47,21 +48,23 @@ public partial class App : Application
             launcher,
             riskGate,
             assemblyInspector: inspector,
-            confirmHighRisk: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Warning),
-            confirm: msg => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question),
-            confirmChoice: (msg, defaultResult) => Confirm(owner, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question, defaultResult),
-            notify: msg => Notify(owner, msg),
-            browseFolder: () => BrowseFolder(owner),
-            openDll: () => OpenFile(owner, LocalizationService.T("FileFilterDll")),
-            openZip: () => OpenFile(owner, LocalizationService.T("FileFilterZip")),
-            promptText: title => Prompt(owner, title),
-            pickPackageType: () => PickPackageType(owner),
-            pickCurrentBranch: () => PickCurrentBranch(owner),
-            openFolder: () => BrowseImportFolder(owner),
-            promptReport: modName => PromptReport(owner, modName),
-            promptSubmitGuide: () => PromptSubmitGuide(owner),
-            promptEditTaxonomy: pkg => PromptEditTaxonomy(owner, pkg),
+            confirmHighRisk: msg => Confirm(window, msg, LocalizationService.T("Confirm"), MessageBoxImage.Warning),
+            confirm: msg => Confirm(window, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question),
+            confirmChoice: (msg, defaultResult) => Confirm(window, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question, defaultResult),
+            notify: msg => Notify(window, msg),
+            browseFolder: () => BrowseFolder(window),
+            openDll: () => OpenFile(window, LocalizationService.T("FileFilterDll")),
+            openZip: () => OpenFile(window, LocalizationService.T("FileFilterZip")),
+            promptText: title => Prompt(window, title),
+            pickPackageType: () => PickPackageType(window),
+            pickCurrentBranch: () => PickCurrentBranch(window),
+            openFolder: () => BrowseImportFolder(window),
+            promptReport: modName => PromptReport(window, modName),
+            promptSubmitGuide: () => PromptSubmitGuide(window),
+            promptEditTaxonomy: pkg => PromptEditTaxonomy(window, pkg),
             copyText: text => Clipboard.SetText(text),
+            unselectLibrary: window.UnselectLibraryMods,
+            unselectCatalog: window.UnselectCatalogMods,
             branchSwitch: branchSwitch,
             processProbe: probe,
             processStarter: starter);
@@ -70,7 +73,19 @@ public partial class App : Application
     static PathsService ResolvePaths(JsonStore store)
     {
         var appData = new PathsService();
+        var configExisted = File.Exists(appData.ConfigPath);
         var config = store.LoadOrDefault(appData.ConfigPath, () => new AppConfig());
+
+        InstallDefaults? seed = null;
+        if (File.Exists(PathsService.InstallDefaultsPath))
+            seed = store.LoadOrDefault(PathsService.InstallDefaultsPath, () => new InstallDefaults());
+
+        if (InstallDefaultsMerger.TryMerge(config, seed, configExisted))
+        {
+            appData.EnsureCreated();
+            store.Save(appData.ConfigPath, config);
+        }
+
         if (!string.IsNullOrWhiteSpace(config.DataRoot))
             return new PathsService(config.DataRoot);
         return appData;

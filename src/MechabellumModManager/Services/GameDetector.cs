@@ -45,7 +45,7 @@ public sealed class GameDetector
             {
                 Kind = GameStatusKind.LoaderPresentAssembliesMissing,
                 GamePath = gamePath,
-                Message = "MelonLoader 框架已安装，但尚未生成 Il2Cpp 程序集。将尝试自动生成（首次可能需要一两分钟）。",
+                Message = "MelonLoader 框架已安装，但尚未生成 Il2Cpp 程序集（可立即生成，或稍后在应用方案时生成；首次约一两分钟）。",
                 MelonLoaderVersion = TryReadMelonVersion(gamePath)
             };
 

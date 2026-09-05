@@ -76,6 +76,23 @@ public class ModCatalogServiceTests
         ModCatalogService.PreviewUrl(new CatalogMod()).Should().BeNull();
     }
 
+    [Theory]
+    [InlineData("../secrets.dll")]
+    [InlineData("mods/../../other/x.dll")]
+    [InlineData("https://evil.example/x.dll")]
+    [InlineData("//evil.example/x.dll")]
+    public void GetRawUrl_rejects_traversal_and_absolute_urls(string path)
+    {
+        var act = () => ModCatalogService.GetRawUrl(path);
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void PreviewUrl_returns_null_for_traversal_paths()
+    {
+        ModCatalogService.PreviewUrl(new CatalogMod { Preview = "../x.png" }).Should().BeNull();
+    }
+
     [Fact]
     public void IsInLibraryByFileName_matches_case_insensitive_filename()
     {
@@ -108,16 +125,16 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
-    public void GetRawUrl_and_BuildFileUrl_tolerate_null_paths()
+    public void GetRawUrl_and_BuildFileUrl_reject_null_or_empty_paths()
     {
-        ModCatalogService.GetRawUrl(null!).Should().Be(
-            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/");
+        var getNull = () => ModCatalogService.GetRawUrl(null!);
+        getNull.Should().Throw<ArgumentException>();
+
         ModCatalogService.PreviewUrl(null).Should().BeNull();
 
         var svc = new ModCatalogService();
-        var url = svc.BuildFileUrl(new CatalogMod { File = null! });
-        url.ToString().Should().Be(
-            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/");
+        var buildEmpty = () => svc.BuildFileUrl(new CatalogMod { File = null! });
+        buildEmpty.Should().Throw<ArgumentException>();
     }
 
     [Theory]

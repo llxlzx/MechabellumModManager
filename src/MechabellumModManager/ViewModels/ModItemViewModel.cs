@@ -116,9 +116,7 @@ public sealed partial class ModItemViewModel : ObservableObject
 
     public void RefreshCatalogFieldsFromPackage()
     {
-        PreviewUrl = string.IsNullOrWhiteSpace(Package.Preview)
-            ? null
-            : ModCatalogService.GetRawUrl(Package.Preview);
+        PreviewUrl = ModCatalogService.TryGetRawUrl(Package.Preview);
         NotifyDetailChanged();
     }
 
