@@ -45,7 +45,19 @@ public sealed class MelonLoaderDualStoreSync
 
         var status = _detector.Detect(gamePath);
         if (status.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
-            return new MelonLoaderInstallResult { Success = true, Message = "MelonLoader 已就绪，无需补齐。" };
+        {
+            var zipReady = ResolveLocalZip(localZipPath);
+            var seedReady = SeedDependencies(gamePath, DeriveRedistDirFromMelonZip(zipReady));
+            // Re-apply after seed so offline can flip true when zip just landed.
+            var optimizeReady = _optimizer.ApplyRecommendedSettings(gamePath);
+            return new MelonLoaderInstallResult
+            {
+                Success = true,
+                Message = "MelonLoader 已就绪，无需补齐。"
+                          + FormatSeedMessage(seedReady)
+                          + (optimizeReady.Changed ? "\n" + optimizeReady.Message : "")
+            };
+        }
 
         var zip = ResolveLocalZip(localZipPath);
         if (!string.IsNullOrWhiteSpace(zip))
@@ -163,6 +175,8 @@ public sealed class MelonLoaderDualStoreSync
             if (status.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing))
                 return Fail($"已从压缩包写入，但检测仍为：{status.Message}");
 
+            // Seed matching UnityDependencies zip BEFORE offline optimize so CanForceOffline can become true.
+            var seed = SeedDependencies(gamePath, DeriveRedistDirFromMelonZip(zipPath));
             var optimize = _optimizer.ApplyRecommendedSettings(gamePath);
             var assembliesNote = status.Kind == GameStatusKind.LoaderPresentAssembliesMissing
                 ? "\n首次启动该服时 MelonLoader 会重新生成程序集，可能需要一两分钟。"
@@ -171,6 +185,7 @@ public sealed class MelonLoaderDualStoreSync
             {
                 Success = true,
                 Message = "已从本地 MelonLoader 压缩包安装到该服目录。"
+                          + FormatSeedMessage(seed)
                           + (optimize.Changed ? "\n" + optimize.Message : "")
                           + assembliesNote
             };
@@ -190,6 +205,34 @@ public sealed class MelonLoaderDualStoreSync
             {
                 // ignore
             }
+        }
+    }
+
+    /// <summary>
+    /// Seeds the exact <c>UnityDependencies_{version}.zip</c> into the game Melon AG folder.
+    /// </summary>
+    public UnityDependenciesSeedResult SeedDependencies(string gamePath, string? redistDir = null)
+        => new UnityDependenciesSeeder().Seed(gamePath, redistDir);
+
+    /// <summary>
+    /// When Melon zip lives at <c>.../melonloader/MelonLoader.x64.zip</c>, redist root is the parent of <c>melonloader</c>.
+    /// </summary>
+    public static string? DeriveRedistDirFromMelonZip(string? zipPath)
+    {
+        if (string.IsNullOrWhiteSpace(zipPath))
+            return null;
+        try
+        {
+            var dir = Path.GetDirectoryName(Path.GetFullPath(zipPath));
+            if (string.IsNullOrWhiteSpace(dir))
+                return null;
+            if (string.Equals(Path.GetFileName(dir), "melonloader", StringComparison.OrdinalIgnoreCase))
+                return Path.GetDirectoryName(dir);
+            return null;
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -217,11 +260,14 @@ public sealed class MelonLoaderDualStoreSync
             if (status.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing))
                 return Fail($"已从另一服复制 Loader，但检测仍为：{status.Message}");
 
+            var zip = ResolveLocalZip();
+            var seed = SeedDependencies(destGamePath, DeriveRedistDirFromMelonZip(zip));
             var optimize = _optimizer.ApplyRecommendedSettings(destGamePath);
             return new MelonLoaderInstallResult
             {
                 Success = true,
                 Message = "已从另一服复制 MelonLoader（未复制 Il2CppAssemblies / Latest.log）。"
+                          + FormatSeedMessage(seed)
                           + (optimize.Changed ? "\n" + optimize.Message : "")
                           + "\n将尝试自动生成程序集，或首次启动时由 MelonLoader 生成。"
             };
@@ -230,6 +276,15 @@ public sealed class MelonLoaderDualStoreSync
         {
             return Fail($"复制 MelonLoader 失败：{ex.Message}");
         }
+    }
+
+    static string FormatSeedMessage(UnityDependenciesSeedResult seed)
+    {
+        if (string.IsNullOrWhiteSpace(seed.Message))
+            return "";
+        if (seed.Success)
+            return "\n" + seed.Message;
+        return "\n警告：UnityDependencies 播种失败 — " + seed.Message;
     }
 
     static void CopyDirectoryFiltered(string sourceDir, string destDir)

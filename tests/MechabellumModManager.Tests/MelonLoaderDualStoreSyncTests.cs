@@ -1,8 +1,70 @@
-﻿using FluentAssertions;
+﻿using System.IO.Compression;
+using FluentAssertions;
 using MechabellumModManager.Services;
 
 public class MelonLoaderDualStoreSyncTests
 {
+    [Fact]
+    public void InstallFromZip_seeds_UnityDependencies_before_offline_optimize()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-seed-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "game");
+        var redist = Path.Combine(root, "redist");
+        var melonZipDir = Path.Combine(redist, "melonloader");
+        var unityDeps = Path.Combine(redist, "unity-deps");
+        try
+        {
+            SeedGame(game);
+            WriteFakeGlobalgamemanagers(game, "2022.3.62f3");
+            Directory.CreateDirectory(melonZipDir);
+            Directory.CreateDirectory(unityDeps);
+            File.WriteAllText(Path.Combine(unityDeps, "UnityDependencies_2022.3.62.zip"), "deps-payload");
+            var zipPath = CreateFakeMelonZip(melonZipDir);
+
+            var result = new MelonLoaderDualStoreSync().InstallFromZip(game, zipPath);
+
+            result.Success.Should().BeTrue(result.Message);
+            result.Message.Should().Contain("UnityDependencies");
+            File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
+                "UnityDependencies_2022.3.62.zip")).Should().BeTrue();
+            var cfg = File.ReadAllText(Path.Combine(game, "UserData", "Loader.cfg"));
+            cfg.Should().MatchRegex(@"(?im)^\s*force_offline_generation\s*=\s*true\s*$");
+            cfg.Should().MatchRegex(@"(?im)^\s*force_quit\s*=\s*true\s*$");
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
+    public void SeedDependencies_copies_matching_zip_when_redist_provided()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-seeddep-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "game");
+        var redist = Path.Combine(root, "redist");
+        try
+        {
+            Directory.CreateDirectory(game);
+            WriteFakeGlobalgamemanagers(game, "2022.3.62f3");
+            Directory.CreateDirectory(Path.Combine(redist, "unity-deps"));
+            File.WriteAllText(
+                Path.Combine(redist, "unity-deps", "UnityDependencies_2022.3.62.zip"),
+                "deps-payload");
+
+            var seed = new MelonLoaderDualStoreSync().SeedDependencies(game, redist);
+
+            seed.Success.Should().BeTrue(seed.Message);
+            seed.Copied.Should().BeTrue();
+            File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
+                "UnityDependencies_2022.3.62.zip")).Should().BeTrue();
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
     [Fact]
     public void EnsureOnStore_copies_framework_from_sibling_without_il2cpp_assemblies()
     {
@@ -123,6 +185,29 @@ public class MelonLoaderDualStoreSyncTests
         Directory.CreateDirectory(Path.Combine(dir, "MelonLoader", "net6"));
         File.WriteAllBytes(Path.Combine(dir, "MelonLoader", "net6", "MelonLoader.dll"), new byte[] { 0x4D, 0x5A });
         File.WriteAllBytes(Path.Combine(dir, "version.dll"), new byte[] { 0x4D, 0x5A });
+    }
+
+    static void WriteFakeGlobalgamemanagers(string game, string unityVersion)
+    {
+        var data = Path.Combine(game, "Mechabellum_Data");
+        Directory.CreateDirectory(data);
+        File.WriteAllBytes(
+            Path.Combine(data, "globalgamemanagers"),
+            System.Text.Encoding.ASCII.GetBytes("xxxx" + unityVersion + "yyyy"));
+    }
+
+    static string CreateFakeMelonZip(string directory)
+    {
+        Directory.CreateDirectory(directory);
+        var zipPath = Path.Combine(directory, "MelonLoader.x64.zip");
+        var stage = Path.Combine(directory, "stage-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(stage, "MelonLoader"));
+        File.WriteAllText(Path.Combine(stage, "MelonLoader", "placeholder.txt"), "ml");
+        File.WriteAllText(Path.Combine(stage, "version.dll"), "");
+        if (File.Exists(zipPath)) File.Delete(zipPath);
+        ZipFile.CreateFromDirectory(stage, zipPath);
+        try { Directory.Delete(stage, true); } catch { /* ignore */ }
+        return zipPath;
     }
 }
 
