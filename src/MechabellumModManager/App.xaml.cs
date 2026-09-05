@@ -76,7 +76,18 @@ public partial class App : Application
         base.OnStartup(e);
 
         var window = new MainWindow();
-        window.Closing += (_, e) => { if (_blockMainClose) e.Cancel = true; };
+        window.Closing += (_, e) =>
+        {
+            if (window.DataContext is MainViewModel vm)
+            {
+                if (vm.TryHandleWindowClosing(_blockMainClose || _busyDialog is not null, out var cancel) && cancel)
+                    e.Cancel = true;
+                else if (_blockMainClose)
+                    e.Cancel = true;
+            }
+            else if (_blockMainClose)
+                e.Cancel = true;
+        };
         window.DataContext = ComposeMainViewModel(window);
         MainWindow = window;
         window.Show();
@@ -136,6 +147,7 @@ public partial class App : Application
         var junctions = new JunctionService();
         var betaEditor = new SteamBetaKeyEditor(probe);
         var branchSwitch = new BranchSwitchService(paths, store, probe, junctions, betaEditor);
+        var criticalOp = new CriticalOpGuard(paths);
 
         return new MainViewModel(
             paths,
@@ -172,7 +184,8 @@ public partial class App : Application
             revealInExplorer: RevealInExplorer,
             beginBusy: (title, msg) => BeginBusy(window, title, msg),
             setBusyMessage: SetBusyMessage,
-            endBusy: EndBusy);
+            endBusy: EndBusy,
+            criticalOp: criticalOp);
     }
 
     static PathsService ResolvePaths(JsonStore store)
