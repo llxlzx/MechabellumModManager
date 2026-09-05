@@ -368,6 +368,8 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Der Steam-Testzweig des anderen Zweigs konnte nicht automatisch gesetzt werden. In Steam manuell wählen, dann laden.</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Doppelordner-Assistent pausiert; später fortsetzbar.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Offiziell/Test-Doppelordner entfernt.</value></data>
+  <data name="LogWizardAbortedReset" xml:space="preserve"><value>Doppelordner-Assistent abgebrochen und zurückgesetzt. Spielordner prüfen, dann Anwenden &amp; starten. MelonLoader zeigt eine schwarze Melon-Konsole (nicht PowerShell).</value></data>
+  <data name="LogMelonConsoleHint" xml:space="preserve"><value>Damit Mods laden, sollte MelonLoader eine schwarze Melon-Konsole öffnen (nicht PowerShell). Fehlt sie: version.dll / MelonLoader prüfen und MelonLoader\Latest.log senden.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Doppelordner entfernt. In Steam prüfen, ob der aktuelle Spielzweig stimmt.</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Profil auf den Spieleordner angewendet</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam-Testzweig konnte nicht automatisch ausgerichtet werden. Zweig zuerst manuell in Steam wählen; Steam bis dahin nicht starten.</value></data>
@@ -414,4 +416,14 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
     <value>Sofortige Assembly-Erzeugung übersprungen. Später über „Profil anwenden“ oder durch einmaligen Spielstart möglich.</value>
   </data>
+  <data name="ExportDiagnosticsButton" xml:space="preserve"><value>Diagnose exportieren</value></data>
+  <data name="ExportDiagnosticsTitle" xml:space="preserve"><value>Diagnose exportieren</value></data>
+  <data name="ExportDiagnosticsConsent" xml:space="preserve"><value>Das Paket enthaelt Manager-Logs, Konfiguration, Dual-Branch-Status und MelonLoader-Logs. Der Vollmodus kann lokale Pfade und Benutzernamen enthalten; alternativ starke Schwaerzung. E-Mail kann die ZIP nicht automatisch anhaengen — bitte manuell anhaengen.</value></data>
+  <data name="ExportDiagnosticsModeFull" xml:space="preserve"><value>Vollstaendig (kann Pfade/Namen enthalten)</value></data>
+  <data name="ExportDiagnosticsModeStrong" xml:space="preserve"><value>Starke Schwaerzung (Benutzerpfade ersetzen)</value></data>
+  <data name="ExportDiagnosticsContinue" xml:space="preserve"><value>Weiter</value></data>
+  <data name="ExportDiagnosticsSaved" xml:space="preserve"><value>Diagnose exportiert: {0}</value></data>
+  <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>Diagnose-Export fehlgeschlagen</value></data>
+  <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Webmail geoeffnet; Zwischenablage einfuegen und ZIP manuell anhaengen.</value></data>
+  <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail geoeffnet; bitte ZIP manuell anhaengen.</value></data>
 </root>

@@ -123,7 +123,10 @@ public partial class App : Application
             unselectCatalog: window.UnselectCatalogMods,
             branchSwitch: branchSwitch,
             processProbe: probe,
-            processStarter: starter);
+            processStarter: starter,
+            promptExportDiagnostics: () => PromptExportDiagnostics(window),
+            saveZipFile: suggestedName => SaveZipFile(window, suggestedName),
+            revealInExplorer: RevealInExplorer);
     }
 
     static PathsService ResolvePaths(JsonStore store)
@@ -247,5 +250,56 @@ public partial class App : Application
         if (dialog.ShowDialog() != true)
             return null;
         return dialog.Result;
+    }
+
+    static DiagnosticsRedactionMode? PromptExportDiagnostics(Window owner)
+    {
+        var dialog = new ExportDiagnosticsDialog { Owner = owner };
+        return dialog.ShowDialog() == true ? dialog.RedactionMode : null;
+    }
+
+    static string? SaveZipFile(Window owner, string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = LocalizationService.T("ExportDiagnosticsTitle"),
+            Filter = "Zip (*.zip)|*.zip",
+            FileName = suggestedFileName,
+            AddExtension = true,
+            DefaultExt = ".zip",
+            OverwritePrompt = true
+        };
+        return dialog.ShowDialog(owner) == true ? dialog.FileName : null;
+    }
+
+    static void RevealInExplorer(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = "/select,\"" + path + "\"",
+                    UseShellExecute = true
+                });
+                return;
+            }
+
+            var dir = Directory.Exists(path) ? path : Path.GetDirectoryName(path);
+            if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
+                return;
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = dir,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // Best-effort; export itself already succeeded.
+        }
     }
 }

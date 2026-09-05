@@ -164,6 +164,24 @@ public static class GitHubCommunityLinks
         return new MailComposePayload(subject, body, BuildMailto(subject, body));
     }
 
+    public static MailComposePayload BuildDiagnosticsCompose(
+        string? appVersion,
+        DiagnosticsRedactionMode redaction)
+    {
+        var modeLabel = redaction == DiagnosticsRedactionMode.Strong
+            ? "强脱敏 / Strong"
+            : "原样 / Full";
+        var subject = $"[诊断包/Diagnostics] MechabellumModManager {appVersion ?? ""}";
+        var body =
+            "【类型 / Type】诊断包 / Diagnostics\n" +
+            $"【管理器版本 / App】{appVersion ?? ""}\n" +
+            $"【脱敏模式 / Redaction】{modeLabel}\n" +
+            "【说明 / Note】请手动附加刚导出的 zip（系统无法自动附加附件）。\n" +
+            "Please attach the diagnostics zip manually (mailto/webmail cannot attach files).\n" +
+            "【问题简述 / Issue】\n";
+        return new MailComposePayload(subject, body, BuildMailto(subject, body));
+    }
+
     public static string BuildSubmitMailto(string? modName = null) =>
         BuildSubmitCompose(modName).MailtoUrl;
 
