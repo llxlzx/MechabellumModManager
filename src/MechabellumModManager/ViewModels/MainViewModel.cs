@@ -2721,9 +2721,6 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
-            return;
-
         var cfg = _branchSwitch.LoadConfig();
         cfg.SteamLinkPath = steamLink;
         cfg.OfficialStorePath = officialStore;
@@ -2746,14 +2743,27 @@ public sealed partial class MainViewModel : ObservableObject
             _suppressBranchSwitchSave = false;
         }
 
-        var archiveA = _branchSwitch.ArchiveCurrentAs(current);
-        if (!archiveA.Success)
+        var segmentAOk = false;
+        await RunBusyAsync(LocalizationService.T("BusyWaitingSteam"), async () =>
         {
-            AbortWizardAfterFailure(string.IsNullOrWhiteSpace(archiveA.Message)
-                ? LocalizationService.T("FailWizardArchiveCurrentFailed")
-                : archiveA.Message);
+            if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+                return;
+
+            BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
+            var archiveA = await Task.Run(() => _branchSwitch.ArchiveCurrentAs(current)).ConfigureAwait(true);
+            if (!archiveA.Success)
+            {
+                AbortWizardAfterFailure(string.IsNullOrWhiteSpace(archiveA.Message)
+                    ? LocalizationService.T("FailWizardArchiveCurrentFailed")
+                    : archiveA.Message);
+                return;
+            }
+
+            segmentAOk = true;
+        }).ConfigureAwait(true);
+
+        if (!segmentAOk)
             return;
-        }
 
         SetWizardStep(BranchWizardStep.WaitingDownloadB);
         await ContinueWizardAfterArchiveAAsync(current).ConfigureAwait(true);
@@ -2782,9 +2792,6 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
-            return;
-
         var silentOther = _branchSwitch.TrySilentSetBeta(other);
         if (!silentOther.Success)
         {
@@ -2803,28 +2810,75 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
-            return;
-
-        var archiveB = _branchSwitch.ArchiveDownloadedAs(other);
-        if (!archiveB.Success)
+        var linked = false;
+        await RunBusyAsync(LocalizationService.T("BusyWaitingSteam"), async () =>
         {
-            FailWizard(string.IsNullOrWhiteSpace(archiveB.Message) ? LocalizationService.T("FailWizardArchiveOtherFailed") : archiveB.Message);
-            return;
-        }
+            if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+                return;
 
-        await FinishWizardAfterStoresReadyAsync(current).ConfigureAwait(true);
+            BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
+            var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
+            if (!archiveB.Success)
+            {
+                FailWizard(string.IsNullOrWhiteSpace(archiveB.Message)
+                    ? LocalizationService.T("FailWizardArchiveOtherFailed")
+                    : archiveB.Message);
+                return;
+            }
+
+            BusyMessage(LocalizationService.T("BusyCreatingJunction"));
+            var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
+            if (!link.Success)
+            {
+                FailWizard(string.IsNullOrWhiteSpace(link.Message)
+                    ? LocalizationService.T("FailWizardCreateLinkFailed")
+                    : link.Message);
+                return;
+            }
+
+            ApplyLinkedWizardState(current);
+            linked = true;
+        }).ConfigureAwait(true);
+
+        if (!linked)
+            return;
+
+        var silent = _branchSwitch.TrySilentSetBeta(current);
+        await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
     }
 
     async Task FinishWizardAfterStoresReadyAsync(GameBranch current)
     {
-        var link = _branchSwitch.CreateLinkTo(current);
-        if (!link.Success)
-        {
-            FailWizard(string.IsNullOrWhiteSpace(link.Message) ? LocalizationService.T("FailWizardCreateLinkFailed") : link.Message);
+        if (!await TryCreateLinkAndApplyAsync(current).ConfigureAwait(true))
             return;
-        }
 
+        var silent = _branchSwitch.TrySilentSetBeta(current);
+        await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
+    }
+
+    async Task<bool> TryCreateLinkAndApplyAsync(GameBranch current)
+    {
+        var linked = false;
+        await RunBusyAsync(LocalizationService.T("BusyCreatingJunction"), async () =>
+        {
+            var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
+            if (!link.Success)
+            {
+                FailWizard(string.IsNullOrWhiteSpace(link.Message)
+                    ? LocalizationService.T("FailWizardCreateLinkFailed")
+                    : link.Message);
+                return;
+            }
+
+            ApplyLinkedWizardState(current);
+            linked = true;
+        }).ConfigureAwait(true);
+
+        return linked;
+    }
+
+    void ApplyLinkedWizardState(GameBranch current)
+    {
         _branchSwitch.MigrateLegacyManifestIfNeeded(current);
 
         _suppressBranchSwitchSave = true;
@@ -2847,11 +2901,7 @@ public sealed partial class MainViewModel : ObservableObject
         });
 
         RefreshStatus();
-
         EnsureMelonLoaderForDualStores(preferTarget: current);
-
-        var silent = _branchSwitch.TrySilentSetBeta(current);
-        await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
     }
 
     void EnsureMelonLoaderForDualStores(GameBranch? preferTarget = null)
