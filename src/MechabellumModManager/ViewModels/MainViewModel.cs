@@ -61,6 +61,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Action<string>? _setBusyMessage;
     readonly Action? _endBusy;
     readonly BranchSwitchService _branchSwitch;
+    readonly CriticalOpGuard _criticalOp;
     readonly IProcessProbe _processProbe;
     readonly IProcessStarter _processStarter;
     readonly Func<TimeSpan, Task> _delay;
@@ -129,7 +130,8 @@ public sealed partial class MainViewModel : ObservableObject
         Action<string>? revealInExplorer = null,
         Action<string, string>? beginBusy = null,
         Action<string>? setBusyMessage = null,
-        Action? endBusy = null)
+        Action? endBusy = null,
+        CriticalOpGuard? criticalOp = null)
     {
         _paths = paths;
         _store = store;
@@ -184,6 +186,7 @@ public sealed partial class MainViewModel : ObservableObject
             _processProbe,
             new JunctionService(),
             new SteamBetaKeyEditor(_processProbe));
+        _criticalOp = criticalOp ?? new CriticalOpGuard(paths);
         ApplyProfileCommand = new AsyncRelayCommand(async () => _ = await ApplyProfileAsync(), () => CanApplyProfile);
 
         Ui = new UiStrings();
@@ -325,6 +328,58 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool CanDeployOrLaunch =>
         IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
+
+    public bool IsCriticalOpRunning => _criticalOp.IsRunning;
+
+    public bool IsRecoveryGateActive { get; private set; }
+
+    public bool IsWizardWaitingSteam =>
+        BranchWizardStep is BranchWizardStep.WaitingDownloadB;
+
+    public CriticalOpGateLevel EvaluateCloseOrUpdateGate(bool busyDialogOpen) =>
+        CriticalOpGate.Classify(
+            _criticalOp.IsRunning,
+            busyDialogOpen,
+            IsBranchSwitchBusy,
+            IsRecoveryGateActive,
+            IsAwaitingSteamSettle,
+            IsWizardWaitingSteam);
+
+    public bool TryHandleWindowClosing(bool busyDialogOpen, out bool cancel)
+    {
+        var level = EvaluateCloseOrUpdateGate(busyDialogOpen);
+        if (level == CriticalOpGateLevel.HardBlock)
+        {
+            _notify(LocalizationService.T("CriticalOpBlockClose"));
+            cancel = true;
+            return true;
+        }
+
+        if (level == CriticalOpGateLevel.SoftConfirm)
+        {
+            var prompt = string.Format(
+                LocalizationService.T("CriticalOpSoftCloseConfirm"),
+                SoftGateStateLabel());
+            if (!_confirm(prompt))
+            {
+                cancel = true;
+                return true;
+            }
+
+            cancel = false;
+            return false;
+        }
+
+        cancel = false;
+        return false;
+    }
+
+    string SoftGateStateLabel() =>
+        IsWizardWaitingSteam
+            ? LocalizationService.T("TaskTitleBranchWizard")
+            : ActiveGameBranch == GameBranch.Official
+                ? LocalizationService.T("BranchStatusOfficial")
+                : LocalizationService.T("BranchStatusBeta");
 
     public bool CanApplyProfile =>
         CanDeployOrLaunch && IsDirty;
@@ -1772,6 +1827,23 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     async Task CheckForUpdatesAsync()
     {
+        var level = EvaluateCloseOrUpdateGate(busyDialogOpen: false);
+        if (level == CriticalOpGateLevel.HardBlock)
+        {
+            _notify(LocalizationService.T("CriticalOpBlockUpdate"));
+            return;
+        }
+
+        if (level == CriticalOpGateLevel.SoftConfirm)
+        {
+            var prompt = string.Format(
+                LocalizationService.T("CriticalOpSoftUpdateConfirm"),
+                SoftGateStateLabel());
+            if (!_confirm(prompt))
+                return;
+            AppendLog("User accepted soft update risk during settle/wait.");
+        }
+
         if (_checkingUpdates) return;
         _checkingUpdates = true;
         UpdateStatus = "正在检查更新…";
