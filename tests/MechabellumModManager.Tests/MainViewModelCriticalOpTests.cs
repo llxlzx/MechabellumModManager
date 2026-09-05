@@ -72,6 +72,28 @@ public class MainViewModelCriticalOpTests
     }
 
     [Fact]
+    public async Task RunWithCriticalOpAsync_action_throws_still_completes()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        var began = false;
+
+        var act = async () => await vm.RunWithCriticalOpAsync(
+            CriticalOpKind.BranchDiskWrite,
+            "SwitchToBeta",
+            () =>
+            {
+                began = fx.Guard.IsRunning && File.Exists(fx.Paths.CriticalOpMarkerPath);
+                throw new InvalidOperationException("boom");
+            });
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("boom");
+        began.Should().BeTrue();
+        fx.Guard.IsRunning.Should().BeFalse();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+    }
+
+    [Fact]
     public void TryHandleWindowClosing_hard_cancels_when_guard_running()
     {
         using var fx = Fixture.CreateReady();
