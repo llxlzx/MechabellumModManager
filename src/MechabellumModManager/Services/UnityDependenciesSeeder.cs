@@ -37,7 +37,7 @@ public sealed class UnityDependenciesSeeder
                 };
             }
 
-            if (!TryResolveTargetVersion(gamePath, redistDir, versionOverride, out var version, out var resolveMessage))
+            if (!TryResolveTargetVersion(gamePath, redistDir, versionOverride, out var version, out var usedFallback, out var resolveMessage))
             {
                 return new UnityDependenciesSeedResult
                 {
@@ -45,6 +45,8 @@ public sealed class UnityDependenciesSeeder
                     Message = resolveMessage
                 };
             }
+
+            var fallbackNote = usedFallback ? "（Unity 版本来自红配唯一 zip 回退）" : "";
 
             var destDir = Path.Combine(gamePath, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator");
             var destZip = Path.Combine(destDir, UnityVersionNormalizer.ExpectedZipFileName(version!));
@@ -63,7 +65,7 @@ public sealed class UnityDependenciesSeeder
                         Success = true,
                         Copied = true,
                         Version = version,
-                        Message = $"已更新 UnityDependencies_{version}.zip。"
+                        Message = $"已更新 UnityDependencies_{version}.zip。{fallbackNote}"
                     };
                 }
 
@@ -72,7 +74,7 @@ public sealed class UnityDependenciesSeeder
                     Success = true,
                     Copied = false,
                     Version = version,
-                    Message = $"UnityDependencies_{version}.zip 已存在，跳过复制。"
+                    Message = $"UnityDependencies_{version}.zip 已存在，跳过复制。{fallbackNote}"
                 };
             }
 
@@ -95,7 +97,7 @@ public sealed class UnityDependenciesSeeder
                 Success = true,
                 Copied = true,
                 Version = version,
-                Message = $"已复制 UnityDependencies_{version}.zip。"
+                Message = $"已复制 UnityDependencies_{version}.zip。{fallbackNote}"
             };
         }
         catch (Exception ex)
@@ -158,9 +160,11 @@ public sealed class UnityDependenciesSeeder
         string? redistDir,
         string? versionOverride,
         out string? version,
+        out bool usedFallback,
         out string message)
     {
         version = null;
+        usedFallback = false;
         message = "";
 
         if (!string.IsNullOrWhiteSpace(versionOverride))
@@ -184,7 +188,10 @@ public sealed class UnityDependenciesSeeder
 
         version = null;
         if (TryFallbackVersionFromSingleRedistZip(redistDir, out version))
+        {
+            usedFallback = true;
             return true;
+        }
 
         message = "无法解析游戏 Unity 版本，且红配中无唯一 UnityDependencies_*.zip 可回退。";
         return false;
@@ -215,13 +222,7 @@ public sealed class UnityDependenciesSeeder
         if (!m.Success)
             return false;
 
-        var raw = m.Groups[1].Value;
-        if (UnityVersionNormalizer.TryNormalize(raw, out version))
-            return true;
-
-        // Filename already major.minor.patch-style; accept as-is when normalizer rejects edge cases
-        version = raw;
-        return !string.IsNullOrWhiteSpace(version);
+        return UnityVersionNormalizer.TryNormalize(m.Groups[1].Value, out version);
     }
 
     static bool ShouldRefresh(string sourceZip, string destZip)
