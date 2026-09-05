@@ -15,25 +15,94 @@ function Test-MelonLoaderInstalled {
     return (Test-Path $melonDir) -and $proxy
 }
 
+function Test-HasIl2CppAssemblies {
+    param([string] $Root)
+    $assemblies = Join-Path $Root "MelonLoader\Il2CppAssemblies"
+    if (-not (Test-Path $assemblies)) { return $false }
+    try {
+        return @(Get-ChildItem -Path $assemblies -Filter "*.dll" -File -ErrorAction Stop).Count -gt 0
+    } catch {
+        return $false
+    }
+}
+
+function Resolve-UnityMajorMinorPatch {
+    param([string] $Root)
+
+    $candidates = @()
+    $preferred = Join-Path $Root "Mechabellum_Data\globalgamemanagers"
+    if (Test-Path $preferred) {
+        $candidates += $preferred
+    } else {
+        Get-ChildItem -Path $Root -Directory -Filter "*_Data" -ErrorAction SilentlyContinue | ForEach-Object {
+            $ggm = Join-Path $_.FullName "globalgamemanagers"
+            if (Test-Path $ggm) { $candidates += $ggm }
+        }
+    }
+
+    foreach ($file in $candidates) {
+        try {
+            $fs = [System.IO.File]::OpenRead($file)
+            try {
+                $max = [Math]::Min($fs.Length, 4 * 1024 * 1024)
+                $buf = New-Object byte[] $max
+                $read = $fs.Read($buf, 0, $buf.Length)
+                if ($read -le 0) { continue }
+                $text = [System.Text.Encoding]::UTF8.GetString($buf, 0, $read)
+                $m = [regex]::Match($text, '(20\d{2}\.\d+\.\d+[a-zA-Z]\d+)')
+                if (-not $m.Success) { continue }
+                $norm = [regex]::Match($m.Value, '^\s*(\d+)\.(\d+)\.(\d+)')
+                if (-not $norm.Success) { continue }
+                return "$($norm.Groups[1].Value).$($norm.Groups[2].Value).$($norm.Groups[3].Value)"
+            } finally {
+                $fs.Dispose()
+            }
+        } catch {
+            continue
+        }
+    }
+
+    return $null
+}
+
+function Test-CanForceOfflineGeneration {
+    param([string] $Root)
+
+    if (Test-HasIl2CppAssemblies -Root $Root) {
+        return $true
+    }
+
+    $version = Resolve-UnityMajorMinorPatch -Root $Root
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        return $false
+    }
+
+    $zip = Join-Path $Root "MelonLoader\Dependencies\Il2CppAssemblyGenerator\UnityDependencies_$version.zip"
+    return Test-Path -LiteralPath $zip
+}
+
 function Apply-LoaderCfgOptimizations {
     param([string] $Root)
     $userData = Join-Path $Root "UserData"
     New-Item -ItemType Directory -Force -Path $userData | Out-Null
     $cfg = Join-Path $userData "Loader.cfg"
+    $forceOffline = Test-CanForceOfflineGeneration -Root $Root
+    $offlineLiteral = if ($forceOffline) { "true" } else { "false" }
+
     if (-not (Test-Path $cfg)) {
         @"
 [loader]
 force_quit = true
 
 [unityengine]
-force_offline_generation = true
+force_offline_generation = $offlineLiteral
 "@ | Set-Content -Path $cfg -Encoding UTF8
         return
     }
 
     $text = Get-Content $cfg -Raw -Encoding UTF8
     $text = [regex]::Replace($text, '(?m)^(\s*)force_quit\s*=\s*false\s*$', '${1}force_quit = true')
-    $text = [regex]::Replace($text, '(?m)^(\s*)force_offline_generation\s*=\s*false\s*$', '${1}force_offline_generation = true')
+    $text = [regex]::Replace($text, '(?m)^(\s*)force_offline_generation\s*=\s*(true|false)\s*$', "`${1}force_offline_generation = $offlineLiteral")
     if ($text -notmatch '(?m)^\s*force_quit\s*=') {
         if ($text -match '(?m)^\[loader\]\s*$') {
             $text = [regex]::Replace($text, '(?m)^\[loader\]\s*$', "[loader]`r`nforce_quit = true")
@@ -43,9 +112,9 @@ force_offline_generation = true
     }
     if ($text -notmatch '(?m)^\s*force_offline_generation\s*=') {
         if ($text -match '(?m)^\[unityengine\]\s*$') {
-            $text = [regex]::Replace($text, '(?m)^\[unityengine\]\s*$', "[unityengine]`r`nforce_offline_generation = true")
+            $text = [regex]::Replace($text, '(?m)^\[unityengine\]\s*$', "[unityengine]`r`nforce_offline_generation = $offlineLiteral")
         } else {
-            $text = $text.TrimEnd() + "`r`n`r`n[unityengine]`r`nforce_offline_generation = true`r`n"
+            $text = $text.TrimEnd() + "`r`n`r`n[unityengine]`r`nforce_offline_generation = $offlineLiteral`r`n"
         }
     }
     Set-Content -Path $cfg -Value $text -Encoding UTF8
