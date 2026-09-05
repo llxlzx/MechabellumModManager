@@ -427,4 +427,9 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>Failed to export diagnostics</value></data>
   <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Web mail opened; paste the clipboard draft and attach the diagnostics zip manually.</value></data>
   <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail compose opened; please attach the diagnostics zip manually.</value></data>
+  <data name="BusyProgressTitle" xml:space="preserve"><value>Please wait</value></data>
+  <data name="BusyWaitingSteam" xml:space="preserve"><value>Requesting Steam / game to exit — do not close the manager…</value></data>
+  <data name="BusyMovingGameFolder" xml:space="preserve"><value>Moving the game folder — do not close the manager…</value></data>
+  <data name="BusyCreatingJunction" xml:space="preserve"><value>Creating directory junction — do not close the manager…</value></data>
+  <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Preparing Steam branch info — do not close the manager…</value></data>
 </root>

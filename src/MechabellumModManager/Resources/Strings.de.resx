@@ -426,4 +426,9 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>Diagnose-Export fehlgeschlagen</value></data>
   <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Webmail geoeffnet; Zwischenablage einfuegen und ZIP manuell anhaengen.</value></data>
   <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail geoeffnet; bitte ZIP manuell anhaengen.</value></data>
+  <data name="BusyProgressTitle" xml:space="preserve"><value>Bitte warten</value></data>
+  <data name="BusyWaitingSteam" xml:space="preserve"><value>Steam / Spiel wird zum Beenden aufgefordert — Manager nicht schliessen…</value></data>
+  <data name="BusyMovingGameFolder" xml:space="preserve"><value>Spielordner wird verschoben — Manager nicht schliessen…</value></data>
+  <data name="BusyCreatingJunction" xml:space="preserve"><value>Verzeichnisverknuepfung wird erstellt — Manager nicht schliessen…</value></data>
+  <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Steam-Branch-Informationen werden vorbereitet — Manager nicht schliessen…</value></data>
 </root>

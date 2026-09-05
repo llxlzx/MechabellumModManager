@@ -57,6 +57,9 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<DiagnosticsRedactionMode?>? _promptExportDiagnostics;
     readonly Func<string, string?>? _saveZipFile;
     readonly Action<string>? _revealInExplorer;
+    readonly Action<string, string>? _beginBusy;
+    readonly Action<string>? _setBusyMessage;
+    readonly Action? _endBusy;
     readonly BranchSwitchService _branchSwitch;
     readonly IProcessProbe _processProbe;
     readonly IProcessStarter _processStarter;
@@ -123,7 +126,10 @@ public sealed partial class MainViewModel : ObservableObject
         ManagerLogWriter? managerLog = null,
         Func<DiagnosticsRedactionMode?>? promptExportDiagnostics = null,
         Func<string, string?>? saveZipFile = null,
-        Action<string>? revealInExplorer = null)
+        Action<string>? revealInExplorer = null,
+        Action<string, string>? beginBusy = null,
+        Action<string>? setBusyMessage = null,
+        Action? endBusy = null)
     {
         _paths = paths;
         _store = store;
@@ -163,6 +169,9 @@ public sealed partial class MainViewModel : ObservableObject
         _promptExportDiagnostics = promptExportDiagnostics;
         _saveZipFile = saveZipFile;
         _revealInExplorer = revealInExplorer;
+        _beginBusy = beginBusy;
+        _setBusyMessage = setBusyMessage;
+        _endBusy = endBusy;
         _processProbe = processProbe ?? new ProcessProbe();
         _processStarter = processStarter ?? new ShellProcessStarter();
         _delay = delay ?? (span => Task.Delay(span));

@@ -426,4 +426,9 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>診断のエクスポートに失敗しました</value></data>
   <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Webメールを開きました。クリップボードを貼り付け、zip を手動添付してください。</value></data>
   <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail 作成画面を開きました。zip を手動添付してください。</value></data>
+  <data name="BusyProgressTitle" xml:space="preserve"><value>しばらくお待ちください</value></data>
+  <data name="BusyWaitingSteam" xml:space="preserve"><value>Steam / ゲームの終了を要求しています。マネージャーを閉じないでください…</value></data>
+  <data name="BusyMovingGameFolder" xml:space="preserve"><value>ゲームフォルダーを移動しています。マネージャーを閉じないでください…</value></data>
+  <data name="BusyCreatingJunction" xml:space="preserve"><value>ディレクトリジャンクションを作成しています。マネージャーを閉じないでください…</value></data>
+  <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Steam ブランチ情報を準備しています。マネージャーを閉じないでください…</value></data>
 </root>
