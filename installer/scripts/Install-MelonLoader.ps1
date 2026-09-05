@@ -90,7 +90,32 @@ function Test-CanForceOfflineGeneration {
     }
 
     $zip = Join-Path $Root "MelonLoader\Dependencies\Il2CppAssemblyGenerator\UnityDependencies_$version.zip"
-    return Test-Path -LiteralPath $zip
+    $cpp2Il = Join-Path $Root "MelonLoader\Dependencies\Il2CppAssemblyGenerator\Cpp2IL\Cpp2IL.exe"
+    return (Test-Path -LiteralPath $zip) -and (Test-Path -LiteralPath $cpp2Il)
+}
+
+function Seed-Cpp2Il {
+    param(
+        [string] $Root,
+        [string] $Redist
+    )
+
+    $cpp2IlDir = Join-Path $Redist "cpp2il"
+    $srcExe = Join-Path $cpp2IlDir "Cpp2IL.exe"
+    $srcPlugin = Join-Path $cpp2IlDir "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
+    if (-not (Test-Path -LiteralPath $srcExe) -or -not (Test-Path -LiteralPath $srcPlugin)) {
+        Write-Host "WARNING: Cpp2IL seed skipped — missing Cpp2IL.exe or plugin under $cpp2IlDir"
+        return $false
+    }
+
+    $destExe = Join-Path $Root "MelonLoader\Dependencies\Il2CppAssemblyGenerator\Cpp2IL\Cpp2IL.exe"
+    $destPlugin = Join-Path $Root "MelonLoader\Dependencies\Il2CppAssemblyGenerator\Cpp2IL\Plugins\Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
+    New-Item -ItemType Directory -Force -Path (Split-Path $destExe -Parent) | Out-Null
+    New-Item -ItemType Directory -Force -Path (Split-Path $destPlugin -Parent) | Out-Null
+    Copy-Item -LiteralPath $srcExe -Destination $destExe -Force
+    Copy-Item -LiteralPath $srcPlugin -Destination $destPlugin -Force
+    Write-Host "Seeded Cpp2IL.exe and StrippedCodeRegSupport plugin"
+    return $true
 }
 
 function Seed-UnityDependencies {
@@ -136,6 +161,7 @@ function Seed-UnityDependencies {
     $dest = Join-Path $destDir "UnityDependencies_$version.zip"
     Copy-Item -LiteralPath $src -Destination $dest -Force
     Write-Host "Seeded UnityDependencies_$version.zip into Il2CppAssemblyGenerator"
+    $null = Seed-Cpp2Il -Root $Root -Redist $Redist
     return $version
 }
 

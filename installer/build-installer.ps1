@@ -1,4 +1,4 @@
-# Build publish folder + Inno Setup installer
+﻿# Build publish folder + Inno Setup installer
 param(
     [switch] $SkipMelonRedistCheck
 )
@@ -24,10 +24,11 @@ Copy-Item "src\MechabellumModManager\Assets\*" $assetsOut -Force
   "installer\redist\dotnet8",
   "installer\redist\dotnet6",
   "installer\redist\melonloader",
-  "installer\redist\unity-deps"
+  "installer\redist\unity-deps",
+  "installer\redist\cpp2il"
 ) | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ | Out-Null }
 
-Write-Host "[2/3] Checking offline redist (MelonLoader, UnityDependencies, .NET 8)..."
+Write-Host "[2/3] Checking offline redist (MelonLoader, UnityDependencies, Cpp2IL, .NET 8)..."
 $melonZip = Join-Path (Get-Location) "installer\redist\melonloader\MelonLoader.x64.zip"
 $unityDepsDir = Join-Path (Get-Location) "installer\redist\unity-deps"
 $dotnet8Dir = Join-Path (Get-Location) "installer\redist\dotnet8"
@@ -68,6 +69,24 @@ Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
     }
     Write-Host "Found UnityDependencies redist: $($unityDepsZip.FullName) ($([math]::Round($unityDepsZip.Length / 1MB, 1)) MB)"
 
+    $cpp2IlDir = Join-Path (Get-Location) "installer\redist\cpp2il"
+    $cpp2IlExe = Join-Path $cpp2IlDir "Cpp2IL.exe"
+    $cpp2IlPlugin = Join-Path $cpp2IlDir "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
+    if (-not (Test-NonEmptyFile $cpp2IlExe) -or -not (Test-NonEmptyFile $cpp2IlPlugin)) {
+        Write-Error @"
+Missing Cpp2IL offline package (required for release builds).
+Place Melon 0.7.3 matching files here:
+  installer\redist\cpp2il\Cpp2IL.exe
+  installer\redist\cpp2il\Cpp2IL.Plugin.StrippedCodeRegSupport.dll
+From: https://github.com/SamboyCoding/Cpp2IL/releases/tag/2022.1.0-pre-release.21
+(Windows asset: Cpp2IL-*-Windows.exe → rename to Cpp2IL.exe)
+
+Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
+"@
+        exit 3
+    }
+    Write-Host ("Found Cpp2IL redist: {0} ({1} MB)" -f $cpp2IlExe, [math]::Round((Get-Item $cpp2IlExe).Length / 1MB, 1))
+
     $dotnet8Exe = Get-ChildItem -Path $dotnet8Dir -Filter "windowsdesktop-runtime-8.*-win-x64.exe" -File -ErrorAction SilentlyContinue |
         Where-Object { $_.Length -gt 0 } |
         Select-Object -First 1
@@ -84,9 +103,22 @@ Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
     }
     Write-Host "Found .NET 8 redist: $($dotnet8Exe.FullName) ($([math]::Round($dotnet8Exe.Length / 1MB, 1)) MB)"
 } else {
-    Write-Warning "SkipMelonRedistCheck set — Setup may lack MelonLoader, UnityDependencies, or .NET 8 redist. Do not use for release."
+    Write-Warning "SkipMelonRedistCheck set 鈥?Setup may lack MelonLoader, UnityDependencies, Cpp2IL, or .NET 8 redist. Do not use for release."
 }
 
+
+# UTF-8 BOM check for Inno script (prevents Chinese CustomMessages mojibake)
+$issPath = Join-Path (Get-Location) "installer\MechabellumModManager.iss"
+$issBytes = [IO.File]::ReadAllBytes($issPath)
+if ($issBytes.Length -lt 3 -or $issBytes[0] -ne 0xEF -or $issBytes[1] -ne 0xBB -or $issBytes[2] -ne 0xBF) {
+  Write-Error "installer\MechabellumModManager.iss must be UTF-8 with BOM (Inno Unicode). Re-save with BOM; do not use PowerShell Set-Content without -Encoding utf8BOM."
+  exit 4
+}
+$issText = [Text.Encoding]::UTF8.GetString($issBytes, 3, $issBytes.Length - 3)
+if ($issText -notmatch '钢铁指挥官 Mod 管理器') {
+  Write-Error "Chinese AppDisplayName missing/corrupt in MechabellumModManager.iss. Restore from git and bump version with UTF-8-preserving tools only."
+  exit 4
+}
 Write-Host "[3/3] Compiling Inno Setup..."
 $iscc = $null
 foreach ($c in @(

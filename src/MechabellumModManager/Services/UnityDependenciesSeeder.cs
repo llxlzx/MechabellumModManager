@@ -55,49 +55,65 @@ public sealed class UnityDependenciesSeeder
                 ? null
                 : FindMatchingZipInRedist(unityDepsDir, version!);
 
+            var messages = new List<string>();
+            var copied = false;
+
             if (File.Exists(destZip))
             {
                 if (sourceZip is not null && ShouldRefresh(sourceZip, destZip))
                 {
                     File.Copy(sourceZip, destZip, overwrite: true);
+                    copied = true;
+                    messages.Add($"已更新 UnityDependencies_{version}.zip。{fallbackNote}");
+                }
+                else
+                {
+                    messages.Add($"UnityDependencies_{version}.zip 已存在，跳过复制。{fallbackNote}");
+                }
+            }
+            else
+            {
+                if (sourceZip is null)
+                {
                     return new UnityDependenciesSeedResult
                     {
-                        Success = true,
-                        Copied = true,
+                        Success = false,
                         Version = version,
-                        Message = $"已更新 UnityDependencies_{version}.zip。{fallbackNote}"
+                        Message = unityDepsDir is null
+                            ? "未找到 unity-deps 红配目录。"
+                            : $"红配中缺少 UnityDependencies_{version}.zip。"
                     };
                 }
 
-                return new UnityDependenciesSeedResult
-                {
-                    Success = true,
-                    Copied = false,
-                    Version = version,
-                    Message = $"UnityDependencies_{version}.zip 已存在，跳过复制。{fallbackNote}"
-                };
+                Directory.CreateDirectory(destDir);
+                File.Copy(sourceZip, destZip, overwrite: false);
+                copied = true;
+                messages.Add($"已复制 UnityDependencies_{version}.zip。{fallbackNote}");
             }
 
-            if (sourceZip is null)
+            var cpp2Il = SeedCpp2Il(gamePath, redistDir);
+            if (!cpp2Il.Success)
             {
                 return new UnityDependenciesSeedResult
                 {
                     Success = false,
+                    Copied = copied,
                     Version = version,
-                    Message = unityDepsDir is null
-                        ? "未找到 unity-deps 红配目录。"
-                        : $"红配中缺少 UnityDependencies_{version}.zip。"
+                    Message = string.Join(" ", messages) + " " + cpp2Il.Message
                 };
             }
 
-            Directory.CreateDirectory(destDir);
-            File.Copy(sourceZip, destZip, overwrite: false);
+            if (cpp2Il.Copied)
+                copied = true;
+            if (!string.IsNullOrWhiteSpace(cpp2Il.Message))
+                messages.Add(cpp2Il.Message);
+
             return new UnityDependenciesSeedResult
             {
                 Success = true,
-                Copied = true,
+                Copied = copied,
                 Version = version,
-                Message = $"已复制 UnityDependencies_{version}.zip。{fallbackNote}"
+                Message = string.Join(" ", messages)
             };
         }
         catch (Exception ex)
@@ -108,6 +124,120 @@ public sealed class UnityDependenciesSeeder
                 Message = "播种 UnityDependencies 失败：" + ex.Message
             };
         }
+    }
+
+    /// <summary>
+    /// Melon 0.7.3 expects Cpp2IL.exe under Il2CppAssemblyGenerator\Cpp2IL\ when offline.
+    /// </summary>
+    public static UnityDependenciesSeedResult SeedCpp2Il(string gamePath, string? redistDir = null)
+    {
+        try
+        {
+            var cpp2IlRedist = ResolveCpp2IlRedistDir(redistDir);
+            if (cpp2IlRedist is null)
+            {
+                return new UnityDependenciesSeedResult
+                {
+                    Success = false,
+                    Message = "未找到 cpp2il 红配目录。"
+                };
+            }
+
+            var srcExe = Path.Combine(cpp2IlRedist, "Cpp2IL.exe");
+            var srcPlugin = Path.Combine(cpp2IlRedist, "Cpp2IL.Plugin.StrippedCodeRegSupport.dll");
+            if (!File.Exists(srcExe) || !File.Exists(srcPlugin))
+            {
+                return new UnityDependenciesSeedResult
+                {
+                    Success = false,
+                    Message = "红配中缺少 Cpp2IL.exe 或 Cpp2IL.Plugin.StrippedCodeRegSupport.dll。"
+                };
+            }
+
+            var destExe = Path.Combine(
+                gamePath,
+                "MelonLoader",
+                "Dependencies",
+                "Il2CppAssemblyGenerator",
+                "Cpp2IL",
+                "Cpp2IL.exe");
+            var destPlugin = Path.Combine(
+                gamePath,
+                "MelonLoader",
+                "Dependencies",
+                "Il2CppAssemblyGenerator",
+                "Cpp2IL",
+                "Plugins",
+                "Cpp2IL.Plugin.StrippedCodeRegSupport.dll");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destExe)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(destPlugin)!);
+
+            var copied = false;
+            if (!File.Exists(destExe) || ShouldRefresh(srcExe, destExe))
+            {
+                File.Copy(srcExe, destExe, overwrite: true);
+                copied = true;
+            }
+
+            if (!File.Exists(destPlugin) || ShouldRefresh(srcPlugin, destPlugin))
+            {
+                File.Copy(srcPlugin, destPlugin, overwrite: true);
+                copied = true;
+            }
+
+            return new UnityDependenciesSeedResult
+            {
+                Success = File.Exists(destExe) && File.Exists(destPlugin),
+                Copied = copied,
+                Message = copied ? "已播种 Cpp2IL.exe 与 StrippedCodeRegSupport 插件。" : "Cpp2IL 依赖已存在，跳过复制。"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new UnityDependenciesSeedResult
+            {
+                Success = false,
+                Message = "播种 Cpp2IL 失败：" + ex.Message
+            };
+        }
+    }
+
+    public static string? ResolveCpp2IlRedistDir(string? preferredRedistDir = null)
+    {
+        var candidates = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(preferredRedistDir))
+            candidates.Add(Path.Combine(preferredRedistDir, "cpp2il"));
+
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            candidates.Add(Path.Combine(baseDir, "installer-redist", "cpp2il"));
+            candidates.Add(Path.Combine(baseDir, "redist", "cpp2il"));
+        }
+        catch
+        {
+            // ignore
+        }
+
+        try
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            for (var i = 0; i < 8 && dir is not null; i++, dir = dir.Parent)
+            {
+                candidates.Add(Path.Combine(dir.FullName, "installer", "redist", "cpp2il"));
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+
+        return candidates.FirstOrDefault(d =>
+            Directory.Exists(d)
+            && File.Exists(Path.Combine(d, "Cpp2IL.exe"))
+            && File.Exists(Path.Combine(d, "Cpp2IL.Plugin.StrippedCodeRegSupport.dll")));
     }
 
     public static string? ResolveUnityDepsRedistDir(string? preferredRedistDir = null)

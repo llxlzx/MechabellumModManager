@@ -28,6 +28,24 @@ redist/unity-deps/UnityDependencies_2022.3.62.zip
 Download: https://github.com/LavaGang/Unity-Runtime-Libraries  
 Upstream files are named by patch only (e.g. `2022.3.62.zip`). **Rename** them to `UnityDependencies_2022.3.62.zip` before placing in `unity-deps/`. You may keep multiple versions for different game builds.
 
+
+## Cpp2IL — **required for release builds** (Melon 0.7.3 offline)
+
+Place Melon-matching files here:
+
+```
+redist/cpp2il/Cpp2IL.exe
+redist/cpp2il/Cpp2IL.Plugin.StrippedCodeRegSupport.dll
+```
+
+Download (tag `2022.1.0-pre-release.21` for MelonLoader 0.7.3):
+https://github.com/SamboyCoding/Cpp2IL/releases/tag/2022.1.0-pre-release.21
+
+- Windows binary asset `Cpp2IL-2022.1.0-pre-release.21-Windows.exe` → save as `Cpp2IL.exe`
+- Asset `Cpp2IL.Plugin.StrippedCodeRegSupport.dll` → keep that name
+
+Without these, seeding UnityDependencies alone forces offline mode and Melon fails with `Cpp2IL.exe does not Exist`.
+
 ## .NET Desktop Runtime
 
 **.NET 8 — required for release builds:**
@@ -51,6 +69,6 @@ If .NET 6 is missing, the installer downloads from Microsoft CDN when that compo
 
 `build-installer` **hard-fails** if any required file above is missing or empty.
 
-Local debug only: PowerShell `-SkipMelonRedistCheck` or `set SKIP_MELON_REDIST_CHECK=1` skips **all** release redist checks (MelonLoader, UnityDependencies, and .NET 8) — **do not** use for release.
+Local debug only: PowerShell `-SkipMelonRedistCheck` or `set SKIP_MELON_REDIST_CHECK=1` skips **all** release redist checks (MelonLoader, UnityDependencies, Cpp2IL, and .NET 8) — **do not** use for release.
 
 Do **not** commit large binaries to git (see `.gitignore`).

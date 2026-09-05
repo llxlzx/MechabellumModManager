@@ -19,6 +19,10 @@ public class MelonLoaderDualStoreSyncTests
             Directory.CreateDirectory(melonZipDir);
             Directory.CreateDirectory(unityDeps);
             File.WriteAllText(Path.Combine(unityDeps, "UnityDependencies_2022.3.62.zip"), "deps-payload");
+            var cpp2Il = Path.Combine(redist, "cpp2il");
+            Directory.CreateDirectory(cpp2Il);
+            File.WriteAllText(Path.Combine(cpp2Il, "Cpp2IL.exe"), "fake-cpp2il");
+            File.WriteAllText(Path.Combine(cpp2Il, "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"), "fake-plugin");
             var zipPath = CreateFakeMelonZip(melonZipDir);
 
             var result = new MelonLoaderDualStoreSync().InstallFromZip(game, zipPath);
@@ -27,6 +31,8 @@ public class MelonLoaderDualStoreSyncTests
             result.Message.Should().Contain("UnityDependencies");
             File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
                 "UnityDependencies_2022.3.62.zip")).Should().BeTrue();
+            File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
+                "Cpp2IL", "Cpp2IL.exe")).Should().BeTrue();
             var cfg = File.ReadAllText(Path.Combine(game, "UserData", "Loader.cfg"));
             cfg.Should().MatchRegex(@"(?im)^\s*force_offline_generation\s*=\s*true\s*$");
             cfg.Should().MatchRegex(@"(?im)^\s*force_quit\s*=\s*true\s*$");
@@ -51,6 +57,10 @@ public class MelonLoaderDualStoreSyncTests
             File.WriteAllText(
                 Path.Combine(redist, "unity-deps", "UnityDependencies_2022.3.62.zip"),
                 "deps-payload");
+            var cpp2IlDir = Path.Combine(redist, "cpp2il");
+            Directory.CreateDirectory(cpp2IlDir);
+            File.WriteAllText(Path.Combine(cpp2IlDir, "Cpp2IL.exe"), "fake-cpp2il");
+            File.WriteAllText(Path.Combine(cpp2IlDir, "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"), "fake-plugin");
 
             var seed = new MelonLoaderDualStoreSync().SeedDependencies(game, redist);
 

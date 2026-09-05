@@ -17,6 +17,8 @@ public class UnityDependenciesSeederTests
             result.Copied.Should().BeTrue();
             File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
                 "UnityDependencies_2022.3.62.zip")).Should().BeTrue();
+            File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
+                "Cpp2IL", "Cpp2IL.exe")).Should().BeTrue();
         }
         finally
         {
@@ -37,6 +39,7 @@ public class UnityDependenciesSeederTests
             // Same payload as redist zip so length matches → skip refresh/copy
             var payload = "fake-zip-2022.3.62";
             File.WriteAllText(Path.Combine(destDir, "UnityDependencies_2022.3.62.zip"), payload);
+            PlaceMatchingCpp2IlStubs(destDir);
 
             var result = new UnityDependenciesSeeder().Seed(game, redist);
             result.Success.Should().BeTrue();
@@ -173,6 +176,7 @@ public class UnityDependenciesSeederTests
         Directory.CreateDirectory(unityDeps);
         foreach (var version in versions)
             File.WriteAllText(Path.Combine(unityDeps, $"UnityDependencies_{version}.zip"), "fake-zip-" + version);
+        AddCpp2IlRedist(root);
         return root;
     }
 
@@ -182,6 +186,7 @@ public class UnityDependenciesSeederTests
         var unityDeps = Path.Combine(root, "unity-deps");
         Directory.CreateDirectory(unityDeps);
         File.WriteAllText(Path.Combine(unityDeps, fileName), "fake-zip");
+        AddCpp2IlRedist(root);
         return root;
     }
 
@@ -198,6 +203,7 @@ public class UnityDependenciesSeederTests
         var unityDeps = Path.Combine(root, "unity-deps");
         Directory.CreateDirectory(unityDeps);
         File.WriteAllText(Path.Combine(unityDeps, $"UnityDependencies_{version}.zip"), "fake-zip-" + version);
+        AddCpp2IlRedist(root);
         return root;
     }
 
@@ -206,6 +212,23 @@ public class UnityDependenciesSeederTests
         var root = Path.Combine(Path.GetTempPath(), "mmm-uds-redist-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(root, "unity-deps"));
         return root;
+    }
+
+    static void AddCpp2IlRedist(string redistRoot)
+    {
+        var cpp2Il = Path.Combine(redistRoot, "cpp2il");
+        Directory.CreateDirectory(cpp2Il);
+        File.WriteAllText(Path.Combine(cpp2Il, "Cpp2IL.exe"), "fake-cpp2il");
+        File.WriteAllText(Path.Combine(cpp2Il, "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"), "fake-plugin");
+    }
+
+    static void PlaceMatchingCpp2IlStubs(string agDir)
+    {
+        var exeDir = Path.Combine(agDir, "Cpp2IL");
+        var pluginDir = Path.Combine(exeDir, "Plugins");
+        Directory.CreateDirectory(pluginDir);
+        File.WriteAllText(Path.Combine(exeDir, "Cpp2IL.exe"), "fake-cpp2il");
+        File.WriteAllText(Path.Combine(pluginDir, "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"), "fake-plugin");
     }
 
     static void WriteFakeGlobalgamemanagers(string game, string unityVersion)
