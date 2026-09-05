@@ -2563,6 +2563,20 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    void BusyBegin(string message) =>
+        _beginBusy?.Invoke(LocalizationService.T("BusyProgressTitle"), message);
+
+    void BusyMessage(string message) => _setBusyMessage?.Invoke(message);
+
+    void BusyEnd() => _endBusy?.Invoke();
+
+    async Task RunBusyAsync(string initialMessage, Func<Task> work)
+    {
+        BusyBegin(initialMessage);
+        try { await work().ConfigureAwait(true); }
+        finally { BusyEnd(); }
+    }
+
     async Task SwitchToBranchAsync(GameBranch target)
     {
         if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
@@ -2581,44 +2595,52 @@ public sealed partial class MainViewModel : ObservableObject
         IsBranchSwitchBusy = true;
         try
         {
-            if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
-                return;
-
-            // Capture leaving branch depot metadata while ACF still matches that store.
-            var leaveBranch = ActiveGameBranch;
-            var snap = _branchSwitch.TrySnapshotSettledAcf(leaveBranch);
-            if (!snap.Success && !string.IsNullOrWhiteSpace(snap.Message))
-                AppendLog($"切服前未保存 {leaveBranch} ACF 快照：{snap.Message}");
-
-            var swap = _branchSwitch.TrySwapJunction(target);
-            if (!swap.Success)
+            BranchOperationResult? silentResult = null;
+            await RunBusyAsync(LocalizationService.T("BusyWaitingSteam"), async () =>
             {
-                AppendLog(string.IsNullOrWhiteSpace(swap.Message) ? LocalizationService.T("LogSwapFolderFailed") : swap.Message);
-                return;
-            }
+                if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+                    return;
 
-            _suppressBranchSwitchSave = true;
-            try
-            {
-                ActiveGameBranch = target;
-            }
-            finally
-            {
-                _suppressBranchSwitchSave = false;
-            }
+                BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
 
-            SelectBoundProfile(target);
+                var leaveBranch = ActiveGameBranch;
+                var snap = _branchSwitch.TrySnapshotSettledAcf(leaveBranch);
+                if (!snap.Success && !string.IsNullOrWhiteSpace(snap.Message))
+                    AppendLog($"切服前未保存 {leaveBranch} ACF 快照：{snap.Message}");
 
-            EnsureMelonLoaderForDualStores(preferTarget: target);
+                var swap = await Task.Run(() => _branchSwitch.TrySwapJunction(target)).ConfigureAwait(true);
+                if (!swap.Success)
+                {
+                    AppendLog(string.IsNullOrWhiteSpace(swap.Message) ? LocalizationService.T("LogSwapFolderFailed") : swap.Message);
+                    return;
+                }
 
-            var silent = _branchSwitch.TryPrepareSteamBranchMetadata(target);
-            if (silent.Success
-                && string.Equals(silent.Message, "restored-acf-snapshot", StringComparison.Ordinal))
-            {
-                AppendLog("已恢复目标服 Steam 清单快照（避免重复下载）");
-            }
+                BusyMessage(LocalizationService.T("BusySwitchingSteamBranch"));
 
-            await SettleAfterSilentBetaAsync(silent).ConfigureAwait(true);
+                _suppressBranchSwitchSave = true;
+                try
+                {
+                    ActiveGameBranch = target;
+                }
+                finally
+                {
+                    _suppressBranchSwitchSave = false;
+                }
+
+                SelectBoundProfile(target);
+
+                EnsureMelonLoaderForDualStores(preferTarget: target);
+
+                silentResult = _branchSwitch.TryPrepareSteamBranchMetadata(target);
+                if (silentResult.Success
+                    && string.Equals(silentResult.Message, "restored-acf-snapshot", StringComparison.Ordinal))
+                {
+                    AppendLog("已恢复目标服 Steam 清单快照（避免重复下载）");
+                }
+            }).ConfigureAwait(true);
+
+            if (silentResult is not null)
+                await SettleAfterSilentBetaAsync(silentResult).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
