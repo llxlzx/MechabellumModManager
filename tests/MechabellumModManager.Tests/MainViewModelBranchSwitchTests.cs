@@ -36,10 +36,9 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
-    public void Leftover_mid_wizard_with_feature_disabled_does_not_block_deploy()
+    public void Leftover_mid_wizard_with_feature_disabled_session_locks_deploy()
     {
-        // StartBranchWizard persists Enabled=false + WizardStep mid-flight while paused.
-        // That must not brick Apply / Apply-and-launch when dual-folder is not enabled.
+        // Paused wizard (Enabled=false + mid WizardStep) must session-lock Apply / Apply-and-launch.
         using var fx = Fixture.CreateReady();
         fx.WriteBranchConfig(new BranchSwitchConfig
         {
@@ -54,12 +53,13 @@ public class MainViewModelBranchSwitchTests
         vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
         vm.IsBranchWizardInProgress.Should().BeTrue();
         vm.IsBranchWizardBlocking.Should().BeFalse();
+        vm.IsSessionLocked.Should().BeTrue();
+        vm.HasCurrentTask.Should().BeTrue();
         vm.IsReady.Should().BeTrue();
-        vm.CanDeployOrLaunch.Should().BeTrue();
-        vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeFalse();
+        vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeFalse();
         vm.CanTeardownBranchSwitch.Should().BeTrue();
-        vm.DeployBlockedReason.Should().BeEmpty();
-        vm.BranchStatusText.Should().Contain("不影响部署");
+        vm.DeployBlockedReason.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -407,6 +407,122 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task RepairOrphanDualLayout_materializes_when_disabled_but_junction_remains()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.None,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = "",
+            BetaStorePath = "",
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        var notes = new List<string>();
+        var vm = fx.CreateVm(
+            confirmChoice: (msg, _) => !msg.Contains("删除另一", StringComparison.Ordinal),
+            notify: notes.Add);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.BranchSwitchEnabled.Should().BeFalse();
+        vm.ShowRepairOrphanDualLayout.Should().BeTrue();
+        vm.CanRepairOrphanDualLayout.Should().BeTrue();
+
+        await vm.RepairOrphanDualLayoutCommand.ExecuteAsync(null);
+
+        fx.Junctions.IsJunction(fx.SteamLink).Should().BeFalse();
+        File.Exists(Path.Combine(fx.SteamLink, "Mechabellum.exe")).Should().BeTrue();
+        Directory.Exists(fx.BetaStore).Should().BeTrue();
+        (vm.LogText + string.Join('\n', notes)).Should().Contain("单目录");
+    }
+
+    [Fact]
+    public void ShowRepairOrphanDualLayout_false_when_dual_folder_enabled()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+        var vm = fx.CreateVm();
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.BranchSwitchEnabled.Should().BeTrue();
+        vm.ShowRepairOrphanDualLayout.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task StartBranchWizard_rejects_when_gamePath_is_store_and_Mechabellum_missing()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.Junctions.DeleteJunction(fx.SteamLink);
+        if (Directory.Exists(fx.SteamLink))
+            Directory.Delete(fx.SteamLink, recursive: true);
+
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirm: _ => true, notify: notes.Add);
+        vm.GamePath = fx.OfficialStore;
+        vm.RefreshStatusCommand.Execute(null);
+
+        await vm.StartBranchWizardCommand.ExecuteAsync(null);
+
+        var text = vm.LogText + string.Join('\n', notes);
+        text.Should().Contain("双服仓");
+        text.Should().Contain("Mechabellum");
+        text.Should().NotContain("Store path already exists.");
+        fx.LoadBranchConfig().Enabled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task StartBranchWizard_normalizes_store_gamePath_to_Mechabellum_when_link_exists()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        // Dual folder already has link→official; also leave beta. Point GamePath at official store folder path.
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirm: _ => true, notify: notes.Add, delay: _ => Task.CompletedTask);
+        vm.GamePath = fx.OfficialStore;
+        vm.RefreshStatusCommand.Execute(null);
+
+        // Pre-create would-be dest conflict shouldn't apply when we normalize to Mechabellum link.
+        // Delete junction so link path is missing as a real dir — wait, CreateReadyDualFolder has junction.
+        // For normalize test: have BOTH Mechabellum (junction) and we're selecting official path string.
+        await vm.StartBranchWizardCommand.ExecuteAsync(null);
+
+        // Should not show raw English store-exists as first failure when path is official while link exists.
+        // Either progresses (needs steam exit) or Chinese leftover message for beta/official conflict.
+        var text = vm.LogText + string.Join('\n', notes);
+        text.Should().Contain("归一");
+        text.Should().NotContain("Store path already exists.");
+        Path.GetFullPath(vm.GamePath).Should().Be(Path.GetFullPath(fx.SteamLink));
+    }
+
+    [Fact]
+    public void MapArchiveFailureMessage_maps_english_store_exists()
+    {
+        var mapped = MainViewModel.MapArchiveFailureMessage(
+            "Store path already exists.",
+            @"D:\steam\steamapps\common\Mechabellum_beta");
+        mapped.Should().Contain("Mechabellum_beta");
+        mapped.Should().NotContain("Store path already exists");
+        mapped.Should().Contain("另一服");
+    }
+
+    [Fact]
     public async Task SwitchToBeta_when_aligned_but_game_missing_does_not_claim_already_on_branch()
     {
         using var fx = Fixture.CreateReadyDualFolder();
@@ -439,7 +555,6 @@ public class MainViewModelBranchSwitchTests
 
         var notes = new List<string>();
         var vm = fx.CreateVm(confirm: _ => true, notify: notes.Add);
-        // GamePath diverges from healthy steam link — Detect(GamePath) is GameMissing while IsAlignedWith(store) is true.
         vm.GamePath = Path.Combine(Path.GetTempPath(), "mmm-missing-game-" + Guid.NewGuid().ToString("N"));
         vm.RefreshStatusCommand.Execute(null);
 
@@ -514,25 +629,52 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
-    public void Restored_AwaitingSteamSettle_sets_DegradeToManualBeta()
+    public void Restored_AwaitingSteamSettle_does_not_force_DegradeToManualBeta()
     {
         using var fx = Fixture.CreateReady();
         fx.WriteBranchConfig(new BranchSwitchConfig
         {
             Enabled = true,
             WizardStep = BranchWizardStep.AwaitingSteamSettle,
-            ActiveBranch = GameBranch.Beta,
+            ActiveBranch = GameBranch.Official,
             OfficialProfileId = "default",
             BetaProfileId = "default",
-            BetaBranchName = "publicbeta"
+            BetaBranchName = "public_test"
         });
 
         var vm = fx.CreateVm();
 
         vm.IsAwaitingSteamSettle.Should().BeTrue();
-        vm.DegradeToManualBeta.Should().BeTrue();
+        vm.ActiveGameBranch.Should().Be(GameBranch.Official);
+        vm.DegradeToManualBeta.Should().BeFalse();
         vm.CanDeployOrLaunch.Should().BeFalse();
+        vm.SettleConfirmButtonText.Should().NotContain("测试服");
+        vm.BranchStatusText.Should().Contain("正式");
     }
+
+    [Fact]
+    public void BrowseGamePath_allowed_during_settle_when_game_not_ready()
+    {
+        using var fx = Fixture.CreateReady();
+        string? browsed = null;
+        var vm = fx.CreateVm(browseFolder: () =>
+        {
+            browsed = fx.GameRoot;
+            return fx.GameRoot;
+        });
+        vm.IsAwaitingSteamSettle = true;
+        vm.IsReady.Should().BeTrue();
+        vm.GamePath = @"D:\missing\Mechabellum";
+        vm.RefreshStatusCommand.Execute(null);
+        vm.IsReady.Should().BeFalse();
+        vm.IsSessionLocked.Should().BeTrue();
+
+        vm.BrowseGamePathCommand.Execute(null);
+
+        browsed.Should().Be(fx.GameRoot);
+        vm.GamePath.Should().Be(fx.GameRoot);
+    }
+
 
     [Fact]
     public void Busy_disables_CanDeployOrLaunch()
@@ -665,6 +807,40 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task Teardown_success_clears_recovery_gate()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+        var guard = new CriticalOpGuard(fx.Paths);
+        Directory.CreateDirectory(fx.Paths.DataRoot);
+        File.WriteAllText(
+            fx.Paths.CriticalOpMarkerPath,
+            """{"kind":"BranchDiskWrite","startedUtc":"2026-09-05T12:00:00+00:00","detail":"stale","pid":1}""");
+
+        var vm = fx.CreateVm(
+            confirm: msg => !msg.Contains("删除另一", StringComparison.Ordinal),
+            criticalOp: guard);
+        vm.GamePath = fx.SteamLink;
+        vm.IsRecoveryGateActive = true;
+
+        await vm.TeardownBranchSwitchCommand.ExecuteAsync(null);
+
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Resume_from_Linked_with_existing_junction_enables()
     {
         using var fx = Fixture.CreateReadyDualFolder();
@@ -731,6 +907,38 @@ public class MainViewModelBranchSwitchTests
         deleteDefault.Should().Be(MessageBoxResult.No);
         Directory.Exists(fx.BetaStore).Should().BeTrue();
         vm.BranchSwitchEnabled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Teardown_warns_about_leftover_store_when_not_deleted()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirmChoice: (msg, defaultResult) =>
+        {
+            if (msg.Contains("删除另一", StringComparison.Ordinal))
+                return false;
+            return true;
+        }, notify: notes.Add);
+        vm.GamePath = fx.SteamLink;
+
+        await vm.TeardownBranchSwitchCommand.ExecuteAsync(null);
+
+        Directory.Exists(fx.BetaStore).Should().BeTrue();
+        (vm.LogText + string.Join('\n', notes)).Should().Contain("残留");
     }
 
     [Fact]
@@ -833,7 +1041,59 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
-    public async Task ConfirmManualBeta_refuses_deploy_while_Steam_running_unless_risk_confirmed()
+    public async Task ConfirmManualBeta_succeeds_while_Steam_running_when_ready()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        var steamapps = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", ".."));
+        void WriteSettledAcf()
+        {
+            File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
+                """
+                "AppState"
+                {
+                	"appid"		"669330"
+                	"StateFlags"		"4"
+                	"buildid"		"100"
+                	"TargetBuildID"		"100"
+                	"BytesToDownload"		"0"
+                	"BytesDownloaded"		"0"
+                	"UserConfig"
+                	{
+                		"language"		"english"
+                	}
+                }
+                """);
+        }
+
+        WriteSettledAcf();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.AwaitingSteamSettle,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var vm = fx.CreateVm(confirm: _ => true, delay: _ => Task.CompletedTask);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+        vm.IsAwaitingSteamSettle = true;
+        vm.BranchWizardStep = BranchWizardStep.AwaitingSteamSettle;
+        fx.Probe.SteamRunning = true;
+        WriteSettledAcf();
+
+        await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
+
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ConfirmManualBeta_refuses_deploy_while_game_running_unless_risk_confirmed()
     {
         using var fx = Fixture.CreateReadyDualFolder();
         fx.WriteBranchConfig(new BranchSwitchConfig
@@ -849,24 +1109,72 @@ public class MainViewModelBranchSwitchTests
             BetaBranchName = ""
         });
 
-        var notes = new List<string>();
         var vm = fx.CreateVm(
-            confirm: msg => !msg.Contains("仍要部署", StringComparison.Ordinal),
-            delay: _ => Task.CompletedTask,
-            notify: notes.Add);
+            confirm: msg => !(msg.Contains("游戏仍在运行", StringComparison.Ordinal)
+                              || msg.Contains("仍要部署", StringComparison.Ordinal)),
+            delay: _ => Task.CompletedTask);
         vm.GamePath = fx.SteamLink;
         vm.RefreshStatusCommand.Execute(null);
         vm.Mods[0].IsEnabled = true;
 
         await vm.SwitchToBetaCommand.ExecuteAsync(null);
         vm.IsAwaitingSteamSettle.Should().BeTrue();
-        fx.Probe.SteamRunning = true;
+        fx.Probe.GameRunning = true;
 
         await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
 
         vm.IsAwaitingSteamSettle.Should().BeTrue();
         File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
-        notes.Should().Contain(n => n.Contains("Steam", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ConfirmManualBeta_succeeds_while_Steam_running_after_switch()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        var steamapps = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", ".."));
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var vm = fx.CreateVm(confirm: _ => true, delay: _ => Task.CompletedTask);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+        vm.Mods[0].IsEnabled = true;
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+
+        File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"StateFlags"		"4"
+            	"buildid"		"100"
+            	"TargetBuildID"		"100"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            	"UserConfig"
+            	{
+            		"language"		"english"
+            		"BetaKey"		"public_test"
+            	}
+            }
+            """);
+        fx.Probe.SteamRunning = true;
+
+        await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
+
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
     }
 
     [Fact]
@@ -894,7 +1202,7 @@ public class MainViewModelBranchSwitchTests
 
         vm.DegradeToManualBeta.Should().BeFalse();
         vm.SettleConfirmButtonText.Should().NotContain("已手选");
-        vm.SettleConfirmButtonText.Should().Be(vm.Ui.BranchSwitchConfirmSettle);
+        vm.SettleConfirmButtonText.Should().Be(LocalizationService.T("BranchSwitchConfirmSettleBeta"));
     }
 
     [Fact]
@@ -1107,7 +1415,9 @@ public class MainViewModelBranchSwitchTests
             Func<string, MessageBoxResult, bool>? confirmChoice = null,
             Action<string, string>? beginBusy = null,
             Action<string>? setBusyMessage = null,
-            Action? endBusy = null)
+            Action? endBusy = null,
+            Func<string?>? browseFolder = null,
+            CriticalOpGuard? criticalOp = null)
         {
             var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
             return new MainViewModel(
@@ -1122,6 +1432,7 @@ public class MainViewModelBranchSwitchTests
                 confirmHighRisk: _ => true,
                 confirm: confirm ?? (_ => false),
                 notify: notify,
+                browseFolder: browseFolder,
                 promptText: promptText,
                 branchSwitch: _branchSwitch,
                 processProbe: Probe,
@@ -1133,7 +1444,8 @@ public class MainViewModelBranchSwitchTests
                 confirmChoice: confirmChoice,
                 beginBusy: beginBusy,
                 setBusyMessage: setBusyMessage,
-                endBusy: endBusy);
+                endBusy: endBusy,
+                criticalOp: criticalOp);
         }
 
         public void WriteBranchConfig(BranchSwitchConfig cfg) =>

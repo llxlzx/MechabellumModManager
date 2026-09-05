@@ -177,6 +177,51 @@ public class MainViewModelCriticalOpTests
     }
 
     [Fact]
+    public void ApplyRecoveryContinue_Enabled_Ready_clears_gate_when_repair_not_offered()
+    {
+        using var fx = Fixture.CreateReady();
+        WriteInterruptedMarker(fx.Paths);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            ActiveBranch = GameBranch.Official,
+            SteamLinkPath = fx.GameRoot,
+            OfficialStorePath = fx.GameRoot,
+            BetaStorePath = fx.GameRoot
+        });
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.IsRecoveryGateActive = true;
+        vm.ShowRepairOrphanDualLayout.Should().BeFalse();
+
+        vm.ApplyRecoveryContinue();
+
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+    }
+
+    [Fact]
+    public void CanOfferAssemblyGeneratePrompt_false_when_recovery_gate_active()
+    {
+        using var fx = Fixture.CreateMissingAssemblies();
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.GameStatus?.Kind.Should().Be(GameStatusKind.LoaderPresentAssembliesMissing);
+        vm.IsRecoveryGateActive = true;
+        vm.CanOfferAssemblyGeneratePrompt.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplyProfile_sync_does_not_generate_when_assemblies_missing()
+    {
+        using var fx = Fixture.CreateMissingAssemblies();
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.GameStatus?.Kind.Should().Be(GameStatusKind.LoaderPresentAssembliesMissing);
+
+        vm.ApplyProfile().Should().BeFalse();
+        vm.GameStatus?.Kind.Should().Be(GameStatusKind.LoaderPresentAssembliesMissing);
+    }
+
+    [Fact]
     public void ApplyRecoveryContinue_clears_gate_routes_settle_ui()
     {
         using var fx = Fixture.CreateReady();
@@ -372,6 +417,22 @@ public class MainViewModelCriticalOpTests
             return fx;
         }
 
+        public static Fixture CreateMissingAssemblies()
+        {
+            var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-critop-vm-" + Guid.NewGuid().ToString("N"));
+            var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-critop-game-" + Guid.NewGuid().ToString("N"));
+            CreateMissingAssembliesGame(gameRoot);
+            var fx = new Fixture(dataRoot, gameRoot);
+            SeedLibrary(fx);
+            fx._store.Save(fx.Paths.ConfigPath, new AppConfig
+            {
+                GamePath = gameRoot,
+                ActiveProfileId = "default",
+                LaunchMode = LaunchMode.ExeOnly
+            });
+            return fx;
+        }
+
         public MainViewModel CreateVm(
             Func<string, bool>? confirm = null,
             Action<string>? notify = null,
@@ -436,7 +497,16 @@ public class MainViewModelCriticalOpTests
             File.WriteAllText(Path.Combine(root, "version.dll"), "");
         }
 
-        static void TryDelete(string path)
+        static void CreateMissingAssembliesGame(string root)
+        {
+            Directory.CreateDirectory(root);
+            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
+            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
+            Directory.CreateDirectory(Path.Combine(root, "MelonLoader"));
+            File.WriteAllText(Path.Combine(root, "version.dll"), "");
+        }
+
+                static void TryDelete(string path)
         {
             try
             {

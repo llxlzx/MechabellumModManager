@@ -94,18 +94,6 @@ public sealed class MelonLoaderAssemblyGenerator
         }
     }
 
-    public MelonAssemblyGenerateResult EnsureAssemblies(
-        string gamePath,
-        TimeSpan? timeout = null,
-        TimeSpan? pollInterval = null,
-        CancellationToken cancellationToken = default,
-        Action<string>? progress = null)
-    {
-        return EnsureAssembliesAsync(gamePath, timeout, pollInterval, cancellationToken, progress)
-            .GetAwaiter()
-            .GetResult();
-    }
-
     public async Task<MelonAssemblyGenerateResult> EnsureAssembliesAsync(
         string gamePath,
         TimeSpan? timeout = null,
