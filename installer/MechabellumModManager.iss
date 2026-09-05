@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "1.1.1"
+#define MyAppVersion "1.1.2"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -32,12 +32,13 @@ SetupLogging=yes
 ShowLanguageDialog=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
 InfoBeforeFile=
-CloseApplications=force
+CloseApplications=yes
 CloseApplicationsFilter={#MyAppExeName}
 
 [Messages]
 english.SetupAppRunningError=Setup has detected that %1 is currently running.%n%nPlease close all instances of it now, then click OK to continue, or Cancel to exit.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.
-english.ApplicationsFound2=The following applications are using files that need to be updated by Setup. It is recommended that you allow Setup to automatically close these applications. After Setup has finished, Setup will attempt to restart the applications.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.
+english.ApplicationsFound=The following applications are using files that need to be updated by Setup.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.%n%nIf the manager is not busy, you may allow Setup to automatically close these applications.
+english.ApplicationsFound2=The following applications are using files that need to be updated by Setup.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.%n%nIf the manager is not busy, you may allow Setup to automatically close these applications; after installation, Setup will attempt to restart them. Alternatively, close the applications yourself and click Retry.
 english.ErrorCloseApplications=Setup was unable to automatically close all applications. It is recommended that you close all applications using files that need to be updated by Setup before continuing.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.
 
 [Languages]
@@ -54,7 +55,7 @@ chinesesimplified.TaskDesktopGroup=附加选项:
 chinesesimplified.CompMain=管理器本体（必选）
 chinesesimplified.CompDotNet8=.NET 8 Desktop Runtime x64（管理器需要；已安装则跳过；下载约 55-60 MB，安装后约 150-200 MB）
 chinesesimplified.CompDotNet6=.NET 6 Desktop Runtime x64（MelonLoader 需要；已安装则跳过；下载约 50-55 MB，安装后约 140-180 MB）
-chinesesimplified.CompMelon=MelonLoader（安装包已内嵌离线包；已安装则跳过；一般无需访问 GitHub；默认建议安装到游戏目录）
+chinesesimplified.CompMelon=MelonLoader（安装包已内嵌离线包；低于 0.7.3 会升级；一般无需访问 GitHub；默认建议安装到游戏目录）
 chinesesimplified.RunNow=立即启动 %1
 chinesesimplified.RiskWelcome=请仔细阅读下一页用户协议；同意后方可继续安装。
 chinesesimplified.GamePathTitle=选择游戏目录
@@ -66,6 +67,7 @@ chinesesimplified.StatusWriteConfig=正在写入管理器配置（保留双服�
 chinesesimplified.StatusSeedUserConfig=正在写入当前用户配置（无界面，请稍候）…
 chinesesimplified.ErrWriteConfig=写入管理器配置失败。可稍后在管理器「设置」中手动指定游戏路径。
 chinesesimplified.StatusRestoreOptional=可选恢复脚本未运行（不影响安装；配置已用内置方式写入）。
+chinesesimplified.StatusSanitizeAcf=正在清理无效的 Steam 分支快照（不修改 Steam 本体）…
 chinesesimplified.StatusDotNet8=正在静默安装 .NET 8 Desktop Runtime（下载约 55-60 MB；进度条可能短暂不动，请稍候；已安装则跳过）…
 chinesesimplified.ErrDotNet8=.NET 8 Desktop Runtime 安装未成功（exit %1）。请稍后从 https://dotnet.microsoft.com/download/dotnet/8.0 手动安装。
 chinesesimplified.StatusNoPsDotNet8=无法启动 PowerShell，已跳过 .NET 8 自动安装（可稍后手动安装）。
@@ -76,11 +78,11 @@ chinesesimplified.StatusNoPsDotNet6=无法启动 PowerShell，已跳过 .NET 6 �
 chinesesimplified.StatusDotNet6Done=.NET 6 Desktop Runtime 已完成（或已跳过）。
 chinesesimplified.StatusSteamBusyMelon=检测到 Steam 正在下载本游戏，已跳过写入 MelonLoader（避免打断下载）。请等下载完成后再运行安装包并勾选 MelonLoader，或自行安装。
 chinesesimplified.WarnSteamBusyMelon=检测到 Steam 正在下载本游戏，安装程序已跳过 MelonLoader。%n%n请等下载完成后再运行本安装包（勾选 MelonLoader），否则管理器会提示「缺少 Loader」，且「应用并启动」不可用。
-chinesesimplified.StatusMelon=正在检测/安装 MelonLoader（已安装则跳过；优先内嵌离线包）…
+chinesesimplified.StatusMelon=正在检测/安装 MelonLoader（≥0.7.3 则跳过；优先内嵌离线包）…
 chinesesimplified.StatusNoPsMelon=无法启动 PowerShell；将改用管理器内嵌方式安装 MelonLoader。
 chinesesimplified.ErrMelon=MelonLoader 安装未成功（exit %1）。%n%nexit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整；exit 5：游戏正在运行。%n%n也可打开管理器点击「安装 MelonLoader」，或手动安装：%nhttps://github.com/LavaGang/MelonLoader/releases%n（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）
 chinesesimplified.StatusMelonDone=MelonLoader 已完成（或已跳过）。
-chinesesimplified.StatusMelonAlready=检测到 MelonLoader 已就绪，跳过安装。
+chinesesimplified.StatusMelonAlready=检测到 MelonLoader ≥0.7.3 已就绪，跳过安装。
 chinesesimplified.ErrMelonVerify=MelonLoader 未能正确写入游戏目录。%n%n请关闭游戏后：打开管理器点「安装 MelonLoader」，或重新运行本安装包并勾选 MelonLoader。%n若杀软拦截 version.dll，请允许后再试。
 chinesesimplified.WarnNoPsMelon=无法启动 PowerShell，已改用管理器内嵌方式安装 MelonLoader；若仍失败请打开管理器点「安装 MelonLoader」。
 chinesesimplified.StatusPostDone=后置步骤已处理，即将进入完成页…
@@ -91,7 +93,7 @@ english.TaskDesktopGroup=Additional tasks:
 english.CompMain=Manager app (required)
 english.CompDotNet8=.NET 8 Desktop Runtime x64 (required by the manager; skipped if already installed; ~55-60 MB download, ~150-200 MB installed)
 english.CompDotNet6=.NET 6 Desktop Runtime x64 (required by MelonLoader; skipped if already installed; ~50-55 MB download, ~140-180 MB installed)
-english.CompMelon=MelonLoader (offline package embedded; skipped if already installed; usually no GitHub access needed; recommended for the game folder)
+english.CompMelon=MelonLoader (offline package embedded; upgrades if below 0.7.3; usually no GitHub access needed; recommended for the game folder)
 english.RunNow=Launch %1 now
 english.RiskWelcome=Please read the license agreement on the next page carefully. You must agree before continuing.
 english.GamePathTitle=Select game folder
@@ -103,6 +105,7 @@ english.StatusWriteConfig=Writing manager config (keep dual-folder records; do n
 english.StatusSeedUserConfig=Writing per-user config (no UI; please wait)…
 english.ErrWriteConfig=Failed to write manager config. You can set the game path later in Settings.
 english.StatusRestoreOptional=Optional restore script did not run (install continues; config was written natively).
+english.StatusSanitizeAcf=Removing invalid Steam branch snapshots (Steam itself is not modified)…
 english.StatusDotNet8=Quietly installing .NET 8 Desktop Runtime (~55-60 MB download; progress may pause briefly; skipped if present)…
 english.ErrDotNet8=.NET 8 Desktop Runtime install failed (exit %1). Install manually from https://dotnet.microsoft.com/download/dotnet/8.0
 english.StatusNoPsDotNet8=Could not start PowerShell; skipped automatic .NET 8 install (you can install it later).
@@ -113,12 +116,12 @@ english.StatusNoPsDotNet6=Could not start PowerShell; skipped automatic .NET 6 i
 english.StatusDotNet6Done=.NET 6 Desktop Runtime finished (or skipped).
 english.StatusSteamBusyMelon=Steam is downloading this game; MelonLoader write was skipped. After the download finishes, re-run Setup with MelonLoader checked, or install MelonLoader manually.
 english.WarnSteamBusyMelon=Steam is downloading this game, so Setup skipped MelonLoader.%n%nAfter the download finishes, re-run this Setup (keep MelonLoader checked). Otherwise the manager will show “Missing Loader” and Apply and Launch will stay disabled.
-english.StatusMelon=Checking/installing MelonLoader (skip if present; prefer embedded offline package)…
+english.StatusMelon=Checking/installing MelonLoader (skip if ≥0.7.3; prefer embedded offline package)…
 english.StatusNoPsMelon=Could not start PowerShell; falling back to the manager’s built-in MelonLoader installer.
 english.WarnNoPsMelon=Could not start PowerShell; already using the manager's built-in MelonLoader installer. If it still fails, open the manager and click Install MelonLoader.
 english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: often GitHub download failure; exit 3: incomplete install; exit 5: game running.%n%nOr open the manager and click Install MelonLoader, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
 english.StatusMelonDone=MelonLoader finished (or skipped).
-english.StatusMelonAlready=MelonLoader already present; skipping install.
+english.StatusMelonAlready=MelonLoader ≥0.7.3 already present; skipping install.
 english.ErrMelonVerify=MelonLoader was not written correctly into the game folder.%n%nClose the game, then open the manager and click Install MelonLoader — or re-run this Setup with MelonLoader checked.%nIf antivirus quarantined version.dll, allow it and retry.
 english.StatusPostDone=Post-install steps done; opening the Completed page…
 
@@ -128,7 +131,7 @@ russian.TaskDesktopGroup=Дополнительно:
 russian.CompMain=Приложение менеджера (обязательно)
 russian.CompDotNet8=.NET 8 Desktop Runtime x64 (нужен менеджеру; пропуск, если установлен; ~55–60 МБ загрузка, ~150–200 МБ после установки)
 russian.CompDotNet6=.NET 6 Desktop Runtime x64 (нужен MelonLoader; пропуск, если установлен; ~50–55 МБ загрузка, ~140–180 МБ после установки)
-russian.CompMelon=MelonLoader (офлайн-пакет в комплекте; пропуск, если установлен; обычно GitHub не нужен; рекомендуется для папки игры)
+russian.CompMelon=MelonLoader (офлайн-пакет в комплекте; обновление, если ниже 0.7.3; обычно GitHub не нужен; рекомендуется для папки игры)
 russian.RunNow=Запустить %1 сейчас
 russian.RiskWelcome=Внимательно прочитайте лицензию на следующей странице. Без согласия установка невозможна.
 russian.GamePathTitle=Выбор папки игры
@@ -140,6 +143,7 @@ russian.StatusWriteConfig=Запись конфигурации менеджер
 russian.StatusSeedUserConfig=Запись пользовательской конфигурации (без окна; подождите)…
 russian.ErrWriteConfig=Не удалось записать конфигурацию. Путь к игре можно указать позже в настройках.
 russian.StatusRestoreOptional=Дополнительный скрипт восстановления не выполнен (установка продолжается; конфиг записан встроенным способом).
+russian.StatusSanitizeAcf=Удаление недействительных снимков ветки Steam (сам Steam не изменяется)…
 russian.StatusDotNet8=Тихая установка .NET 8 Desktop Runtime (~55–60 МБ; прогресс может замирать; пропуск, если есть)…
 russian.ErrDotNet8=Установка .NET 8 Desktop Runtime не удалась (код %1). Установите вручную: https://dotnet.microsoft.com/download/dotnet/8.0
 russian.StatusNoPsDotNet8=Не удалось запустить PowerShell; автоматическая установка .NET 8 пропущена (можно установить позже).
@@ -150,12 +154,12 @@ russian.StatusNoPsDotNet6=Не удалось запустить PowerShell; а�
 russian.StatusDotNet6Done=.NET 6 Desktop Runtime завершён (или пропущен).
 russian.StatusSteamBusyMelon=Steam загружает эту игру; запись MelonLoader пропущена. После загрузки снова запустите Setup с MelonLoader или установите вручную.
 russian.WarnSteamBusyMelon=Steam загружает эту игру, поэтому MelonLoader пропущен.%n%nПосле загрузки снова запустите Setup (оставьте MelonLoader) — иначе менеджер покажет «нет Loader», а «Применить и запустить» будет недоступно.
-russian.StatusMelon=Проверка/установка MelonLoader (пропуск, если есть; предпочтение офлайн-пакету)…
+russian.StatusMelon=Проверка/установка MelonLoader (пропуск при ≥0.7.3; предпочтение офлайн-пакету)…
 russian.StatusNoPsMelon=Не удалось запустить PowerShell; автоматическая установка MelonLoader пропущена (можно установить позже).
 russian.WarnNoPsMelon=Не удалось запустить PowerShell; используется встроенный установщик MelonLoader. Если ошибка повторится, откройте менеджер и нажмите «Установить MelonLoader».
 russian.ErrMelon=Установка MelonLoader не удалась (код %1).%n%nкод 1: неверный путь или файлы заняты; код 2: часто сбой загрузки с GitHub; код 3: неполная установка.%n%nМожно снять MelonLoader и переустановить менеджер, или установить вручную:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Скачайте MelonLoader.x64.zip и распакуйте в папку игры по инструкции.)
 russian.StatusMelonDone=MelonLoader завершён (или пропущен).
-russian.StatusMelonAlready=MelonLoader already present; skipping install.
+russian.StatusMelonAlready=MelonLoader ≥0.7.3 уже установлен; установка пропущена.
 russian.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 russian.StatusPostDone=Постустановочные шаги выполнены; переход к странице завершения…
 
@@ -165,7 +169,7 @@ japanese.TaskDesktopGroup=追加タスク:
 japanese.CompMain=マネージャー本体（必須）
 japanese.CompDotNet8=.NET 8 Desktop Runtime x64（マネージャーに必要；インストール済みならスキップ；ダウンロード約55–60 MB、インストール後約150–200 MB）
 japanese.CompDotNet6=.NET 6 Desktop Runtime x64（MelonLoader に必要；インストール済みならスキップ；ダウンロード約50–55 MB、インストール後約140–180 MB）
-japanese.CompMelon=MelonLoader（オフラインパッケージ同梱；インストール済みならスキップ；通常 GitHub 不要；ゲームフォルダへのインストールを推奨）
+japanese.CompMelon=MelonLoader（オフラインパッケージ同梱；0.7.3 未満はアップグレード；通常 GitHub 不要；ゲームフォルダへのインストールを推奨）
 japanese.RunNow=今すぐ %1 を起動
 japanese.RiskWelcome=次のページの利用規約をよくお読みください。同意しないとインストールを続行できません。
 japanese.GamePathTitle=ゲームフォルダの選択
@@ -177,6 +181,7 @@ japanese.StatusWriteConfig=マネージャー設定を書き込み中（双フ�
 japanese.StatusSeedUserConfig=ユーザー設定を書き込み中（画面なし・お待ちください）…
 japanese.ErrWriteConfig=マネージャー設定の書き込みに失敗しました。後で設定からゲームパスを指定できます。
 japanese.StatusRestoreOptional=オプションの復元スクリプトは実行されませんでした（インストールは続行；設定は組み込み方式で書き込み済み）。
+japanese.StatusSanitizeAcf=無効な Steam ブランチスナップショットを削除中（Steam 本体は変更しません）…
 japanese.StatusDotNet8=.NET 8 Desktop Runtime をサイレントインストール中（約55–60 MB；進捗が一時停止することがあります；存在すればスキップ）…
 japanese.ErrDotNet8=.NET 8 Desktop Runtime のインストールに失敗しました（終了コード %1）。https://dotnet.microsoft.com/download/dotnet/8.0 から手動インストールしてください。
 japanese.StatusNoPsDotNet8=PowerShell を起動できませんでした；.NET 8 の自動インストールをスキップしました（後でインストール可能）。
@@ -187,12 +192,12 @@ japanese.StatusNoPsDotNet6=PowerShell を起動できませんでした；.NET 6
 japanese.StatusDotNet6Done=.NET 6 Desktop Runtime が完了しました（またはスキップ）。
 japanese.StatusSteamBusyMelon=Steam が本ゲームをダウンロード中のため MelonLoader 書き込みをスキップしました。完了後に Setup で MelonLoader を選ぶか手動インストールしてください。
 japanese.WarnSteamBusyMelon=Steam が本ゲームをダウンロード中のため MelonLoader をスキップしました。%n%n完了後に本 Setup を再実行（MelonLoader にチェック）してください。そうしないと「Loader なし」になり「適用して起動」が使えません。
-japanese.StatusMelon=MelonLoader を確認/インストール中（存在すればスキップ；同梱オフラインパッケージを優先）…
+japanese.StatusMelon=MelonLoader を確認/インストール中（≥0.7.3 ならスキップ；同梱オフラインパッケージを優先）…
 japanese.StatusNoPsMelon=PowerShell を起動できませんでした；MelonLoader の自動インストールをスキップしました（後でインストール可能）。
 japanese.WarnNoPsMelon=PowerShell を起動できませんでした。マネージャー内蔵の MelonLoader インストーラに切り替えました。失敗する場合はマネージャーで「MelonLoader をインストール」を押してください。
 japanese.ErrMelon=MelonLoader のインストールに失敗しました（終了コード %1）。%n%n終了コード 1：無効なパスまたはファイルロック；2：多くは GitHub ダウンロード失敗；3：不完全なインストール。%n%nMelonLoader のチェックを外してマネージャーを再インストールするか、手動でインストールしてください：%nhttps://github.com/LavaGang/MelonLoader/releases%n（MelonLoader.x64.zip をダウンロードし、公式手順に従いゲームフォルダに展開）
 japanese.StatusMelonDone=MelonLoader が完了しました（またはスキップ）。
-japanese.StatusMelonAlready=MelonLoader already present; skipping install.
+japanese.StatusMelonAlready=MelonLoader ≥0.7.3 が既にあります。インストールをスキップします。
 japanese.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 japanese.StatusPostDone=インストール後処理が終わりました。完了ページへ進みます…
 
@@ -202,7 +207,7 @@ german.TaskDesktopGroup=Zusätzliche Aufgaben:
 german.CompMain=Manager-App (erforderlich)
 german.CompDotNet8=.NET 8 Desktop Runtime x64 (vom Manager benötigt; übersprungen wenn installiert; ~55–60 MB Download, ~150–200 MB installiert)
 german.CompDotNet6=.NET 6 Desktop Runtime x64 (von MelonLoader benötigt; übersprungen wenn installiert; ~50–55 MB Download, ~140–180 MB installiert)
-german.CompMelon=MelonLoader (Offline-Paket enthalten; übersprungen wenn installiert; meist kein GitHub nötig; für Spielordner empfohlen)
+german.CompMelon=MelonLoader (Offline-Paket enthalten; Upgrade wenn unter 0.7.3; meist kein GitHub nötig; für Spielordner empfohlen)
 german.RunNow=%1 jetzt starten
 german.RiskWelcome=Bitte lesen Sie die Lizenz auf der nächsten Seite sorgfältig. Ohne Zustimmung kann die Installation nicht fortgesetzt werden.
 german.GamePathTitle=Spielordner auswählen
@@ -214,6 +219,7 @@ german.StatusWriteConfig=Manager-Konfiguration wird geschrieben (Dual-Ordner-Ein
 german.StatusSeedUserConfig=Benutzerkonfiguration wird geschrieben (ohne UI; bitte warten)…
 german.ErrWriteConfig=Manager-Konfiguration konnte nicht geschrieben werden. Spielpfad später in den Einstellungen setzen.
 german.StatusRestoreOptional=Optionales Wiederherstellungsskript nicht ausgeführt (Installation läuft weiter; Konfiguration nativ geschrieben).
+german.StatusSanitizeAcf=Ungültige Steam-Branch-Snapshots werden entfernt (Steam selbst wird nicht geändert)…
 german.StatusDotNet8=.NET 8 Desktop Runtime wird still installiert (~55–60 MB; Fortschritt kann kurz stehen; übersprungen wenn vorhanden)…
 german.ErrDotNet8=.NET 8 Desktop Runtime Installation fehlgeschlagen (Exit %1). Manuell installieren: https://dotnet.microsoft.com/download/dotnet/8.0
 german.StatusNoPsDotNet8=PowerShell konnte nicht gestartet werden; automatische .NET 8-Installation übersprungen (später möglich).
@@ -224,12 +230,12 @@ german.StatusNoPsDotNet6=PowerShell konnte nicht gestartet werden; automatische 
 german.StatusDotNet6Done=.NET 6 Desktop Runtime abgeschlossen (oder übersprungen).
 german.StatusSteamBusyMelon=Steam lädt dieses Spiel; MelonLoader-Schreiben übersprungen. Nach dem Download Setup erneut mit MelonLoader ausführen oder manuell installieren.
 german.WarnSteamBusyMelon=Steam lädt dieses Spiel, daher wurde MelonLoader übersprungen.%n%nNach dem Download Setup erneut ausführen (MelonLoader angehakt). Sonst zeigt der Manager „Loader fehlt“ und Anwenden und Starten bleibt deaktiviert.
-german.StatusMelon=MelonLoader prüfen/installieren (überspringen wenn vorhanden; Offline-Paket bevorzugt)…
+german.StatusMelon=MelonLoader prüfen/installieren (überspringen ab ≥0.7.3; Offline-Paket bevorzugt)…
 german.StatusNoPsMelon=PowerShell konnte nicht gestartet werden; automatische MelonLoader-Installation übersprungen (später möglich).
 german.WarnNoPsMelon=PowerShell konnte nicht gestartet werden; es wird der eingebaute MelonLoader-Installer des Managers verwendet. Bei weiterem Fehler öffnen Sie den Manager und klicken Sie auf MelonLoader installieren.
 german.ErrMelon=MelonLoader-Installation fehlgeschlagen (Exit %1).%n%nExit 1: ungültiger Pfad oder Dateien gesperrt; Exit 2: oft GitHub-Download-Fehler; Exit 3: unvollständige Installation.%n%nMelonLoader abwählen und Manager neu installieren, oder manuell installieren:%nhttps://github.com/LavaGang/MelonLoader/releases%n(MelonLoader.x64.zip herunterladen und gemäß Anleitung in Spielordner entpacken)
 german.StatusMelonDone=MelonLoader abgeschlossen (oder übersprungen).
-german.StatusMelonAlready=MelonLoader already present; skipping install.
+german.StatusMelonAlready=MelonLoader ≥0.7.3 bereits vorhanden; Installation übersprungen.
 german.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 german.StatusPostDone=Nachinstallation erledigt; Abschlussseite folgt…
 
@@ -318,13 +324,68 @@ begin
   Result := ResultCode;
 end;
 
+function MelonDllVersionAtLeast073(const DllPath: string): Boolean;
+var
+  MS, LS: Cardinal;
+  Major, Minor, Release: Word;
+begin
+  Result := False;
+  if not FileExists(DllPath) then
+    exit;
+  if not GetVersionNumbers(DllPath, MS, LS) then
+    exit;
+  Major := Word(MS shr 16);
+  Minor := Word(MS and $FFFF);
+  Release := Word(LS shr 16);
+  if Major > 0 then
+  begin
+    Result := True;
+    exit;
+  end;
+  if Minor > 7 then
+  begin
+    Result := True;
+    exit;
+  end;
+  if Minor < 7 then
+    exit;
+  Result := Release >= 3;
+end;
+
 function LooksLikeMelon(const Path: string): Boolean;
 var
   Root: string;
 begin
+  { Presence alone is not enough — bundled redist is 0.7.3; older installs must upgrade. }
   Root := AddBackslash(Path);
-  Result := DirExists(Root + 'MelonLoader') and
-            (FileExists(Root + 'version.dll') or FileExists(Root + 'winhttp.dll'));
+  if not DirExists(Root + 'MelonLoader') then
+  begin
+    Result := False;
+    exit;
+  end;
+  if not (FileExists(Root + 'version.dll') or FileExists(Root + 'winhttp.dll')) then
+  begin
+    Result := False;
+    exit;
+  end;
+  Result :=
+    MelonDllVersionAtLeast073(Root + 'MelonLoader\net6\MelonLoader.dll') or
+    MelonDllVersionAtLeast073(Root + 'MelonLoader\net472\MelonLoader.dll') or
+    MelonDllVersionAtLeast073(Root + 'MelonLoader\net35\MelonLoader.dll') or
+    MelonDllVersionAtLeast073(Root + 'MelonLoader\MelonLoader.dll');
+end;
+
+function SanitizeAcfViaApp: Integer;
+var
+  ResultCode: Integer;
+begin
+  if not Exec(ExpandConstant('{app}\{#MyAppExeName}'), '--sanitize-acf-snapshots', '',
+              SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    Result := -1;
+    exit;
+  end;
+  Result := ResultCode;
 end;
 
 function InstallMelonViaApp(const GamePath, Redist: string): Integer;
@@ -779,6 +840,12 @@ begin
   if Code <> 0 then
     SetStatus(CustomMessage('StatusRestoreOptional'));
 
+  { Delete dirty AppData ACF snapshots that would poison one-click branch switch. }
+  SetStatus(CustomMessage('StatusSanitizeAcf'));
+  Code := SanitizeAcfViaApp();
+  if Code <> 0 then
+    PsFromSrc('Sanitize-AcfSnapshots.ps1', '');
+
   { Skip Melon only when THIS game is mid-download — not merely because Steam is open. }
   SteamBusy := QueryGameDownloading(GamePath);
 
@@ -815,32 +882,35 @@ begin
       SetStatus(CustomMessage('StatusSteamBusyMelon'));
       MsgBox(CustomMessage('WarnSteamBusyMelon'), mbInformation, MB_OK);
     end
-    else if LooksLikeMelon(GamePath) then
-    begin
-      SetStatus(CustomMessage('StatusMelonAlready'));
-    end
     else
     begin
-      SetStatus(CustomMessage('StatusMelon'));
-      { Primary: manager EXE + embedded zip (no PowerShell). }
-      Code := InstallMelonViaApp(GamePath, Redist);
-      if (Code <> 0) and (not LooksLikeMelon(GamePath)) then
-      begin
-        { Fallback: PowerShell script (same offline zip). }
-        if Code = -1 then
-          SetStatus(CustomMessage('StatusNoPsMelon'));
-        Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
-        Code := PsFromSrc('Install-MelonLoader.ps1', Args);
-      end;
-
       if LooksLikeMelon(GamePath) then
-        SetStatus(CustomMessage('StatusMelonDone'))
-      else if Code = -1 then
-        MsgBox(CustomMessage('ErrMelonVerify'), mbError, MB_OK)
-      else if Code <> 0 then
-        MsgBox(FmtMessage(CustomMessage('ErrMelon'), [IntToStr(Code)]), mbError, MB_OK)
+      begin
+        SetStatus(CustomMessage('StatusMelonAlready'));
+      end
       else
-        MsgBox(CustomMessage('ErrMelonVerify'), mbError, MB_OK);
+      begin
+        SetStatus(CustomMessage('StatusMelon'));
+        { Primary: manager EXE + embedded zip (no PowerShell). }
+        Code := InstallMelonViaApp(GamePath, Redist);
+        if (Code <> 0) and (not LooksLikeMelon(GamePath)) then
+        begin
+          { Fallback: PowerShell script (same offline zip). }
+          if Code = -1 then
+            SetStatus(CustomMessage('StatusNoPsMelon'));
+          Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
+          Code := PsFromSrc('Install-MelonLoader.ps1', Args);
+        end;
+
+        if LooksLikeMelon(GamePath) then
+          SetStatus(CustomMessage('StatusMelonDone'))
+        else if Code = -1 then
+          MsgBox(CustomMessage('ErrMelonVerify'), mbError, MB_OK)
+        else if Code <> 0 then
+          MsgBox(FmtMessage(CustomMessage('ErrMelon'), [IntToStr(Code)]), mbError, MB_OK)
+        else
+          MsgBox(CustomMessage('ErrMelonVerify'), mbError, MB_OK);
+      end;
     end;
   end;
 
