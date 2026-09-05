@@ -412,18 +412,18 @@ public sealed partial class MainViewModel : ObservableObject
             // Isolation: recovery must still route or clear.
         }
 
+        ActiveContentPage = MainContentPage.Settings;
+
         if (IsAwaitingSteamSettle || IsBranchWizardInProgress)
         {
-            ActiveContentPage = MainContentPage.Settings;
             ClearRecoveryGate();
             NotifyBranchGates();
             return;
         }
 
-        if (IsStaleReadyRecovery())
+        // Sticky Hard only when Repair is actually offered; healthy Enabled dual-folder must not brick.
+        if (!ShowRepairOrphanDualLayout)
             ClearRecoveryGate();
-        else
-            ActiveContentPage = MainContentPage.Settings;
 
         NotifyBranchGates();
     }
@@ -466,7 +466,7 @@ public sealed partial class MainViewModel : ObservableObject
         !IsAwaitingSteamSettle
         && !IsBranchWizardInProgress
         && (BranchWizardStep is BranchWizardStep.None or BranchWizardStep.Ready)
-        && !TryInspectOrphanDualLayout();
+        && !ShowRepairOrphanDualLayout;
 
     bool TryInspectOrphanDualLayout()
     {
@@ -930,8 +930,14 @@ public sealed partial class MainViewModel : ObservableObject
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
     }
 
+    public bool CanOfferAssemblyGeneratePrompt =>
+        !IsRecoveryGateActive
+        && GameStatus?.Kind == GameStatusKind.LoaderPresentAssembliesMissing;
+
     void ScheduleAssemblyGeneratePrompt()
     {
+        if (IsRecoveryGateActive)
+            return;
         if (GameStatus?.Kind is not GameStatusKind.LoaderPresentAssembliesMissing)
             return;
         if (string.IsNullOrWhiteSpace(GamePath) || !Directory.Exists(GamePath))
@@ -948,6 +954,8 @@ public sealed partial class MainViewModel : ObservableObject
         {
             try
             {
+                if (IsRecoveryGateActive)
+                    return;
                 if (_detector.Detect(GamePath).Kind is not GameStatusKind.LoaderPresentAssembliesMissing)
                     return;
 
@@ -1267,8 +1275,8 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshStatusCore(offerAssemblyGeneratePrompt: false);
         if (GameStatus?.Kind == GameStatusKind.LoaderPresentAssembliesMissing)
         {
-            EnsureMelonAssembliesForStore(GamePath);
-            RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+            AppendLog(GameStatus?.Message ?? "MelonLoader 程序集未就绪，请先生成后再部署。");
+            return false;
         }
 
         if (GameStatus?.Kind != GameStatusKind.Ready)
@@ -1349,9 +1357,9 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanDeployOrLaunch))]
-    void ApplyAndLaunch()
+    async Task ApplyAndLaunch()
     {
-        if (!ApplyProfile()) return;
+        if (!await ApplyProfileAsync().ConfigureAwait(true)) return;
         if (GameStatus?.Kind != GameStatusKind.Ready) return;
 
         TryOptimizeMelonLoader(logAlways: true);
@@ -3214,7 +3222,9 @@ public sealed partial class MainViewModel : ObservableObject
 
             if (silentResult is not null)
             {
-                EnsureMelonLoaderForDualStores(preferTarget: target);
+                await RunBusyAsync(
+                    LocalizationService.T("BusyGeneratingMelonAssemblies"),
+                    () => EnsureMelonLoaderForDualStoresAsync(preferTarget: target)).ConfigureAwait(true);
                 await SettleAfterSilentBetaAsync(silentResult).ConfigureAwait(true);
             }
         }
@@ -3508,7 +3518,17 @@ public sealed partial class MainViewModel : ObservableObject
         }).ConfigureAwait(true);
 
         if (linkFailure is not null)
+        {
             FailWizard(linkFailure);
+            return false;
+        }
+
+        if (linked)
+        {
+            await RunBusyAsync(
+                LocalizationService.T("BusyGeneratingMelonAssemblies"),
+                () => EnsureMelonLoaderForDualStoresAsync(preferTarget: current)).ConfigureAwait(true);
+        }
 
         return linked;
     }
@@ -3537,10 +3557,9 @@ public sealed partial class MainViewModel : ObservableObject
         });
 
         RefreshStatus();
-        EnsureMelonLoaderForDualStores(preferTarget: current);
     }
 
-    void EnsureMelonLoaderForDualStores(GameBranch? preferTarget = null)
+    async Task EnsureMelonLoaderForDualStoresAsync(GameBranch? preferTarget = null)
     {
         try
         {
@@ -3557,29 +3576,22 @@ public sealed partial class MainViewModel : ObservableObject
                 var warn = LocalizationService.T("NotifyMelonLoaderDualStoreIncomplete");
                 AppendLog(warn);
                 _notify(warn);
+                return;
             }
-            else
+
+            var targetPath = preferTarget switch
             {
-                var targetPath = preferTarget switch
-                {
-                    GameBranch.Official => cfg.OfficialStorePath,
-                    GameBranch.Beta => cfg.BetaStorePath,
-                    _ => string.IsNullOrWhiteSpace(GamePath) ? cfg.SteamLinkPath : GamePath
-                };
-                EnsureMelonAssembliesForStore(targetPath);
-                RefreshStatusCore(offerAssemblyGeneratePrompt: false);
-            }
+                GameBranch.Official => cfg.OfficialStorePath,
+                GameBranch.Beta => cfg.BetaStorePath,
+                _ => string.IsNullOrWhiteSpace(GamePath) ? cfg.SteamLinkPath : GamePath
+            };
+            await EnsureMelonAssembliesForStoreAsync(targetPath).ConfigureAwait(true);
+            RefreshStatusCore(offerAssemblyGeneratePrompt: false);
         }
         catch (Exception ex)
         {
             AppendLog($"补齐双服 MelonLoader 失败：{ex.Message}");
         }
-    }
-
-    void EnsureMelonAssembliesForStore(string? storePath)
-    {
-        // Sync wrapper for legacy call sites; prefer EnsureMelonAssembliesForStoreAsync.
-        EnsureMelonAssembliesForStoreAsync(storePath).GetAwaiter().GetResult();
     }
 
     async Task EnsureMelonAssembliesForStoreAsync(string? storePath)
@@ -3654,6 +3666,9 @@ public sealed partial class MainViewModel : ObservableObject
             ok = true;
             return Task.CompletedTask;
         }).ConfigureAwait(true);
+
+        if (ok)
+            ClearRecoveryGate();
 
         return ok;
     }
