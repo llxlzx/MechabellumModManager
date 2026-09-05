@@ -327,11 +327,30 @@ public sealed partial class MainViewModel : ObservableObject
             or GameStatusKind.LoaderPresentAssembliesMissing;
 
     public bool CanDeployOrLaunch =>
-        IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
+        IsReady && !IsSessionLocked;
+
+    public bool IsSessionLocked =>
+        IsRecoveryGateActive
+        || IsAwaitingSteamSettle
+        || IsBranchWizardBlocking
+        || IsBranchSwitchBusy;
 
     public bool IsCriticalOpRunning => _criticalOp.IsRunning;
 
-    public bool IsRecoveryGateActive { get; private set; }
+    bool _isRecoveryGateActive;
+
+    public bool IsRecoveryGateActive
+    {
+        get => _isRecoveryGateActive;
+        internal set
+        {
+            if (_isRecoveryGateActive == value)
+                return;
+            _isRecoveryGateActive = value;
+            OnPropertyChanged();
+            NotifyBranchGates();
+        }
+    }
 
     public bool IsWizardWaitingSteam =>
         BranchWizardStep is BranchWizardStep.WaitingDownloadB;
@@ -355,6 +374,124 @@ public sealed partial class MainViewModel : ObservableObject
         finally
         {
             _criticalOp.Complete();
+        }
+    }
+
+    public bool ShouldOfferCriticalRecovery(CriticalOpGuard? guard = null)
+    {
+        var g = guard ?? _criticalOp;
+        if (g.TryLoadInterrupted(out _))
+            return true;
+
+        try
+        {
+            return TryInspectOrphanDualLayout() && IsBranchWizardInProgress;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public void ApplyRecoveryContinue()
+    {
+        try
+        {
+            LoadBranchSwitchState();
+        }
+        catch
+        {
+            // Isolation: recovery must still route or clear.
+        }
+
+        if (IsAwaitingSteamSettle || IsBranchWizardInProgress)
+        {
+            ActiveContentPage = MainContentPage.Settings;
+            NotifyBranchGates();
+            return;
+        }
+
+        if (IsStaleReadyRecovery())
+            ClearRecoveryGate();
+        else
+            ActiveContentPage = MainContentPage.Settings;
+
+        NotifyBranchGates();
+    }
+
+    public async Task ApplyRecoveryRepair()
+    {
+        try
+        {
+            LoadBranchSwitchState();
+        }
+        catch
+        {
+            // Isolation: recovery must still route or clear.
+        }
+
+        ActiveContentPage = MainContentPage.Settings;
+        try
+        {
+            await TryRunOrphanRepairIfAvailableAsync().ConfigureAwait(true);
+        }
+        catch
+        {
+            // Optional orphan repair must not block recovery routing.
+        }
+
+        if (IsStaleReadyRecovery())
+            ClearRecoveryGate();
+
+        NotifyBranchGates();
+    }
+
+    public void ClearRecoveryGate()
+    {
+        _criticalOp.ClearInterrupted();
+        IsRecoveryGateActive = false;
+        NotifyBranchGates();
+    }
+
+    bool IsStaleReadyRecovery() =>
+        !IsAwaitingSteamSettle
+        && !IsBranchWizardInProgress
+        && (BranchWizardStep is BranchWizardStep.None or BranchWizardStep.Ready)
+        && !TryInspectOrphanDualLayout();
+
+    bool TryInspectOrphanDualLayout()
+    {
+        try
+        {
+            var inspect = _branchSwitch.GetType().GetMethod("InspectOrphanDualLayout", new[] { typeof(string) });
+            if (inspect is null)
+                return false;
+
+            var info = inspect.Invoke(_branchSwitch, new object?[] { GamePath });
+            if (info is null)
+                return false;
+
+            var prop = info.GetType().GetProperty("IsOrphan");
+            return prop?.GetValue(info) is true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    async Task TryRunOrphanRepairIfAvailableAsync()
+    {
+        try
+        {
+            var prop = GetType().GetProperty("RepairOrphanDualLayoutCommand");
+            var cmd = prop?.GetValue(this);
+            if (cmd is IAsyncRelayCommand asyncCmd && asyncCmd.CanExecute(null))
+                await asyncCmd.ExecuteAsync(null).ConfigureAwait(true);
+        }
+        catch
+        {
+            // Repair command is optional when orphan WIP is not present.
         }
     }
 
@@ -440,10 +577,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         get
         {
-            if (IsReady
-                && !IsAwaitingSteamSettle
-                && !IsBranchWizardBlocking
-                && !IsBranchSwitchBusy)
+            if (IsReady && !IsSessionLocked)
                 return "";
 
             if (!IsReady)
@@ -1049,7 +1183,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     bool ApplyProfile(bool ignoreBranchGate)
     {
-        if (!ignoreBranchGate && (IsAwaitingSteamSettle || IsBranchWizardBlocking))
+        if (!ignoreBranchGate && IsSessionLocked)
         {
             AppendLog("正在等待 Steam 结算或双服配置未完成，暂不可部署。");
             return false;
@@ -3376,6 +3510,8 @@ public sealed partial class MainViewModel : ObservableObject
         });
         NotifyBranchGates();
         RefreshBranchStatusText();
+        if (IsStaleReadyRecovery())
+            ClearRecoveryGate();
     }
 
     void SelectBoundProfile(GameBranch branch)
@@ -3408,6 +3544,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(UseApplyAccent));
         OnPropertyChanged(nameof(IsBranchWizardBlocking));
         OnPropertyChanged(nameof(IsBranchWizardInProgress));
+        OnPropertyChanged(nameof(IsSessionLocked));
         OnPropertyChanged(nameof(DeployBlockedReason));
         OnPropertyChanged(nameof(ShowDeployBlockedReason));
         OnPropertyChanged(nameof(CanSwitchGameBranch));
