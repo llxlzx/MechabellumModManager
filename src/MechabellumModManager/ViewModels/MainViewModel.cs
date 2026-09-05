@@ -64,6 +64,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly CriticalOpGuard _criticalOp;
     readonly IProcessProbe _processProbe;
     readonly IProcessStarter _processStarter;
+    readonly TaskProgressSession _taskProgress = new();
     readonly Func<TimeSpan, Task> _delay;
     readonly TimeSpan _steamExitTimeout;
     readonly TimeSpan _steamExitCooldown;
@@ -324,16 +325,23 @@ public sealed partial class MainViewModel : ObservableObject
     public bool NeedsMelonLoaderInstall =>
         GameStatus?.Kind is GameStatusKind.GameOkLoaderMissing
             or GameStatusKind.LoaderPartial
-            or GameStatusKind.LoaderPresentAssembliesMissing;
+            or GameStatusKind.LoaderPresentAssembliesMissing
+        || (GameStatus?.Kind == GameStatusKind.Ready
+            && MelonLoaderVersionGate.ShouldUpgradeInstalled(GameStatus.MelonLoaderVersion));
 
     public bool CanDeployOrLaunch =>
         IsReady && !IsSessionLocked;
 
+    /// <summary>
+    /// Critical unfinished work: dual-folder wizard/settle/busy, or an active session-locked task.
+    /// Does not disable the whole window — only CanExecute / button gates.
+    /// </summary>
     public bool IsSessionLocked =>
         IsRecoveryGateActive
         || IsAwaitingSteamSettle
-        || IsBranchWizardBlocking
-        || IsBranchSwitchBusy;
+        || IsBranchWizardInProgress
+        || IsBranchSwitchBusy
+        || (_taskProgress.HasTask && _taskProgress.SessionLock);
 
     public bool IsCriticalOpRunning => _criticalOp.IsRunning;
 
@@ -441,7 +449,7 @@ public sealed partial class MainViewModel : ObservableObject
             // Optional orphan repair must not block recovery routing.
         }
 
-        if (IsStaleReadyRecovery())
+        if (IsAwaitingSteamSettle || IsBranchWizardInProgress || IsStaleReadyRecovery())
             ClearRecoveryGate();
 
         NotifyBranchGates();
@@ -528,9 +536,16 @@ public sealed partial class MainViewModel : ObservableObject
     string SoftGateStateLabel() =>
         IsWizardWaitingSteam
             ? LocalizationService.T("TaskTitleBranchWizard")
-            : ActiveGameBranch == GameBranch.Official
-                ? LocalizationService.T("BranchStatusOfficial")
-                : LocalizationService.T("BranchStatusBeta");
+            : ActiveBranchDisplayName;
+
+    public bool HasCurrentTask => _taskProgress.HasTask;
+    public string TaskTitle => _taskProgress.Title;
+    public string TaskMessage => _taskProgress.Message;
+    public double TaskProgressValue => _taskProgress.Percent ?? 0;
+    public bool IsTaskIndeterminate => _taskProgress.IsIndeterminate;
+    public bool ShowTaskPercent => _taskProgress.HasTask && _taskProgress.Percent is not null;
+    public string TaskPercentLabel =>
+        _taskProgress.Percent is { } p ? $"{p:0}%" : "";
 
     public bool CanApplyProfile =>
         CanDeployOrLaunch && IsDirty;
@@ -561,10 +576,52 @@ public sealed partial class MainViewModel : ObservableObject
         && !IsAwaitingSteamSettle
         && !IsBranchSwitchBusy;
 
-    public string SettleConfirmButtonText =>
-        DegradeToManualBeta
-            ? LocalizationService.T("BranchSwitchConfirmManual")
-            : LocalizationService.T("BranchSwitchConfirmSettle");
+    /// <summary>
+    /// Dual-folder off but disk still has junction and/or leftover store folders.
+    /// </summary>
+    public bool ShowRepairOrphanDualLayout
+    {
+        get
+        {
+            if (BranchSwitchEnabled || IsBranchWizardInProgress)
+                return false;
+            try
+            {
+                return _branchSwitch.InspectOrphanDualLayout(GamePath).IsOrphan;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    public bool CanRepairOrphanDualLayout =>
+        ShowRepairOrphanDualLayout
+        && !IsAwaitingSteamSettle
+        && !IsBranchSwitchBusy;
+
+    public string SettleConfirmButtonText
+    {
+        get
+        {
+            if (DegradeToManualBeta)
+            {
+                return ActiveGameBranch == GameBranch.Official
+                    ? LocalizationService.T("BranchSwitchConfirmManualOfficial")
+                    : LocalizationService.T("BranchSwitchConfirmManual");
+            }
+
+            return ActiveGameBranch == GameBranch.Official
+                ? LocalizationService.T("BranchSwitchConfirmSettleOfficial")
+                : LocalizationService.T("BranchSwitchConfirmSettleBeta");
+        }
+    }
+
+    string ActiveBranchDisplayName =>
+        ActiveGameBranch == GameBranch.Official
+            ? LocalizationService.T("BranchStatusOfficial")
+            : LocalizationService.T("BranchStatusBeta");
 
     /// <summary>
     /// Incomplete dual-folder wizard blocks deploy/launch.
@@ -578,7 +635,8 @@ public sealed partial class MainViewModel : ObservableObject
     {
         get
         {
-            if (IsReady && !IsSessionLocked)
+            if (IsReady
+                && !IsSessionLocked)
                 return "";
 
             if (!IsReady)
@@ -597,11 +655,13 @@ public sealed partial class MainViewModel : ObservableObject
                 };
             }
 
+            if (IsRecoveryGateActive)
+                return LocalizationService.T("CriticalOpRecoveryBody");
             if (IsAwaitingSteamSettle)
                 return LocalizationService.T("DeployBlockedAwaitingSteam");
-            if (IsBranchWizardBlocking)
+            if (IsBranchWizardInProgress)
                 return LocalizationService.T("DeployBlockedWizardIncomplete");
-            if (IsBranchSwitchBusy)
+            if (IsBranchSwitchBusy || (_taskProgress.HasTask && _taskProgress.SessionLock))
                 return LocalizationService.T("DeployBlockedBusy");
             return LocalizationService.T("DeployBlockedGeneric");
         }
@@ -866,6 +926,8 @@ public sealed partial class MainViewModel : ObservableObject
         TryAutoImportFromGame();
         if (offerAssemblyGeneratePrompt)
             ScheduleAssemblyGeneratePrompt();
+        OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
+        InstallMelonLoaderCommand.NotifyCanExecuteChanged();
     }
 
     void ScheduleAssemblyGeneratePrompt()
@@ -1018,6 +1080,12 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     void BrowseGamePath()
     {
+        // Allow fixing an invalid path while settle/wizard locks write ops.
+        if (IsSessionLocked && IsReady)
+        {
+            _notify(LocalizationService.T("NotifySessionLocked"));
+            return;
+        }
         var picked = _browseFolder?.Invoke();
         if (string.IsNullOrWhiteSpace(picked)) return;
         GamePath = picked;
@@ -1186,7 +1254,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!ignoreBranchGate && IsSessionLocked)
         {
-            AppendLog("正在等待 Steam 结算或双服配置未完成，暂不可部署。");
+            AppendLog(LocalizationService.T("DeployBlockedWizardIncomplete"));
             return false;
         }
 
@@ -1211,6 +1279,13 @@ public sealed partial class MainViewModel : ObservableObject
 
         try
         {
+            _taskProgress.Begin(
+                ManagerTaskKind.Deploy,
+                LocalizationService.T("TaskTitleDeploy"),
+                LocalizationService.T("TaskMessageDeploy"),
+                sessionLock: true);
+            NotifyTaskProgress();
+
             var profile = _profiles.Get(SelectedProfile.Id);
             var packages = _library.List().ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
             var manifestPath = CurrentDeployManifestPath();
@@ -1261,6 +1336,15 @@ public sealed partial class MainViewModel : ObservableObject
         {
             AppendLog($"部署失败：{ex.Message}");
             return false;
+        }
+        finally
+        {
+            if (_taskProgress.Kind == ManagerTaskKind.Deploy)
+            {
+                _taskProgress.Clear();
+                SyncStickyBranchTaskStrip();
+                NotifyTaskProgress();
+            }
         }
     }
 
@@ -1363,6 +1447,87 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    async Task RepairOrphanDualLayout()
+    {
+        if (!CanRepairOrphanDualLayout) return;
+
+        OrphanDualLayoutInfo info;
+        try { info = _branchSwitch.InspectOrphanDualLayout(GamePath); }
+        catch (Exception ex)
+        {
+            _notify(string.Format(LocalizationService.T("NotifyOrphanRepairFailed"), ex.Message));
+            return;
+        }
+
+        if (!info.IsOrphan) return;
+
+        if (!Confirm(LocalizationService.T("ConfirmOrphanDualRepair")))
+            return;
+
+        var otherStores = info.LeftoverStorePaths
+            .Where(p => string.IsNullOrWhiteSpace(info.JunctionTarget)
+                        || !PathsEqual(p, info.JunctionTarget))
+            .ToList();
+        var deleteOther = otherStores.Count > 0
+            && Confirm(LocalizationService.T("ConfirmBranchDeleteOtherStore"), MessageBoxResult.No);
+
+        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+        {
+            FailWizard(LocalizationService.T("LogSteamOrGameStillRunning"));
+            return;
+        }
+
+        IsBranchSwitchBusy = true;
+        try
+        {
+            await RunWithCriticalOpAsync(CriticalOpKind.OrphanRepair, "RepairOrphan", async () =>
+            {
+                await Task.Run(() =>
+                {
+                    var result = _branchSwitch.TryRepairOrphanDualLayout(deleteOther, GamePath);
+                    if (!result.Success)
+                        throw new InvalidOperationException(
+                            string.IsNullOrWhiteSpace(result.Message)
+                                ? LocalizationService.T("NotifyOrphanRepairFailedGeneric")
+                                : result.Message);
+                }).ConfigureAwait(true);
+
+                if (!string.IsNullOrWhiteSpace(info.SteamLinkPath)
+                    && !string.Equals(GamePath, info.SteamLinkPath, StringComparison.OrdinalIgnoreCase))
+                    GamePath = info.SteamLinkPath;
+
+                try
+                {
+                    var cfg = LoadConfig();
+                    cfg.GamePath = GamePath;
+                    SaveConfig(cfg);
+                }
+                catch { /* best-effort */ }
+
+                RefreshStatus();
+                AppendLog(LocalizationService.T("LogOrphanRepairDone"));
+                _notify(LocalizationService.T("NotifyOrphanRepairDone"));
+                ClearRecoveryGate();
+
+                var leftovers = _branchSwitch.InspectOrphanDualLayout(GamePath);
+                if (leftovers.IsOrphan && leftovers.LeftoverStorePaths.Count > 0)
+                    WarnLeftoverDualStores(GamePath);
+            }).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            AppendLog(string.Format(LocalizationService.T("NotifyOrphanRepairFailed"), ex.Message));
+            _notify(string.Format(LocalizationService.T("NotifyOrphanRepairFailed"), ex.Message));
+        }
+        finally
+        {
+            IsBranchSwitchBusy = false;
+            NotifyBranchGates();
+            RefreshBranchStatusText();
+        }
+    }
+
     bool Confirm(string message, MessageBoxResult defaultResult = MessageBoxResult.Yes) =>
         _confirmChoice?.Invoke(message, defaultResult) ?? _confirm(message);
 
@@ -1371,14 +1536,21 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!IsAwaitingSteamSettle && !DegradeToManualBeta) return;
 
+        // Brief wait in case Steam is mid-finalize after download UI shows 100%.
         for (var i = 0; i < 8 && _processProbe.IsSteamRunning(); i++)
             await _delay(TimeSpan.FromMilliseconds(250)).ConfigureAwait(true);
 
-        if (_processProbe.IsSteamRunning())
+        if (_processProbe.IsGameRunning())
         {
-            _notify(LocalizationService.T("NotifySteamStillRunningSettle"));
-            if (!Confirm(LocalizationService.T("ConfirmDeployWhileSteamRunning")))
+            _notify(LocalizationService.T("NotifyGameStillRunningSettle"));
+            if (!Confirm(LocalizationService.T("ConfirmDeployWhileGameRunning")))
                 return;
+        }
+        else if (_processProbe.IsSteamRunning())
+        {
+            // Steam open is OK for settle confirm: we only read ACF + deploy mods.
+            // Disk swaps / writing live ACF still require Steam exit elsewhere.
+            AppendLog(LocalizationService.T("LogSteamOpenDuringSettleOk"));
         }
 
         DeployBoundProfileAndClearSettle();
@@ -1393,17 +1565,24 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     void ToggleLogPanel() => IsLogExpanded = !IsLogExpanded;
 
-    [RelayCommand(CanExecute = nameof(NeedsMelonLoaderInstall))]
+    public bool CanInstallMelonLoader =>
+        NeedsMelonLoaderInstall
+        && !(IsSessionLocked && _taskProgress.Kind != ManagerTaskKind.MelonInstall);
+
+    [RelayCommand(CanExecute = nameof(CanInstallMelonLoader))]
     async Task InstallMelonLoaderAsync()
     {
-        if (!NeedsMelonLoaderInstall) return;
+        if (!CanInstallMelonLoader) return;
         if (string.IsNullOrWhiteSpace(GamePath))
         {
             _notify(LocalizationService.T("NotifyMelonInstallNeedGamePath"));
             return;
         }
 
-        if (!Confirm(LocalizationService.T("ConfirmInstallMelonLoader")))
+        if (!Confirm(LocalizationService.T(
+                MelonLoaderVersionGate.ShouldUpgradeInstalled(GameStatus?.MelonLoaderVersion)
+                    ? "ConfirmUpgradeMelonLoader"
+                    : "ConfirmInstallMelonLoader")))
             return;
 
         if (_processProbe.IsGameRunning())
@@ -1413,6 +1592,12 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         AppendLog(LocalizationService.T("LogMelonInstallStart"));
+        _taskProgress.Begin(
+            ManagerTaskKind.MelonInstall,
+            LocalizationService.T("TaskTitleMelonInstall"),
+            LocalizationService.T("TaskMessageMelonInstall"),
+            sessionLock: true);
+        NotifyTaskProgress();
         try
         {
             await RunWithCriticalOpAsync(CriticalOpKind.MelonInstall, "MelonInstall", async () =>
@@ -1422,13 +1607,20 @@ public sealed partial class MainViewModel : ObservableObject
                 if (zip is not null)
                 {
                     AppendLog(string.Format(LocalizationService.T("LogMelonInstallLocalZip"), zip));
+                    _taskProgress.Report(LocalizationService.T("TaskMessageMelonInstallLocal"));
+                    NotifyTaskProgress();
                     result = await Task.Run(() => _melonDualSync.InstallFromZip(GamePath, zip)).ConfigureAwait(true);
                 }
                 else
                 {
                     AppendLog(LocalizationService.T("LogMelonInstallDownload"));
                     var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning());
-                    result = await installer.InstallAsync(GamePath).ConfigureAwait(true);
+                    var progress = new Progress<MelonLoaderProgress>(p =>
+                    {
+                        _taskProgress.Report(p.Message, p.Percent);
+                        NotifyTaskProgress();
+                    });
+                    result = await installer.InstallAsync(GamePath, progress).ConfigureAwait(true);
                 }
 
                 AppendLog(result.Message);
@@ -1442,6 +1634,12 @@ public sealed partial class MainViewModel : ObservableObject
         {
             AppendLog(string.Format(LocalizationService.T("NotifyMelonInstallFailed"), ex.Message));
             _notify(string.Format(LocalizationService.T("NotifyMelonInstallFailed"), ex.Message));
+        }
+        finally
+        {
+            _taskProgress.Clear();
+            SyncStickyBranchTaskStrip();
+            NotifyTaskProgress();
         }
     }
 
@@ -1593,6 +1791,12 @@ public sealed partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(zipPath)) return;
 
         _exportingDiagnostics = true;
+        _taskProgress.Begin(
+            ManagerTaskKind.DiagnosticsExport,
+            LocalizationService.T("TaskTitleDiagnostics"),
+            LocalizationService.T("TaskMessageDiagnostics"),
+            sessionLock: false);
+        NotifyTaskProgress();
         try
         {
             var service = new DiagnosticsExportService();
@@ -1657,6 +1861,12 @@ public sealed partial class MainViewModel : ObservableObject
         finally
         {
             _exportingDiagnostics = false;
+            if (_taskProgress.Kind == ManagerTaskKind.DiagnosticsExport)
+            {
+                _taskProgress.Clear();
+                SyncStickyBranchTaskStrip();
+                NotifyTaskProgress();
+            }
         }
     }
 
@@ -1681,6 +1891,12 @@ public sealed partial class MainViewModel : ObservableObject
         _checkingCatalog = true;
         CatalogStatus = "正在拉取目录…";
         AppendLog("正在拉取 Mod 目录…");
+        _taskProgress.Begin(
+            ManagerTaskKind.CatalogRefresh,
+            LocalizationService.T("TaskTitleCatalogRefresh"),
+            LocalizationService.T("TaskMessageCatalogRefresh"),
+            sessionLock: false);
+        NotifyTaskProgress();
         try
         {
             var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
@@ -1718,6 +1934,12 @@ public sealed partial class MainViewModel : ObservableObject
         finally
         {
             _checkingCatalog = false;
+            if (_taskProgress.Kind == ManagerTaskKind.CatalogRefresh)
+            {
+                _taskProgress.Clear();
+                SyncStickyBranchTaskStrip();
+                NotifyTaskProgress();
+            }
         }
     }
 
@@ -1734,6 +1956,12 @@ public sealed partial class MainViewModel : ObservableObject
 
         _addingCatalogMod = true;
         AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+        _taskProgress.Begin(
+            ManagerTaskKind.CatalogDownload,
+            LocalizationService.T("TaskTitleCatalogDownload"),
+            LocalizationService.T("TaskMessageCatalogDownload"),
+            sessionLock: false);
+        NotifyTaskProgress();
         try
         {
             foreach (var item in targets)
@@ -1743,6 +1971,12 @@ public sealed partial class MainViewModel : ObservableObject
         {
             _addingCatalogMod = false;
             AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+            if (_taskProgress.Kind == ManagerTaskKind.CatalogDownload)
+            {
+                _taskProgress.Clear();
+                SyncStickyBranchTaskStrip();
+                NotifyTaskProgress();
+            }
         }
     }
 
@@ -1999,6 +2233,12 @@ public sealed partial class MainViewModel : ObservableObject
         _checkingUpdates = true;
         UpdateStatus = "正在检查更新…";
         AppendLog("正在检查更新…");
+        _taskProgress.Begin(
+            ManagerTaskKind.CheckUpdate,
+            LocalizationService.T("TaskTitleCheckUpdate"),
+            LocalizationService.T("TaskMessageCheckUpdate"),
+            sessionLock: false);
+        NotifyTaskProgress();
         try
         {
             var result = await _updateChecker.CheckAsync().ConfigureAwait(true);
@@ -2030,6 +2270,12 @@ public sealed partial class MainViewModel : ObservableObject
         finally
         {
             _checkingUpdates = false;
+            if (_taskProgress.Kind == ManagerTaskKind.CheckUpdate)
+            {
+                _taskProgress.Clear();
+                SyncStickyBranchTaskStrip();
+                NotifyTaskProgress();
+            }
         }
     }
 
@@ -2749,7 +2995,9 @@ public sealed partial class MainViewModel : ObservableObject
             BetaProfileId = string.IsNullOrWhiteSpace(cfg.BetaProfileId) ? "default" : cfg.BetaProfileId;
             BranchWizardStep = cfg.WizardStep;
             IsAwaitingSteamSettle = cfg.Enabled && cfg.WizardStep == BranchWizardStep.AwaitingSteamSettle;
-            DegradeToManualBeta = IsAwaitingSteamSettle;
+            // Do not force DegradeToManualBeta on restore — that always shows "测试服" confirm
+            // even when settling Official. Degrade is only set after silent-beta failure at runtime.
+            DegradeToManualBeta = false;
             SelectBoundProfile(ActiveGameBranch);
             if (cfg.Enabled
                 && !string.IsNullOrWhiteSpace(cfg.OfficialStorePath)
@@ -2791,18 +3039,100 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    void BusyBegin(string message) =>
+    void BusyBegin(string message)
+    {
+        _taskProgress.Begin(
+            ManagerTaskKind.GenericBusy,
+            LocalizationService.T("BusyProgressTitle"),
+            message,
+            sessionLock: true,
+            sticky: false);
+        NotifyTaskProgress();
         _beginBusy?.Invoke(LocalizationService.T("BusyProgressTitle"), message);
+    }
 
-    void BusyMessage(string message) => _setBusyMessage?.Invoke(message);
+    void BusyMessage(string message)
+    {
+        _taskProgress.Report(message);
+        NotifyTaskProgress();
+        _setBusyMessage?.Invoke(message);
+    }
 
-    void BusyEnd() => _endBusy?.Invoke();
+    void BusyEnd()
+    {
+        _taskProgress.Complete();
+        SyncStickyBranchTaskStrip();
+        NotifyTaskProgress();
+        _endBusy?.Invoke();
+    }
 
     async Task RunBusyAsync(string initialMessage, Func<Task> work)
     {
         BusyBegin(initialMessage);
         try { await work().ConfigureAwait(true); }
         finally { BusyEnd(); }
+    }
+
+    void NotifyTaskProgress()
+    {
+        OnPropertyChanged(nameof(HasCurrentTask));
+        OnPropertyChanged(nameof(TaskTitle));
+        OnPropertyChanged(nameof(TaskMessage));
+        OnPropertyChanged(nameof(TaskProgressValue));
+        OnPropertyChanged(nameof(IsTaskIndeterminate));
+        OnPropertyChanged(nameof(ShowTaskPercent));
+        OnPropertyChanged(nameof(TaskPercentLabel));
+        OnPropertyChanged(nameof(IsSessionLocked));
+        NotifyBranchGates();
+    }
+
+    void SyncStickyBranchTaskStrip()
+    {
+        if (IsAwaitingSteamSettle)
+        {
+            var title = LocalizationService.T("TaskTitleBranchSettle");
+            var msg = string.Format(
+                LocalizationService.T("TaskMessageBranchSettleFmt"),
+                ActiveBranchDisplayName);
+            if (_taskProgress.Kind == ManagerTaskKind.BranchSettle && _taskProgress.IsSticky)
+                _taskProgress.Report(msg);
+            else if (!_taskProgress.HasTask || _taskProgress.Kind is ManagerTaskKind.BranchWizard or ManagerTaskKind.None)
+            {
+                if (_taskProgress.HasTask && _taskProgress.Kind == ManagerTaskKind.BranchWizard)
+                    _taskProgress.Clear();
+                _taskProgress.Begin(ManagerTaskKind.BranchSettle, title, msg, sessionLock: true, sticky: true);
+            }
+            NotifyTaskProgress();
+            return;
+        }
+
+        if (IsBranchWizardInProgress)
+        {
+            var title = LocalizationService.T("TaskTitleBranchWizard");
+            var msg = BranchWizardStep switch
+            {
+                BranchWizardStep.WaitingDownloadB => LocalizationService.T("TaskMessageWizardWaitingDownload"),
+                BranchWizardStep.AwaitingSteamSettle => LocalizationService.T("TaskMessageBranchSettle"),
+                _ => LocalizationService.T("TaskMessageWizardInProgress")
+            };
+            if (_taskProgress.Kind == ManagerTaskKind.BranchWizard && _taskProgress.IsSticky)
+                _taskProgress.Report(msg);
+            else if (!_taskProgress.HasTask
+                     || _taskProgress.Kind is ManagerTaskKind.None or ManagerTaskKind.BranchSettle)
+            {
+                if (_taskProgress.Kind == ManagerTaskKind.BranchSettle)
+                    _taskProgress.Clear();
+                _taskProgress.Begin(ManagerTaskKind.BranchWizard, title, msg, sessionLock: true, sticky: true);
+            }
+            NotifyTaskProgress();
+            return;
+        }
+
+        if (_taskProgress.Kind is ManagerTaskKind.BranchWizard or ManagerTaskKind.BranchSettle)
+        {
+            _taskProgress.Clear();
+            NotifyTaskProgress();
+        }
     }
 
     async Task SwitchToBranchAsync(GameBranch target)
@@ -2825,6 +3155,7 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog(incomplete);
             if (!string.IsNullOrWhiteSpace(detect.Message))
                 AppendLog(detect.Message);
+            AppendLog(LocalizationService.T("HintActiveStoreIncompleteSwitchOther"));
             _notify(incomplete);
             return;
         }
@@ -2854,7 +3185,7 @@ public sealed partial class MainViewModel : ObservableObject
                     var swap = await Task.Run(() => _branchSwitch.TrySwapJunction(target)).ConfigureAwait(true);
                     if (!swap.Success)
                     {
-                        AppendLog(string.IsNullOrWhiteSpace(swap.Message) ? LocalizationService.T("LogSwapFolderFailed") : swap.Message);
+                        AppendLog(MapBranchOperationFailure(swap.Message, LocalizationService.T("LogSwapFolderFailed")));
                         return;
                     }
 
@@ -2935,6 +3266,36 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        if (SteamBranchLayout.IsBranchStorePath(steamLink))
+        {
+            if (!SteamBranchLayout.TryGetCanonicalSteamLink(steamLink, out var canonicalLink))
+            {
+                FailWizard(LocalizationService.T("FailWizardGamePathIsBranchStore"));
+                return;
+            }
+
+            if (SteamGameLocator.LooksLikeGameRoot(canonicalLink))
+            {
+                AppendLog(string.Format(LocalizationService.T("LogWizardNormalizedStorePath"), steamLink, canonicalLink));
+                steamLink = canonicalLink;
+                officialStore = Path.Combine(Path.GetDirectoryName(canonicalLink)!, SteamBranchLayout.OfficialStoreFolderName);
+                betaStore = Path.Combine(Path.GetDirectoryName(canonicalLink)!, SteamBranchLayout.BetaStoreFolderName);
+                GamePath = canonicalLink;
+                try
+                {
+                    var cfgFix = LoadConfig();
+                    cfgFix.GamePath = canonicalLink;
+                    SaveConfig(cfgFix);
+                }
+                catch { /* best-effort */ }
+            }
+            else
+            {
+                FailWizard(LocalizationService.T("FailWizardGamePathIsBranchStore"));
+                return;
+            }
+        }
+
         if (!SteamGameLocator.LooksLikeGameRoot(steamLink))
         {
             FailWizard(LocalizationService.T("FailWizardInvalidGamePath"));
@@ -3000,9 +3361,7 @@ public sealed partial class MainViewModel : ObservableObject
                 var archiveA = await Task.Run(() => _branchSwitch.ArchiveCurrentAs(current)).ConfigureAwait(true);
                 if (!archiveA.Success)
                 {
-                    segmentAFailure = string.IsNullOrWhiteSpace(archiveA.Message)
-                        ? LocalizationService.T("FailWizardArchiveCurrentFailed")
-                        : archiveA.Message;
+                    segmentAFailure = MapArchiveFailureMessage(archiveA.Message, destA);
                     return;
                 }
 
@@ -3080,9 +3439,12 @@ public sealed partial class MainViewModel : ObservableObject
                 var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
                 if (!archiveB.Success)
                 {
-                    segmentBcFailure = string.IsNullOrWhiteSpace(archiveB.Message)
-                        ? LocalizationService.T("FailWizardArchiveOtherFailed")
-                        : archiveB.Message;
+                    var destHint = string.IsNullOrWhiteSpace(otherStore)
+                        ? (other == GameBranch.Official
+                            ? SteamBranchLayout.OfficialStoreFolderName
+                            : SteamBranchLayout.BetaStoreFolderName)
+                        : otherStore;
+                    segmentBcFailure = MapArchiveFailureMessage(archiveB.Message, destHint);
                     return;
                 }
 
@@ -3261,7 +3623,9 @@ public sealed partial class MainViewModel : ObservableObject
             var result = _branchSwitch.TryTeardown(deleteOtherStore);
             if (!result.Success)
             {
-                FailWizard(string.IsNullOrWhiteSpace(result.Message) ? LocalizationService.T("FailWizardTeardownFailed") : result.Message);
+                FailWizard(string.IsNullOrWhiteSpace(result.Message)
+                    ? LocalizationService.T("FailWizardTeardownFailed")
+                    : MapBranchOperationFailure(result.Message, LocalizationService.T("FailWizardTeardownFailed")));
                 return Task.CompletedTask;
             }
 
@@ -3283,10 +3647,53 @@ public sealed partial class MainViewModel : ObservableObject
             RefreshBranchStatusText();
             AppendLog(LocalizationService.T("LogBranchTeardownDone"));
             _notify(LocalizationService.T("NotifyBranchTeardownDone"));
+
+            if (!deleteOtherStore)
+                WarnLeftoverDualStores(GamePath);
+
             ok = true;
             return Task.CompletedTask;
         }).ConfigureAwait(true);
+
         return ok;
+    }
+
+    void WarnLeftoverDualStores(string? aroundPath)
+    {
+        var leftovers = SteamBranchLayout.EnumerateExistingStoreFolders(aroundPath)
+            .Where(SteamGameLocator.LooksLikeGameRoot)
+            .ToList();
+        if (leftovers.Count == 0)
+            return;
+
+        var joined = string.Join("\n", leftovers);
+        var msg = string.Format(LocalizationService.T("NotifyBranchTeardownLeftoverStores"), joined);
+        AppendLog(msg);
+        _notify(msg);
+    }
+
+    internal     static string MapArchiveFailureMessage(string? raw, string destHint)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return LocalizationService.T("FailWizardArchiveCurrentFailed");
+
+        if (raw.Contains("Store path already exists", StringComparison.OrdinalIgnoreCase))
+            return string.Format(LocalizationService.T("FailWizardOtherStoreExists"), destHint);
+
+        return raw;
+    }
+
+    static string MapBranchOperationFailure(string? raw, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return fallback;
+
+        if (raw.Contains("Current store is not a valid game root", StringComparison.OrdinalIgnoreCase)
+            || raw.Contains("Restored path is not a valid game root", StringComparison.OrdinalIgnoreCase)
+            || raw.Contains("Branch store is not a valid game root", StringComparison.OrdinalIgnoreCase))
+            return LocalizationService.T("FailBranchStoreIncompleteSteamDownload");
+
+        return raw;
     }
 
     void SetWizardStep(BranchWizardStep step)
@@ -3324,7 +3731,17 @@ public sealed partial class MainViewModel : ObservableObject
                 cfg.OfficialStorePath = "";
             if (!betaOk)
                 cfg.BetaStorePath = "";
-            if (linkOk && GamePath != cfg.SteamLinkPath)
+
+            // If SteamLinkPath wrongly points at a store folder, prefer sibling Mechabellum when valid.
+            if (SteamBranchLayout.IsBranchStorePath(cfg.SteamLinkPath)
+                && SteamBranchLayout.TryGetCanonicalSteamLink(cfg.SteamLinkPath, out var canonical)
+                && SteamGameLocator.LooksLikeGameRoot(canonical))
+            {
+                cfg.SteamLinkPath = canonical;
+                linkOk = true;
+            }
+
+            if (linkOk && !string.Equals(GamePath, cfg.SteamLinkPath, StringComparison.OrdinalIgnoreCase))
                 GamePath = cfg.SteamLinkPath;
             _branchSwitch.SaveConfig(cfg);
 
@@ -3473,7 +3890,9 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var msg = GameStatus?.Message ?? LocalizationService.T("NotifySettleBlockedGameNotReady");
             AppendLog(msg);
-            AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
+            AppendLog(string.Format(
+                LocalizationService.T("LogSettleKeptAwaitingDownloadFmt"),
+                ActiveBranchDisplayName));
             _notify(LocalizationService.T("NotifySettleBlockedGameNotReady"));
             return;
         }
@@ -3490,8 +3909,25 @@ public sealed partial class MainViewModel : ObservableObject
         {
             if (!string.IsNullOrWhiteSpace(snap.Message))
                 AppendLog($"结算后未保存 ACF 快照：{snap.Message}");
-            AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
-            _notify(LocalizationService.T("NotifySettleBlockedAcfNotSettled"));
+
+            if (snap.IsGameRunningBlock)
+            {
+                AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
+                _notify(LocalizationService.T("NotifySettleBlockedGameRunning"));
+                return;
+            }
+
+            if (snap.IsManifestNotSettled)
+            {
+                AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
+                _notify(LocalizationService.T("NotifySettleBlockedAcfNotSettled"));
+                return;
+            }
+
+            // Deploy already succeeded; snapshot is best-effort. Clear settle so UI matches Steam.
+            AppendLog(LocalizationService.T("LogSettleClearedSnapshotDeferred"));
+            _notify(LocalizationService.T("NotifySettleClearedSnapshotDeferred"));
+            ClearSteamSettle();
             return;
         }
 
@@ -3551,8 +3987,14 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(CanSwitchGameBranch));
         OnPropertyChanged(nameof(CanStartBranchWizard));
         OnPropertyChanged(nameof(CanTeardownBranchSwitch));
+        OnPropertyChanged(nameof(ShowRepairOrphanDualLayout));
+        OnPropertyChanged(nameof(CanRepairOrphanDualLayout));
         ApplyProfileCommand.NotifyCanExecuteChanged();
         ApplyAndLaunchCommand.NotifyCanExecuteChanged();
+        RepairOrphanDualLayoutCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
+        OnPropertyChanged(nameof(CanInstallMelonLoader));
+        InstallMelonLoaderCommand.NotifyCanExecuteChanged();
     }
 
     void RefreshBranchStatusText()
@@ -3562,13 +4004,17 @@ public sealed partial class MainViewModel : ObservableObject
                 ? LocalizationService.T("BranchStatusUnconfigured")
                 : LocalizationService.T("BranchStatusWizardPaused");
         else if (IsAwaitingSteamSettle || BranchWizardStep == BranchWizardStep.AwaitingSteamSettle)
-            BranchStatusText = LocalizationService.T("BranchStatusWaitingSteam");
+            BranchStatusText = string.Format(
+                LocalizationService.T("BranchStatusWaitingSteamFmt"),
+                ActiveBranchDisplayName);
         else if (IsBranchWizardBlocking)
             BranchStatusText = LocalizationService.T("BranchStatusIncomplete");
         else
             BranchStatusText = ActiveGameBranch == GameBranch.Official
                 ? LocalizationService.T("BranchStatusOfficial")
                 : LocalizationService.T("BranchStatusBeta");
+
+        SyncStickyBranchTaskStrip();
     }
 
     string CurrentDeployManifestPath() =>
@@ -3604,6 +4050,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!_suppressBranchSwitchSave)
             TryUpdateBranchConfig(cfg => cfg.ActiveBranch = value);
+        OnPropertyChanged(nameof(SettleConfirmButtonText));
         RefreshBranchStatusText();
     }
 

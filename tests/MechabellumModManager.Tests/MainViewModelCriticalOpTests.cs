@@ -195,6 +195,34 @@ public class MainViewModelCriticalOpTests
         File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
     }
 
+    [Fact]
+    public async Task ApplyRecoveryRepair_clears_gate_when_settle_or_wizard()
+    {
+        using var fx = Fixture.CreateReady();
+        WriteInterruptedMarker(fx.Paths);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.AwaitingSteamSettle,
+            ActiveBranch = GameBranch.Official
+        });
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.IsRecoveryGateActive = true;
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+
+        await vm.ApplyRecoveryRepair();
+
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        vm.IsSessionLocked.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeFalse();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+        fx.Guard.TryLoadInterrupted(out _).Should().BeFalse();
+        vm.ActiveContentPage.Should().Be(MainContentPage.Settings);
+        vm.ShowConfirmManualBeta.Should().BeTrue();
+        vm.EvaluateCloseOrUpdateGate(busyDialogOpen: false).Should().Be(CriticalOpGateLevel.SoftConfirm);
+    }
+
     static void WriteInterruptedMarker(PathsService paths)
     {
         Directory.CreateDirectory(paths.DataRoot);
