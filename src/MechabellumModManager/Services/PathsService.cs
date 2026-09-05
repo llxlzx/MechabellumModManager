@@ -30,6 +30,7 @@ public sealed class PathsService
     public string DeployManifestPrevPath => Path.Combine(DataRoot, "deploy-manifest.prev.json");
     public string BranchSwitchConfigPath => Path.Combine(DataRoot, "branch-switch.json");
     public string BranchSwitchJournalPath => Path.Combine(DataRoot, "branch-switch-journal.json");
+    public string CriticalOpMarkerPath => Path.Combine(DataRoot, "critical-op.json");
     public string LogsDir => Path.Combine(DataRoot, "logs");
     public string SteamAcfSnapshotsDir => Path.Combine(DataRoot, "steam-acf-snapshots");
 
