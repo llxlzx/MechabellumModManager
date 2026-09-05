@@ -368,6 +368,8 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Could not automatically set the other branch’s Steam test channel. Select it manually in Steam, then download.</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Dual-folder wizard paused; you can continue later.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Official/Test dual-folder setup removed.</value></data>
+  <data name="LogWizardAbortedReset" xml:space="preserve"><value>Dual-folder wizard aborted and reset to unconfigured. Confirm the game folder is intact, then Apply &amp; Launch. A working MelonLoader shows a black Melon console (not PowerShell).</value></data>
+  <data name="LogMelonConsoleHint" xml:space="preserve"><value>For mods to load, MelonLoader should open a black Melon console (not PowerShell). If it does not, check version.dll / MelonLoader under the game folder and send MelonLoader\Latest.log.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Dual-folder setup removed. In Steam, confirm the current game branch is correct.</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Profile applied to the game folder</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Could not automatically align the Steam test branch. Select the branch manually in Steam first; do not start Steam until it is aligned.</value></data>
@@ -415,4 +417,14 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
     <value>Skipped generating assemblies now. You can try again via Apply Profile, or launch the game once manually.</value>
   </data>
+  <data name="ExportDiagnosticsButton" xml:space="preserve"><value>Export Diagnostics</value></data>
+  <data name="ExportDiagnosticsTitle" xml:space="preserve"><value>Export Diagnostics</value></data>
+  <data name="ExportDiagnosticsConsent" xml:space="preserve"><value>This pack includes manager logs, config, dual-branch state, and MelonLoader logs to help troubleshoot. Full mode may include local paths and usernames; you can choose strong redaction instead. Email cannot attach the zip automatically — please attach the saved file manually.</value></data>
+  <data name="ExportDiagnosticsModeFull" xml:space="preserve"><value>Full (may include paths/usernames)</value></data>
+  <data name="ExportDiagnosticsModeStrong" xml:space="preserve"><value>Strong redaction (replace user paths)</value></data>
+  <data name="ExportDiagnosticsContinue" xml:space="preserve"><value>Continue</value></data>
+  <data name="ExportDiagnosticsSaved" xml:space="preserve"><value>Diagnostics exported: {0}</value></data>
+  <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>Failed to export diagnostics</value></data>
+  <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Web mail opened; paste the clipboard draft and attach the diagnostics zip manually.</value></data>
+  <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail compose opened; please attach the diagnostics zip manually.</value></data>
 </root>

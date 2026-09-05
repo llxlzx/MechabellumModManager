@@ -368,6 +368,8 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>他方の Steam テストブランチを自動設定できませんでした。Steam で手動選択してからダウンロードしてください。</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>二系統ウィザードを一時停止しました。後で続行できます。</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>正式/テスト二系統設定を解除しました。</value></data>
+  <data name="LogWizardAbortedReset" xml:space="preserve"><value>デュアル構成ウィザードを中止し未設定に戻しました。ゲームフォルダを確認してから適用して起動してください。MelonLoader 有効時は黒い Melon コンソールが出ます（PowerShell ではありません）。</value></data>
+  <data name="LogMelonConsoleHint" xml:space="preserve"><value>Mod を有効にするには MelonLoader の黒いコンソールが必要です（PowerShell ではありません）。出ない場合は version.dll / MelonLoader を確認し、MelonLoader\Latest.log を送ってください。</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>二系統設定を解除しました。Steam で現在のゲームブランチが正しいか確認してください。</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>プロファイルをゲームフォルダに適用しました</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam テストブランチを自動整合できませんでした。先に Steam で手動選択し、整合完了まで Steam を起動しないでください。</value></data>
@@ -414,4 +416,14 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
     <value>今の自動生成をスキップしました。「スキーム適用」または手動で一度ゲームを起動してください。</value>
   </data>
+  <data name="ExportDiagnosticsButton" xml:space="preserve"><value>診断をエクスポート</value></data>
+  <data name="ExportDiagnosticsTitle" xml:space="preserve"><value>診断をエクスポート</value></data>
+  <data name="ExportDiagnosticsConsent" xml:space="preserve"><value>管理ログ、設定、二重フォルダ状態、MelonLoader ログなどをまとめます。そのままモードではパスやユーザー名が含まれる場合があります。強脱敏も選べます。メールは zip を自動添付できないため、保存したファイルを手動で添付してください。</value></data>
+  <data name="ExportDiagnosticsModeFull" xml:space="preserve"><value>そのまま（パス/ユーザー名を含む可能性）</value></data>
+  <data name="ExportDiagnosticsModeStrong" xml:space="preserve"><value>強脱敏（ユーザーパス等を置換）</value></data>
+  <data name="ExportDiagnosticsContinue" xml:space="preserve"><value>続行</value></data>
+  <data name="ExportDiagnosticsSaved" xml:space="preserve"><value>診断をエクスポートしました：{0}</value></data>
+  <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>診断のエクスポートに失敗しました</value></data>
+  <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Webメールを開きました。クリップボードを貼り付け、zip を手動添付してください。</value></data>
+  <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail 作成画面を開きました。zip を手動添付してください。</value></data>
 </root>

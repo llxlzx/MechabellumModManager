@@ -62,6 +62,16 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string RefreshCatalog => T("RefreshCatalog");
     public string AddToLibrary => T("AddToLibrary");
     public string ImportFromGame => T("ImportFromGame");
+    public string ExportDiagnosticsButton => T("ExportDiagnosticsButton");
+    public string ExportDiagnosticsTitle => T("ExportDiagnosticsTitle");
+    public string ExportDiagnosticsConsent => T("ExportDiagnosticsConsent");
+    public string ExportDiagnosticsModeFull => T("ExportDiagnosticsModeFull");
+    public string ExportDiagnosticsModeStrong => T("ExportDiagnosticsModeStrong");
+    public string ExportDiagnosticsContinue => T("ExportDiagnosticsContinue");
+    public string ExportDiagnosticsSaved => T("ExportDiagnosticsSaved");
+    public string ExportDiagnosticsFailed => T("ExportDiagnosticsFailed");
+    public string ExportDiagnosticsMailOpenedDomestic => T("ExportDiagnosticsMailOpenedDomestic");
+    public string ExportDiagnosticsMailOpenedInternational => T("ExportDiagnosticsMailOpenedInternational");
     public string GamePath => T("GamePath");
     public string LaunchMode => T("LaunchMode");
     public string PortableDataRoot => T("PortableDataRoot");

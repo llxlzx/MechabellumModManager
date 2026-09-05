@@ -368,6 +368,8 @@
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Не удалось автоматически выставить тестовый канал Steam для другой ветки. Выберите вручную в Steam, затем скачайте.</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Мастер двух каталогов приостановлен; можно продолжить позже.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка официальная/тестовая снята.</value></data>
+  <data name="LogWizardAbortedReset" xml:space="preserve"><value>Мастер двойной ветки прерван и сброшен. Проверьте папку игры, затем «Применить и запустить». Рабочий MelonLoader показывает чёрную консоль Melon (это не PowerShell).</value></data>
+  <data name="LogMelonConsoleHint" xml:space="preserve"><value>Чтобы моды загрузились, MelonLoader должен открыть чёрную консоль Melon (это не PowerShell). Если нет — проверьте version.dll / MelonLoader и пришлите MelonLoader\Latest.log.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка снята. В Steam проверьте, что текущая ветка игры верна.</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Профиль применён к каталогу игры</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Не удалось автоматически выровнять тестовую ветку Steam. Сначала выберите ветку вручную; не запускайте Steam до выравнивания.</value></data>
@@ -414,4 +416,14 @@
   <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
     <value>Немедленная генерация пропущена. Можно позже через «Применить профиль» или запустить игру вручную.</value>
   </data>
+  <data name="ExportDiagnosticsButton" xml:space="preserve"><value>Экспорт диагностики</value></data>
+  <data name="ExportDiagnosticsTitle" xml:space="preserve"><value>Экспорт диагностики</value></data>
+  <data name="ExportDiagnosticsConsent" xml:space="preserve"><value>Пакет включает логи менеджера, конфиг, состояние dual-folder и логи MelonLoader. Полный режим может содержать пути и имена пользователей; можно выбрать сильную редакцию. Почта не прикрепляет zip автоматически — приложите файл вручную.</value></data>
+  <data name="ExportDiagnosticsModeFull" xml:space="preserve"><value>Полный (может содержать пути/имена)</value></data>
+  <data name="ExportDiagnosticsModeStrong" xml:space="preserve"><value>Сильная редакция (замена путей пользователя)</value></data>
+  <data name="ExportDiagnosticsContinue" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="ExportDiagnosticsSaved" xml:space="preserve"><value>Диагностика экспортирована: {0}</value></data>
+  <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>Не удалось экспортировать диагностику</value></data>
+  <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Веб-почта открыта; вставьте черновик из буфера и приложите zip вручную.</value></data>
+  <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail открыт; приложите zip вручную.</value></data>
 </root>

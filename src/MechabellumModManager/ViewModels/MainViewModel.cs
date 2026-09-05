@@ -54,6 +54,9 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Action<string>? _copyText;
     readonly Action? _unselectLibrary;
     readonly Action? _unselectCatalog;
+    readonly Func<DiagnosticsRedactionMode?>? _promptExportDiagnostics;
+    readonly Func<string, string?>? _saveZipFile;
+    readonly Action<string>? _revealInExplorer;
     readonly BranchSwitchService _branchSwitch;
     readonly IProcessProbe _processProbe;
     readonly IProcessStarter _processStarter;
@@ -71,6 +74,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly HashSet<string> _assemblyGeneratePrompted = new(StringComparer.OrdinalIgnoreCase);
     bool _suppressLanguageSave;
     bool _reporting;
+    bool _exportingDiagnostics;
     bool _suppressFilterRefresh;
 
     public IRelayCommand ApplyProfileCommand { get; }
@@ -116,7 +120,10 @@ public sealed partial class MainViewModel : ObservableObject
         TimeSpan? steamExitCooldown = null,
         TimeSpan? steamRestartCooldown = null,
         Func<string, MessageBoxResult, bool>? confirmChoice = null,
-        ManagerLogWriter? managerLog = null)
+        ManagerLogWriter? managerLog = null,
+        Func<DiagnosticsRedactionMode?>? promptExportDiagnostics = null,
+        Func<string, string?>? saveZipFile = null,
+        Action<string>? revealInExplorer = null)
     {
         _paths = paths;
         _store = store;
@@ -153,6 +160,9 @@ public sealed partial class MainViewModel : ObservableObject
         _copyText = copyText;
         _unselectLibrary = unselectLibrary;
         _unselectCatalog = unselectCatalog;
+        _promptExportDiagnostics = promptExportDiagnostics;
+        _saveZipFile = saveZipFile;
+        _revealInExplorer = revealInExplorer;
         _processProbe = processProbe ?? new ProcessProbe();
         _processStarter = processStarter ?? new ShellProcessStarter();
         _delay = delay ?? (span => Task.Delay(span));
@@ -1352,6 +1362,82 @@ public sealed partial class MainViewModel : ObservableObject
         var msg = domestic ? Ui.SubmitMailOpenedDomestic : Ui.SubmitMailOpenedInternational;
         AppendLog(msg);
         _notify(msg);
+    }
+
+    [RelayCommand]
+    void ExportDiagnostics()
+    {
+        if (_exportingDiagnostics) return;
+
+        var mode = _promptExportDiagnostics?.Invoke();
+        if (mode is null) return;
+
+        var defaultName = $"MechabellumModManager-diagnostics-{DateTime.Now:yyyyMMdd-HHmmss}.zip";
+        var zipPath = _saveZipFile?.Invoke(defaultName);
+        if (string.IsNullOrWhiteSpace(zipPath)) return;
+
+        _exportingDiagnostics = true;
+        try
+        {
+            var service = new DiagnosticsExportService();
+            var result = service.ExportToFile(zipPath, new DiagnosticsExportRequest
+            {
+                Paths = _paths,
+                GamePath = GamePath ?? "",
+                SessionLogText = LogText ?? "",
+                AppVersion = AppVersion ?? "",
+                GameStatusKind = GameStatus?.Kind.ToString(),
+                GameStatusMessage = GameStatus?.Message,
+                BranchSwitchEnabled = BranchSwitchEnabled,
+                BranchWizardStep = BranchWizardStep.ToString(),
+                ActiveGameBranch = ActiveGameBranch.ToString(),
+                Redaction = mode.Value,
+                LogWriter = _managerLog
+            });
+
+            if (!result.Success)
+            {
+                var fail = string.IsNullOrWhiteSpace(result.Message)
+                    ? Ui.ExportDiagnosticsFailed
+                    : $"{Ui.ExportDiagnosticsFailed}：{result.Message}";
+                AppendLog(fail);
+                _notify(fail);
+                return;
+            }
+
+            _revealInExplorer?.Invoke(result.ZipPath ?? zipPath);
+
+            var compose = GitHubCommunityLinks.BuildDiagnosticsCompose(AppVersion, mode.Value);
+            var (ok, _, domestic) = GitHubCommunityLinks.TryOpenCompose(
+                compose.Subject,
+                compose.Body,
+                TryCopyText);
+
+            var saved = string.Format(Ui.ExportDiagnosticsSaved, result.ZipPath ?? zipPath);
+            AppendLog(saved);
+
+            if (!ok)
+            {
+                AppendLog($"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
+                _notify($"{saved}\n{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
+                return;
+            }
+
+            var mailMsg = domestic
+                ? Ui.ExportDiagnosticsMailOpenedDomestic
+                : Ui.ExportDiagnosticsMailOpenedInternational;
+            AppendLog($"{mailMsg}\n{GitHubCommunityLinks.Inbox}");
+            _notify($"{saved}\n{mailMsg}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"{Ui.ExportDiagnosticsFailed}：{ex.Message}");
+            _notify(Ui.ExportDiagnosticsFailed);
+        }
+        finally
+        {
+            _exportingDiagnostics = false;
+        }
     }
 
     [RelayCommand]

@@ -370,6 +370,8 @@
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>未能自动设置另一服的 Steam 测试分支。请在 Steam 中手动选择后再下载。</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>双目录向导已暂停，可稍后继续。</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>已解除正式服/测试服双目录配置。</value></data>
+  <data name="LogWizardAbortedReset" xml:space="preserve"><value>双服向导已中止并恢复为「未配置」。请确认游戏目录仍完整，再「应用并启动」。Mod 生效时应出现 MelonLoader 黑色控制台（不是 PowerShell）。</value></data>
+  <data name="LogMelonConsoleHint" xml:space="preserve"><value>若 Mod 要生效，启动后应出现 MelonLoader 黑色控制台窗口（不是 PowerShell）。若没有该窗口，请检查游戏目录下是否有 version.dll / MelonLoader，并把 MelonLoader\Latest.log 发给维护者。</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>已解除双目录配置。请在 Steam 中确认当前游戏分支是否正确。</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>方案已应用到游戏目录</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>未能自动对齐 Steam 测试分支。请先在 Steam 中手动选好分支；对齐完成前请勿启动 Steam。</value></data>
@@ -417,4 +419,14 @@
   <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
     <value>已跳过立即生成程序集；需要时可点击「应用方案」再试，或手动启动一次游戏。</value>
   </data>
+  <data name="ExportDiagnosticsButton" xml:space="preserve"><value>导出诊断包</value></data>
+  <data name="ExportDiagnosticsTitle" xml:space="preserve"><value>导出诊断包</value></data>
+  <data name="ExportDiagnosticsConsent" xml:space="preserve"><value>将打包管理器日志、配置、双服状态与 MelonLoader 日志等，便于排查问题。原样模式可能包含本机路径与用户名；也可选择强脱敏。邮件无法自动附加 zip，请手动附上导出的文件。</value></data>
+  <data name="ExportDiagnosticsModeFull" xml:space="preserve"><value>原样收录（可能含路径/用户名）</value></data>
+  <data name="ExportDiagnosticsModeStrong" xml:space="preserve"><value>强脱敏（替换用户路径等）</value></data>
+  <data name="ExportDiagnosticsContinue" xml:space="preserve"><value>继续导出</value></data>
+  <data name="ExportDiagnosticsSaved" xml:space="preserve"><value>已导出诊断包：{0}</value></data>
+  <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>导出诊断包失败</value></data>
+  <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>已打开网页邮箱；请粘贴剪贴板内容，并手动附加诊断 zip。</value></data>
+  <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>已打开 Gmail 撰写页；请手动附加诊断 zip。</value></data>
 </root>
