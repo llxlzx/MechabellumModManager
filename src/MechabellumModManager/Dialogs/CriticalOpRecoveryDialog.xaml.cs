@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using MechabellumModManager.Services;
 
@@ -5,45 +6,54 @@ namespace MechabellumModManager.Dialogs;
 
 public enum CriticalOpRecoveryChoice
 {
-    None,
     Continue,
     Repair
 }
 
 public partial class CriticalOpRecoveryDialog : Window
 {
-    public CriticalOpRecoveryChoice ResultChoice { get; private set; } = CriticalOpRecoveryChoice.None;
+    CriticalOpRecoveryChoice? _choice;
 
-    public event Action? DiagnosticsRequested;
-
-    public CriticalOpRecoveryDialog()
+    public CriticalOpRecoveryDialog(Action? diagnosticsRequested = null)
     {
         InitializeComponent();
+        DiagnosticsRequested = diagnosticsRequested;
         Title = LocalizationService.T("CriticalOpRecoveryTitle");
-        TitleText.Text = LocalizationService.T("CriticalOpRecoveryTitle");
-        MessageText.Text = LocalizationService.T("CriticalOpRecoveryBody");
+        TitleHint.Text = LocalizationService.T("CriticalOpRecoveryTitle");
+        BodyText.Text = LocalizationService.T("CriticalOpRecoveryBody");
         ContinueButton.Content = LocalizationService.T("CriticalOpRecoveryContinue");
         RepairButton.Content = LocalizationService.T("CriticalOpRecoveryRepair");
         DiagnosticsButton.Content = LocalizationService.T("CriticalOpRecoveryDiagnostics");
-        Closing += (_, e) =>
-        {
-            if (ResultChoice == CriticalOpRecoveryChoice.None)
-                e.Cancel = true;
-        };
+        DiagnosticsButton.Visibility = diagnosticsRequested is null
+            ? Visibility.Collapsed
+            : Visibility.Visible;
     }
+
+    public CriticalOpRecoveryChoice Choice => _choice ?? CriticalOpRecoveryChoice.Continue;
+
+    public Action? DiagnosticsRequested { get; }
 
     void Continue_Click(object sender, RoutedEventArgs e)
     {
-        ResultChoice = CriticalOpRecoveryChoice.Continue;
+        _choice = CriticalOpRecoveryChoice.Continue;
         DialogResult = true;
     }
 
     void Repair_Click(object sender, RoutedEventArgs e)
     {
-        ResultChoice = CriticalOpRecoveryChoice.Repair;
+        _choice = CriticalOpRecoveryChoice.Repair;
         DialogResult = true;
     }
 
-    void Diagnostics_Click(object sender, RoutedEventArgs e) =>
+    void Diagnostics_Click(object sender, RoutedEventArgs e)
+    {
         DiagnosticsRequested?.Invoke();
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (_choice is null)
+            e.Cancel = true;
+        base.OnClosing(e);
+    }
 }
