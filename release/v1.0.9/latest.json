@@ -1,6 +1,6 @@
 {
   "version": "1.0.9",
-  "notes": "1.0.9: UI icons; catalog multi-select; apply fix; installer 5 langs + EULA; ProgramData install-defaults + runasoriginaluser; ask before Il2Cpp assembly generate; uiLanguage seed/merge.",
+  "notes": "1.0.9：功能图标与浏览折叠文案；目录多选批量入库；应用方案仅脏可点；安装器五语+种子配置；检测后询问生成程序集。 / 1.0.9: UI icons and browse collapse labels; catalog multi-select batch add; Apply only when dirty; 5-lang installer + config seeding; ask before assembly generation.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.9/MechabellumModManager_Setup_v1.0.9.exe",
-  "publishedAt": "2026-09-05T00:27:09Z"
+  "publishedAt": "2026-09-05T00:29:54Z"
 }

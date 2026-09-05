@@ -1,6 +1,6 @@
 {
   "version": "1.0.7",
-  "notes": "1.0.7：ACF 快照定居修复（BytesToDownload 等于 BytesDownloaded 视为已完成）；安装器原生写配置。 / ACF snapshot settle: accept BytesToDownload==BytesDownloaded; installer native config write.",
+  "notes": "1.0.7：正式/测试双目录切换；切服加固与 ACF 快照定居修复；双服 Melon 同步；安装器原生写配置。 / 1.0.7: Official/Beta dual-folder switch; safer switching + ACF snapshot settle fix; Melon dual-store sync; installer native config write.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.7/MechabellumModManager_Setup_v1.0.7.exe",
-  "publishedAt": "2026-09-04T14:35:45Z"
+  "publishedAt": "2026-09-04T11:01:56Z"
 }

@@ -1,6 +1,6 @@
-﻿{
-    "version":  "1.0.3",
-    "notes":  "Mod 浏览预览图；本地库详情；自检修复(JSON/catalog null)；多DLL导入；从游戏扫描等。",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.3/MechabellumModManager_Setup_v1.0.3.exe",
-    "publishedAt":  "2026-09-03T04:00:00Z"
+{
+  "version": "1.0.3",
+  "notes": "1.0.3：目录预览图与本地库详情；多 DLL 导入/游戏目录扫描；稳定性自检修复。 / 1.0.3: catalog previews and library details; multi-DLL import / scan game folders; stability self-check fixes.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.3/MechabellumModManager_Setup_v1.0.3.exe",
+  "publishedAt": "2026-09-03T04:08:16Z"
 }

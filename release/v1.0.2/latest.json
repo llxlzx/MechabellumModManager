@@ -1,6 +1,6 @@
 {
   "version": "1.0.2",
-  "notes": "新增 Mod 浏览大全（对接 MechabellumMods 仓库目录）；重建 Setup 安装包。",
+  "notes": "1.0.2：新增 Mod 浏览大全（对接 MechabellumMods 目录仓库）；重建 Setup 安装包。 / 1.0.2: add Mod catalog browser (MechabellumMods repo); rebuild Setup package.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.2/MechabellumModManager_Setup_v1.0.2.exe",
   "publishedAt": "2026-09-03T03:00:00Z"
 }

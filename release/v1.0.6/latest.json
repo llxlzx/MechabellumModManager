@@ -1,6 +1,6 @@
 {
   "version": "1.0.6",
-  "notes": "1.0.6 ZH/EN: 筛选栏(搜索+分类+标签+排序)；目录/本地 category·tags；分类列与详情标签；投稿模板含 category/tags；主窗口默认最大化。 Filter bar; catalog/local category·tags; Category column; submit template; window maximized by default. MelonLoader Type unchanged.",
+  "notes": "1.0.6：筛选栏（搜索/分类/标签/排序）；目录与本地 category·tags；投稿模板；主窗口默认最大化。 / 1.0.6: filter bar (search/category/tags/sort); catalog and local category·tags; submit template; window maximized by default.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.6/MechabellumModManager_Setup_v1.0.6.exe",
-  "publishedAt": "2026-09-04T00:35:28Z"
+  "publishedAt": "2026-09-04T00:29:12Z"
 }

@@ -1,6 +1,6 @@
 {
   "version": "1.0.4",
-  "publishedAt": "2026-09-03T06:00:00Z",
+  "notes": "1.0.4：取消中转，投稿/举报直连 GitHub；应用内投稿引导与预填 Issue；多语言 UI。 / 1.0.4: remove relay; GitHub-direct submit/report; in-app submit guide and prefilled Issue; multi-language UI.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.4/MechabellumModManager_Setup_v1.0.4.exe",
-  "notes": "取消中转：投稿/举报直连 GitHub；投稿三步引导 + PR；举报预填 Issue 并复制链接；多语言与免责声明。"
+  "publishedAt": "2026-09-03T06:44:11Z"
 }
