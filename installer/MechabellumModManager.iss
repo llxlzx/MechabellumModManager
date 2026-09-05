@@ -1,9 +1,9 @@
-; Mechabellum Mod Manager — Inno Setup 6
+﻿; Mechabellum Mod Manager — Inno Setup 6
 ; Compile with: ISCC.exe MechabellumModManager.iss
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "1.0.9"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -108,6 +108,7 @@ english.StatusSteamBusyMelon=Steam is downloading this game; MelonLoader write w
 english.WarnSteamBusyMelon=Steam is downloading this game, so Setup skipped MelonLoader.%n%nAfter the download finishes, re-run this Setup (keep MelonLoader checked). Otherwise the manager will show “Missing Loader” and Apply and Launch will stay disabled.
 english.StatusMelon=Checking/installing MelonLoader (skip if present; prefer embedded offline package)…
 english.StatusNoPsMelon=Could not start PowerShell; falling back to the manager’s built-in MelonLoader installer.
+english.WarnNoPsMelon=Could not start PowerShell; already using the manager's built-in MelonLoader installer. If it still fails, open the manager and click Install MelonLoader.
 english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: often GitHub download failure; exit 3: incomplete install; exit 5: game running.%n%nOr open the manager and click Install MelonLoader, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
 english.StatusMelonDone=MelonLoader finished (or skipped).
 english.StatusMelonAlready=MelonLoader already present; skipping install.
@@ -144,6 +145,7 @@ russian.StatusSteamBusyMelon=Steam загружает эту игру; запи�
 russian.WarnSteamBusyMelon=Steam загружает эту игру, поэтому MelonLoader пропущен.%n%nПосле загрузки снова запустите Setup (оставьте MelonLoader) — иначе менеджер покажет «нет Loader», а «Применить и запустить» будет недоступно.
 russian.StatusMelon=Проверка/установка MelonLoader (пропуск, если есть; предпочтение офлайн-пакету)…
 russian.StatusNoPsMelon=Не удалось запустить PowerShell; автоматическая установка MelonLoader пропущена (можно установить позже).
+russian.WarnNoPsMelon=Не удалось запустить PowerShell; используется встроенный установщик MelonLoader. Если ошибка повторится, откройте менеджер и нажмите «Установить MelonLoader».
 russian.ErrMelon=Установка MelonLoader не удалась (код %1).%n%nкод 1: неверный путь или файлы заняты; код 2: часто сбой загрузки с GitHub; код 3: неполная установка.%n%nМожно снять MelonLoader и переустановить менеджер, или установить вручную:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Скачайте MelonLoader.x64.zip и распакуйте в папку игры по инструкции.)
 russian.StatusMelonDone=MelonLoader завершён (или пропущен).
 russian.StatusMelonAlready=MelonLoader already present; skipping install.
@@ -180,6 +182,7 @@ japanese.StatusSteamBusyMelon=Steam が本ゲームをダウンロード中の�
 japanese.WarnSteamBusyMelon=Steam が本ゲームをダウンロード中のため MelonLoader をスキップしました。%n%n完了後に本 Setup を再実行（MelonLoader にチェック）してください。そうしないと「Loader なし」になり「適用して起動」が使えません。
 japanese.StatusMelon=MelonLoader を確認/インストール中（存在すればスキップ；同梱オフラインパッケージを優先）…
 japanese.StatusNoPsMelon=PowerShell を起動できませんでした；MelonLoader の自動インストールをスキップしました（後でインストール可能）。
+japanese.WarnNoPsMelon=PowerShell を起動できませんでした。マネージャー内蔵の MelonLoader インストーラに切り替えました。失敗する場合はマネージャーで「MelonLoader をインストール」を押してください。
 japanese.ErrMelon=MelonLoader のインストールに失敗しました（終了コード %1）。%n%n終了コード 1：無効なパスまたはファイルロック；2：多くは GitHub ダウンロード失敗；3：不完全なインストール。%n%nMelonLoader のチェックを外してマネージャーを再インストールするか、手動でインストールしてください：%nhttps://github.com/LavaGang/MelonLoader/releases%n（MelonLoader.x64.zip をダウンロードし、公式手順に従いゲームフォルダに展開）
 japanese.StatusMelonDone=MelonLoader が完了しました（またはスキップ）。
 japanese.StatusMelonAlready=MelonLoader already present; skipping install.
@@ -216,6 +219,7 @@ german.StatusSteamBusyMelon=Steam lädt dieses Spiel; MelonLoader-Schreiben übe
 german.WarnSteamBusyMelon=Steam lädt dieses Spiel, daher wurde MelonLoader übersprungen.%n%nNach dem Download Setup erneut ausführen (MelonLoader angehakt). Sonst zeigt der Manager „Loader fehlt“ und Anwenden und Starten bleibt deaktiviert.
 german.StatusMelon=MelonLoader prüfen/installieren (überspringen wenn vorhanden; Offline-Paket bevorzugt)…
 german.StatusNoPsMelon=PowerShell konnte nicht gestartet werden; automatische MelonLoader-Installation übersprungen (später möglich).
+german.WarnNoPsMelon=PowerShell konnte nicht gestartet werden; es wird der eingebaute MelonLoader-Installer des Managers verwendet. Bei weiterem Fehler öffnen Sie den Manager und klicken Sie auf MelonLoader installieren.
 german.ErrMelon=MelonLoader-Installation fehlgeschlagen (Exit %1).%n%nExit 1: ungültiger Pfad oder Dateien gesperrt; Exit 2: oft GitHub-Download-Fehler; Exit 3: unvollständige Installation.%n%nMelonLoader abwählen und Manager neu installieren, oder manuell installieren:%nhttps://github.com/LavaGang/MelonLoader/releases%n(MelonLoader.x64.zip herunterladen und gemäß Anleitung in Spielordner entpacken)
 german.StatusMelonDone=MelonLoader abgeschlossen (oder übersprungen).
 german.StatusMelonAlready=MelonLoader already present; skipping install.

@@ -87,13 +87,15 @@ public sealed class MelonLoaderConfigOptimizer
             }
         }
 
-        var zipPath = Path.Combine(
+        var agDir = Path.Combine(
             gamePath,
             "MelonLoader",
             "Dependencies",
-            "Il2CppAssemblyGenerator",
-            UnityVersionNormalizer.ExpectedZipFileName(version!));
-        return File.Exists(zipPath);
+            "Il2CppAssemblyGenerator");
+        var zipPath = Path.Combine(agDir, UnityVersionNormalizer.ExpectedZipFileName(version!));
+        var cpp2IlExe = Path.Combine(agDir, "Cpp2IL", "Cpp2IL.exe");
+        // Offline must not lock Melon out of downloading Cpp2IL when only UnityDeps exist.
+        return File.Exists(zipPath) && File.Exists(cpp2IlExe);
     }
 
     public MelonLoaderOptimizeResult ApplyRecommendedSettings(string gamePath) =>

@@ -22,6 +22,7 @@ if not exist "installer\redist\dotnet8" mkdir "installer\redist\dotnet8"
 if not exist "installer\redist\dotnet6" mkdir "installer\redist\dotnet6"
 if not exist "installer\redist\melonloader" mkdir "installer\redist\melonloader"
 if not exist "installer\redist\unity-deps" mkdir "installer\redist\unity-deps"
+if not exist "installer\redist\cpp2il" mkdir "installer\redist\cpp2il"
 
 if /I "%SKIP_MELON_REDIST_CHECK%"=="1" (
   echo WARNING: SKIP_MELON_REDIST_CHECK=1 — skips all release redist checks. Do NOT use for release.
@@ -54,6 +55,15 @@ if "%UNITY_DEPS_OK%"=="0" (
 echo Found UnityDependencies offline zip.
 
 set "DOTNET8_OK=0"
+
+set "HAS_CPP2IL="
+if exist "installer\redist\cpp2il\Cpp2IL.exe" if exist "installer\redist\cpp2il\Cpp2IL.Plugin.StrippedCodeRegSupport.dll" set "HAS_CPP2IL=1"
+if not defined HAS_CPP2IL (
+  echo ERROR: Missing non-empty installer\redist\cpp2il\Cpp2IL.exe and plugin DLL
+  echo Place Melon 0.7.3 matching Cpp2IL files ^(tag 2022.1.0-pre-release.21^).
+  exit /b 3
+)
+
 for %%F in ("installer\redist\dotnet8\windowsdesktop-runtime-8.*-win-x64.exe") do (
   if exist "%%~fF" if not "%%~zF"=="0" set "DOTNET8_OK=1"
 )

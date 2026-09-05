@@ -288,5 +288,9 @@ public class MelonLoaderConfigOptimizerTests
         File.WriteAllText(
             Path.Combine(dir, UnityVersionNormalizer.ExpectedZipFileName(majorMinorPatch)),
             "fake-zip");
+        // Offline also requires Cpp2IL.exe (Melon 0.7.3).
+        var cpp2Il = Path.Combine(dir, "Cpp2IL");
+        Directory.CreateDirectory(cpp2Il);
+        File.WriteAllText(Path.Combine(cpp2Il, "Cpp2IL.exe"), "fake-cpp2il");
     }
 }
