@@ -15,7 +15,7 @@ public static class CriticalOpGate
         bool branchSwitchBusy,
         bool recoveryModalPending,
         bool awaitingSteamSettle,
-        bool wizardWaitingSteam)
+        bool wizardInProgress)
     {
         if (recoveryModalPending)
             return CriticalOpGateLevel.HardBlock;
@@ -23,7 +23,7 @@ public static class CriticalOpGate
         if (guardRunning || busyDialogOpen || branchSwitchBusy)
             return CriticalOpGateLevel.HardBlock;
 
-        if (awaitingSteamSettle || wizardWaitingSteam)
+        if (awaitingSteamSettle || wizardInProgress)
             return CriticalOpGateLevel.SoftConfirm;
 
         return CriticalOpGateLevel.Allow;

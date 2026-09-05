@@ -154,6 +154,29 @@ public class MainViewModelCriticalOpTests
     }
 
     [Fact]
+    public void ApplyRecoveryContinue_mid_wizard_Linked_is_SoftConfirm_not_Allow()
+    {
+        using var fx = Fixture.CreateReady();
+        WriteInterruptedMarker(fx.Paths);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Linked,
+            ActiveBranch = GameBranch.Official
+        });
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.IsRecoveryGateActive = true;
+        vm.IsBranchWizardInProgress.Should().BeTrue();
+        vm.IsWizardWaitingSteam.Should().BeFalse();
+
+        vm.ApplyRecoveryContinue();
+
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        vm.IsBranchWizardInProgress.Should().BeTrue();
+        vm.EvaluateCloseOrUpdateGate(busyDialogOpen: false).Should().Be(CriticalOpGateLevel.SoftConfirm);
+    }
+
+    [Fact]
     public void ApplyRecoveryContinue_clears_gate_routes_settle_ui()
     {
         using var fx = Fixture.CreateReady();

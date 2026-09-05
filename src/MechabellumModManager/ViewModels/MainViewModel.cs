@@ -370,7 +370,7 @@ public sealed partial class MainViewModel : ObservableObject
             IsBranchSwitchBusy,
             IsRecoveryGateActive,
             IsAwaitingSteamSettle,
-            IsWizardWaitingSteam);
+            IsBranchWizardInProgress);
 
     internal async Task RunWithCriticalOpAsync(CriticalOpKind kind, string detail, Func<Task> action)
     {
