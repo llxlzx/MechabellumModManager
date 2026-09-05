@@ -437,4 +437,13 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="BusyMovingGameFolder" xml:space="preserve"><value>Spielordner wird verschoben — Manager nicht schliessen…</value></data>
   <data name="BusyCreatingJunction" xml:space="preserve"><value>Verzeichnisverknuepfung wird erstellt — Manager nicht schliessen…</value></data>
   <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Steam-Branch-Informationen werden vorbereitet — Manager nicht schliessen…</value></data>
+  <data name="CriticalOpBlockUpdate" xml:space="preserve"><value>A disk write or critical operation is in progress. Check for updates after it finishes.</value></data>
+  <data name="CriticalOpBlockClose" xml:space="preserve"><value>A disk write or critical operation is in progress. Do not close the manager.</value></data>
+  <data name="CriticalOpSoftUpdateConfirm" xml:space="preserve"><value>Still waiting for Steam to switch or download ({0}). Updating the installer may interrupt the flow; open the download link anyway?</value></data>
+  <data name="CriticalOpSoftCloseConfirm" xml:space="preserve"><value>Still waiting for Steam ({0}). You can resume settle or the wizard later; close anyway?</value></data>
+  <data name="CriticalOpRecoveryTitle" xml:space="preserve"><value>Unfinished critical operation detected</value></data>
+  <data name="CriticalOpRecoveryBody" xml:space="preserve"><value>A mode switch, Melon install, or repair may have been interrupted. Continue the unfinished step, or run repair.</value></data>
+  <data name="CriticalOpRecoveryContinue" xml:space="preserve"><value>Continue unfinished operation</value></data>
+  <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>Run repair / safe cleanup</value></data>
+  <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data>
 </root>
