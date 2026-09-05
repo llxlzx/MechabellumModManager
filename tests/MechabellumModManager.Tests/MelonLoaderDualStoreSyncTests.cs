@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MechabellumModManager.Services;
 
 public class MelonLoaderDualStoreSyncTests
@@ -81,6 +81,36 @@ public class MelonLoaderDualStoreSyncTests
         }
     }
 
+
+    [Fact]
+    public void EnsureOnStore_does_not_copy_stale_assembly_generator_Config()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-cfg-" + Guid.NewGuid().ToString("N"));
+        var src = Path.Combine(root, "src");
+        var dst = Path.Combine(root, "dst");
+        try
+        {
+            SeedGame(src);
+            SeedGame(dst);
+            SeedLoader(src);
+            Directory.CreateDirectory(Path.Combine(src, "MelonLoader", "Il2CppAssemblies"));
+            File.WriteAllText(Path.Combine(src, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "gen");
+            var cfgDir = Path.Combine(src, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator");
+            Directory.CreateDirectory(cfgDir);
+            File.WriteAllText(Path.Combine(cfgDir, "Config.cfg"), "GameAssemblyHash = \"FROM_SRC\"\n");
+            File.WriteAllText(Path.Combine(cfgDir, "Il2CppAssemblyGenerator.dll"), "dll");
+
+            var result = new MelonLoaderDualStoreSync().EnsureOnStore(dst, siblingGamePath: src);
+
+            result.Success.Should().BeTrue();
+            File.Exists(Path.Combine(dst, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "Il2CppAssemblyGenerator.dll")).Should().BeTrue();
+            File.Exists(Path.Combine(dst, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator", "Config.cfg")).Should().BeFalse();
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
     static void SeedGame(string dir)
     {
         Directory.CreateDirectory(dir);
@@ -95,3 +125,4 @@ public class MelonLoaderDualStoreSyncTests
         File.WriteAllBytes(Path.Combine(dir, "version.dll"), new byte[] { 0x4D, 0x5A });
     }
 }
+

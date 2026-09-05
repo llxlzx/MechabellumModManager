@@ -12,6 +12,10 @@ public sealed class UiStrings : INotifyPropertyChanged
 
     public string Settings => T("Settings");
     public string BrowseMods => T("BrowseMods");
+    public string CatalogEmptyHint => T("CatalogEmptyHint");
+    public string LibraryEmptyHint => T("LibraryEmptyHint");
+    public string NavLibraryTip => T("NavLibraryTip");
+    public string NavWorkshopTip => T("NavWorkshopTip");
     public string CollapseBrowse => T("CollapseBrowse");
     public string ExpandBrowse => T("ExpandBrowse");
     public string ImportDll => T("ImportDll");
@@ -64,6 +68,8 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string Profiles => T("Profiles");
     public string ModLibrary => T("ModLibrary");
     public string SyncLog => T("SyncLog");
+    public string LogExpand => T("LogExpand");
+    public string LogCollapse => T("LogCollapse");
     public string CurrentProfile => T("CurrentProfile");
     public string FilterSearch => T("FilterSearch");
     public string FilterCategory => T("FilterCategory");

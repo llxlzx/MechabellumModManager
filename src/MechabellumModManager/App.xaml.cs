@@ -12,6 +12,55 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (InstallConfigSeeder.TryParseArgs(e.Args, out var seedGamePath, out var seedUiLanguage))
+        {
+            try
+            {
+                InstallConfigSeeder.Seed(seedGamePath!, seedUiLanguage);
+                Shutdown(0);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    var dir = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "MechabellumModManager");
+                    Directory.CreateDirectory(dir);
+                    File.AppendAllText(
+                        Path.Combine(dir, "seed-config.log"),
+                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}\n");
+                }
+                catch { /* ignore */ }
+
+                Shutdown(1);
+            }
+
+            return;
+        }
+
+        DispatcherUnhandledException += (_, args) =>
+        {
+            try
+            {
+                var dir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "MechabellumModManager");
+                Directory.CreateDirectory(dir);
+                File.AppendAllText(
+                    Path.Combine(dir, "crash.log"),
+                    $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {args.Exception}\n");
+            }
+            catch { /* ignore */ }
+
+            // Win32Exception 1816 (quota) during window updates should not hard-kill the process.
+            if (args.Exception is System.ComponentModel.Win32Exception { NativeErrorCode: 1816 })
+            {
+                args.Handled = true;
+                return;
+            }
+        };
+
         base.OnStartup(e);
 
         var window = new MainWindow();

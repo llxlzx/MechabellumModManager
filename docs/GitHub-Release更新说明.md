@@ -15,6 +15,13 @@ For maintainers: how to build the Setup and publish a GitHub Release.
 
 ## 版本速记 / Release notes
 
+### v1.0.9
+
+- 独占页面布局；目录/本地库密度与视觉抛光；「已装 Mod / Mod 工坊」命名；运行日志可展开收起。
+- 跟随系统语言按 Windows 显示语言；Melon 双服同步跳过陈旧 Config.cfg；安装器静默 .NET、去掉结束前二次启动。
+- Exclusive pages; density + polish; Installed/Workshop labels; expandable activity log.
+- Follow-system uses Windows display language; Melon dual-store skips stale Config.cfg; quiet .NET; no pre-finish app launch.
+
 ### v1.0.5
 
 - 投稿 / 更新 / 举报 / 建议改为邮件 **llxmod@foxmail.com**（标准主题前缀 + 正文模板；应用内复制到剪贴板并打开网页邮箱）。

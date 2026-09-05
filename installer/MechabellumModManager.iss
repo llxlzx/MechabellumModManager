@@ -56,13 +56,14 @@ chinesesimplified.GamePathDesc=目录中需包含 Mechabellum.exe 与 GameAssemb
 chinesesimplified.GamePathLabel=游戏路径
 chinesesimplified.ErrBadGamePath=游戏路径无效：未找到 Mechabellum.exe 与 GameAssembly.dll。
 chinesesimplified.StatusWriteConfig=正在写入管理器配置（保留双服记录，不打断 Steam）…
+chinesesimplified.StatusSeedUserConfig=正在写入当前用户配置（无界面，请稍候）…
 chinesesimplified.ErrWriteConfig=写入管理器配置失败。可稍后在管理器「设置」中手动指定游戏路径。
 chinesesimplified.StatusRestoreOptional=可选恢复脚本未运行（不影响安装；配置已用内置方式写入）。
-chinesesimplified.StatusDotNet8=正在准备 .NET 8 Desktop Runtime（下载约 55-60 MB；安装后约 150-200 MB；已安装则跳过）…
+chinesesimplified.StatusDotNet8=正在静默安装 .NET 8 Desktop Runtime（下载约 55-60 MB；进度条可能短暂不动，请稍候；已安装则跳过）…
 chinesesimplified.ErrDotNet8=.NET 8 Desktop Runtime 安装未成功（exit %1）。请稍后从 https://dotnet.microsoft.com/download/dotnet/8.0 手动安装。
 chinesesimplified.StatusNoPsDotNet8=无法启动 PowerShell，已跳过 .NET 8 自动安装（可稍后手动安装）。
 chinesesimplified.StatusDotNet8Done=.NET 8 Desktop Runtime 已完成（或已跳过）。
-chinesesimplified.StatusDotNet6=正在准备 .NET 6 Desktop Runtime（下载约 50-55 MB；安装后约 140-180 MB；已安装则跳过）…
+chinesesimplified.StatusDotNet6=正在静默安装 .NET 6 Desktop Runtime（下载约 50-55 MB；进度条可能短暂不动，请稍候；已安装则跳过）…
 chinesesimplified.ErrDotNet6=.NET 6 Desktop Runtime 安装未成功（exit %1）。请稍后从 https://dotnet.microsoft.com/download/dotnet/6.0 手动安装。
 chinesesimplified.StatusNoPsDotNet6=无法启动 PowerShell，已跳过 .NET 6 自动安装（可稍后手动安装）。
 chinesesimplified.StatusDotNet6Done=.NET 6 Desktop Runtime 已完成（或已跳过）。
@@ -71,7 +72,7 @@ chinesesimplified.StatusMelon=正在检测/安装 MelonLoader（已安装则跳�
 chinesesimplified.StatusNoPsMelon=无法启动 PowerShell，已跳过 MelonLoader 自动安装（可稍后手动安装）。
 chinesesimplified.ErrMelon=MelonLoader 安装未成功（exit %1）。%n%nexit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整。%n%n也可取消 MelonLoader 组件后重装管理器，或手动安装：%nhttps://github.com/LavaGang/MelonLoader/releases%n（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）
 chinesesimplified.StatusMelonDone=MelonLoader 已完成（或已跳过）。
-chinesesimplified.StatusPostDone=安装后置步骤完成。
+chinesesimplified.StatusPostDone=后置步骤已处理，即将进入完成页…
 
 english.AppDisplayName=Mechabellum Mod Manager
 english.TaskDesktop=Create a desktop shortcut
@@ -88,13 +89,14 @@ english.GamePathDesc=The folder must contain Mechabellum.exe and GameAssembly.dl
 english.GamePathLabel=Game path
 english.ErrBadGamePath=Invalid game path: Mechabellum.exe and GameAssembly.dll were not found.
 english.StatusWriteConfig=Writing manager config (keep dual-folder records; do not interrupt Steam)…
+english.StatusSeedUserConfig=Writing per-user config (no UI; please wait)…
 english.ErrWriteConfig=Failed to write manager config. You can set the game path later in Settings.
 english.StatusRestoreOptional=Optional restore script did not run (install continues; config was written natively).
-english.StatusDotNet8=Preparing .NET 8 Desktop Runtime (~55-60 MB download; ~150-200 MB installed; skipped if present)…
+english.StatusDotNet8=Quietly installing .NET 8 Desktop Runtime (~55-60 MB download; progress may pause briefly; skipped if present)…
 english.ErrDotNet8=.NET 8 Desktop Runtime install failed (exit %1). Install manually from https://dotnet.microsoft.com/download/dotnet/8.0
 english.StatusNoPsDotNet8=Could not start PowerShell; skipped automatic .NET 8 install (you can install it later).
 english.StatusDotNet8Done=.NET 8 Desktop Runtime finished (or skipped).
-english.StatusDotNet6=Preparing .NET 6 Desktop Runtime (~50-55 MB download; ~140-180 MB installed; skipped if present)…
+english.StatusDotNet6=Quietly installing .NET 6 Desktop Runtime (~50-55 MB download; progress may pause briefly; skipped if present)…
 english.ErrDotNet6=.NET 6 Desktop Runtime install failed (exit %1). Install manually from https://dotnet.microsoft.com/download/dotnet/6.0
 english.StatusNoPsDotNet6=Could not start PowerShell; skipped automatic .NET 6 install (you can install it later).
 english.StatusDotNet6Done=.NET 6 Desktop Runtime finished (or skipped).
@@ -103,7 +105,7 @@ english.StatusMelon=Checking/installing MelonLoader (skip if present; prefer emb
 english.StatusNoPsMelon=Could not start PowerShell; skipped automatic MelonLoader install (you can install it later).
 english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: often GitHub download failure; exit 3: incomplete install.%n%nYou can uncheck MelonLoader and reinstall the manager, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
 english.StatusMelonDone=MelonLoader finished (or skipped).
-english.StatusPostDone=Post-install steps finished.
+english.StatusPostDone=Post-install steps done; opening the Completed page…
 
 russian.AppDisplayName=Mechabellum Mod Manager
 russian.TaskDesktop=Создать ярлык на рабочем столе
@@ -120,13 +122,14 @@ russian.GamePathDesc=В папке должны быть Mechabellum.exe и Game
 russian.GamePathLabel=Путь к игре
 russian.ErrBadGamePath=Неверный путь: не найдены Mechabellum.exe и GameAssembly.dll.
 russian.StatusWriteConfig=Запись конфигурации менеджера (сохранение двух папок; без прерывания Steam)…
+russian.StatusSeedUserConfig=Запись пользовательской конфигурации (без окна; подождите)…
 russian.ErrWriteConfig=Не удалось записать конфигурацию. Путь к игре можно указать позже в настройках.
 russian.StatusRestoreOptional=Дополнительный скрипт восстановления не выполнен (установка продолжается; конфиг записан встроенным способом).
-russian.StatusDotNet8=Подготовка .NET 8 Desktop Runtime (~55–60 МБ загрузка; ~150–200 МБ после установки; пропуск, если есть)…
+russian.StatusDotNet8=Тихая установка .NET 8 Desktop Runtime (~55–60 МБ; прогресс может замирать; пропуск, если есть)…
 russian.ErrDotNet8=Установка .NET 8 Desktop Runtime не удалась (код %1). Установите вручную: https://dotnet.microsoft.com/download/dotnet/8.0
 russian.StatusNoPsDotNet8=Не удалось запустить PowerShell; автоматическая установка .NET 8 пропущена (можно установить позже).
 russian.StatusDotNet8Done=.NET 8 Desktop Runtime завершён (или пропущен).
-russian.StatusDotNet6=Подготовка .NET 6 Desktop Runtime (~50–55 МБ загрузка; ~140–180 МБ после установки; пропуск, если есть)…
+russian.StatusDotNet6=Тихая установка .NET 6 Desktop Runtime (~50–55 МБ; прогресс может замирать; пропуск, если есть)…
 russian.ErrDotNet6=Установка .NET 6 Desktop Runtime не удалась (код %1). Установите вручную: https://dotnet.microsoft.com/download/dotnet/6.0
 russian.StatusNoPsDotNet6=Не удалось запустить PowerShell; автоматическая установка .NET 6 пропущена (можно установить позже).
 russian.StatusDotNet6Done=.NET 6 Desktop Runtime завершён (или пропущен).
@@ -135,7 +138,7 @@ russian.StatusMelon=Проверка/установка MelonLoader (пропу�
 russian.StatusNoPsMelon=Не удалось запустить PowerShell; автоматическая установка MelonLoader пропущена (можно установить позже).
 russian.ErrMelon=Установка MelonLoader не удалась (код %1).%n%nкод 1: неверный путь или файлы заняты; код 2: часто сбой загрузки с GitHub; код 3: неполная установка.%n%nМожно снять MelonLoader и переустановить менеджер, или установить вручную:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Скачайте MelonLoader.x64.zip и распакуйте в папку игры по инструкции.)
 russian.StatusMelonDone=MelonLoader завершён (или пропущен).
-russian.StatusPostDone=Постустановочные шаги завершены.
+russian.StatusPostDone=Постустановочные шаги выполнены; переход к странице завершения…
 
 japanese.AppDisplayName=Mechabellum Mod Manager
 japanese.TaskDesktop=デスクトップにショートカットを作成
@@ -152,13 +155,14 @@ japanese.GamePathDesc=フォルダに Mechabellum.exe と GameAssembly.dll が�
 japanese.GamePathLabel=ゲームパス
 japanese.ErrBadGamePath=ゲームパスが無効です：Mechabellum.exe と GameAssembly.dll が見つかりません。
 japanese.StatusWriteConfig=マネージャー設定を書き込み中（双フォルダ記録を保持；Steam を中断しません）…
+japanese.StatusSeedUserConfig=ユーザー設定を書き込み中（画面なし・お待ちください）…
 japanese.ErrWriteConfig=マネージャー設定の書き込みに失敗しました。後で設定からゲームパスを指定できます。
 japanese.StatusRestoreOptional=オプションの復元スクリプトは実行されませんでした（インストールは続行；設定は組み込み方式で書き込み済み）。
-japanese.StatusDotNet8=.NET 8 Desktop Runtime を準備中（ダウンロード約55–60 MB；インストール後約150–200 MB；存在すればスキップ）…
+japanese.StatusDotNet8=.NET 8 Desktop Runtime をサイレントインストール中（約55–60 MB；進捗が一時停止することがあります；存在すればスキップ）…
 japanese.ErrDotNet8=.NET 8 Desktop Runtime のインストールに失敗しました（終了コード %1）。https://dotnet.microsoft.com/download/dotnet/8.0 から手動インストールしてください。
 japanese.StatusNoPsDotNet8=PowerShell を起動できませんでした；.NET 8 の自動インストールをスキップしました（後でインストール可能）。
 japanese.StatusDotNet8Done=.NET 8 Desktop Runtime が完了しました（またはスキップ）。
-japanese.StatusDotNet6=.NET 6 Desktop Runtime を準備中（ダウンロード約50–55 MB；インストール後約140–180 MB；存在すればスキップ）…
+japanese.StatusDotNet6=.NET 6 Desktop Runtime をサイレントインストール中（約50–55 MB；進捗が一時停止することがあります；存在すればスキップ）…
 japanese.ErrDotNet6=.NET 6 Desktop Runtime のインストールに失敗しました（終了コード %1）。https://dotnet.microsoft.com/download/dotnet/6.0 から手動インストールしてください。
 japanese.StatusNoPsDotNet6=PowerShell を起動できませんでした；.NET 6 の自動インストールをスキップしました（後でインストール可能）。
 japanese.StatusDotNet6Done=.NET 6 Desktop Runtime が完了しました（またはスキップ）。
@@ -167,7 +171,7 @@ japanese.StatusMelon=MelonLoader を確認/インストール中（存在すれ�
 japanese.StatusNoPsMelon=PowerShell を起動できませんでした；MelonLoader の自動インストールをスキップしました（後でインストール可能）。
 japanese.ErrMelon=MelonLoader のインストールに失敗しました（終了コード %1）。%n%n終了コード 1：無効なパスまたはファイルロック；2：多くは GitHub ダウンロード失敗；3：不完全なインストール。%n%nMelonLoader のチェックを外してマネージャーを再インストールするか、手動でインストールしてください：%nhttps://github.com/LavaGang/MelonLoader/releases%n（MelonLoader.x64.zip をダウンロードし、公式手順に従いゲームフォルダに展開）
 japanese.StatusMelonDone=MelonLoader が完了しました（またはスキップ）。
-japanese.StatusPostDone=インストール後の処理が完了しました。
+japanese.StatusPostDone=インストール後処理が終わりました。完了ページへ進みます…
 
 german.AppDisplayName=Mechabellum Mod Manager
 german.TaskDesktop=Desktop-Verknüpfung erstellen
@@ -184,13 +188,14 @@ german.GamePathDesc=Der Ordner muss Mechabellum.exe und GameAssembly.dll enthalt
 german.GamePathLabel=Spielpfad
 german.ErrBadGamePath=Ungültiger Spielpfad: Mechabellum.exe und GameAssembly.dll nicht gefunden.
 german.StatusWriteConfig=Manager-Konfiguration wird geschrieben (Dual-Ordner-Einträge bleiben; Steam wird nicht unterbrochen)…
+german.StatusSeedUserConfig=Benutzerkonfiguration wird geschrieben (ohne UI; bitte warten)…
 german.ErrWriteConfig=Manager-Konfiguration konnte nicht geschrieben werden. Spielpfad später in den Einstellungen setzen.
 german.StatusRestoreOptional=Optionales Wiederherstellungsskript nicht ausgeführt (Installation läuft weiter; Konfiguration nativ geschrieben).
-german.StatusDotNet8=.NET 8 Desktop Runtime wird vorbereitet (~55–60 MB Download; ~150–200 MB installiert; übersprungen wenn vorhanden)…
+german.StatusDotNet8=.NET 8 Desktop Runtime wird still installiert (~55–60 MB; Fortschritt kann kurz stehen; übersprungen wenn vorhanden)…
 german.ErrDotNet8=.NET 8 Desktop Runtime Installation fehlgeschlagen (Exit %1). Manuell installieren: https://dotnet.microsoft.com/download/dotnet/8.0
 german.StatusNoPsDotNet8=PowerShell konnte nicht gestartet werden; automatische .NET 8-Installation übersprungen (später möglich).
 german.StatusDotNet8Done=.NET 8 Desktop Runtime abgeschlossen (oder übersprungen).
-german.StatusDotNet6=.NET 6 Desktop Runtime wird vorbereitet (~50–55 MB Download; ~140–180 MB installiert; übersprungen wenn vorhanden)…
+german.StatusDotNet6=.NET 6 Desktop Runtime wird still installiert (~50–55 MB; Fortschritt kann kurz stehen; übersprungen wenn vorhanden)…
 german.ErrDotNet6=.NET 6 Desktop Runtime Installation fehlgeschlagen (Exit %1). Manuell installieren: https://dotnet.microsoft.com/download/dotnet/6.0
 german.StatusNoPsDotNet6=PowerShell konnte nicht gestartet werden; automatische .NET 6-Installation übersprungen (später möglich).
 german.StatusDotNet6Done=.NET 6 Desktop Runtime abgeschlossen (oder übersprungen).
@@ -199,7 +204,7 @@ german.StatusMelon=MelonLoader prüfen/installieren (überspringen wenn vorhande
 german.StatusNoPsMelon=PowerShell konnte nicht gestartet werden; automatische MelonLoader-Installation übersprungen (später möglich).
 german.ErrMelon=MelonLoader-Installation fehlgeschlagen (Exit %1).%n%nExit 1: ungültiger Pfad oder Dateien gesperrt; Exit 2: oft GitHub-Download-Fehler; Exit 3: unvollständige Installation.%n%nMelonLoader abwählen und Manager neu installieren, oder manuell installieren:%nhttps://github.com/LavaGang/MelonLoader/releases%n(MelonLoader.x64.zip herunterladen und gemäß Anleitung in Spielordner entpacken)
 german.StatusMelonDone=MelonLoader abgeschlossen (oder übersprungen).
-german.StatusPostDone=Nachinstallation abgeschlossen.
+german.StatusPostDone=Nachinstallation erledigt; Abschlussseite folgt…
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:TaskDesktop}"; GroupDescription: "{cm:TaskDesktopGroup}"; Flags: unchecked
@@ -225,11 +230,9 @@ Name: "{group}\{cm:AppDisplayName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{cm:AppDisplayName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-; Plan B: write per-user AppData as the user who launched Setup (before elevation).
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
-  Parameters: "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\installer-scripts\Write-ManagerConfig.ps1"" -GamePath ""{code:GetPostGamePath}"" -UiLanguage ""{code:GetPostUiLang}"""; \
-  StatusMsg: "{cm:StatusWriteConfig}"; \
-  Flags: runasoriginaluser waituntilterminated
+; Config is written natively in CurStepChanged (userappdata + ProgramData seed).
+; Do NOT launch the manager exe again before the Finished page — that caused a second
+; "completion" wait / possible UI flash (duplicate finish experience).
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:RunNow,{cm:AppDisplayName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
@@ -276,10 +279,11 @@ begin
     Result := -2;
     exit;
   end;
-  { Hidden + NonInteractive reduces 0xc0000142 / desktop-heap failures under elevated Setup. }
-  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' +
+  { Minimized (not Hidden): Chinese AV "敏感动作/隐藏执行PowerShell" treats SW_HIDE as malware-like.
+    Minimized still avoids stealing focus under elevated Setup. }
+  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Minimized -File "' +
          ScriptPath + '" ' + ExtraArgs;
-  if not Exec(PowerShellExe(), Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  if not Exec(PowerShellExe(), Cmd, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
   begin
     Result := -1;
     exit;
@@ -563,9 +567,9 @@ begin
   ScriptFile := ExpandConstant('{tmp}\Detect-GamePath.ps1');
   OutFile := ExpandConstant('{tmp}\mmm-detected-game-path.txt');
   DeleteFile(OutFile);
-  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' +
+  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Minimized -File "' +
          ScriptFile + '" -OutFile "' + OutFile + '"';
-  if not Exec(PowerShellExe(), Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  if not Exec(PowerShellExe(), Cmd, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
     exit;
   if ResultCode <> 0 then
     exit;
@@ -645,10 +649,10 @@ begin
   Result := True;
   OutFile := ExpandConstant('{tmp}\mmm-steam-busy.txt');
   DeleteFile(OutFile);
-  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command "' +
+  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Minimized -Command "' +
          'if (Get-Process steam,steamwebhelper -ErrorAction SilentlyContinue) { Set-Content -LiteralPath ''' +
          OutFile + ''' -Value busy } else { Set-Content -LiteralPath ''' + OutFile + ''' -Value idle }"';
-  if not Exec(PowerShellExe(), Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  if not Exec(PowerShellExe(), Cmd, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
     exit;
   if FileExists(OutFile) and LoadStringFromFile(OutFile, Line) then
   begin

@@ -16,9 +16,21 @@
     <value>設定</value>
   </data>
   <data name="BrowseMods" xml:space="preserve">
-    <value>Mod 一覧</value>
+    <value>Mod工房</value>
   </data>
-  <data name="CollapseBrowse" xml:space="preserve">
+        <data name="NavWorkshopTip" xml:space="preserve">
+    <value>コミュニティModを閲覧（工房）して導入済みへ追加</value>
+  </data>
+<data name="NavLibraryTip" xml:space="preserve">
+    <value>このPCに導入済みのModと構成を管理</value>
+  </data>
+<data name="CatalogEmptyHint" xml:space="preserve">
+    <value>工房は空です。「更新」でコミュニティModを取得してください。</value>
+  </data>
+  <data name="LibraryEmptyHint" xml:space="preserve">
+    <value>導入済みModはありません。工房から追加するか、DLL/Zipを取り込みます。</value>
+  </data>
+<data name="CollapseBrowse" xml:space="preserve">
     <value>一覧を折りたたむ</value>
   </data>
   <data name="ExpandBrowse" xml:space="preserve">
@@ -48,7 +60,10 @@
   <data name="LanguageSystem" xml:space="preserve">
     <value>システムに合わせる</value>
   </data>
-  <data name="CreditsTitle" xml:space="preserve">
+    <data name="NotifyFollowedSystemLanguage" xml:space="preserve">
+    <value>システム言語に従いました（{0}）</value>
+  </data>
+<data name="CreditsTitle" xml:space="preserve">
     <value>クレジットと免責</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
@@ -175,12 +190,18 @@
     <value>プロファイル</value>
   </data>
   <data name="ModLibrary" xml:space="preserve">
-    <value>Mod ライブラリ</value>
+    <value>導入済み</value>
   </data>
   <data name="SyncLog" xml:space="preserve">
-    <value>同期ログ</value>
+    <value>実行ログ</value>
   </data>
-  <data name="CurrentProfile" xml:space="preserve">
+    <data name="LogExpand" xml:space="preserve">
+    <value>ログを展開</value>
+  </data>
+  <data name="LogCollapse" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+<data name="CurrentProfile" xml:space="preserve">
     <value>現在のプロファイル</value>
   </data>
 

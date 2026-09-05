@@ -16,9 +16,21 @@
     <value>Settings</value>
   </data>
   <data name="BrowseMods" xml:space="preserve">
-    <value>Browse Mods</value>
+    <value>Workshop</value>
   </data>
-  <data name="CollapseBrowse" xml:space="preserve">
+        <data name="NavWorkshopTip" xml:space="preserve">
+    <value>Browse community mods (Workshop-style) and add them to Installed</value>
+  </data>
+<data name="NavLibraryTip" xml:space="preserve">
+    <value>Manage mods already on this PC (enable / apply profiles)</value>
+  </data>
+<data name="CatalogEmptyHint" xml:space="preserve">
+    <value>Workshop is empty. Click Refresh to fetch community mods.</value>
+  </data>
+  <data name="LibraryEmptyHint" xml:space="preserve">
+    <value>No installed mods yet. Add from Workshop, or import a DLL / Zip.</value>
+  </data>
+<data name="CollapseBrowse" xml:space="preserve">
     <value>Collapse browser</value>
   </data>
   <data name="ExpandBrowse" xml:space="preserve">
@@ -48,7 +60,10 @@
   <data name="LanguageSystem" xml:space="preserve">
     <value>Follow system</value>
   </data>
-  <data name="CreditsTitle" xml:space="preserve">
+    <data name="NotifyFollowedSystemLanguage" xml:space="preserve">
+    <value>Followed system language ({0})</value>
+  </data>
+<data name="CreditsTitle" xml:space="preserve">
     <value>Credits &amp; Disclaimer</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
@@ -175,12 +190,18 @@ One email = one request. Maintainers review and upload to the catalog — no For
     <value>Profiles</value>
   </data>
   <data name="ModLibrary" xml:space="preserve">
-    <value>Mod Library</value>
+    <value>Installed</value>
   </data>
   <data name="SyncLog" xml:space="preserve">
-    <value>Sync Log</value>
+    <value>Activity Log</value>
   </data>
-  <data name="CurrentProfile" xml:space="preserve">
+    <data name="LogExpand" xml:space="preserve">
+    <value>Expand log</value>
+  </data>
+  <data name="LogCollapse" xml:space="preserve">
+    <value>Collapse</value>
+  </data>
+<data name="CurrentProfile" xml:space="preserve">
     <value>Active Profile</value>
   </data>
 

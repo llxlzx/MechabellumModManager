@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 using MechabellumModManager.Models;
 
@@ -21,7 +21,10 @@ public sealed class MelonLoaderDualStoreSync
 
     static readonly HashSet<string> SkipFileNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Latest.log"
+        "Latest.log",
+        // Melon uses this hash to skip Il2Cpp generation. Copying it without Il2CppAssemblies
+        // leaves the destination permanently "up to date" with no assemblies.
+        "Config.cfg"
     };
 
     readonly GameDetector _detector;
@@ -208,6 +211,7 @@ public sealed class MelonLoaderDualStoreSync
                 return Fail("源目录没有 MelonLoader 文件夹。");
 
             CopyDirectoryFiltered(srcMelon, destMelon);
+            MelonLoaderAssemblyGenerator.InvalidateStaleGenerationState(destGamePath);
 
             var status = _detector.Detect(destGamePath);
             if (status.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing))
@@ -251,3 +255,5 @@ public sealed class MelonLoaderDualStoreSync
     static MelonLoaderInstallResult Fail(string message) =>
         new() { Success = false, Message = message };
 }
+
+

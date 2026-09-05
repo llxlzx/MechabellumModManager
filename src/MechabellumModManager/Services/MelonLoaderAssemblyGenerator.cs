@@ -1,5 +1,7 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
@@ -19,6 +21,10 @@ public sealed class MelonLoaderAssemblyGenerator
     public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(180);
     public static readonly TimeSpan DefaultPollInterval = TimeSpan.FromSeconds(2);
 
+    static readonly Regex GameAssemblyHashRegex = new(
+        @"GameAssemblyHash\s*=\s*""[^""]*""",
+        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
     readonly GameDetector _detector;
     readonly HashSet<string> _attemptedStores = new(StringComparer.OrdinalIgnoreCase);
     readonly Func<string, Process?> _startProcess;
@@ -32,6 +38,60 @@ public sealed class MelonLoaderAssemblyGenerator
         _detector = detector ?? new GameDetector();
         _startProcess = startProcess ?? StartGameProcess;
         _delay = delay ?? ((ts, ct) => Task.Delay(ts, ct));
+    }
+
+    /// <summary>
+    /// When Il2CppAssemblies are missing but Config.cfg still has GameAssemblyHash,
+    /// MelonLoader skips generation ("Assembly is up to date"). Clear the hash so the
+    /// next game launch regenerates. Dual-store sync can create this broken state by
+    /// copying Config.cfg while excluding Il2CppAssemblies.
+    /// </summary>
+    public static bool InvalidateStaleGenerationState(string gamePath)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath))
+            return false;
+        if (GameDetector.HasIl2CppAssemblies(gamePath))
+            return false;
+
+        var cfgPath = Path.Combine(
+            gamePath,
+            "MelonLoader",
+            "Dependencies",
+            "Il2CppAssemblyGenerator",
+            "Config.cfg");
+        if (!File.Exists(cfgPath))
+            return false;
+
+        string text;
+        try
+        {
+            text = File.ReadAllText(cfgPath, Encoding.UTF8);
+        }
+        catch
+        {
+            return false;
+        }
+
+        if (!GameAssemblyHashRegex.IsMatch(text))
+            return false;
+
+        // Already empty → nothing to do.
+        if (Regex.IsMatch(text, @"GameAssemblyHash\s*=\s*""""", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase))
+            return false;
+
+        var updated = GameAssemblyHashRegex.Replace(text, @"GameAssemblyHash = """"");
+        if (string.Equals(updated, text, StringComparison.Ordinal))
+            return false;
+
+        try
+        {
+            File.WriteAllText(cfgPath, updated, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public MelonAssemblyGenerateResult EnsureAssemblies(
@@ -64,8 +124,17 @@ public sealed class MelonLoaderAssemblyGenerator
             return Fail($"当前状态无法生成程序集：{status.Message}");
 
         var full = Path.GetFullPath(gamePath);
+
+        // Clear stale Melon cache BEFORE the session attempt gate, so a prior failed
+        // attempt caused by "hash present / assemblies missing" can be retried once we fix it.
+        if (InvalidateStaleGenerationState(full))
+        {
+            _attemptedStores.Remove(full);
+            progress?.Invoke("已清除过期的程序集生成缓存（Config.cfg GameAssemblyHash），将强制 MelonLoader 重新生成。");
+        }
+
         if (!_attemptedStores.Add(full))
-            return Fail("本会话已尝试过自动生成且未成功。请手动启动一次游戏完成 MelonLoader 首次引导，或查看 MelonLoader\\Latest.log。");
+            return Fail("本会话已尝试过自动生成但未成功。请手动启动一次游戏完成 MelonLoader 首次生成，或查看 MelonLoader\\Latest.log。");
 
         var exe = Path.Combine(full, GameLauncher.GameExeName);
         if (!File.Exists(exe))
@@ -76,14 +145,14 @@ public sealed class MelonLoaderAssemblyGenerator
 
         var wait = timeout ?? DefaultTimeout;
         var interval = pollInterval ?? DefaultPollInterval;
-        progress?.Invoke("正在短暂启动游戏以生成 MelonLoader 程序集…");
+        progress?.Invoke("正在短暂启动游戏以触发 MelonLoader 生成程序集。");
 
         Process? proc = null;
         try
         {
             proc = _startProcess(exe);
             if (proc is null)
-                progress?.Invoke("未附加到游戏进程句柄，仍将轮询程序集文件…");
+                progress?.Invoke("未附加到游戏进程，将继续轮询生成文件。");
 
             var marker = Path.Combine(full, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll");
             long? lastSize = null;
@@ -124,7 +193,7 @@ public sealed class MelonLoaderAssemblyGenerator
 
             TryKill(proc);
             return Fail(
-                $"等待程序集生成超时（{wait.TotalSeconds:0} 秒）。请手动启动一次游戏完成首次引导，日志：MelonLoader\\Latest.log");
+                $"等待程序集生成超时（{wait.TotalSeconds:0} 秒）。请手动启动一次游戏完成首次生成，并查看日志：MelonLoader\\Latest.log");
         }
         catch (OperationCanceledException)
         {

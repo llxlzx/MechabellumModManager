@@ -162,7 +162,7 @@ public sealed partial class MainViewModel : ObservableObject
             _processProbe,
             new JunctionService(),
             new SteamBetaKeyEditor(_processProbe));
-        ApplyProfileCommand = new RelayCommand(() => _ = ApplyProfile(), () => CanApplyProfile);
+        ApplyProfileCommand = new AsyncRelayCommand(async () => _ = await ApplyProfileAsync(), () => CanApplyProfile);
 
         Ui = new UiStrings();
         Profiles = new ObservableCollection<ProfileItemViewModel>();
@@ -172,6 +172,8 @@ public sealed partial class MainViewModel : ObservableObject
         CatalogModsView.Filter = FilterCatalogItem;
         LibraryModsView = CollectionViewSource.GetDefaultView(Mods);
         LibraryModsView.Filter = FilterLibraryItem;
+        CatalogMods.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsCatalogEmpty));
+        Mods.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsLibraryEmpty));
         CatalogAvailableTagOptions = new ObservableCollection<TagFilterOption>();
         LibraryAvailableTagOptions = new ObservableCollection<TagFilterOption>();
         RiskBanner = RiskGate.BannerText;
@@ -277,6 +279,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<CatalogModItemViewModel> CatalogMods { get; }
     public ICollectionView CatalogModsView { get; }
     public ICollectionView LibraryModsView { get; }
+    public bool IsCatalogEmpty => CatalogMods.Count == 0;
+    public bool IsLibraryEmpty => Mods.Count == 0;
     public ObservableCollection<TagFilterOption> CatalogAvailableTagOptions { get; }
     public ObservableCollection<TagFilterOption> LibraryAvailableTagOptions { get; }
     public IReadOnlyList<CategoryFilterOption> CatalogCategoryFilterOptions { get; private set; } = Array.Empty<CategoryFilterOption>();
@@ -334,6 +338,8 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private GameStatus? _gameStatus;
     [ObservableProperty] private ProfileItemViewModel? _selectedProfile;
     [ObservableProperty] private string _logText = "";
+    [ObservableProperty] private string _latestLogLine = "";
+    [ObservableProperty] private bool _isLogExpanded;
     [ObservableProperty] private bool _isDirty;
     [ObservableProperty] private string _riskBanner = "";
     [ObservableProperty] private string _loaderVersionWarning = "";
@@ -342,14 +348,18 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _gamePath = "";
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
-    [ObservableProperty] private bool _settingsExpanded;
-    [ObservableProperty] private bool _catalogExpanded;
+    [ObservableProperty] private MainContentPage _activeContentPage = MainContentPage.Library;
 
-    public string CatalogToggleLabel =>
-        CatalogExpanded ? Ui.CollapseBrowse : Ui.ExpandBrowse;
+    public bool IsLibraryPage => ActiveContentPage == MainContentPage.Library;
+    public bool IsCatalogPage => ActiveContentPage == MainContentPage.Catalog;
+    public bool IsSettingsPage => ActiveContentPage == MainContentPage.Settings;
 
-    partial void OnCatalogExpandedChanged(bool value) =>
-        OnPropertyChanged(nameof(CatalogToggleLabel));
+    partial void OnActiveContentPageChanged(MainContentPage value)
+    {
+        OnPropertyChanged(nameof(IsLibraryPage));
+        OnPropertyChanged(nameof(IsCatalogPage));
+        OnPropertyChanged(nameof(IsSettingsPage));
+    }
     [ObservableProperty] private string _catalogStatus = "";
     [ObservableProperty] private CatalogModItemViewModel? _selectedCatalogMod;
     [ObservableProperty] private ModItemViewModel? _selectedLibraryMod;
@@ -408,15 +418,17 @@ public sealed partial class MainViewModel : ObservableObject
         if (!_suppressFilterRefresh) RefreshLibraryView();
     }
 
-    partial void OnSelectedUiLanguageCodeChanged(string value)
+    partial void OnSelectedUiLanguageCodeChanged(string? oldValue, string newValue)
     {
         if (_suppressLanguageSave) return;
-        ApplyUiLanguage(value, save: true, refreshUi: true);
+        ApplyUiLanguage(newValue, save: true, refreshUi: true, previousConfiguredOverride: oldValue);
     }
 
-    void ApplyUiLanguage(string? code, bool save, bool refreshUi)
+    void ApplyUiLanguage(string? code, bool save, bool refreshUi, string? previousConfiguredOverride = null)
     {
         var configured = string.IsNullOrWhiteSpace(code) ? "system" : code.Trim();
+        var previousConfigured = previousConfiguredOverride ?? SelectedUiLanguageCode;
+        var previousResolved = LocalizationService.ResolveConfiguredLanguage(previousConfigured);
         var resolved = LocalizationService.ResolveConfiguredLanguage(configured);
         LocalizationService.Apply(resolved);
 
@@ -424,9 +436,20 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             SelectedUiLanguageCode = configured;
-            var system = LanguageOptions.FirstOrDefault(o => o.Code == "system");
-            if (system is not null)
-                system.Label = LocalizationService.T("LanguageSystem");
+            void UpdateSystemLabel()
+            {
+                var system = LanguageOptions.FirstOrDefault(o => o.Code == "system");
+                if (system is not null)
+                    system.Label = LocalizationService.T("LanguageSystem");
+            }
+
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher is not null && !dispatcher.CheckAccess())
+                _ = dispatcher.BeginInvoke(UpdateSystemLabel);
+            else if (dispatcher is not null)
+                _ = dispatcher.BeginInvoke(UpdateSystemLabel, System.Windows.Threading.DispatcherPriority.Background);
+            else
+                UpdateSystemLabel();
         }
         finally
         {
@@ -440,10 +463,25 @@ public sealed partial class MainViewModel : ObservableObject
             SaveConfig(config);
         }
 
+        if (string.Equals(configured, "system", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(previousConfigured, "system", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(resolved, previousResolved, StringComparison.OrdinalIgnoreCase))
+        {
+            var display = resolved switch
+            {
+                "zh-CN" => "简体中文",
+                "en" => "English",
+                "ru" => "Русский",
+                "ja" => "日本語",
+                "de" => "Deutsch",
+                _ => resolved
+            };
+            AppendLog(string.Format(LocalizationService.T("NotifyFollowedSystemLanguage"), display));
+        }
+
         if (refreshUi)
         {
             Ui.Refresh();
-            OnPropertyChanged(nameof(CatalogToggleLabel));
             RebuildFilterOptionLabels();
             RefreshBranchStatusText();
             foreach (var mod in Mods)
@@ -556,7 +594,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!_assemblyGeneratePrompted.Add(full))
             return;
 
-        void RunPrompt()
+        async void RunPrompt()
         {
             try
             {
@@ -569,7 +607,7 @@ public sealed partial class MainViewModel : ObservableObject
                     return;
                 }
 
-                EnsureMelonAssembliesForStore(GamePath);
+                await EnsureMelonAssembliesForStoreAsync(GamePath).ConfigureAwait(true);
                 RefreshStatusCore(offerAssemblyGeneratePrompt: false);
             }
             catch (Exception ex)
@@ -812,6 +850,16 @@ public sealed partial class MainViewModel : ObservableObject
     /// <returns>true if deploy succeeded.</returns>
     public bool ApplyProfile() => ApplyProfile(ignoreBranchGate: false);
 
+    public async Task<bool> ApplyProfileAsync()
+    {
+        RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+        if (GameStatus?.Kind == GameStatusKind.LoaderPresentAssembliesMissing)
+            await EnsureMelonAssembliesForStoreAsync(GamePath).ConfigureAwait(true);
+        return ApplyProfile(ignoreBranchGate: false);
+    }
+
+
+
     bool ApplyProfile(bool ignoreBranchGate)
     {
         if (!ignoreBranchGate && (IsAwaitingSteamSettle || IsBranchWizardBlocking))
@@ -1011,7 +1059,13 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    void ToggleSettings() => SettingsExpanded = !SettingsExpanded;
+    void ShowSettingsPage() => ActiveContentPage = MainContentPage.Settings;
+
+    [RelayCommand]
+    void ShowLibraryPage() => ActiveContentPage = MainContentPage.Library;
+
+    [RelayCommand]
+    void ToggleLogPanel() => IsLogExpanded = !IsLogExpanded;
 
     [RelayCommand]
     async Task ReportCatalogModAsync()
@@ -1149,10 +1203,10 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    void ToggleCatalog()
+    void ShowCatalogPage()
     {
-        CatalogExpanded = !CatalogExpanded;
-        if (CatalogExpanded && CatalogMods.Count == 0)
+        ActiveContentPage = MainContentPage.Catalog;
+        if (CatalogMods.Count == 0)
             _ = RefreshCatalogAsync();
     }
 
@@ -2505,15 +2559,34 @@ public sealed partial class MainViewModel : ObservableObject
 
     void EnsureMelonAssembliesForStore(string? storePath)
     {
+        // Sync wrapper for legacy call sites; prefer EnsureMelonAssembliesForStoreAsync.
+        EnsureMelonAssembliesForStoreAsync(storePath).GetAwaiter().GetResult();
+    }
+
+    async Task EnsureMelonAssembliesForStoreAsync(string? storePath)
+    {
         if (string.IsNullOrWhiteSpace(storePath))
             return;
         if (_detector.Detect(storePath).Kind is not GameStatusKind.LoaderPresentAssembliesMissing)
             return;
 
         AppendLog($"正在为「{Path.GetFileName(storePath)}」生成 MelonLoader 程序集…");
-        var gen = _melonAssemblyGenerator.EnsureAssemblies(
-            storePath,
-            progress: msg => AppendLog(msg));
+
+        var dispatcher = Application.Current?.Dispatcher;
+        void Progress(string msg)
+        {
+            if (dispatcher is null || dispatcher.CheckAccess())
+                AppendLog(msg);
+            else
+                _ = dispatcher.BeginInvoke(() => AppendLog(msg));
+        }
+
+        // Await (do not GetResult) so the WPF dispatcher stays responsive while Unity runs.
+        // Blocking the UI thread previously caused Win32Exception 1816 (not enough quota) crashes.
+        var gen = await _melonAssemblyGenerator
+            .EnsureAssembliesAsync(storePath, progress: Progress)
+            .ConfigureAwait(true);
+
         if (!string.IsNullOrWhiteSpace(gen.Message))
             AppendLog(gen.Message);
         if (!gen.Success && !gen.Skipped)
@@ -2826,6 +2899,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        LatestLogLine = line;
         LogText = string.IsNullOrEmpty(LogText) ? line : LogText + Environment.NewLine + line;
     }
 

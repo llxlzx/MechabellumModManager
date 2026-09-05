@@ -63,9 +63,9 @@ if ($local) {
     }
 }
 
-Write-Host "Launching .NET $Major Desktop Runtime installer (/passive — progress UI will appear)..."
+Write-Host "Launching .NET $Major Desktop Runtime installer (/quiet — no separate finish UI)..."
 Write-Host "Installed footprint typically $($hint.Installed)."
-$p = Start-Process -FilePath $installerPath -ArgumentList "/install","/passive","/norestart" -Wait -PassThru
+$p = Start-Process -FilePath $installerPath -ArgumentList "/install","/quiet","/norestart" -Wait -PassThru
 $code = $p.ExitCode
 # 0 = success, 3010 = success reboot required
 if ($code -eq 0 -or $code -eq 3010) {

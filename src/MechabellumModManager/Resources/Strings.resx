@@ -16,9 +16,21 @@
     <value>设置</value>
   </data>
   <data name="BrowseMods" xml:space="preserve">
-    <value>Mod 浏览</value>
+    <value>Mod 工坊</value>
   </data>
-  <data name="CollapseBrowse" xml:space="preserve">
+        <data name="NavWorkshopTip" xml:space="preserve">
+    <value>浏览社区 Mod（类似创意工坊），加入到已装库</value>
+  </data>
+<data name="NavLibraryTip" xml:space="preserve">
+    <value>管理本机已安装的 Mod 与配置方案（启用/应用）</value>
+  </data>
+<data name="CatalogEmptyHint" xml:space="preserve">
+    <value>工坊还是空的。点「刷新」拉取社区 Mod。</value>
+  </data>
+  <data name="LibraryEmptyHint" xml:space="preserve">
+    <value>还没有已装 Mod。从「Mod 工坊」加入，或导入 DLL / Zip。</value>
+  </data>
+<data name="CollapseBrowse" xml:space="preserve">
     <value>收起浏览</value>
   </data>
   <data name="ExpandBrowse" xml:space="preserve">
@@ -48,7 +60,10 @@
   <data name="LanguageSystem" xml:space="preserve">
     <value>跟随系统</value>
   </data>
-  <data name="CreditsTitle" xml:space="preserve">
+    <data name="NotifyFollowedSystemLanguage" xml:space="preserve">
+    <value>已跟随系统语言（{0}）</value>
+  </data>
+<data name="CreditsTitle" xml:space="preserve">
     <value>关于与声明</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
@@ -175,12 +190,18 @@
     <value>方案</value>
   </data>
   <data name="ModLibrary" xml:space="preserve">
-    <value>Mod 库</value>
+    <value>已装 Mod</value>
   </data>
   <data name="SyncLog" xml:space="preserve">
-    <value>同步日志</value>
+    <value>运行日志</value>
   </data>
-  <data name="CurrentProfile" xml:space="preserve">
+    <data name="LogExpand" xml:space="preserve">
+    <value>展开日志</value>
+  </data>
+  <data name="LogCollapse" xml:space="preserve">
+    <value>收起</value>
+  </data>
+<data name="CurrentProfile" xml:space="preserve">
     <value>当前方案</value>
   </data>
 
