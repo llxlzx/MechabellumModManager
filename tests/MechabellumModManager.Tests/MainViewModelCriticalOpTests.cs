@@ -154,7 +154,7 @@ public class MainViewModelCriticalOpTests
     }
 
     [Fact]
-    public void ApplyRecoveryContinue_keeps_gate_when_awaiting_settle()
+    public void ApplyRecoveryContinue_clears_gate_routes_settle_ui()
     {
         using var fx = Fixture.CreateReady();
         WriteInterruptedMarker(fx.Paths);
@@ -170,11 +170,15 @@ public class MainViewModelCriticalOpTests
 
         vm.ApplyRecoveryContinue();
 
-        vm.IsRecoveryGateActive.Should().BeTrue();
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
         vm.IsSessionLocked.Should().BeTrue();
-        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeFalse();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+        fx.Guard.TryLoadInterrupted(out _).Should().BeFalse();
         vm.ActiveContentPage.Should().Be(MainContentPage.Settings);
         vm.ShowConfirmManualBeta.Should().BeTrue();
+        vm.EvaluateCloseOrUpdateGate(busyDialogOpen: false).Should().Be(CriticalOpGateLevel.SoftConfirm);
     }
 
     [Fact]
