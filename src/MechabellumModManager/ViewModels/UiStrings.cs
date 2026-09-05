@@ -12,10 +12,13 @@ public sealed class UiStrings : INotifyPropertyChanged
 
     public string Settings => T("Settings");
     public string BrowseMods => T("BrowseMods");
+    public string CollapseBrowse => T("CollapseBrowse");
+    public string ExpandBrowse => T("ExpandBrowse");
     public string ImportDll => T("ImportDll");
     public string ImportZip => T("ImportZip");
     public string ImportFolder => T("ImportFolder");
     public string ApplyProfile => T("ApplyProfile");
+    public string NotifyApplySucceeded => T("NotifyApplySucceeded");
     public string ApplyAndLaunch => T("ApplyAndLaunch");
     public string CheckUpdates => T("CheckUpdates");
     public string Language => T("Language");

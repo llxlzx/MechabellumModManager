@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string] $GamePath
+    [string] $GamePath,
+    [string] $UiLanguage = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,17 +23,45 @@ $obj = [ordered]@{
     dataRoot         = $null
 }
 
-if (Test-Path $configPath) {
+if (Test-Path -LiteralPath $configPath) {
+    $existing = $null
     try {
-        $existing = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($null -ne $existing.launchMode) { $obj.launchMode = [int]$existing.launchMode }
-        if ($existing.activeProfileId) { $obj.activeProfileId = [string]$existing.activeProfileId }
-        if ($existing.PSObject.Properties.Name -contains "dataRoot") { $obj.dataRoot = $existing.dataRoot }
-    } catch { }
+        $existing = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch {
+        try {
+            $existing = Get-Content -LiteralPath $configPath -Raw -Encoding Default | ConvertFrom-Json
+        } catch { }
+    }
+    if ($null -ne $existing) {
+        $merged = [ordered]@{}
+        foreach ($p in $existing.PSObject.Properties) {
+            $merged[$p.Name] = $p.Value
+        }
+        $merged["gamePath"] = $GamePath
+        if ($null -eq $merged["launchMode"]) { $merged["launchMode"] = 0 }
+        if (-not $merged["activeProfileId"]) { $merged["activeProfileId"] = "default" }
+        if (-not ($merged.Keys -contains "dataRoot")) { $merged["dataRoot"] = $null }
+        $obj = $merged
+    }
+}
+
+if ($UiLanguage) {
+    $obj.uiLanguage = $UiLanguage
 }
 
 $json = ($obj | ConvertTo-Json -Depth 5)
 [IO.File]::WriteAllText($configPath, $json, [Text.UTF8Encoding]::new($false))
+
+# Plan A: also refresh machine-wide seed when this script runs (elevated or original user).
+$seedRoot = Join-Path $env:ProgramData "MechabellumModManager"
+New-Item -ItemType Directory -Force -Path $seedRoot | Out-Null
+$seed = [ordered]@{ gamePath = $GamePath }
+if ($obj.uiLanguage) { $seed.uiLanguage = [string]$obj.uiLanguage }
+elseif ($UiLanguage) { $seed.uiLanguage = $UiLanguage }
+[IO.File]::WriteAllText(
+    (Join-Path $seedRoot "install-defaults.json"),
+    ($seed | ConvertTo-Json -Depth 5),
+    [Text.UTF8Encoding]::new($false))
 
 $profile = Join-Path $root "profiles\default.json"
 if (-not (Test-Path $profile)) {

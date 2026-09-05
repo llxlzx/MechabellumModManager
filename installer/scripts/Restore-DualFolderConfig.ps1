@@ -59,7 +59,7 @@ if (-not (Test-LooksLikeGame $resolved)) {
     exit 1
 }
 
-# Write / merge config.json
+# Write / merge config.json (preserve unknown keys + uiLanguage)
 New-Item -ItemType Directory -Force -Path $appData | Out-Null
 $obj = [ordered]@{
     gamePath        = $resolved
@@ -68,15 +68,44 @@ $obj = [ordered]@{
     dataRoot        = $null
 }
 if (Test-Path -LiteralPath $configPath) {
+    $existing = $null
     try {
         $existing = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($null -ne $existing.launchMode) { $obj.launchMode = [int]$existing.launchMode }
-        if ($existing.activeProfileId) { $obj.activeProfileId = [string]$existing.activeProfileId }
-        if ($existing.PSObject.Properties.Name -contains "dataRoot") { $obj.dataRoot = $existing.dataRoot }
-    } catch { }
+    } catch {
+        try {
+            $existing = Get-Content -LiteralPath $configPath -Raw -Encoding Default | ConvertFrom-Json
+        } catch {
+            Write-Host "Existing config.json could not be parsed; rewriting known fields only."
+        }
+    }
+    if ($null -ne $existing) {
+        # Start from all existing properties so unknown keys survive.
+        $merged = [ordered]@{}
+        foreach ($p in $existing.PSObject.Properties) {
+            $merged[$p.Name] = $p.Value
+        }
+        $merged["gamePath"] = $resolved
+        if ($null -eq $merged["launchMode"]) { $merged["launchMode"] = 0 }
+        if (-not $merged["activeProfileId"]) { $merged["activeProfileId"] = "default" }
+        if (-not ($merged.Keys -contains "dataRoot")) { $merged["dataRoot"] = $null }
+        $obj = $merged
+    }
 }
 [IO.File]::WriteAllText($configPath, ($obj | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
 Write-Host "Wrote config gamePath=$resolved"
+
+# Plan A: machine-wide seed for daily-user first launch (survives wrong elevated AppData).
+$seedRoot = Join-Path $env:ProgramData "MechabellumModManager"
+New-Item -ItemType Directory -Force -Path $seedRoot | Out-Null
+$seed = [ordered]@{
+    gamePath   = $resolved
+}
+if ($obj.uiLanguage) { $seed.uiLanguage = [string]$obj.uiLanguage }
+[IO.File]::WriteAllText(
+    (Join-Path $seedRoot "install-defaults.json"),
+    ($seed | ConvertTo-Json -Depth 5),
+    [Text.UTF8Encoding]::new($false))
+Write-Host "Wrote ProgramData install-defaults.json"
 
 # Optional: ensure MelonLoader without interrupting Steam downloads.
 # If Steam is busy, only fill the Official store (or non-active path). Never write into an active download target.
@@ -115,7 +144,7 @@ if ($enabled -and $official -and $beta) {
 }
 
 if ($enabled -and $null -ne $activeBranch) {
-    $label = if ($activeBranch -eq 1) { "测试服" } else { "正式服" }
+    $label = if ($activeBranch -eq 1) { "Beta" } else { "Official" }
     Write-Host "Previous active branch recorded as: $label (activeBranch=$activeBranch)."
     Write-Host "Folders/junction left unchanged so Steam can finish downloading."
 }

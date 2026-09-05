@@ -6,6 +6,30 @@ using MechabellumModManager.ViewModels;
 public class MainViewModelTests
 {
     [Fact]
+    public void CanApplyProfile_false_when_only_library_selection_and_not_dirty()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+
+        vm.IsDirty.Should().BeFalse();
+        vm.LibrarySelectionCount = 3;
+
+        vm.CanApplyProfile.Should().BeFalse();
+        vm.ApplyProfileCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void CanApplyProfile_true_when_dirty_and_ready()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+
+        vm.Mods[0].IsEnabled = true;
+        vm.IsDirty.Should().BeTrue();
+        vm.CanApplyProfile.Should().BeTrue();
+    }
+
+    [Fact]
     public void Toggle_enable_marks_dirty_and_Apply_clears_when_deploy_succeeds()
     {
         using var fx = Fixture.CreateReady();
@@ -113,6 +137,70 @@ public class MainViewModelTests
 
         fx.Library.List().Should().HaveCount(before);
         vm.LogText.Should().Contain("\u5df2\u53d6\u6d88");
+    }
+
+    [Fact]
+    public void SetCatalogSelection_updates_CatalogSelectionCount()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+        var mod = new CatalogMod { Id = "test-mod", Name = "Test", File = "mods/test/Test.dll" };
+        var item = new CatalogModItemViewModel(mod, isInLibrary: false);
+
+        vm.SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
+        vm.CatalogSelectionCount.Should().Be(0);
+
+        vm.SetCatalogSelection(new[] { item });
+        vm.CatalogSelectionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void CanAddCatalogMod_false_when_no_addable_selection()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+        var inLib = new CatalogModItemViewModel(
+            new CatalogMod { Id = "cam", Name = "Cam", File = "mods/cam/Cam.dll" },
+            isInLibrary: true);
+
+        vm.SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
+        vm.AddCatalogModToLibraryCommand.CanExecute(null).Should().BeFalse();
+
+        vm.SetCatalogSelection(new[] { inLib });
+        vm.AddCatalogModToLibraryCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void CanAddCatalogMod_true_when_any_selected_not_in_library()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+        var inLib = new CatalogModItemViewModel(
+            new CatalogMod { Id = "cam", Name = "Cam", File = "mods/cam/Cam.dll" },
+            isInLibrary: true);
+        var fresh = new CatalogModItemViewModel(
+            new CatalogMod { Id = "new-mod", Name = "New", File = "mods/new/New.dll" },
+            isInLibrary: false);
+
+        vm.SetCatalogSelection(new[] { inLib, fresh });
+        vm.AddCatalogModToLibraryCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ClearCatalogModSelection_clears_catalog_selection_count()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+        var item = new CatalogModItemViewModel(
+            new CatalogMod { Id = "new-mod", Name = "New", File = "mods/new/New.dll" },
+            isInLibrary: false);
+
+        vm.SetCatalogSelection(new[] { item });
+        vm.SelectedCatalogMod = item;
+        vm.ClearCatalogModSelectionCommand.Execute(null);
+
+        vm.CatalogSelectionCount.Should().Be(0);
+        vm.SelectedCatalogMod.Should().BeNull();
     }
 
     [Fact]

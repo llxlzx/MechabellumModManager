@@ -1,0 +1,23 @@
+Diese Endbenutzer-Lizenzvereinbarung („Vereinbarung“) gilt zwischen Ihnen und Mechabellum Mod Manager („das Tool“). Durch Installation, Kopieren oder Nutzung des Tools bestätigen Sie, dass Sie diese Vereinbarung gelesen haben und ihr zustimmen.
+
+1. Verwendungszweck
+1.1 Das Tool dient ausschließlich der Installation, Verwaltung und zum Starten clientseitiger QoL-Mods (Quality-of-Life).
+1.2 Verwenden Sie das Tool nicht, um Inhalte zu installieren oder zu aktivieren, die Kampflogik ändern, faires Spiel beeinträchtigen oder Online-Matchdaten manipulieren.
+
+2. Risiken
+2.1 Das Ändern der Kampflogik oder anderer Kernmechaniken kann Data Errors, fehlerhafte Matches und offizielle Sanktionen (einschließlich Sperren) verursachen.
+2.2 Der Spielepublisher unterstützt Drittanbieter-Mods nicht offiziell. Sie nutzen das Tool und Mods auf eigenes Risiko.
+2.3 MelonLoader, Spielupdates, Dual-Ordner-Umschaltung (Official/Test), Antivirensoftware und ähnliche Faktoren können das Laden von Mods vorübergehend verhindern. Befolgen Sie bei Problemen die Hinweise in der App und MelonLoader-Protokolle.
+
+3. Dual-Ordner und Steam
+3.1 Der Official/Test-Dual-Ordner-Modus verdoppelt ungefähr den Speicherplatz und kann Beta-bezogene Felder im Steam-App-Manifest bearbeiten.
+3.2 Beenden Sie Steam und das Spiel, bevor Sie den Dual-Ordner-Assistenten ausführen oder Branches wechseln. Erzwingen Sie keine Vorgänge während Steam-Downloads oder -Überprüfungen.
+
+4. Haftungsausschluss
+4.1 Das Tool wird „wie besehen“ ohne jegliche Gewährleistung bereitgestellt.
+4.2 Die Entwickler haften nicht für direkte oder indirekte Schäden aus der Nutzung des Tools, Mods, MelonLoader oder Dual-Ordner-Funktionen.
+4.3 Sie müssen die Nutzungsbedingungen des Spiels, geltendes Recht und die Steam-Nutzungsbedingungen einhalten.
+
+5. Sonstiges
+5.1 Wenn Sie nicht zustimmen, brechen Sie die Installation ab und löschen Sie das Tool sofort.
+5.2 Durch Fortsetzen der Installation bestätigen Sie: „Ich habe die Nutzungsvereinbarung gelesen und stimme zu.“

@@ -18,6 +18,12 @@
   <data name="BrowseMods" xml:space="preserve">
     <value>Mods durchsuchen</value>
   </data>
+  <data name="CollapseBrowse" xml:space="preserve">
+    <value>Durchsuchen einklappen</value>
+  </data>
+  <data name="ExpandBrowse" xml:space="preserve">
+    <value>Durchsuchen ausklappen</value>
+  </data>
   <data name="ImportDll" xml:space="preserve">
     <value>DLL importieren</value>
   </data>
@@ -287,6 +293,7 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Doppelordner-Assistent pausiert; später fortsetzbar.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Offiziell/Test-Doppelordner entfernt.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Doppelordner entfernt. In Steam prüfen, ob der aktuelle Spielzweig stimmt.</value></data>
+  <data name="NotifyApplySucceeded" xml:space="preserve"><value>Profil auf den Spieleordner angewendet</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam-Testzweig konnte nicht automatisch ausgerichtet werden. Zweig zuerst manuell in Steam wählen; Steam bis dahin nicht starten.</value></data>
   <data name="ColumnName" xml:space="preserve"><value>Name</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>Autor</value></data>
@@ -324,4 +331,11 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Ordnerwechsel fehlgeschlagen.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Bereits auf diesem Zweig (Ordner und Steam-Beta stimmen). Kein Wechsel nötig.</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>In einem Offiziell/Test-Ordner fehlt noch MelonLoader. Setup erneut mit MelonLoader, oder zuerst auf dem Ordner mit Loader installieren.</value></data>
+  <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">
+    <value>MelonLoader ist installiert, aber Il2Cpp-Assemblys fehlen noch.
+Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten. Später auch über „Profil anwenden“ möglich.)</value>
+  </data>
+  <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
+    <value>Sofortige Assembly-Erzeugung übersprungen. Später über „Profil anwenden“ oder durch einmaligen Spielstart möglich.</value>
+  </data>
 </root>

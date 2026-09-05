@@ -18,6 +18,12 @@
   <data name="BrowseMods" xml:space="preserve">
     <value>Mod 一覧</value>
   </data>
+  <data name="CollapseBrowse" xml:space="preserve">
+    <value>一覧を折りたたむ</value>
+  </data>
+  <data name="ExpandBrowse" xml:space="preserve">
+    <value>一覧を展開</value>
+  </data>
   <data name="ImportDll" xml:space="preserve">
     <value>DLL を取り込み</value>
   </data>
@@ -287,6 +293,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>二系統ウィザードを一時停止しました。後で続行できます。</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>正式/テスト二系統設定を解除しました。</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>二系統設定を解除しました。Steam で現在のゲームブランチが正しいか確認してください。</value></data>
+  <data name="NotifyApplySucceeded" xml:space="preserve"><value>プロファイルをゲームフォルダに適用しました</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam テストブランチを自動整合できませんでした。先に Steam で手動選択し、整合完了まで Steam を起動しないでください。</value></data>
   <data name="ColumnName" xml:space="preserve"><value>名前</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>作者</value></data>
@@ -324,4 +331,11 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>フォルダ切替に失敗しました。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>すでにこのブランチです（フォルダと Steam ベータは整合済み）。切替不要。</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>正式/テストのどちらかに MelonLoader がありません。インストーラーで MelonLoader を入れるか、先に Loader がある方へ入れてください。</value></data>
+  <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">
+    <value>MelonLoader は入っていますが、Il2Cpp アセンブリが未生成です。
+今すぐゲームを短時間起動して生成しますか？（初回は1〜2分程度。後で「スキーム適用」時にも生成できます。）</value>
+  </data>
+  <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
+    <value>今の自動生成をスキップしました。「スキーム適用」または手動で一度ゲームを起動してください。</value>
+  </data>
 </root>

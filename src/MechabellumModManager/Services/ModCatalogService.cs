@@ -83,6 +83,8 @@ public sealed class ModCatalogService
         _http = http ?? CreateDefaultClient();
     }
 
+    public const long MaxDownloadBytes = 80L * 1024 * 1024;
+
     public static HttpClient CreateDefaultClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
@@ -90,10 +92,51 @@ public sealed class ModCatalogService
         return client;
     }
 
+    /// <summary>
+    /// Builds a raw.githubusercontent.com URL under Owner/Repo/Branch. Rejects absolute URLs and path traversal.
+    /// </summary>
     public static string GetRawUrl(string relativePath)
     {
-        var relative = (relativePath ?? "").Replace('\\', '/').TrimStart('/');
+        var relative = NormalizeCatalogRelativePath(relativePath);
         return $"https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/{relative}";
+    }
+
+    public static string? TryGetRawUrl(string? relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+            return null;
+        try
+        {
+            return GetRawUrl(relativePath);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    public static string NormalizeCatalogRelativePath(string? relativePath)
+    {
+        var relative = (relativePath ?? "").Replace('\\', '/').Trim();
+        if (string.IsNullOrWhiteSpace(relative))
+            throw new ArgumentException("Catalog path is empty.", nameof(relativePath));
+
+        if (relative.Contains("://", StringComparison.Ordinal) ||
+            relative.StartsWith("//", StringComparison.Ordinal))
+            throw new ArgumentException("Catalog path must be relative to the mods repo.", nameof(relativePath));
+
+        relative = relative.TrimStart('/');
+        var segments = relative.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0)
+            throw new ArgumentException("Catalog path is empty.", nameof(relativePath));
+
+        foreach (var segment in segments)
+        {
+            if (segment is "." or "..")
+                throw new ArgumentException("Catalog path must not contain '.' or '..' segments.", nameof(relativePath));
+        }
+
+        return string.Join('/', segments);
     }
 
     public Uri BuildFileUrl(CatalogMod mod)
@@ -106,7 +149,7 @@ public sealed class ModCatalogService
     {
         if (mod is null || string.IsNullOrWhiteSpace(mod.Preview))
             return null;
-        return GetRawUrl(mod.Preview);
+        return TryGetRawUrl(mod.Preview);
     }
 
     public async Task<CatalogRoot> FetchCatalogAsync(CancellationToken ct = default)
@@ -132,8 +175,13 @@ public sealed class ModCatalogService
             throw new ArgumentException("Destination path is required.", nameof(destPath));
 
         var url = BuildFileUrl(mod);
-        using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+        using var resp = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct)
+            .ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
+
+        if (resp.Content.Headers.ContentLength is long declared && declared > MaxDownloadBytes)
+            throw new InvalidOperationException(
+                $"Catalog download exceeds size limit ({MaxDownloadBytes} bytes).");
 
         var dir = Path.GetDirectoryName(destPath);
         if (!string.IsNullOrWhiteSpace(dir))
@@ -141,7 +189,24 @@ public sealed class ModCatalogService
 
         await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
         await using var file = File.Create(destPath);
-        await stream.CopyToAsync(file, ct).ConfigureAwait(false);
+        var buffer = new byte[81920];
+        long total = 0;
+        while (true)
+        {
+            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
+            if (read <= 0)
+                break;
+            total += read;
+            if (total > MaxDownloadBytes)
+            {
+                await file.DisposeAsync().ConfigureAwait(false);
+                try { File.Delete(destPath); } catch { /* best effort */ }
+                throw new InvalidOperationException(
+                    $"Catalog download exceeds size limit ({MaxDownloadBytes} bytes).");
+            }
+
+            await file.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+        }
     }
 
     /// <summary>

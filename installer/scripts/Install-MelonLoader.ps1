@@ -100,7 +100,31 @@ $($_.Exception.Message)
 $extract = Join-Path $WorkDir ("mmm-melon-extract-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Force -Path $extract | Out-Null
 try {
-    Expand-Archive -Path $zipPath -DestinationPath $extract -Force
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+    try {
+        $extractFull = [System.IO.Path]::GetFullPath($extract)
+        $extractPrefix = $extractFull.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+        foreach ($entry in $zip.Entries) {
+            $name = $entry.FullName
+            if ([string]::IsNullOrWhiteSpace($name)) { continue }
+            $dest = [System.IO.Path]::GetFullPath((Join-Path $extractFull $name))
+            if (-not ($dest.StartsWith($extractPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+                      $dest.Equals($extractFull, [StringComparison]::OrdinalIgnoreCase))) {
+                throw "Refusing MelonLoader zip entry outside extract root (zip-slip): $name"
+            }
+            if ($name.EndsWith('/') -or $name.EndsWith('\')) {
+                New-Item -ItemType Directory -Force -Path $dest | Out-Null
+                continue
+            }
+            $parent = Split-Path -Parent $dest
+            if ($parent) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $dest, $true)
+        }
+    } finally {
+        $zip.Dispose()
+    }
+
     Get-ChildItem $extract -Force | ForEach-Object {
         $dest = Join-Path $GamePath $_.Name
         if ($_.PSIsContainer) {

@@ -51,6 +51,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<bool>? _promptSubmitGuide;
     readonly Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? _promptEditTaxonomy;
     readonly Action<string>? _copyText;
+    readonly Action? _unselectLibrary;
+    readonly Action? _unselectCatalog;
     readonly BranchSwitchService _branchSwitch;
     readonly IProcessProbe _processProbe;
     readonly IProcessStarter _processStarter;
@@ -63,7 +65,9 @@ public sealed partial class MainViewModel : ObservableObject
     bool _checkingUpdates;
     bool _checkingCatalog;
     bool _addingCatalogMod;
+    readonly List<CatalogModItemViewModel> _catalogSelection = new();
     bool _autoImportedFromGame;
+    readonly HashSet<string> _assemblyGeneratePrompted = new(StringComparer.OrdinalIgnoreCase);
     bool _suppressLanguageSave;
     bool _reporting;
     bool _suppressFilterRefresh;
@@ -101,6 +105,8 @@ public sealed partial class MainViewModel : ObservableObject
         Func<bool>? promptSubmitGuide = null,
         Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? promptEditTaxonomy = null,
         Action<string>? copyText = null,
+        Action? unselectLibrary = null,
+        Action? unselectCatalog = null,
         BranchSwitchService? branchSwitch = null,
         IProcessProbe? processProbe = null,
         IProcessStarter? processStarter = null,
@@ -142,6 +148,8 @@ public sealed partial class MainViewModel : ObservableObject
         _promptSubmitGuide = promptSubmitGuide;
         _promptEditTaxonomy = promptEditTaxonomy;
         _copyText = copyText;
+        _unselectLibrary = unselectLibrary;
+        _unselectCatalog = unselectCatalog;
         _processProbe = processProbe ?? new ProcessProbe();
         _processStarter = processStarter ?? new ShellProcessStarter();
         _delay = delay ?? (span => Task.Delay(span));
@@ -284,9 +292,13 @@ public sealed partial class MainViewModel : ObservableObject
         IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
 
     public bool CanApplyProfile =>
-        CanDeployOrLaunch && (IsDirty || LibrarySelectionCount > 0);
+        CanDeployOrLaunch && IsDirty;
+
+    public bool UseApplyAccent => CanApplyProfile;
 
     [ObservableProperty] private int _librarySelectionCount;
+
+    public int CatalogSelectionCount { get; private set; }
 
     public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
 
@@ -332,6 +344,12 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _settingsExpanded;
     [ObservableProperty] private bool _catalogExpanded;
+
+    public string CatalogToggleLabel =>
+        CatalogExpanded ? Ui.CollapseBrowse : Ui.ExpandBrowse;
+
+    partial void OnCatalogExpandedChanged(bool value) =>
+        OnPropertyChanged(nameof(CatalogToggleLabel));
     [ObservableProperty] private string _catalogStatus = "";
     [ObservableProperty] private CatalogModItemViewModel? _selectedCatalogMod;
     [ObservableProperty] private ModItemViewModel? _selectedLibraryMod;
@@ -425,6 +443,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (refreshUi)
         {
             Ui.Refresh();
+            OnPropertyChanged(nameof(CatalogToggleLabel));
             RebuildFilterOptionLabels();
             RefreshBranchStatusText();
             foreach (var mod in Mods)
@@ -447,12 +466,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(DirtyHint));
         OnPropertyChanged(nameof(CanApplyProfile));
-        ApplyProfileCommand.NotifyCanExecuteChanged();
-    }
-
-    partial void OnLibrarySelectionCountChanged(int value)
-    {
-        OnPropertyChanged(nameof(CanApplyProfile));
+        OnPropertyChanged(nameof(UseApplyAccent));
         ApplyProfileCommand.NotifyCanExecuteChanged();
     }
 
@@ -513,12 +527,62 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     void RefreshStatus()
     {
+        RefreshStatusCore(offerAssemblyGeneratePrompt: true);
+    }
+
+    void RefreshStatusCore(bool offerAssemblyGeneratePrompt)
+    {
         GameStatus = _detector.Detect(GamePath);
         UpdateLoaderVersionWarning();
         UpdateFirstAssemblyWarning();
         AppendLog(GameStatus.Message);
         TryOptimizeMelonLoader(logAlways: false);
         TryAutoImportFromGame();
+        if (offerAssemblyGeneratePrompt)
+            ScheduleAssemblyGeneratePrompt();
+    }
+
+    void ScheduleAssemblyGeneratePrompt()
+    {
+        if (GameStatus?.Kind is not GameStatusKind.LoaderPresentAssembliesMissing)
+            return;
+        if (string.IsNullOrWhiteSpace(GamePath) || !Directory.Exists(GamePath))
+            return;
+
+        string full;
+        try { full = Path.GetFullPath(GamePath); }
+        catch { return; }
+
+        if (!_assemblyGeneratePrompted.Add(full))
+            return;
+
+        void RunPrompt()
+        {
+            try
+            {
+                if (_detector.Detect(GamePath).Kind is not GameStatusKind.LoaderPresentAssembliesMissing)
+                    return;
+
+                if (!Confirm(LocalizationService.T("ConfirmGenerateAssembliesNow"), MessageBoxResult.Yes))
+                {
+                    AppendLog(LocalizationService.T("LogGenerateAssembliesDeclined"));
+                    return;
+                }
+
+                EnsureMelonAssembliesForStore(GamePath);
+                RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"询问生成程序集时出错：{ex.Message}");
+            }
+        }
+
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null)
+            RunPrompt();
+        else
+            _ = dispatcher.BeginInvoke(RunPrompt, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     void TryAutoImportFromGame()
@@ -762,11 +826,11 @@ public sealed partial class MainViewModel : ObservableObject
             return false;
         }
 
-        RefreshStatus();
+        RefreshStatusCore(offerAssemblyGeneratePrompt: false);
         if (GameStatus?.Kind == GameStatusKind.LoaderPresentAssembliesMissing)
         {
             EnsureMelonAssembliesForStore(GamePath);
-            RefreshStatus();
+            RefreshStatusCore(offerAssemblyGeneratePrompt: false);
         }
 
         if (GameStatus?.Kind != GameStatusKind.Ready)
@@ -820,6 +884,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (!result.Success) return false;
 
             RecomputeDirty();
+            _notify(LocalizationService.T("NotifyApplySucceeded"));
             return true;
         }
         catch (Exception ex)
@@ -1095,6 +1160,12 @@ public sealed partial class MainViewModel : ObservableObject
     async Task RefreshCatalogAsync()
     {
         if (_checkingCatalog) return;
+        if (_addingCatalogMod)
+        {
+            AppendLog("正在加入本地库，已跳过目录刷新。");
+            CatalogStatus = "加入本地库进行中，暂不刷新目录。";
+            return;
+        }
         _checkingCatalog = true;
         CatalogStatus = "正在拉取目录…";
         AppendLog("正在拉取 Mod 目录…");
@@ -1102,7 +1173,6 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
             var packages = _library.List();
-            var previousId = SelectedCatalogMod?.Id;
 
             CatalogMods.Clear();
             foreach (var mod in root.Mods)
@@ -1112,10 +1182,9 @@ public sealed partial class MainViewModel : ObservableObject
                 CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
             }
 
-            SelectedCatalogMod = CatalogMods.FirstOrDefault(m =>
-                previousId is not null &&
-                string.Equals(m.Id, previousId, StringComparison.OrdinalIgnoreCase))
-                ?? CatalogMods.FirstOrDefault();
+            SelectedCatalogMod = null;
+            SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
+            _unselectCatalog?.Invoke();
 
             EnrichModsFromCatalog();
             if (SelectedLibraryMod is not null)
@@ -1143,11 +1212,30 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddCatalogMod))]
     async Task AddCatalogModToLibraryAsync()
     {
-        if (SelectedCatalogMod is null || _addingCatalogMod) return;
+        if (_addingCatalogMod) return;
+        var targets = _catalogSelection.Where(i => !i.IsInLibrary).ToList();
+        if (targets.Count == 0) return;
+
+        var skippedInLibrary = _catalogSelection.Count - targets.Count;
+        if (skippedInLibrary > 0)
+            AppendLog($"已跳过 {skippedInLibrary} 个已在本地库的目录项。");
+
         _addingCatalogMod = true;
         AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+        try
+        {
+            foreach (var item in targets)
+                await AddOneCatalogModAsync(item).ConfigureAwait(true);
+        }
+        finally
+        {
+            _addingCatalogMod = false;
+            AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+        }
+    }
 
-        var item = SelectedCatalogMod;
+    async Task AddOneCatalogModAsync(CatalogModItemViewModel item)
+    {
         try
         {
             if (item.IsInLibrary)
@@ -1238,18 +1326,23 @@ public sealed partial class MainViewModel : ObservableObject
             CatalogStatus = $"加入本地库失败：{ex.Message}";
             AppendLog(CatalogStatus);
         }
-        finally
-        {
-            _addingCatalogMod = false;
-            AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
-        }
     }
 
-    bool CanAddCatalogMod() => SelectedCatalogMod is not null && !_addingCatalogMod;
+    bool CanAddCatalogMod() =>
+        !_addingCatalogMod &&
+        _catalogSelection.Any(i => !i.IsInLibrary);
+
+    public void SetCatalogSelection(IReadOnlyList<CatalogModItemViewModel> items)
+    {
+        _catalogSelection.Clear();
+        _catalogSelection.AddRange(items);
+        CatalogSelectionCount = _catalogSelection.Count;
+        OnPropertyChanged(nameof(CatalogSelectionCount));
+        AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnSelectedCatalogModChanged(CatalogModItemViewModel? value)
     {
-        AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
         _ = value?.LoadPreviewImageAsync();
     }
 
@@ -1260,7 +1353,20 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    void ClearLibraryModSelection() => SelectedLibraryMod = null;
+    void ClearLibraryModSelection()
+    {
+        _unselectLibrary?.Invoke();
+        SelectedLibraryMod = null;
+        LibrarySelectionCount = 0;
+    }
+
+    [RelayCommand]
+    void ClearCatalogModSelection()
+    {
+        _unselectCatalog?.Invoke();
+        SelectedCatalogMod = null;
+        SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
+    }
 
     void UpdateLibraryModDetail()
     {
@@ -1280,15 +1386,13 @@ public sealed partial class MainViewModel : ObservableObject
             item.ApplyCatalogEnrichment(catalog.Mod);
 
         var previewUrl = catalog?.PreviewUrl
-            ?? (string.IsNullOrWhiteSpace(item.Package.Preview)
-                ? null
-                : ModCatalogService.GetRawUrl(item.Package.Preview));
+            ?? ModCatalogService.TryGetRawUrl(item.Package.Preview);
         _ = item.LoadPreviewImageAsync(previewUrl);
     }
 
     async Task SoftRefreshCatalogForLibraryDetailAsync()
     {
-        if (_checkingCatalog || CatalogMods.Count > 0) return;
+        if (_checkingCatalog || _addingCatalogMod || CatalogMods.Count > 0) return;
         _checkingCatalog = true;
         try
         {
@@ -2390,7 +2494,7 @@ public sealed partial class MainViewModel : ObservableObject
                     _ => string.IsNullOrWhiteSpace(GamePath) ? cfg.SteamLinkPath : GamePath
                 };
                 EnsureMelonAssembliesForStore(targetPath);
-                RefreshStatus();
+                RefreshStatusCore(offerAssemblyGeneratePrompt: false);
             }
         }
         catch (Exception ex)
@@ -2628,6 +2732,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(CanDeployOrLaunch));
         OnPropertyChanged(nameof(CanApplyProfile));
+        OnPropertyChanged(nameof(UseApplyAccent));
         OnPropertyChanged(nameof(IsBranchWizardBlocking));
         OnPropertyChanged(nameof(CanSwitchGameBranch));
         OnPropertyChanged(nameof(CanStartBranchWizard));

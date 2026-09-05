@@ -18,6 +18,12 @@
   <data name="BrowseMods" xml:space="preserve">
     <value>Mod 浏览</value>
   </data>
+  <data name="CollapseBrowse" xml:space="preserve">
+    <value>收起浏览</value>
+  </data>
+  <data name="ExpandBrowse" xml:space="preserve">
+    <value>展开浏览</value>
+  </data>
   <data name="ImportDll" xml:space="preserve">
     <value>导入 DLL</value>
   </data>
@@ -289,6 +295,7 @@
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>双目录向导已暂停，可稍后继续。</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>已解除正式服/测试服双目录配置。</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>已解除双目录配置。请在 Steam 中确认当前游戏分支是否正确。</value></data>
+  <data name="NotifyApplySucceeded" xml:space="preserve"><value>方案已应用到游戏目录</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>未能自动对齐 Steam 测试分支。请先在 Steam 中手动选好分支；对齐完成前请勿启动 Steam。</value></data>
   <data name="ColumnName" xml:space="preserve"><value>名称</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>作者</value></data>
@@ -327,4 +334,11 @@
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>当前已是该服（目录与 Steam 测试分支已对齐），无需再次切换。</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>双服目录中仍有服缺少 MelonLoader。请重新运行安装包勾选 MelonLoader，或先在有 Loader 的那一服装好。</value></data>
   <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>当前安装的是哪一服？请直接选择正式服或测试服。</value></data>
+  <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">
+    <value>检测到 MelonLoader 已安装，但尚未生成 Il2Cpp 程序集。
+是否现在短暂启动游戏自动生成？（首次约 1–2 分钟；也可稍后在「应用方案」时再生成。）</value>
+  </data>
+  <data name="LogGenerateAssembliesDeclined" xml:space="preserve">
+    <value>已跳过立即生成程序集；需要时可点击「应用方案」再试，或手动启动一次游戏。</value>
+  </data>
 </root>
