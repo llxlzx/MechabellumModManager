@@ -2744,6 +2744,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var segmentAOk = false;
+        string? segmentAFailure = null;
         await RunBusyAsync(LocalizationService.T("BusyWaitingSteam"), async () =>
         {
             if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
@@ -2753,14 +2754,20 @@ public sealed partial class MainViewModel : ObservableObject
             var archiveA = await Task.Run(() => _branchSwitch.ArchiveCurrentAs(current)).ConfigureAwait(true);
             if (!archiveA.Success)
             {
-                AbortWizardAfterFailure(string.IsNullOrWhiteSpace(archiveA.Message)
+                segmentAFailure = string.IsNullOrWhiteSpace(archiveA.Message)
                     ? LocalizationService.T("FailWizardArchiveCurrentFailed")
-                    : archiveA.Message);
+                    : archiveA.Message;
                 return;
             }
 
             segmentAOk = true;
         }).ConfigureAwait(true);
+
+        if (segmentAFailure is not null)
+        {
+            AbortWizardAfterFailure(segmentAFailure);
+            return;
+        }
 
         if (!segmentAOk)
             return;
@@ -2792,6 +2799,9 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+            return;
+
         var silentOther = _branchSwitch.TrySilentSetBeta(other);
         if (!silentOther.Success)
         {
@@ -2811,6 +2821,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var linked = false;
+        string? segmentBcFailure = null;
         await RunBusyAsync(LocalizationService.T("BusyWaitingSteam"), async () =>
         {
             if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
@@ -2820,9 +2831,9 @@ public sealed partial class MainViewModel : ObservableObject
             var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
             if (!archiveB.Success)
             {
-                FailWizard(string.IsNullOrWhiteSpace(archiveB.Message)
+                segmentBcFailure = string.IsNullOrWhiteSpace(archiveB.Message)
                     ? LocalizationService.T("FailWizardArchiveOtherFailed")
-                    : archiveB.Message);
+                    : archiveB.Message;
                 return;
             }
 
@@ -2830,15 +2841,21 @@ public sealed partial class MainViewModel : ObservableObject
             var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
             if (!link.Success)
             {
-                FailWizard(string.IsNullOrWhiteSpace(link.Message)
+                segmentBcFailure = string.IsNullOrWhiteSpace(link.Message)
                     ? LocalizationService.T("FailWizardCreateLinkFailed")
-                    : link.Message);
+                    : link.Message;
                 return;
             }
 
             ApplyLinkedWizardState(current);
             linked = true;
         }).ConfigureAwait(true);
+
+        if (segmentBcFailure is not null)
+        {
+            FailWizard(segmentBcFailure);
+            return;
+        }
 
         if (!linked)
             return;
@@ -2859,20 +2876,24 @@ public sealed partial class MainViewModel : ObservableObject
     async Task<bool> TryCreateLinkAndApplyAsync(GameBranch current)
     {
         var linked = false;
+        string? linkFailure = null;
         await RunBusyAsync(LocalizationService.T("BusyCreatingJunction"), async () =>
         {
             var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
             if (!link.Success)
             {
-                FailWizard(string.IsNullOrWhiteSpace(link.Message)
+                linkFailure = string.IsNullOrWhiteSpace(link.Message)
                     ? LocalizationService.T("FailWizardCreateLinkFailed")
-                    : link.Message);
+                    : link.Message;
                 return;
             }
 
             ApplyLinkedWizardState(current);
             linked = true;
         }).ConfigureAwait(true);
+
+        if (linkFailure is not null)
+            FailWizard(linkFailure);
 
         return linked;
     }
