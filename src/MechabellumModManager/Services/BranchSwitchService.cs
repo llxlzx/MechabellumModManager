@@ -390,7 +390,7 @@ public sealed class BranchSwitchService
                 else
                 {
                     _junctions.DeleteJunction(link);
-                    Directory.Move(real, dest);
+                    MoveDirectoryWithRetry(real, dest);
                 }
             }
             else if (Directory.Exists(link))
@@ -401,7 +401,7 @@ public sealed class BranchSwitchService
                 if (!TryProbeDirectoryWritable(link, out var probeError))
                     return BranchOperationResult.Fail(probeError);
 
-                Directory.Move(link, dest);
+                MoveDirectoryWithRetry(link, dest);
             }
             else
             {
@@ -448,7 +448,7 @@ public sealed class BranchSwitchService
             if (!TryProbeDirectoryWritable(link, out var probeError))
                 return BranchOperationResult.Fail(probeError);
 
-            Directory.Move(link, dest);
+            MoveDirectoryWithRetry(link, dest);
             if (PathExists(link))
                 return BranchOperationResult.Fail("Steam link path still exists after archive.");
 
@@ -554,7 +554,7 @@ public sealed class BranchSwitchService
                 if (!string.IsNullOrWhiteSpace(currentStore) && Directory.Exists(currentStore))
                 {
                     if (!PathExists(link))
-                        Directory.Move(currentStore, link);
+                        MoveDirectoryWithRetry(currentStore, link);
                     else if (!PathsEqual(currentStore, link))
                     {
                         RollbackTeardownLink(link, unlinkedStore, deletedJunction);
@@ -617,7 +617,7 @@ public sealed class BranchSwitchService
         try
         {
             if (PathExists(link) && !_junctions.IsJunction(link) && !PathExists(store))
-                Directory.Move(link, store);
+                MoveDirectoryWithRetry(link, store);
 
             if (!PathExists(link) && Directory.Exists(store))
             {
@@ -781,6 +781,47 @@ public sealed class BranchSwitchService
         && File.Exists(Path.Combine(path, "Mechabellum.exe"))
         && File.Exists(Path.Combine(path, "GameAssembly.dll"));
 
+    /// <summary>
+    /// Directory.Move fails when Explorer/AV/indexer still holds a handle even after Steam exits.
+    /// Retry briefly before surfacing access-denied guidance.
+    /// </summary>
+    internal static void MoveDirectoryWithRetry(
+        string source,
+        string dest,
+        int attempts = 10,
+        TimeSpan? delay = null,
+        Action<TimeSpan>? sleep = null)
+    {
+        if (attempts < 1)
+            throw new ArgumentOutOfRangeException(nameof(attempts));
+
+        delay ??= TimeSpan.FromMilliseconds(400);
+        sleep ??= static span =>
+        {
+            if (span > TimeSpan.Zero)
+                Thread.Sleep(span);
+        };
+
+        Exception? last = null;
+        for (var i = 0; i < attempts; i++)
+        {
+            try
+            {
+                Directory.Move(source, dest);
+                return;
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+            {
+                last = ex;
+                if (i + 1 >= attempts)
+                    break;
+                sleep(delay.Value);
+            }
+        }
+
+        throw last ?? new IOException("Directory.Move failed.");
+    }
+
     static bool TryProbeDirectoryWritable(string dir, out string error)
     {
         error = "";
@@ -812,7 +853,8 @@ public sealed class BranchSwitchService
             || msg.Contains("拒绝访问", StringComparison.OrdinalIgnoreCase))
         {
             return "无法移动游戏目录（访问被拒绝）。请确认已完全退出 Steam 与游戏（含 steamwebhelper），"
-                   + "临时关闭对该目录的杀软占用，检查文件夹只读属性；仍失败时请以管理员身份运行管理器后重试。\n"
+                   + "关闭资源管理器中打开的该游戏文件夹，临时关闭对该目录的杀软占用，检查文件夹只读属性；"
+                   + "仍失败时请以管理员身份运行管理器后重试。\n"
                    + "原始信息：" + msg;
         }
 

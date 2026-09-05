@@ -102,7 +102,46 @@ public class MainViewModelTests
         vm.Mods[0].IsEnabled.Should().BeFalse();
     }
 
-[Fact]
+    [Fact]
+    public void Disable_after_apply_marks_dirty_and_enables_Apply()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+
+        vm.Mods[0].IsEnabled = true;
+        vm.ApplyProfileCommand.Execute(null);
+        vm.IsDirty.Should().BeFalse();
+        vm.CanApplyProfile.Should().BeFalse();
+
+        vm.Mods[0].IsEnabled = false;
+        vm.IsDirty.Should().BeTrue();
+        vm.CanApplyProfile.Should().BeTrue();
+        vm.ApplyProfileCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ImportDll_auto_enables_and_marks_dirty()
+    {
+        using var fx = Fixture.CreateReady();
+        var stub = Path.Combine(fx.DataRoot, "fresh.dll");
+        File.WriteAllBytes(stub, new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
+
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            pickPackageType: () => ModPackageType.MelonMod,
+            openDll: () => stub);
+
+        vm.ImportDllCommand.Execute(null);
+
+        var imported = vm.Mods.Should().ContainSingle(m =>
+            m.Package.Files.Any(f =>
+                f.RelativePathInPackage.EndsWith("fresh.dll", StringComparison.OrdinalIgnoreCase))).Subject;
+        imported.IsEnabled.Should().BeTrue();
+        vm.IsDirty.Should().BeTrue();
+        vm.CanApplyProfile.Should().BeTrue();
+    }
+
+    [Fact]
     public void ImportDll_NeedsType_pick_completes_via_CommitStaging()
     {
         using var fx = Fixture.CreateReady();
