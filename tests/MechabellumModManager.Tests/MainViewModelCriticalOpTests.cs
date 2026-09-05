@@ -94,6 +94,112 @@ public class MainViewModelCriticalOpTests
     }
 
     [Fact]
+    public void IsRecoveryGateActive_locks_deploy()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+
+        vm.IsReady.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeTrue();
+
+        vm.IsRecoveryGateActive = true;
+
+        vm.IsSessionLocked.Should().BeTrue();
+        vm.CanDeployOrLaunch.Should().BeFalse();
+        vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeFalse();
+        vm.IsDirty = true;
+        vm.ApplyProfileCommand.CanExecute(null).Should().BeFalse();
+        vm.ApplyProfile().Should().BeFalse();
+        vm.EvaluateCloseOrUpdateGate(busyDialogOpen: false).Should().Be(CriticalOpGateLevel.HardBlock);
+    }
+
+    [Fact]
+    public void ApplyRecoveryContinue_clears_stale_Ready_marker()
+    {
+        using var fx = Fixture.CreateReady();
+        WriteInterruptedMarker(fx.Paths);
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.IsRecoveryGateActive = true;
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
+        vm.IsBranchWizardInProgress.Should().BeFalse();
+        fx.Guard.TryLoadInterrupted(out _).Should().BeTrue();
+
+        vm.ApplyRecoveryContinue();
+
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        vm.IsSessionLocked.Should().BeFalse();
+        vm.CanDeployOrLaunch.Should().BeTrue();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+        fx.Guard.TryLoadInterrupted(out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ShouldOfferCriticalRecovery_true_when_interrupted_marker()
+    {
+        using var fx = Fixture.CreateReady();
+        WriteInterruptedMarker(fx.Paths);
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+
+        vm.ShouldOfferCriticalRecovery(fx.Guard).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShouldOfferCriticalRecovery_false_when_no_marker()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+        vm.ShouldOfferCriticalRecovery(fx.Guard).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplyRecoveryContinue_keeps_gate_when_awaiting_settle()
+    {
+        using var fx = Fixture.CreateReady();
+        WriteInterruptedMarker(fx.Paths);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.AwaitingSteamSettle,
+            ActiveBranch = GameBranch.Official
+        });
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.IsRecoveryGateActive = true;
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+
+        vm.ApplyRecoveryContinue();
+
+        vm.IsRecoveryGateActive.Should().BeTrue();
+        vm.IsSessionLocked.Should().BeTrue();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeTrue();
+        vm.ActiveContentPage.Should().Be(MainContentPage.Settings);
+        vm.ShowConfirmManualBeta.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ApplyRecoveryRepair_clears_stale_Ready_marker()
+    {
+        using var fx = Fixture.CreateReady();
+        WriteInterruptedMarker(fx.Paths);
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.IsRecoveryGateActive = true;
+
+        await vm.ApplyRecoveryRepair();
+
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+    }
+
+    static void WriteInterruptedMarker(PathsService paths)
+    {
+        Directory.CreateDirectory(paths.DataRoot);
+        File.WriteAllText(
+            paths.CriticalOpMarkerPath,
+            """{"kind":"BranchDiskWrite","startedUtc":"2026-09-05T12:00:00+00:00","detail":"stale","pid":1}""");
+    }
+
+    [Fact]
     public void TryHandleWindowClosing_hard_cancels_when_guard_running()
     {
         using var fx = Fixture.CreateReady();
@@ -235,6 +341,9 @@ public class MainViewModelCriticalOpTests
                 processStarter: starter,
                 criticalOp: criticalOp ?? Guard);
         }
+
+        public void WriteBranchConfig(BranchSwitchConfig cfg) =>
+            _store.Save(Paths.BranchSwitchConfigPath, cfg);
 
         public void Dispose()
         {

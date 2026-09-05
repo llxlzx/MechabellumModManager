@@ -91,6 +91,28 @@ public partial class App : Application
         window.DataContext = ComposeMainViewModel(window);
         MainWindow = window;
         window.Show();
+        OfferCriticalRecoveryIfNeeded(window);
+    }
+
+    static void OfferCriticalRecoveryIfNeeded(MainWindow window)
+    {
+        if (window.DataContext is not MainViewModel vm)
+            return;
+        if (!vm.ShouldOfferCriticalRecovery())
+            return;
+
+        vm.IsRecoveryGateActive = true;
+        var dialog = new CriticalOpRecoveryDialog { Owner = window };
+        dialog.DiagnosticsRequested += () =>
+        {
+            if (vm.ExportDiagnosticsCommand.CanExecute(null))
+                vm.ExportDiagnosticsCommand.Execute(null);
+        };
+        dialog.ShowDialog();
+        if (dialog.ResultChoice == CriticalOpRecoveryChoice.Continue)
+            vm.ApplyRecoveryContinue();
+        else if (dialog.ResultChoice == CriticalOpRecoveryChoice.Repair)
+            _ = vm.ApplyRecoveryRepair();
     }
 
     void BeginBusy(Window owner, string title, string message)
