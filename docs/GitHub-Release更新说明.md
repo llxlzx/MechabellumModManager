@@ -105,6 +105,15 @@ release/v1.0.5/
 
 没有这个文件时，构建脚本会**直接失败**，不允许打正式包。
 
+### 步骤 2b — Unity 依赖 + .NET 8 离线包（fat Setup 必选）
+
+除 Melon zip 外，还需放入 `installer/redist/`：
+
+- `unity-deps/UnityDependencies_{版本}.zip` — 从 https://github.com/LavaGang/Unity-Runtime-Libraries 下载（如 `2022.3.62.zip`），**重命名**为 `UnityDependencies_2022.3.62.zip`
+- `dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` — .NET 8 Desktop Runtime 离线安装包
+
+**国内：** Setup 本身可能仍需镜像/代理获取；安装完成后目标是在 **断网** 下完成首次 Il2Cpp 生成（级别 **B**）。发版前在真机断网启动一次，确认 Melon 不再索要 Cpp2IL 等额外 AG 包（见 design spec acceptance **F**）。详见 `releasing.md` §1.2b。
+
 ### 步骤 3 — 测试并推代码
 
 ```powershell
@@ -302,6 +311,15 @@ Place official `MelonLoader.x64.zip` at:
 From: https://github.com/LavaGang/MelonLoader/releases  
 
 Without it, the build script **fails** and will not produce a release Setup.
+
+### Step 2b — Unity deps + .NET 8 offline (fat Setup required)
+
+Also place under `installer/redist/`:
+
+- `unity-deps/UnityDependencies_{version}.zip` — from https://github.com/LavaGang/Unity-Runtime-Libraries (e.g. download `2022.3.62.zip`, **rename** to `UnityDependencies_2022.3.62.zip`)
+- `dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` — .NET 8 Desktop Runtime offline installer
+
+**Domestic users:** Setup download may still need a mirror/VPN; the goal is **post-install** offline first-run Il2Cpp generation (level **B**). Before release, disconnect network on a real machine and launch once; confirm Melon does not ask for extra AG packages such as Cpp2IL (design spec acceptance **F**). See `releasing.md` §1.2b.
 
 ### Step 3 — Test and push code
 
