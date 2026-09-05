@@ -48,8 +48,10 @@ public sealed class MelonLoaderDualStoreSync
         {
             var zipReady = ResolveLocalZip(localZipPath);
             var seedReady = SeedDependencies(gamePath, DeriveRedistDirFromMelonZip(zipReady));
-            // Re-apply after seed so offline can flip true when zip just landed.
-            var optimizeReady = _optimizer.ApplyRecommendedSettings(gamePath);
+            // Re-apply after seed so offline can flip true when zip just landed (incl. seed.Version fallback).
+            var optimizeReady = seedReady.Success && seedReady.Version != null
+                ? _optimizer.ApplyRecommendedSettings(gamePath, seedReady.Version)
+                : _optimizer.ApplyRecommendedSettings(gamePath);
             return new MelonLoaderInstallResult
             {
                 Success = true,
@@ -178,7 +180,9 @@ public sealed class MelonLoaderDualStoreSync
 
             // Seed matching UnityDependencies zip BEFORE offline optimize so CanForceOffline can become true.
             var seed = SeedDependencies(gamePath, DeriveRedistDirFromMelonZip(zipPath));
-            var optimize = _optimizer.ApplyRecommendedSettings(gamePath);
+            var optimize = seed.Success && seed.Version != null
+                ? _optimizer.ApplyRecommendedSettings(gamePath, seed.Version)
+                : _optimizer.ApplyRecommendedSettings(gamePath);
             var assembliesNote = status.Kind == GameStatusKind.LoaderPresentAssembliesMissing
                 ? "\n首次启动该服时 MelonLoader 会重新生成程序集，可能需要一两分钟。"
                 : "";
@@ -263,7 +267,9 @@ public sealed class MelonLoaderDualStoreSync
 
             var zip = ResolveLocalZip();
             var seed = SeedDependencies(destGamePath, DeriveRedistDirFromMelonZip(zip));
-            var optimize = _optimizer.ApplyRecommendedSettings(destGamePath);
+            var optimize = seed.Success && seed.Version != null
+                ? _optimizer.ApplyRecommendedSettings(destGamePath, seed.Version)
+                : _optimizer.ApplyRecommendedSettings(destGamePath);
             return new MelonLoaderInstallResult
             {
                 Success = true,
