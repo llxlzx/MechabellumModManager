@@ -16,9 +16,21 @@
     <value>Настройки</value>
   </data>
   <data name="BrowseMods" xml:space="preserve">
-    <value>Каталог модов</value>
+    <value>Мастерская</value>
   </data>
-  <data name="CollapseBrowse" xml:space="preserve">
+        <data name="NavWorkshopTip" xml:space="preserve">
+    <value>Обзор модов сообщества (мастерская) и добавление в установленные</value>
+  </data>
+<data name="NavLibraryTip" xml:space="preserve">
+    <value>Управление уже установленными модами и профилями</value>
+  </data>
+<data name="CatalogEmptyHint" xml:space="preserve">
+    <value>Мастерская пуста. Нажмите «Обновить», чтобы загрузить моды.</value>
+  </data>
+  <data name="LibraryEmptyHint" xml:space="preserve">
+    <value>Нет установленных модов. Добавьте из мастерской или импортируйте DLL/Zip.</value>
+  </data>
+<data name="CollapseBrowse" xml:space="preserve">
     <value>Свернуть обзор</value>
   </data>
   <data name="ExpandBrowse" xml:space="preserve">
@@ -48,7 +60,10 @@
   <data name="LanguageSystem" xml:space="preserve">
     <value>Как в системе</value>
   </data>
-  <data name="CreditsTitle" xml:space="preserve">
+    <data name="NotifyFollowedSystemLanguage" xml:space="preserve">
+    <value>Следование языку системы ({0})</value>
+  </data>
+<data name="CreditsTitle" xml:space="preserve">
     <value>Авторы и отказ</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
@@ -175,12 +190,18 @@
     <value>Профили</value>
   </data>
   <data name="ModLibrary" xml:space="preserve">
-    <value>Библиотека модов</value>
+    <value>Установленные</value>
   </data>
   <data name="SyncLog" xml:space="preserve">
-    <value>Журнал синхронизации</value>
+    <value>Журнал</value>
   </data>
-  <data name="CurrentProfile" xml:space="preserve">
+    <data name="LogExpand" xml:space="preserve">
+    <value>Развернуть журнал</value>
+  </data>
+  <data name="LogCollapse" xml:space="preserve">
+    <value>Свернуть</value>
+  </data>
+<data name="CurrentProfile" xml:space="preserve">
     <value>Текущий профиль</value>
   </data>
 

@@ -85,6 +85,12 @@
                 <GradientStop Color="#FF151B22" Offset="1" />
             </LinearGradientBrush>
 
+            <!-- Phase 2 selection / empty-state tokens -->
+            <SolidColorBrush x:Key="SelectionFillBrush" Color="#FF252E38" />
+            <SolidColorBrush x:Key="SelectionHoverBrush" Color="#FF1C242C" />
+            <SolidColorBrush x:Key="RowAltBrush" Color="#FF12171C" />
+            <SolidColorBrush x:Key="GridLineSoftBrush" Color="#FF232B34" />
+
             <FontFamily x:Key="AppFontFamily">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI, sans-serif</FontFamily>
             <FontFamily x:Key="AppDisplayFontFamily">Segoe UI Variable Display, Segoe UI Semibold, Microsoft YaHei UI, sans-serif</FontFamily>
 
@@ -128,8 +134,29 @@
                 <Setter Property="Background" Value="{StaticResource PanelSheenBrush}" />
                 <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="CornerRadius" Value="3" />
+                <Setter Property="CornerRadius" Value="4" />
                 <Setter Property="Padding" Value="14" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+            </Style>
+
+            <Style x:Key="ContentCardStyle" TargetType="Border" BasedOn="{StaticResource PanelChromeStyle}">
+                <Setter Property="Padding" Value="14,12" />
+                <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+
+            <Style x:Key="EmptyStateStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                <Setter Property="TextAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="MaxWidth" Value="420" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Opacity" Value="0.92" />
+                <Setter Property="Margin" Value="24" />
+                <Setter Property="IsHitTestVisible" Value="False" />
             </Style>
 
             <Style TargetType="Button">
@@ -151,7 +178,7 @@
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
                                     Padding="{TemplateBinding Padding}"
-                                    CornerRadius="3"
+                                                    CornerRadius="4"
                                     SnapsToDevicePixels="True">
                                 <ContentPresenter HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"
@@ -251,7 +278,7 @@
                                                     Background="{StaticResource BgElevatedBrush}"
                                                     BorderBrush="{StaticResource SteelEdgeBrush}"
                                                     BorderThickness="1"
-                                                    CornerRadius="2"
+                                                    CornerRadius="4"
                                                     SnapsToDevicePixels="True">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -297,7 +324,7 @@
                                             Background="{StaticResource BgPanelBrush}"
                                             BorderBrush="{StaticResource SteelEdgeBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="2"
+                                            CornerRadius="4"
                                             Margin="0,2,0,0">
                                         <ScrollViewer Margin="0" SnapsToDevicePixels="True">
                                             <StackPanel IsItemsHost="True"
@@ -330,10 +357,10 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsHighlighted" Value="True">
-                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgElevatedBrush}" />
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectionHoverBrush}" />
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="Bd" Property="Background" Value="#FF252E38" />
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectionFillBrush}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -404,18 +431,28 @@
                                     Background="Transparent"
                                     BorderBrush="Transparent"
                                     BorderThickness="1"
-                                    CornerRadius="2"
+                                    CornerRadius="4"
                                     Padding="{TemplateBinding Padding}"
                                     SnapsToDevicePixels="True">
-                                <ContentPresenter />
+                                <Grid>
+                                    <Border x:Name="Accent"
+                                            Width="3"
+                                            HorizontalAlignment="Left"
+                                            Margin="-8,0,0,0"
+                                            CornerRadius="1"
+                                            Background="{StaticResource AccentAmberBrush}"
+                                            Visibility="Collapsed" />
+                                    <ContentPresenter />
+                                </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgElevatedBrush}" />
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectionHoverBrush}" />
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="Bd" Property="Background" Value="#FF252E38" />
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectionFillBrush}" />
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
+                                    <Setter TargetName="Accent" Property="Visibility" Value="Visible" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -428,8 +465,8 @@
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="RowBackground" Value="Transparent" />
-                <Setter Property="AlternatingRowBackground" Value="#FF12171C" />
-                <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource SteelBrush}" />
+                <Setter Property="AlternatingRowBackground" Value="{StaticResource RowAltBrush}" />
+                <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource GridLineSoftBrush}" />
                 <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
                 <Setter Property="GridLinesVisibility" Value="Horizontal" />
                 <Setter Property="HeadersVisibility" Value="Column" />
@@ -468,7 +505,7 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="#FF252E38" />
+                        <Setter Property="Background" Value="{StaticResource SelectionFillBrush}" />
                         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                     </Trigger>
                 </Style.Triggers>
@@ -476,6 +513,18 @@
 
             <Style TargetType="DataGridRow">
                 <Setter Property="MinHeight" Value="34" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{StaticResource SelectionHoverBrush}" />
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{StaticResource SelectionFillBrush}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                        <Setter Property="BorderThickness" Value="3,0,0,0" />
+                    </Trigger>
+                </Style.Triggers>
             </Style>
 
             <Style TargetType="ScrollBar">

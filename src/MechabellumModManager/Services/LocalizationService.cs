@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Resources;
+using System.Runtime.InteropServices;
 
 namespace MechabellumModManager.Services;
 
@@ -10,9 +11,15 @@ public static class LocalizationService
     static readonly ResourceManager Resources =
         new("MechabellumModManager.Resources.Strings", typeof(LocalizationService).Assembly);
 
+    /// <summary>
+    /// Test hook. Production uses the OS UI language (not thread CurrentUICulture),
+    /// because Apply() overwrites CurrentUICulture and would poison "follow system".
+    /// </summary>
+    internal static Func<CultureInfo>? SystemUiCultureProvider { get; set; }
+
     public static string ResolveSystemLanguage()
     {
-        var ui = CultureInfo.CurrentUICulture;
+        var ui = SystemUiCultureProvider?.Invoke() ?? GetOsUiCulture();
         return MatchSupported(ui) ?? MatchSupported(ui.Parent) ?? "zh-CN";
     }
 
@@ -49,6 +56,23 @@ public static class LocalizationService
     }
 
     public static string T(string key) => GetString(key);
+
+    static CultureInfo GetOsUiCulture()
+    {
+        try
+        {
+            // User's Windows display language — independent of CurrentUICulture we may have set.
+            var lcid = GetUserDefaultUILanguage();
+            return CultureInfo.GetCultureInfo(lcid);
+        }
+        catch
+        {
+            return CultureInfo.InstalledUICulture;
+        }
+    }
+
+    [DllImport("kernel32.dll")]
+    static extern ushort GetUserDefaultUILanguage();
 
     static string? MatchSupported(CultureInfo? culture)
     {

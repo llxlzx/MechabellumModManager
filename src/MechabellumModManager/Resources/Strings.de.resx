@@ -16,9 +16,21 @@
     <value>Einstellungen</value>
   </data>
   <data name="BrowseMods" xml:space="preserve">
-    <value>Mods durchsuchen</value>
+    <value>Werkstatt</value>
   </data>
-  <data name="CollapseBrowse" xml:space="preserve">
+        <data name="NavWorkshopTip" xml:space="preserve">
+    <value>Community-Mods durchsuchen (Workshop) und zur Bibliothek hinzufügen</value>
+  </data>
+<data name="NavLibraryTip" xml:space="preserve">
+    <value>Bereits installierte Mods und Profile verwalten</value>
+  </data>
+<data name="CatalogEmptyHint" xml:space="preserve">
+    <value>Werkstatt ist leer. Aktualisieren, um Community-Mods zu laden.</value>
+  </data>
+  <data name="LibraryEmptyHint" xml:space="preserve">
+    <value>Noch keine installierten Mods. Über Werkstatt hinzufügen oder DLL/Zip importieren.</value>
+  </data>
+<data name="CollapseBrowse" xml:space="preserve">
     <value>Durchsuchen einklappen</value>
   </data>
   <data name="ExpandBrowse" xml:space="preserve">
@@ -48,7 +60,10 @@
   <data name="LanguageSystem" xml:space="preserve">
     <value>System folgen</value>
   </data>
-  <data name="CreditsTitle" xml:space="preserve">
+    <data name="NotifyFollowedSystemLanguage" xml:space="preserve">
+    <value>Der Systemsprache gefolgt ({0})</value>
+  </data>
+<data name="CreditsTitle" xml:space="preserve">
     <value>Credits &amp; Hinweis</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
@@ -175,12 +190,18 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
     <value>Profile</value>
   </data>
   <data name="ModLibrary" xml:space="preserve">
-    <value>Mod-Bibliothek</value>
+    <value>Installiert</value>
   </data>
   <data name="SyncLog" xml:space="preserve">
-    <value>Sync-Protokoll</value>
+    <value>Aktivitätsprotokoll</value>
   </data>
-  <data name="CurrentProfile" xml:space="preserve">
+    <data name="LogExpand" xml:space="preserve">
+    <value>Protokoll öffnen</value>
+  </data>
+  <data name="LogCollapse" xml:space="preserve">
+    <value>Einklappen</value>
+  </data>
+<data name="CurrentProfile" xml:space="preserve">
     <value>Aktives Profil</value>
   </data>
 

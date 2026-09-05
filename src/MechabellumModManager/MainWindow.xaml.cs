@@ -1,9 +1,11 @@
-﻿using System.IO;
+﻿using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using MechabellumModManager.Dialogs;
 using MechabellumModManager.ViewModels;
@@ -16,6 +18,31 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         TryApplyBrandAssets();
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.OldValue is INotifyPropertyChanged oldVm)
+            oldVm.PropertyChanged -= OnViewModelPropertyChanged;
+        if (e.NewValue is INotifyPropertyChanged newVm)
+            newVm.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.ActiveContentPage))
+            PlaySubtleFade(ContentPagesHost);
+    }
+
+    static void PlaySubtleFade(UIElement? target)
+    {
+        if (target is null) return;
+        var anim = new DoubleAnimation(0.78, 1.0, TimeSpan.FromMilliseconds(140))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        target.BeginAnimation(OpacityProperty, anim);
     }
 
     void LibraryModsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)

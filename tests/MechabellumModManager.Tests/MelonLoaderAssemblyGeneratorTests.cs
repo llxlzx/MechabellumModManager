@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 
@@ -64,6 +64,87 @@ public class MelonLoaderAssemblyGeneratorTests
             var second = await gen.EnsureAssembliesAsync(root, timeout: TimeSpan.FromMilliseconds(80), pollInterval: TimeSpan.FromMilliseconds(20));
             second.Success.Should().BeFalse();
             second.Message.Should().Contain("本会话已尝试");
+        }
+        finally { TryDelete(root); }
+    }
+
+    [Fact]
+    public async Task EnsureAssemblies_clears_stale_GameAssemblyHash_before_launch()
+    {
+        var root = SeedStore(withAssemblies: false);
+        try
+        {
+            var cfgDir = Path.Combine(root, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator");
+            Directory.CreateDirectory(cfgDir);
+            var cfgPath = Path.Combine(cfgDir, "Config.cfg");
+            File.WriteAllText(cfgPath,
+                """
+                [Il2CppAssemblyGenerator]
+                GameAssemblyHash = "DEADBEEFCAFE"
+                UnityVersion = "2022.3.62"
+                """);
+
+            string? hashAtLaunch = null;
+            var gen = new MelonLoaderAssemblyGenerator(
+                startProcess: _ =>
+                {
+                    hashAtLaunch = File.ReadAllText(cfgPath);
+                    var marker = Path.Combine(root, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll");
+                    Directory.CreateDirectory(Path.GetDirectoryName(marker)!);
+                    File.WriteAllText(marker, "asm");
+                    return null;
+                },
+                delay: async (ts, ct) => await Task.Delay(10, ct));
+
+            var result = await gen.EnsureAssembliesAsync(
+                root,
+                timeout: TimeSpan.FromSeconds(5),
+                pollInterval: TimeSpan.FromMilliseconds(20));
+
+            result.Success.Should().BeTrue(result.Message);
+            hashAtLaunch.Should().NotBeNull();
+            hashAtLaunch!.Should().Contain("GameAssemblyHash = \"\"");
+            hashAtLaunch.Should().NotContain("DEADBEEFCAFE");
+        }
+        finally { TryDelete(root); }
+    }
+
+    [Fact]
+    public void InvalidateStaleGenerationState_clears_hash_when_assemblies_missing()
+    {
+        var root = SeedStore(withAssemblies: false);
+        try
+        {
+            var cfgDir = Path.Combine(root, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator");
+            Directory.CreateDirectory(cfgDir);
+            var cfgPath = Path.Combine(cfgDir, "Config.cfg");
+            File.WriteAllText(cfgPath, "GameAssemblyHash = \"ABC123\"\nUnityVersion = \"2022.3.62\"\n");
+
+            var changed = MelonLoaderAssemblyGenerator.InvalidateStaleGenerationState(root);
+
+            changed.Should().BeTrue();
+            var text = File.ReadAllText(cfgPath);
+            text.Should().Contain("GameAssemblyHash = \"\"");
+            text.Should().NotContain("ABC123");
+        }
+        finally { TryDelete(root); }
+    }
+
+    [Fact]
+    public void InvalidateStaleGenerationState_noop_when_assemblies_present()
+    {
+        var root = SeedStore(withAssemblies: true);
+        try
+        {
+            var cfgDir = Path.Combine(root, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator");
+            Directory.CreateDirectory(cfgDir);
+            var cfgPath = Path.Combine(cfgDir, "Config.cfg");
+            File.WriteAllText(cfgPath, "GameAssemblyHash = \"KEEPME\"\n");
+
+            var changed = MelonLoaderAssemblyGenerator.InvalidateStaleGenerationState(root);
+
+            changed.Should().BeFalse();
+            File.ReadAllText(cfgPath).Should().Contain("KEEPME");
         }
         finally { TryDelete(root); }
     }

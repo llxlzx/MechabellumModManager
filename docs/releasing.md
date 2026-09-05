@@ -187,7 +187,7 @@ git push origin master
 
 ## 6. 当前最新本地对照（写作时） (中文)
 
-- 程序 / Setup：**v1.0.5**（当前最新）→ 仓库内相对路径 `release/v1.0.5/`
+- 程序 / Setup：**v1.0.9**（当前最新）→ 仓库内相对路径 `release/v1.0.9/`
 - 安装包与本体产物均整理在上述 `release/vX.Y.Z/` 目录（勿依赖本机个人测试文件夹路径）
 
 ---
@@ -343,7 +343,7 @@ Players: **Browse mods → Refresh catalog**. Author flow: that repo’s `README
 
 ## 6. Local paths (at write time) (English)
 
-- App / Setup: **v1.0.5** (current latest) → `release/v1.0.5/` relative to this repo
+- App / Setup: **v1.0.9** (current latest) → `release/v1.0.9/` relative to this repo
 - Keep packaged artifacts under `release/vX.Y.Z/` (do not rely on personal install-test folders)
 
 ---

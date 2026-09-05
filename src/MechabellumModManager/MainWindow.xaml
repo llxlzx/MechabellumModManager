@@ -32,12 +32,10 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="120" MinHeight="80" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Top: always two rows — brand/status, then profile/actions -->
@@ -45,7 +43,7 @@
                     Background="{StaticResource HeaderBarBrush}"
                     BorderBrush="{StaticResource SteelEdgeBrush}"
                     BorderThickness="0,0,0,1"
-                    Padding="16,10">
+                    Padding="12,8">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -182,28 +180,43 @@
                                         <TextBlock Text="{Binding Ui.ApplyAndLaunch}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
-                                <Button Command="{Binding ToggleCatalogCommand}"
-                                        Style="{StaticResource GhostButtonStyle}"
+                                <Button Command="{Binding ShowLibraryPageCommand}"
                                         Margin="0,0,8,4"
                                         MinWidth="88"
-                                        Padding="12,6">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Width="14" Height="14" Margin="0,0,6,0"
-                                              Stretch="Uniform"
-                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                                            <Path.Style>
-                                                <Style TargetType="Path">
-                                                    <Setter Property="Data" Value="{StaticResource IconChevronDownGeometry}" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding CatalogExpanded}" Value="True">
-                                                            <Setter Property="Data" Value="{StaticResource IconChevronUpGeometry}" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Path.Style>
-                                        </Path>
-                                        <TextBlock Text="{Binding Ui.BrowseMods}" VerticalAlignment="Center" />
-                                    </StackPanel>
+                                        Padding="12,6"
+                                        ToolTip="{Binding Ui.NavLibraryTip}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLibraryPage}" Value="True">
+                                                    <Setter Property="Background" Value="#FF2A2418" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="{Binding Ui.ModLibrary}" VerticalAlignment="Center" />
+                                </Button>
+                                <Button Command="{Binding ShowCatalogPageCommand}"
+                                        Margin="0,0,8,4"
+                                        MinWidth="88"
+                                        Padding="12,6"
+                                        ToolTip="{Binding Ui.NavWorkshopTip}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCatalogPage}" Value="True">
+                                                    <Setter Property="Background" Value="#FF2A2418" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="{Binding Ui.BrowseMods}" VerticalAlignment="Center" />
                                 </Button>
                                 <Button Command="{Binding SubmitModCommand}"
                                         Style="{StaticResource GhostButtonStyle}"
@@ -218,11 +231,22 @@
                                         <TextBlock Text="{Binding Ui.SubmitMod}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
-                                <Button Command="{Binding ToggleSettingsCommand}"
-                                        Style="{StaticResource GhostButtonStyle}"
+                                <Button Command="{Binding ShowSettingsPageCommand}"
                                         Margin="0,0,0,4"
                                         MinWidth="72"
                                         Padding="12,6">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSettingsPage}" Value="True">
+                                                    <Setter Property="Background" Value="#FF2A2418" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
                                     <StackPanel Orientation="Horizontal">
                                         <Path Width="14" Height="14" Margin="0,0,6,0"
                                               Stretch="Uniform"
@@ -237,13 +261,16 @@
                 </Grid>
             </Border>
 
-            <!-- Settings strip -->
-            <Border Grid.Row="1"
-                    Background="#E0161B20"
-                    BorderBrush="{StaticResource SteelEdgeBrush}"
-                    BorderThickness="0,0,0,1"
-                    Padding="18,12"
-                    Visibility="{Binding SettingsExpanded, Converter={StaticResource BoolToVis}}">
+            <!-- Content pages host (exclusive: settings / catalog / library) -->
+            <Grid Grid.Row="1" x:Name="ContentPagesHost">
+
+            <!-- Settings page -->
+            <Border Style="{StaticResource PanelChromeStyle}"
+                    Padding="14,10"
+                    Margin="12,8,12,8"
+                    Visibility="{Binding IsSettingsPage, Converter={StaticResource BoolToVis}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -446,108 +473,51 @@
                                  Foreground="{StaticResource TextMutedBrush}" />
                     </StackPanel>
                 </Grid>
+                            </ScrollViewer>
             </Border>
 
-            <!-- Catalog browser strip -->
-            <Grid Grid.Row="2" Margin="10,0,10,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            <!-- Catalog page: toolbar + filters / list(*) / detail / status -->
+            <Border Margin="12,8,12,8"
+                    Style="{StaticResource ContentCardStyle}"
+                    Visibility="{Binding IsCatalogPage, Converter={StaticResource BoolToVis}}">
+                <Grid x:Name="CatalogPageRoot">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" MinHeight="200" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <Border Grid.Row="0"
-                        Background="#E0161B20"
-                        BorderBrush="{StaticResource AccentAmberBrush}"
-                        BorderThickness="1"
-                        Padding="18,8">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="2" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding CatalogExpanded}" Value="True">
-                                    <Setter Property="CornerRadius" Value="2,2,0,0" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <DockPanel>
-                        <Button Command="{Binding ToggleCatalogCommand}"
-                                ToolTip="{Binding CatalogToggleLabel}"
-                                DockPanel.Dock="Right"
-                                MinWidth="88"
-                                Padding="12,6"
-                                Style="{StaticResource GhostButtonStyle}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Width="14" Height="14" Margin="0,0,6,0"
-                                      Stretch="Uniform"
-                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                                    <Path.Style>
-                                        <Style TargetType="Path">
-                                            <Setter Property="Data" Value="{StaticResource IconChevronDownGeometry}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CatalogExpanded}" Value="True">
-                                                    <Setter Property="Data" Value="{StaticResource IconChevronUpGeometry}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Path.Style>
-                                </Path>
-                                <TextBlock Text="{Binding CatalogToggleLabel}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Style="{StaticResource AccentBarStyle}"
-                                    Height="14"
+                    <!-- Toolbar + filters -->
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10" LastChildFill="False">
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    DockPanel.Dock="Right">
+                            <Button Command="{Binding RefreshCatalogCommand}"
                                     Margin="0,0,8,0"
-                                    VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding Ui.BrowseMods}"
-                                       Style="{StaticResource SectionLabelStyle}"
-                                       Margin="0"
-                                       VerticalAlignment="Center" />
+                                    MinWidth="88"
+                                    Style="{StaticResource GhostButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Width="14" Height="14" Margin="0,0,6,0"
+                                          Stretch="Uniform"
+                                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          Data="{StaticResource IconRefreshGeometry}" />
+                                    <TextBlock Text="{Binding Ui.RefreshCatalog}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddCatalogModToLibraryCommand}"
+                                    MinWidth="96"
+                                    Style="{StaticResource AccentButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Width="14" Height="14" Margin="0,0,6,0"
+                                          Stretch="Uniform"
+                                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          Data="{StaticResource IconPlusGeometry}" />
+                                    <TextBlock Text="{Binding Ui.AddToLibrary}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
-                    </DockPanel>
-                </Border>
-
-                <Border Grid.Row="1"
-                        Background="#E0161B20"
-                        BorderBrush="{StaticResource AccentAmberBrush}"
-                        BorderThickness="1,0,1,1"
-                        Padding="18,12"
-                        CornerRadius="0,0,2,2"
-                        Visibility="{Binding CatalogExpanded, Converter={StaticResource BoolToVis}}">
-                    <DockPanel MaxHeight="420">
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal"
-                                        HorizontalAlignment="Right"
-                                        DockPanel.Dock="Right">
-                                <Button Command="{Binding RefreshCatalogCommand}"
-                                        Margin="0,0,8,0"
-                                        MinWidth="88"
-                                        Style="{StaticResource GhostButtonStyle}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Width="14" Height="14" Margin="0,0,6,0"
-                                              Stretch="Uniform"
-                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                                              Data="{StaticResource IconRefreshGeometry}" />
-                                        <TextBlock Text="{Binding Ui.RefreshCatalog}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Command="{Binding AddCatalogModToLibraryCommand}"
-                                        MinWidth="96"
-                                        Style="{StaticResource AccentButtonStyle}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Width="14" Height="14" Margin="0,0,6,0"
-                                              Stretch="Uniform"
-                                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                                              Data="{StaticResource IconPlusGeometry}" />
-                                        <TextBlock Text="{Binding Ui.AddToLibrary}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </DockPanel>
-
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8" LastChildFill="False">
-                        <DockPanel Width="160" MinHeight="32" Margin="0,0,8,0" LastChildFill="True">
+                        <DockPanel Width="180" MinHeight="32" Margin="0,0,8,0" LastChildFill="True">
                             <Path Width="14" Height="14" Margin="0,0,6,0"
                                   Stretch="Uniform"
                                   VerticalAlignment="Center"
@@ -575,18 +545,60 @@
                                   DisplayMemberPath="Label" />
                     </DockPanel>
 
-                    <TextBlock DockPanel.Dock="Bottom"
-                               Margin="0,8,0,0"
-                               Text="{Binding CatalogStatus}"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               TextWrapping="Wrap"
-                               FontSize="12" />
+                    <!-- Mod list fills remaining height -->
+                    <Grid Grid.Row="1" MinHeight="160">
+                        <DataGrid x:Name="CatalogModsGrid"
+                                  ItemsSource="{Binding CatalogModsView}"
+                                  SelectedItem="{Binding SelectedCatalogMod}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="CatalogModsGrid_SelectionChanged"
+                                  IsReadOnly="True"
+                                  HeadersVisibility="Column"
+                                  VerticalAlignment="Stretch">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="36">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}, Mode=TwoWay}"
+                                                      PreviewMouseLeftButtonDown="CatalogModCheckBox_PreviewMouseLeftButtonDown" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnName, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding Name}"
+                                                    Width="*"
+                                                    MinWidth="120" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding EffectiveCategoryDisplay}"
+                                                    Width="100" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding Author}"
+                                                    Width="90" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnVersion, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding Version}"
+                                                    Width="70" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnUpdated, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding UpdatedAt}"
+                                                    Width="100" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding StatusText}"
+                                                    Width="72" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="{Binding Ui.CatalogEmptyHint}"
+                                   Style="{StaticResource EmptyStateStyle}"
+                                   Visibility="{Binding IsCatalogEmpty, Converter={StaticResource BoolToVis}}" />
+                    </Grid>
 
-                    <Border DockPanel.Dock="Bottom"
+                    <!-- Detail under list -->
+                    <Border Grid.Row="2"
                             Margin="0,10,0,0"
                             Padding="0,10,0,0"
                             BorderBrush="{StaticResource SteelEdgeBrush}"
                             BorderThickness="0,1,0,0"
+                            MaxHeight="200"
                             Visibility="{Binding SelectedCatalogMod, Converter={StaticResource NullToVis}}">
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Right"
@@ -617,106 +629,74 @@
                             </StackPanel>
                             <DockPanel>
                                 <Image DockPanel.Dock="Left"
-                                   Source="{Binding SelectedCatalogMod.PreviewImage}"
-                                   MaxHeight="160"
-                                   MaxWidth="240"
-                                   Stretch="Uniform"
-                                   Margin="0,0,14,0"
-                                   Cursor="Hand"
-                                   ToolTip="{Binding Ui.PreviewImageHint}"
-                                   RenderOptions.BitmapScalingMode="HighQuality"
-                                   MouseLeftButtonUp="ModPreviewImage_Click" />
-                            <StackPanel>
-                                <TextBlock Text="{Binding SelectedCatalogMod.Name}"
-                                           FontWeight="SemiBold"
-                                           FontSize="14"
-                                           TextWrapping="Wrap"
-                                           Foreground="{StaticResource TextPrimaryBrush}" />
-                                <TextBlock Margin="0,4,0,0"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           FontSize="12"
-                                           TextWrapping="Wrap">
-                                    <Run Text="{Binding Ui.LabelAuthor, Mode=OneWay}" />
-                                    <Run Text="：" />
-                                    <Run Text="{Binding SelectedCatalogMod.Author, Mode=OneWay}" />
-                                    <Run Text="  ·  " />
-                                    <Run Text="{Binding Ui.LabelVersion, Mode=OneWay}" />
-                                    <Run Text="：" />
-                                    <Run Text="{Binding SelectedCatalogMod.Version, Mode=OneWay}" />
-                                    <Run Text="  ·  " />
-                                    <Run Text="{Binding Ui.LabelUpdated, Mode=OneWay}" />
-                                    <Run Text="：" />
-                                    <Run Text="{Binding SelectedCatalogMod.UpdatedAt, Mode=OneWay}" />
-                                </TextBlock>
-                                <TextBlock Margin="0,8,0,0"
-                                           Text="{Binding SelectedCatalogMod.Summary}"
-                                           Foreground="{StaticResource TextPrimaryBrush}"
-                                           TextWrapping="Wrap"
-                                           FontSize="12" />
-                                <TextBlock Margin="0,6,0,0"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           FontSize="12"
-                                           TextWrapping="Wrap"
-                                           Visibility="{Binding SelectedCatalogMod.EffectiveTagsText, Converter={StaticResource NonEmptyVis}}">
-                                    <Run Text="{Binding Ui.TagsLabel, Mode=OneWay}" />
-                                    <Run Text="：" />
-                                    <Run Text="{Binding SelectedCatalogMod.EffectiveTagsText, Mode=OneWay}" />
-                                </TextBlock>
-                            </StackPanel>
+                                       Source="{Binding SelectedCatalogMod.PreviewImage}"
+                                       MaxHeight="140"
+                                       MaxWidth="220"
+                                       Stretch="Uniform"
+                                       Margin="0,0,14,0"
+                                       Cursor="Hand"
+                                       ToolTip="{Binding Ui.PreviewImageHint}"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       MouseLeftButtonUp="ModPreviewImage_Click" />
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="160">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedCatalogMod.Name}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                        <TextBlock Margin="0,4,0,0"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap">
+                                            <Run Text="{Binding Ui.LabelAuthor, Mode=OneWay}" />
+                                            <Run Text="：" />
+                                            <Run Text="{Binding SelectedCatalogMod.Author, Mode=OneWay}" />
+                                            <Run Text="  ·  " />
+                                            <Run Text="{Binding Ui.LabelVersion, Mode=OneWay}" />
+                                            <Run Text="：" />
+                                            <Run Text="{Binding SelectedCatalogMod.Version, Mode=OneWay}" />
+                                            <Run Text="  ·  " />
+                                            <Run Text="{Binding Ui.LabelUpdated, Mode=OneWay}" />
+                                            <Run Text="：" />
+                                            <Run Text="{Binding SelectedCatalogMod.UpdatedAt, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Margin="0,8,0,0"
+                                                   Text="{Binding SelectedCatalogMod.Summary}"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="12" />
+                                        <TextBlock Margin="0,6,0,0"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="{Binding SelectedCatalogMod.EffectiveTagsText, Converter={StaticResource NonEmptyVis}}">
+                                            <Run Text="{Binding Ui.TagsLabel, Mode=OneWay}" />
+                                            <Run Text="：" />
+                                            <Run Text="{Binding SelectedCatalogMod.EffectiveTagsText, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </ScrollViewer>
                             </DockPanel>
                         </DockPanel>
                     </Border>
 
-                    <DataGrid x:Name="CatalogModsGrid"
-                              ItemsSource="{Binding CatalogModsView}"
-                              SelectedItem="{Binding SelectedCatalogMod}"
-                              SelectionMode="Extended"
-                              SelectionChanged="CatalogModsGrid_SelectionChanged"
-                              IsReadOnly="True"
-                              HeadersVisibility="Column"
-                              MaxHeight="180">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Width="36">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}, Mode=TwoWay}"
-                                                  PreviewMouseLeftButtonDown="CatalogModCheckBox_PreviewMouseLeftButtonDown" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnName, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                Binding="{Binding Name}"
-                                                Width="*"
-                                                MinWidth="120" />
-                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                Binding="{Binding EffectiveCategoryDisplay}"
-                                                Width="100" />
-                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                Binding="{Binding Author}"
-                                                Width="90" />
-                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnVersion, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                Binding="{Binding Version}"
-                                                Width="70" />
-                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnUpdated, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                Binding="{Binding UpdatedAt}"
-                                                Width="100" />
-                            <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                Binding="{Binding StatusText}"
-                                                Width="72" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </DockPanel>
-                </Border>
-            </Grid>
+                    <TextBlock Grid.Row="3"
+                               Margin="0,8,0,0"
+                               Text="{Binding CatalogStatus}"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="12" />
+                </Grid>
+            </Border>
 
-            <!-- Body: profiles | library -->
-            <Grid Grid.Row="3" Margin="18,14,18,10">
+            <!-- Library page -->
+            <Grid Margin="12,8,12,8"
+                  Visibility="{Binding IsLibraryPage, Converter={StaticResource BoolToVis}}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="252" MinWidth="200" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="*" MinWidth="420" />
+                    <ColumnDefinition Width="220" MinWidth="180" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" MinWidth="400" />
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0" Style="{StaticResource PanelChromeStyle}">
@@ -764,8 +744,8 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" MinHeight="140" />
-                            <RowDefinition Height="Auto" MaxHeight="180" />
+                            <RowDefinition Height="*" MinHeight="180" />
+                            <RowDefinition Height="Auto" MaxHeight="160" />
                         </Grid.RowDefinitions>
 
                         <DockPanel Grid.Row="0" Margin="0,0,0,8" LastChildFill="False">
@@ -881,15 +861,14 @@
                             </Button>
                         </DockPanel>
 
-                        <DataGrid Grid.Row="2"
-                                  x:Name="LibraryModsGrid"
+                        <Grid Grid.Row="2" MinHeight="140">
+                        <DataGrid x:Name="LibraryModsGrid"
                                   ItemsSource="{Binding LibraryModsView}"
                                   SelectedItem="{Binding SelectedLibraryMod}"
                                   SelectionMode="Extended"
                                   SelectionChanged="LibraryModsGrid_SelectionChanged"
                                   IsReadOnly="False"
-                                  HeadersVisibility="Column"
-                                  MinHeight="140">
+                                  HeadersVisibility="Column">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnEnabled, RelativeSource={RelativeSource AncestorType=Window}}" Width="56">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -960,6 +939,10 @@
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
+                        <TextBlock Text="{Binding Ui.LibraryEmptyHint}"
+                                   Style="{StaticResource EmptyStateStyle}"
+                                   Visibility="{Binding IsLibraryEmpty, Converter={StaticResource BoolToVis}}" />
+                        </Grid>
 
                         <Border Grid.Row="3"
                                 Margin="0,12,0,0"
@@ -1067,7 +1050,9 @@
                 </Border>
             </Grid>
 
-            <StackPanel Grid.Row="4" Margin="18,0,18,8">
+            </Grid><!-- ContentPagesHost -->
+
+            <StackPanel Grid.Row="2" Margin="12,0,12,4">
                 <Border Background="#FF241C12"
                         BorderBrush="{StaticResource DangerBrush}"
                         BorderThickness="1"
@@ -1105,8 +1090,8 @@
                 </Border>
             </StackPanel>
 
-            <Border Grid.Row="5"
-                    Margin="18,0,18,8"
+            <Border Grid.Row="3"
+                    Margin="12,0,12,4"
                     Background="{StaticResource RiskBannerBrush}"
                     BorderBrush="{StaticResource DangerBrush}"
                     BorderThickness="1"
@@ -1127,26 +1112,107 @@
                 </DockPanel>
             </Border>
 
-            <Border Grid.Row="6"
-                    Margin="18,0,18,14"
+            <Border Grid.Row="4"
+                    Margin="12,4,12,10"
                     Style="{StaticResource PanelChromeStyle}"
                     Background="#EE0E1114"
-                    Padding="14">
-                <DockPanel>
-                    <TextBlock Text="{Binding Ui.SyncLog}"
-                               Style="{StaticResource SectionLabelStyle}"
-                               DockPanel.Dock="Top" />
-                    <TextBox Text="{Binding LogText, Mode=OneWay}"
-                             IsReadOnly="True"
-                             TextWrapping="Wrap"
-                             AcceptsReturn="True"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Disabled"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             FontFamily="Consolas, Cascadia Mono, Microsoft YaHei UI"
-                             FontSize="12"
-                             Foreground="{StaticResource TextMutedBrush}" />
+                    Padding="10,8"
+                    x:Name="LogPanel">
+                <DockPanel LastChildFill="True">
+                    <!-- Header: title + expand/collapse -->
+                    <Button DockPanel.Dock="Top"
+                            Command="{Binding ToggleLogPanelCommand}"
+                            Margin="0,0,0,0"
+                            Padding="4,2"
+                            HorizontalContentAlignment="Stretch"
+                            Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="MinHeight" Value="28" />
+                                <Setter Property="Padding" Value="4,2" />
+                            </Style>
+                        </Button.Style>
+                        <DockPanel LastChildFill="True">
+                            <Border Style="{StaticResource AccentBarStyle}"
+                                    Height="12"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    DockPanel.Dock="Left" />
+                            <Grid DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Ui.LogExpand}"
+                                           Foreground="{StaticResource AccentAmberHotBrush}"
+                                           FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLogExpanded}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Ui.LogCollapse}"
+                                           Foreground="{StaticResource AccentAmberHotBrush}"
+                                           FontSize="12"
+                                           Visibility="{Binding IsLogExpanded, Converter={StaticResource BoolToVis}}" />
+                            </Grid>
+                            <TextBlock Text="{Binding Ui.SyncLog}"
+                                       Style="{StaticResource SectionLabelStyle}"
+                                       Margin="0"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Button>
+
+                    <!-- Collapsed: one-line preview -->
+                        <TextBlock Margin="11,6,0,0"
+                               FontFamily="Consolas, Cascadia Mono, Microsoft YaHei UI"
+                               FontSize="12"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Text="{Binding LatestLogLine}"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap"
+                               MaxHeight="18"
+                               ToolTip="{Binding LatestLogLine}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLogExpanded}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <!-- Expanded: large scrollable log -->
+                    <Border Margin="0,8,0,0"
+                            Background="#990A0D10"
+                            BorderBrush="{StaticResource SteelBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Padding="10,8"
+                            MinHeight="200"
+                            MaxHeight="360"
+                            Visibility="{Binding IsLogExpanded, Converter={StaticResource BoolToVis}}">
+                        <TextBox Text="{Binding LogText, Mode=OneWay}"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Disabled"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 FontFamily="Consolas, Cascadia Mono, Microsoft YaHei UI"
+                                 FontSize="12"
+                                 VerticalContentAlignment="Top"
+                                 Foreground="{StaticResource TextMutedBrush}" />
+                    </Border>
                 </DockPanel>
             </Border>
         </Grid>

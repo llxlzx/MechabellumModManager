@@ -15,15 +15,33 @@ public class LocalizationServiceTests
     [InlineData("fr-FR", "zh-CN")]
     public void ResolveSystemLanguage_maps_or_falls_back(string culture, string expected)
     {
-        var previous = CultureInfo.CurrentUICulture;
+        LocalizationService.SystemUiCultureProvider = () => CultureInfo.GetCultureInfo(culture);
         try
         {
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
             LocalizationService.ResolveSystemLanguage().Should().Be(expected);
         }
         finally
         {
-            CultureInfo.CurrentUICulture = previous;
+            LocalizationService.SystemUiCultureProvider = null;
+        }
+    }
+
+    [Fact]
+    public void ResolveSystemLanguage_ignores_thread_culture_after_Apply()
+    {
+        LocalizationService.SystemUiCultureProvider = () => CultureInfo.GetCultureInfo("zh-CN");
+        try
+        {
+            LocalizationService.Apply("ru");
+            CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Should().Be("ru");
+
+            LocalizationService.ResolveSystemLanguage().Should().Be("zh-CN");
+            LocalizationService.ResolveConfiguredLanguage("system").Should().Be("zh-CN");
+        }
+        finally
+        {
+            LocalizationService.SystemUiCultureProvider = null;
+            LocalizationService.Apply("zh-CN");
         }
     }
 

@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string] $GamePath,
     [string] $RedistDir = ""
 )
@@ -123,7 +123,7 @@ function Ensure-Melon([string] $Target, [string] $Why) {
         return
     }
     Write-Host "Ensuring MelonLoader ($Why): $Target"
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installScript -GamePath $Target -RedistDir $RedistDir
+    & $installScript -GamePath $Target -RedistDir $RedistDir
     if ($LASTEXITCODE -ne 0) {
         Write-Host "MelonLoader ensure failed for $Target (exit $LASTEXITCODE) — continuing."
     }
@@ -151,3 +151,4 @@ if ($enabled -and $null -ne $activeBranch) {
 
 Write-Host "Restore/write complete."
 exit 0
+
