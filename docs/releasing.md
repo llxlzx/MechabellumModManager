@@ -46,6 +46,21 @@
 
 缺失时 `build-installer` **硬失败**（退出码 3）。正式发版禁止 `-SkipMelonRedistCheck`。
 
+### 1.2b Unity Il2Cpp 依赖 + .NET 8 离线包（China-offline fat Setup **必选**）
+
+除 Melon zip 外，正式 fat Setup 还需：
+
+| 路径 | 来源 | 说明 |
+|------|------|------|
+| `installer/redist/unity-deps/UnityDependencies_{major.minor.patch}.zip` | https://github.com/LavaGang/Unity-Runtime-Libraries | 上游文件名为 `2022.3.62.zip` 等，**必须重命名**为 `UnityDependencies_2022.3.62.zip` 再放入 `unity-deps/` |
+| `installer/redist/dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` | https://dotnet.microsoft.com/download/dotnet/8.0 | Windows x64 Desktop Runtime 离线安装包 |
+
+Mechabellum 当前 Unity 版本见游戏 `Mechabellum_Data\globalgamemanagers`（如 `2022.3.62f3` → zip 名 `UnityDependencies_2022.3.62.zip`）。游戏 Unity 小版本升级后需刷新 `unity-deps` 并重新打 Setup。
+
+**国内 Setup 镜像：** GitHub Release 下载 Setup 仍可能需要代理或第三方镜像；本 fat Setup 的目标是 **安装完成后**、在已写入 Melon + 已 seed UnityDependencies 的前提下，**断网首次 Il2Cpp 生成**（成功级别 **B**）可完成。镜像分发由运维/文档负责，不在程序内实现。
+
+**发版前 residual 探测（Cpp2IL 等）：** 在真机上按 `docs/superpowers/specs/2026-09-05-china-offline-melon-fat-setup-design.md` 中 acceptance **F** 执行：断网启动游戏一次。若 Melon 仍提示 Il2CppAssemblyGenerator 目录下缺少其他包（常见为 Cpp2IL 相关），将其加入 `installer/redist/` 并纳入 `build-installer` 硬检查后再宣称 B 完成。
+
 ### 1.3 代码与测试
 
 ```powershell
@@ -217,6 +232,21 @@ Place official file at:
 From: https://github.com/LavaGang/MelonLoader/releases  
 
 Missing file → `build-installer` **hard-fails** (exit code 3). Do not use `-SkipMelonRedistCheck` for real releases.
+
+### 1.2b Unity Il2Cpp deps + .NET 8 offline (required for China-offline fat Setup)
+
+In addition to the Melon zip, release fat Setup requires:
+
+| Path | Source | Notes |
+|------|--------|-------|
+| `installer/redist/unity-deps/UnityDependencies_{major.minor.patch}.zip` | https://github.com/LavaGang/Unity-Runtime-Libraries | Upstream names like `2022.3.62.zip` **must be renamed** to `UnityDependencies_2022.3.62.zip` under `unity-deps/` |
+| `installer/redist/dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` | https://dotnet.microsoft.com/download/dotnet/8.0 | Windows x64 Desktop Runtime offline installer |
+
+Resolve the game Unity version from `Mechabellum_Data\globalgamemanagers` (e.g. `2022.3.62f3` → `UnityDependencies_2022.3.62.zip`). Refresh `unity-deps` and ship a new Setup when Mechabellum’s Unity patch bumps.
+
+**Domestic Setup mirror:** Downloading Setup from GitHub Release may still need VPN or a third-party mirror. The fat Setup goal is **post-install** offline first-run Il2Cpp generation (success level **B**) after Melon is written and UnityDependencies is seeded. Mirror distribution is ops/docs only, not in-app.
+
+**Residual probe before calling B done (Cpp2IL, etc.):** On a real machine, run acceptance **F** in `docs/superpowers/specs/2026-09-05-china-offline-melon-fat-setup-design.md`: disconnect network, launch the game once. If Melon still asks for another missing package under `{game}\MelonLoader\Dependencies\Il2CppAssemblyGenerator\` (often Cpp2IL-related), add it to `installer/redist/`, extend the `build-installer` gate, rebuild Setup, then re-run acceptance before claiming B complete.
 
 ### 1.3 Code and tests
 
