@@ -2629,8 +2629,6 @@ public sealed partial class MainViewModel : ObservableObject
 
                 SelectBoundProfile(target);
 
-                EnsureMelonLoaderForDualStores(preferTarget: target);
-
                 silentResult = _branchSwitch.TryPrepareSteamBranchMetadata(target);
                 if (silentResult.Success
                     && string.Equals(silentResult.Message, "restored-acf-snapshot", StringComparison.Ordinal))
@@ -2640,7 +2638,10 @@ public sealed partial class MainViewModel : ObservableObject
             }).ConfigureAwait(true);
 
             if (silentResult is not null)
+            {
+                EnsureMelonLoaderForDualStores(preferTarget: target);
                 await SettleAfterSilentBetaAsync(silentResult).ConfigureAwait(true);
+            }
         }
         catch (Exception ex)
         {
