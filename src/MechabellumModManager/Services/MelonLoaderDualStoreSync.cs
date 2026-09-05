@@ -70,7 +70,8 @@ public sealed class MelonLoaderDualStoreSync
 
         if (!string.IsNullOrWhiteSpace(siblingGamePath)
             && SteamGameLocator.LooksLikeGameRoot(siblingGamePath)
-            && _detector.Detect(siblingGamePath).Kind == GameStatusKind.Ready)
+            && _detector.Detect(siblingGamePath).Kind is GameStatusKind.Ready
+                or GameStatusKind.LoaderPresentAssembliesMissing)
         {
             return CopyFrameworkFromSibling(siblingGamePath, gamePath);
         }

@@ -96,6 +96,35 @@ public class MelonLoaderDualStoreSyncTests
     }
 
     [Fact]
+    public void EnsureOnStore_copies_from_sibling_when_assemblies_missing()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-sync-miss-" + Guid.NewGuid().ToString("N"));
+        var src = Path.Combine(root, "src");
+        var dst = Path.Combine(root, "dst");
+        try
+        {
+            SeedGame(src);
+            SeedGame(dst);
+            SeedLoader(src);
+            new GameDetector().Detect(src).Kind.Should().Be(
+                MechabellumModManager.Models.GameStatusKind.LoaderPresentAssembliesMissing);
+
+            var result = new MelonLoaderDualStoreSync().EnsureOnStore(dst, siblingGamePath: src);
+
+            result.Success.Should().BeTrue(result.Message);
+            File.Exists(Path.Combine(dst, "version.dll")).Should().BeTrue();
+            File.Exists(Path.Combine(dst, "MelonLoader", "net6", "MelonLoader.dll")).Should().BeTrue();
+            Directory.Exists(Path.Combine(dst, "MelonLoader", "Il2CppAssemblies")).Should().BeFalse();
+            new GameDetector().Detect(dst).Kind.Should().Be(
+                MechabellumModManager.Models.GameStatusKind.LoaderPresentAssembliesMissing);
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
     public void EnsureOnStore_does_not_copy_Latest_log()
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-ml-log-" + Guid.NewGuid().ToString("N"));
