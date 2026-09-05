@@ -408,6 +408,12 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam またはゲームが動作中です（steamwebhelper 含む）。タスクマネージャーで終了してから再試行してください。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>フォルダ切替に失敗しました。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>すでにこのブランチです（フォルダと Steam ベータは整合済み）。切替不要。</value></data>
+  <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>フォルダと Steam 分岐キーは一致していますが、ゲームパスが未準備です（実行ファイル不足または MelonLoader 未完了）。Steam のダウンロード/検証完了後に再試行してください。</value></data>
+  <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>ゲームパスが未準備のため決済デプロイできません。Steam 完了後に再度確認してください。</value></data>
+  <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>決済時のデプロイに失敗しました。Steam 決済待ちのままです。修正後に再確認してください。</value></data>
+  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam マニフェストが未安定です（ダウンロード/更新中）。決済は終了しません。完了後に再確認してください。</value></data>
+  <data name="LogSettleKeptAwaiting" xml:space="preserve"><value>Steam 決済状態は維持されています（後で再確認できます）。</value></data>
+  <data name="LogMelonLaunchVerifyHint" xml:space="preserve"><value>約30秒以内に MelonLoader の黒いコンソールが出るか確認してください。出ない場合 Melon 未ロードです。version.dll / MelonLoader を確認し診断をエクスポートしてください。</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>正式/テストのどちらかに MelonLoader がありません。インストーラーで MelonLoader を入れるか、先に Loader がある方へ入れてください。</value></data>
   <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">
     <value>MelonLoader は入っていますが、Il2Cpp アセンブリが未生成です。

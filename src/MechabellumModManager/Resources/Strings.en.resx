@@ -408,6 +408,12 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam or the game is still running (including steamwebhelper). End those processes in Task Manager, then try again.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
+  <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>Folder and Steam branch keys are aligned, but the game path is not ready yet (missing binaries or MelonLoader incomplete). Wait for Steam to finish download/verify, then retry.</value></data>
+  <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>Game path is not ready; cannot finish settle deploy. Wait for Steam download/verify, then confirm again.</value></data>
+  <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>Deploy failed during settle; still waiting for Steam settle. Fix the issue and confirm again.</value></data>
+  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam manifest is not settled yet (still downloading/updating). Settle stays open — confirm again when Steam finishes.</value></data>
+  <data name="LogSettleKeptAwaiting" xml:space="preserve"><value>Steam settle was not cleared (you can confirm again later).</value></data>
+  <data name="LogMelonLaunchVerifyHint" xml:space="preserve"><value>Within ~30s you should see MelonLoader's black console. If not, Melon did not load — check version.dll / MelonLoader and export diagnostics (Latest.log timestamps).</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>One Official/Test folder is still missing MelonLoader. Re-run Setup and tick MelonLoader, or install it on the folder that already has a loader.</value></data>
   <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>Which branch is currently installed? Choose Official or Test.</value></data>
   <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">

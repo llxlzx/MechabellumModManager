@@ -410,6 +410,12 @@
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 或游戏仍在运行（含 steamwebhelper）。请在任务管理器中结束相关进程后再切服。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>当前已是该服（目录与 Steam 测试分支已对齐），无需再次切换。</value></data>
+  <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>目录与 Steam 分支键已对齐，但当前游戏路径尚未就绪（缺少可执行文件或 MelonLoader 未完成）。请等待 Steam 完成下载/校验后再试。</value></data>
+  <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>游戏路径尚未就绪，无法完成结算部署。请等待 Steam 完成下载/校验后再点确认。</value></data>
+  <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>结算时部署失败，仍保持「等待 Steam 结算」。请修复后重试确认。</value></data>
+  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam 清单尚未稳定（仍在下载/更新），暂不结束结算。请等待完成后再次确认。</value></data>
+  <data name="LogSettleKeptAwaiting" xml:space="preserve"><value>未结束 Steam 结算状态（仍可稍后再次确认）。</value></data>
+  <data name="LogMelonLaunchVerifyHint" xml:space="preserve"><value>请在约 30 秒内确认是否出现 MelonLoader 黑色控制台。若没有，说明 Melon 未加载；请检查 version.dll / MelonLoader，并导出诊断包（含 Latest.log 时间戳）。</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>双服目录中仍有服缺少 MelonLoader。请重新运行安装包勾选 MelonLoader，或先在有 Loader 的那一服装好。</value></data>
   <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>当前安装的是哪一服？请直接选择正式服或测试服。</value></data>
   <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">

@@ -185,6 +185,7 @@ public class MainViewModelBranchSwitchTests
 
         await vm.SwitchToBetaCommand.ExecuteAsync(null);
         vm.IsAwaitingSteamSettle.Should().BeTrue();
+        WriteSettledAcf(fx, betaKey: "public_test");
 
         await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
 
@@ -193,6 +194,97 @@ public class MainViewModelBranchSwitchTests
         vm.CanDeployOrLaunch.Should().BeTrue();
         File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeTrue();
         File.Exists(fx.Paths.DeployManifestPath).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ConfirmManualBeta_keeps_settle_when_game_missing()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var vm = fx.CreateVm(confirm: _ => true);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+        vm.Mods[0].IsEnabled = true;
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        WriteSettledAcf(fx, betaKey: "public_test");
+
+        File.Delete(Path.Combine(fx.BetaStore, "Mechabellum.exe"));
+
+        await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
+
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.AwaitingSteamSettle);
+        File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ConfirmManualBeta_keeps_settle_when_acf_not_settled()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var vm = fx.CreateVm(confirm: _ => true);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+        vm.Mods[0].IsEnabled = true;
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        // Fixture ACF remains unsettled (no buildid / TargetBuildID alignment).
+
+        await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
+
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.AwaitingSteamSettle);
+        File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeTrue(
+            "Apply may succeed; unsettle ACF must still block ClearSteamSettle");
+    }
+
+    static void WriteSettledAcf(Fixture fx, string? betaKey)
+    {
+        var acf = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", "..", "appmanifest_669330.acf"));
+        var betaLine = string.IsNullOrWhiteSpace(betaKey)
+            ? ""
+            : "\t\t\"BetaKey\"\t\t\"" + betaKey + "\"\n";
+        File.WriteAllText(acf,
+            "\"AppState\"\n{\n" +
+            "\t\"appid\"\t\t\"669330\"\n" +
+            "\t\"StateFlags\"\t\t\"4\"\n" +
+            "\t\"buildid\"\t\t\"200\"\n" +
+            "\t\"TargetBuildID\"\t\t\"200\"\n" +
+            "\t\"BytesToDownload\"\t\t\"0\"\n" +
+            "\t\"BytesDownloaded\"\t\t\"0\"\n" +
+            "\t\"BytesToStage\"\t\t\"0\"\n" +
+            "\t\"BytesStaged\"\t\t\"0\"\n" +
+            "\t\"UserConfig\"\n\t{\n\t\t\"language\"\t\t\"english\"\n" + betaLine +
+            "\t}\n" +
+            "\t\"MountedConfig\"\n\t{\n\t\t\"language\"\t\t\"english\"\n" + betaLine +
+            "\t}\n}\n");
     }
 
     [Fact]
@@ -315,6 +407,50 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task SwitchToBeta_when_aligned_but_game_missing_does_not_claim_already_on_branch()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.Junctions.DeleteJunction(fx.SteamLink);
+        fx.Junctions.CreateJunction(fx.SteamLink, fx.BetaStore);
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(fx.SteamLink))!, "appmanifest_669330.acf"),
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"UserConfig"
+            	{
+            		"language"		"english"
+            		"BetaKey"		"public_test"
+            	}
+            }
+            """);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Beta,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirm: _ => true, notify: notes.Add);
+        // GamePath diverges from healthy steam link — Detect(GamePath) is GameMissing while IsAlignedWith(store) is true.
+        vm.GamePath = Path.Combine(Path.GetTempPath(), "mmm-missing-game-" + Guid.NewGuid().ToString("N"));
+        vm.RefreshStatusCommand.Execute(null);
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+
+        var text = vm.LogText + string.Join('\n', notes);
+        text.Should().NotContain("无需再次切换");
+        text.Should().Contain("尚未就绪");
+    }
+
+    [Fact]
     public async Task SwitchToBeta_silent_success_stays_in_settle_until_ConfirmManualBeta()
     {
         using var fx = Fixture.CreateReadyDualFolder();
@@ -346,6 +482,7 @@ public class MainViewModelBranchSwitchTests
         starter.Starts.Should().Contain("steam://open/games");
         File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
 
+        WriteSettledAcf(fx, betaKey: "publicbeta");
         await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
 
         vm.IsAwaitingSteamSettle.Should().BeFalse();
