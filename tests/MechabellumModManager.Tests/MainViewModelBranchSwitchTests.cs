@@ -196,6 +196,44 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task SwitchToBranch_shows_busy_around_swap_and_ends_even_if_steam_wait_fails()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+        fx.Probe.SteamRunning = true;
+
+        var begins = 0;
+        var ends = 0;
+        var vm = fx.CreateVm(
+            confirm: _ => true,
+            delay: _ => Task.CompletedTask,
+            steamExitTimeout: TimeSpan.Zero,
+            beginBusy: (_, _) => begins++,
+            setBusyMessage: _ => { },
+            endBusy: () => ends++);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+
+        begins.Should().BeGreaterThanOrEqualTo(1);
+        ends.Should().Be(begins);
+        vm.ActiveGameBranch.Should().Be(GameBranch.Official);
+        File.ReadAllText(Path.Combine(fx.SteamLink, "marker.txt")).Should().Be("official");
+    }
+
+    [Fact]
     public async Task SwitchToBeta_steam_still_running_aborts_before_swap()
     {
         using var fx = Fixture.CreateReadyDualFolder();
@@ -889,7 +927,10 @@ public class MainViewModelBranchSwitchTests
             TimeSpan? steamExitTimeout = null,
             Func<string, string?>? promptText = null,
             Action<string>? notify = null,
-            Func<string, MessageBoxResult, bool>? confirmChoice = null)
+            Func<string, MessageBoxResult, bool>? confirmChoice = null,
+            Action<string, string>? beginBusy = null,
+            Action<string>? setBusyMessage = null,
+            Action? endBusy = null)
         {
             var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
             return new MainViewModel(
@@ -912,7 +953,10 @@ public class MainViewModelBranchSwitchTests
                 steamExitTimeout: steamExitTimeout ?? TimeSpan.FromMilliseconds(50),
                 steamExitCooldown: TimeSpan.Zero,
                 steamRestartCooldown: TimeSpan.Zero,
-                confirmChoice: confirmChoice);
+                confirmChoice: confirmChoice,
+                beginBusy: beginBusy,
+                setBusyMessage: setBusyMessage,
+                endBusy: endBusy);
         }
 
         public void WriteBranchConfig(BranchSwitchConfig cfg) =>
