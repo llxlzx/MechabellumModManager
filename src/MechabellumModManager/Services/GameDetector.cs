@@ -29,7 +29,7 @@ public sealed class GameDetector
             {
                 Kind = GameStatusKind.GameOkLoaderMissing,
                 GamePath = gamePath,
-                Message = "已找到游戏，但未安装 MelonLoader。请重新运行管理器安装包并勾选 MelonLoader，或自行安装后再使用。"
+                Message = "已找到游戏，但未安装 MelonLoader。可点右上角「安装 MelonLoader」，或重新运行安装包勾选 MelonLoader。"
             };
 
         if (!(melon && proxy))
@@ -37,7 +37,7 @@ public sealed class GameDetector
             {
                 Kind = GameStatusKind.LoaderPartial,
                 GamePath = gamePath,
-                Message = "MelonLoader 安装不完整（需要 MelonLoader 目录以及 version.dll 或 winhttp.dll）。请重新运行安装包勾选 MelonLoader，或手动补全。"
+                Message = "MelonLoader 安装不完整（需要 MelonLoader 目录以及 version.dll 或 winhttp.dll）。可点「安装 MelonLoader」补全，或重新运行安装包。"
             };
 
         if (!HasIl2CppAssemblies(gamePath))

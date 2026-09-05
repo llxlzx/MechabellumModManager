@@ -108,6 +108,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding StatusKindLabel}"
                                            FontWeight="SemiBold"
@@ -130,7 +131,16 @@
                                            TextWrapping="NoWrap"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            VerticalAlignment="Center"
+                                           Margin="0,0,8,0"
                                            ToolTip="{Binding GameStatus.Message}" />
+                                <Button Grid.Column="2"
+                                        MinWidth="108"
+                                        Padding="10,4"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Command="{Binding InstallMelonLoaderCommand}"
+                                        Content="{Binding Ui.InstallMelonLoader}"
+                                        Visibility="{Binding NeedsMelonLoaderInstall, Converter={StaticResource BoolToVis}}"
+                                        ToolTip="{Binding Ui.InstallMelonLoaderTip}" />
                             </Grid>
                         </Border>
                     </Grid>

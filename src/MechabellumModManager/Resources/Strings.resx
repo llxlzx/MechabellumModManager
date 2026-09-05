@@ -195,7 +195,37 @@
   <data name="SyncLog" xml:space="preserve">
     <value>运行日志</value>
   </data>
-    <data name="LogExpand" xml:space="preserve">
+      <data name="InstallMelonLoader" xml:space="preserve">
+    <value>安装 MelonLoader</value>
+  </data>
+  <data name="InstallMelonLoaderTip" xml:space="preserve">
+    <value>使用安装包内嵌的离线包写入游戏目录（无需访问 GitHub）</value>
+  </data>
+  <data name="ConfirmInstallMelonLoader" xml:space="preserve">
+    <value>将 MelonLoader 安装到当前游戏目录？请先关闭游戏。</value>
+  </data>
+  <data name="NotifyMelonInstallNeedGamePath" xml:space="preserve">
+    <value>请先在设置中指定有效的游戏路径。</value>
+  </data>
+  <data name="NotifyMelonInstallCloseGame" xml:space="preserve">
+    <value>请先关闭 Mechabellum 再安装 MelonLoader。</value>
+  </data>
+  <data name="LogMelonInstallStart" xml:space="preserve">
+    <value>开始安装 MelonLoader…</value>
+  </data>
+  <data name="LogMelonInstallLocalZip" xml:space="preserve">
+    <value>使用本地离线包：{0}</value>
+  </data>
+  <data name="LogMelonInstallDownload" xml:space="preserve">
+    <value>未找到本地离线包，尝试从 GitHub 下载…</value>
+  </data>
+  <data name="NotifyMelonInstallOk" xml:space="preserve">
+    <value>MelonLoader 安装完成。若仍提示缺程序集，可稍后应用方案时生成。</value>
+  </data>
+  <data name="NotifyMelonInstallFailed" xml:space="preserve">
+    <value>MelonLoader 安装失败：{0}</value>
+  </data>
+<data name="LogExpand" xml:space="preserve">
     <value>展开日志</value>
   </data>
   <data name="LogCollapse" xml:space="preserve">

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.9",
-  "notes": "1.0.9：独占页面布局；目录/本地库密度与视觉抛光；已装 Mod / Mod 工坊命名；运行日志可展开收起；跟随系统语言按 Windows 显示语言；Melon 双服同步跳过陈旧 Config.cfg；安装器静默 .NET、去掉结束前二次启动；安装种子配置。 / 1.0.9: Exclusive pages; catalog/library density + visual polish; Installed/Workshop labels; expandable activity log; follow-system uses Windows display language; Melon dual-store skips stale Config.cfg; quiet .NET install, no pre-finish app launch; install config seeding.",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.9/MechabellumModManager_Setup_v1.0.9.exe",
-  "publishedAt": "2026-09-05T02:12:00Z"
+    "publishedAt":  "2026-09-05T02:57:00Z",
+    "version":  "1.0.9",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.9/MechabellumModManager_Setup_v1.0.9.exe",
+    "notes":  "1.0.9：加固新用户安装——Melon 优先用管理器+内嵌离线包；仅游戏下载中才跳过并弹窗；安装后校验；管理器内可一键安装 MelonLoader。 / 1.0.9: Harden first-time Setup — Melon via manager+offline zip first; skip only while this game downloads; post-verify; in-app Install MelonLoader."
 }
