@@ -89,6 +89,102 @@ public class UnityDependenciesSeederTests
         }
     }
 
+    [Fact]
+    public void Seed_uses_single_zip_fallback_when_resolve_fails()
+    {
+        var game = CreateGameRoot();
+        var redist = CreateRedistWithZip("2022.3.62");
+        try
+        {
+            var result = new UnityDependenciesSeeder().Seed(game, redist);
+            result.Success.Should().BeTrue();
+            result.Copied.Should().BeTrue();
+            result.Version.Should().Be("2022.3.62");
+            result.Message.Should().Contain("回退");
+            File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
+                "UnityDependencies_2022.3.62.zip")).Should().BeTrue();
+        }
+        finally
+        {
+            Cleanup(game, redist);
+        }
+    }
+
+    [Fact]
+    public void Seed_fails_when_resolve_fails_and_redist_has_two_zips()
+    {
+        var game = CreateGameRoot();
+        var redist = CreateRedistWithZips("2022.3.62", "2022.3.63");
+        try
+        {
+            var result = new UnityDependenciesSeeder().Seed(game, redist);
+            result.Success.Should().BeFalse();
+            Directory.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator"))
+                .Should().BeFalse();
+        }
+        finally
+        {
+            Cleanup(game, redist);
+        }
+    }
+
+    [Fact]
+    public void Seed_fails_when_single_zip_suffix_is_not_major_minor_patch()
+    {
+        var game = CreateGameRoot();
+        var redist = CreateRedistWithNamedZip("UnityDependencies_not-a-version.zip");
+        try
+        {
+            var result = new UnityDependenciesSeeder().Seed(game, redist);
+            result.Success.Should().BeFalse();
+            Directory.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator"))
+                .Should().BeFalse();
+        }
+        finally
+        {
+            Cleanup(game, redist);
+        }
+    }
+
+    [Fact]
+    public void Seed_does_not_use_fallback_when_resolve_succeeds_with_different_version()
+    {
+        var game = CreateGameRoot();
+        var redist = CreateRedistWithZip("2022.3.62");
+        try
+        {
+            WriteFakeGlobalgamemanagers(game, "2022.3.63f1");
+
+            var result = new UnityDependenciesSeeder().Seed(game, redist);
+            result.Success.Should().BeFalse();
+            File.Exists(Path.Combine(game, "MelonLoader", "Dependencies", "Il2CppAssemblyGenerator",
+                "UnityDependencies_2022.3.62.zip")).Should().BeFalse();
+        }
+        finally
+        {
+            Cleanup(game, redist);
+        }
+    }
+
+    static string CreateRedistWithZips(params string[] versions)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-uds-redist-" + Guid.NewGuid().ToString("N"));
+        var unityDeps = Path.Combine(root, "unity-deps");
+        Directory.CreateDirectory(unityDeps);
+        foreach (var version in versions)
+            File.WriteAllText(Path.Combine(unityDeps, $"UnityDependencies_{version}.zip"), "fake-zip-" + version);
+        return root;
+    }
+
+    static string CreateRedistWithNamedZip(string fileName)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-uds-redist-" + Guid.NewGuid().ToString("N"));
+        var unityDeps = Path.Combine(root, "unity-deps");
+        Directory.CreateDirectory(unityDeps);
+        File.WriteAllText(Path.Combine(unityDeps, fileName), "fake-zip");
+        return root;
+    }
+
     static string CreateGameRoot()
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-uds-game-" + Guid.NewGuid().ToString("N"));
