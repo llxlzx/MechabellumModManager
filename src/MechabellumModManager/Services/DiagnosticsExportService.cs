@@ -18,6 +18,10 @@ public sealed class DiagnosticsExportRequest
     public bool BranchSwitchEnabled { get; init; }
     public string? BranchWizardStep { get; init; }
     public string? ActiveGameBranch { get; init; }
+    public string? LaunchMode { get; init; }
+    public bool? GameRunning { get; init; }
+    public bool? SteamRunning { get; init; }
+    public bool IsAwaitingSteamSettle { get; init; }
     public DiagnosticsRedactionMode Redaction { get; init; }
     public ManagerLogWriter? LogWriter { get; init; }
 }
@@ -129,6 +133,18 @@ public sealed class DiagnosticsExportService
                 ["redaction"] = redact ? "strong" : "none",
                 ["missing"] = missing
             };
+
+            try
+            {
+                var probeBundle = DiagnosticsProbeBuilder.Build(request);
+                foreach (var kv in probeBundle)
+                    env[kv.Key] = kv.Value;
+            }
+            catch
+            {
+                env["probeError"] = true;
+            }
+
             var envJson = JsonSerializer.Serialize(env, JsonOptions);
             // JSON escapes backslashes; run Redact again for any residual path forms in the document.
             WriteText(staging, "environment.json", redact ? RedactJsonDocument(envJson) : envJson, redact: false);

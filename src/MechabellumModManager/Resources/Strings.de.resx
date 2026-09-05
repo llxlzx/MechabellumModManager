@@ -408,6 +408,12 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam oder Spiel läuft noch (inkl. steamwebhelper). Prozesse im Task-Manager beenden, dann erneut versuchen.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Ordnerwechsel fehlgeschlagen.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Bereits auf diesem Zweig (Ordner und Steam-Beta stimmen). Kein Wechsel nötig.</value></data>
+  <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>Ordner und Steam-Branch-Keys stimmen, aber der Spielpfad ist noch nicht bereit (Binaries fehlen oder MelonLoader unvollständig). Warten Sie auf Steam-Download/Prüfung und versuchen Sie erneut.</value></data>
+  <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>Spielpfad nicht bereit; Settle-Deploy nicht möglich. Nach Steam-Download/Prüfung erneut bestätigen.</value></data>
+  <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>Deploy beim Settle fehlgeschlagen; Settle bleibt offen. Problem beheben und erneut bestätigen.</value></data>
+  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam-Manifest noch nicht stabil (Download/Update). Settle bleibt offen — erneut bestätigen, wenn Steam fertig ist.</value></data>
+  <data name="LogSettleKeptAwaiting" xml:space="preserve"><value>Steam-Settle wurde nicht beendet (später erneut bestätigen möglich).</value></data>
+  <data name="LogMelonLaunchVerifyHint" xml:space="preserve"><value>Innerhalb ~30s sollte die schwarze MelonLoader-Konsole erscheinen. Sonst: Melon nicht geladen — version.dll / MelonLoader prüfen und Diagnose exportieren.</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>In einem Offiziell/Test-Ordner fehlt noch MelonLoader. Setup erneut mit MelonLoader, oder zuerst auf dem Ordner mit Loader installieren.</value></data>
   <data name="ConfirmGenerateAssembliesNow" xml:space="preserve">
     <value>MelonLoader ist installiert, aber Il2Cpp-Assemblys fehlen noch.

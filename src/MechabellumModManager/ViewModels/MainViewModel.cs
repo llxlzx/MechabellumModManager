@@ -1079,6 +1079,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             AppendLog("已请求启动游戏。");
             AppendLog(LocalizationService.T("LogMelonConsoleHint"));
+            AppendLog(LocalizationService.T("LogMelonLaunchVerifyHint"));
             if (_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
                 AppendLog("首次启动提示：若长时间黑屏/控制台滚动，是 MelonLoader 正在生成程序集，请耐心等待完成。");
         }
@@ -1400,6 +1401,10 @@ public sealed partial class MainViewModel : ObservableObject
                 BranchSwitchEnabled = BranchSwitchEnabled,
                 BranchWizardStep = BranchWizardStep.ToString(),
                 ActiveGameBranch = ActiveGameBranch.ToString(),
+                LaunchMode = LaunchMode.ToString(),
+                GameRunning = _processProbe.IsGameRunning(),
+                SteamRunning = _processProbe.IsSteamRunning(),
+                IsAwaitingSteamSettle = IsAwaitingSteamSettle,
                 Redaction = mode.Value,
                 LogWriter = _managerLog
             });
@@ -2583,9 +2588,21 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (_branchSwitch.IsAlignedWith(target))
         {
-            var already = LocalizationService.T("NotifyAlreadyOnGameBranch");
-            AppendLog(already);
-            _notify(already);
+            var linkPath = string.IsNullOrWhiteSpace(GamePath) ? _branchSwitch.LoadConfig().SteamLinkPath : GamePath;
+            var detect = _detector.Detect(linkPath ?? "");
+            if (detect.Kind == GameStatusKind.Ready)
+            {
+                var already = LocalizationService.T("NotifyAlreadyOnGameBranch");
+                AppendLog(already);
+                _notify(already);
+                return;
+            }
+
+            var incomplete = LocalizationService.T("NotifyAlignedButGameIncomplete");
+            AppendLog(incomplete);
+            if (!string.IsNullOrWhiteSpace(detect.Message))
+                AppendLog(detect.Message);
+            _notify(incomplete);
             return;
         }
 
@@ -3208,12 +3225,35 @@ public sealed partial class MainViewModel : ObservableObject
     void DeployBoundProfileAndClearSettle()
     {
         SelectBoundProfile(ActiveGameBranch);
-        ApplyProfile(ignoreBranchGate: true);
+
+        RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+        if (GameStatus?.Kind != GameStatusKind.Ready)
+        {
+            var msg = GameStatus?.Message ?? LocalizationService.T("NotifySettleBlockedGameNotReady");
+            AppendLog(msg);
+            AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
+            _notify(LocalizationService.T("NotifySettleBlockedGameNotReady"));
+            return;
+        }
+
+        if (!ApplyProfile(ignoreBranchGate: true))
+        {
+            AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
+            _notify(LocalizationService.T("NotifySettleBlockedDeployFailed"));
+            return;
+        }
+
         var snap = _branchSwitch.TrySnapshotSettledAcf(ActiveGameBranch);
-        if (snap.Success)
-            AppendLog($"已保存 {ActiveGameBranch} Steam 清单快照，供下次切服免下载");
-        else if (!string.IsNullOrWhiteSpace(snap.Message))
-            AppendLog($"结算后未保存 ACF 快照：{snap.Message}");
+        if (!snap.Success)
+        {
+            if (!string.IsNullOrWhiteSpace(snap.Message))
+                AppendLog($"结算后未保存 ACF 快照：{snap.Message}");
+            AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
+            _notify(LocalizationService.T("NotifySettleBlockedAcfNotSettled"));
+            return;
+        }
+
+        AppendLog($"已保存 {ActiveGameBranch} Steam 清单快照，供下次切服免下载");
         ClearSteamSettle();
     }
 
