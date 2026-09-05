@@ -202,6 +202,28 @@ public class MelonLoaderConfigOptimizerTests
     }
 
     [Fact]
+    public void ApplyRecommendedSettings_knownUnityVersion_enables_offline_when_resolve_fails()
+    {
+        // Seed fallback: zip already in AG folder, but no globalgamemanagers to resolve.
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            PlaceUnityDependenciesZip(root, "2022.3.62");
+
+            var opt = new MelonLoaderConfigOptimizer();
+            opt.CanForceOfflineGeneration(root).Should().BeFalse();
+
+            var result = opt.ApplyRecommendedSettings(root, knownUnityVersion: "2022.3.62");
+            result.Changed.Should().BeTrue();
+
+            var cfg = File.ReadAllText(opt.GetLoaderConfigPath(root));
+            cfg.Should().Contain("force_quit = true");
+            cfg.Should().Contain("force_offline_generation = true");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void NeedsFirstAssemblyGeneration_true_when_assemblies_missing()
     {
         var root = CreateTempGame(withAssemblies: false);

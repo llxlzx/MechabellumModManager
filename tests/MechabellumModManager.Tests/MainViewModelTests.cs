@@ -262,6 +262,41 @@ public class MainViewModelTests
         }
     }
 
+    [Fact]
+    public void RefreshStatus_seed_fallback_version_enables_offline_when_unity_resolve_fails()
+    {
+        // No globalgamemanagers — seed uses sole redist zip version; Apply must still force offline.
+        using var fx = Fixture.CreateLoaderPresentAssembliesMissing();
+
+        var redistRoot = Path.Combine(AppContext.BaseDirectory, "installer-redist");
+        var unityDeps = Path.Combine(redistRoot, "unity-deps");
+        Directory.CreateDirectory(unityDeps);
+        var zipName = "UnityDependencies_2022.3.62.zip";
+        var stagedZip = Path.Combine(unityDeps, zipName);
+        File.WriteAllText(stagedZip, "deps-payload");
+
+        try
+        {
+            var vm = fx.CreateVm(confirmHighRisk: _ => true);
+            vm.RefreshStatusCommand.Execute(null);
+
+            File.Exists(Path.Combine(
+                fx.GameRoot,
+                "MelonLoader",
+                "Dependencies",
+                "Il2CppAssemblyGenerator",
+                zipName)).Should().BeTrue();
+            var cfg = File.ReadAllText(Path.Combine(fx.GameRoot, "UserData", "Loader.cfg"));
+            cfg.Should().MatchRegex(@"(?im)^\s*force_offline_generation\s*=\s*true\s*$");
+        }
+        finally
+        {
+            try { File.Delete(stagedZip); } catch { /* ignore */ }
+            try { Directory.Delete(unityDeps, true); } catch { /* ignore */ }
+            try { Directory.Delete(redistRoot, true); } catch { /* ignore */ }
+        }
+    }
+
     static void WriteFakeGlobalgamemanagers(string game, string unityVersion)
     {
         var data = Path.Combine(game, "Mechabellum_Data");

@@ -706,15 +706,26 @@ public sealed partial class MainViewModel : ObservableObject
                     MelonLoaderDualStoreSync.DeriveRedistDirFromMelonZip(zip));
                 if (seed.Copied)
                     AppendLog(seed.Message);
-                else if (!seed.Success && logAlways)
+                else if (!seed.Success)
                     AppendLog("警告：UnityDependencies 播种失败 — " + seed.Message);
-            }
 
-            var result = _melonOptimizer.ApplyRecommendedSettings(GamePath);
-            if (result.Changed || logAlways || !_loggedMelonOptimize)
+                var result = seed.Success && seed.Version != null
+                    ? _melonOptimizer.ApplyRecommendedSettings(GamePath, seed.Version)
+                    : _melonOptimizer.ApplyRecommendedSettings(GamePath);
+                if (result.Changed || logAlways || !_loggedMelonOptimize)
+                {
+                    AppendLog(result.Message);
+                    _loggedMelonOptimize = true;
+                }
+            }
+            else
             {
-                AppendLog(result.Message);
-                _loggedMelonOptimize = true;
+                var result = _melonOptimizer.ApplyRecommendedSettings(GamePath);
+                if (result.Changed || logAlways || !_loggedMelonOptimize)
+                {
+                    AppendLog(result.Message);
+                    _loggedMelonOptimize = true;
+                }
             }
         }
         catch (Exception ex)
@@ -2300,8 +2311,12 @@ public sealed partial class MainViewModel : ObservableObject
                 try
                 {
                     var sync = _melonDualSync.EnsureOnBothStores(cfg.OfficialStorePath, cfg.BetaStorePath);
-                    if (!sync.Success || (sync.Message?.Contains("安装", StringComparison.Ordinal) == true)
-                        || (sync.Message?.Contains("复制", StringComparison.Ordinal) == true))
+                    if (!sync.Success
+                        || (sync.Message?.Contains("安装", StringComparison.Ordinal) == true)
+                        || (sync.Message?.Contains("复制", StringComparison.Ordinal) == true)
+                        || (sync.Message?.Contains("警告", StringComparison.Ordinal) == true)
+                        || (sync.Message?.Contains("失败", StringComparison.Ordinal) == true)
+                        || (sync.Message?.Contains("播种", StringComparison.Ordinal) == true))
                         AppendLog(sync.Message);
                 }
                 catch (Exception ex)

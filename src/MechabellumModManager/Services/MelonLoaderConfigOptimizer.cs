@@ -96,7 +96,15 @@ public sealed class MelonLoaderConfigOptimizer
         return File.Exists(zipPath);
     }
 
-    public MelonLoaderOptimizeResult ApplyRecommendedSettings(string gamePath)
+    public MelonLoaderOptimizeResult ApplyRecommendedSettings(string gamePath) =>
+        ApplyRecommendedSettings(gamePath, knownUnityVersion: null);
+
+    /// <param name="knownUnityVersion">
+    /// Optional Unity version from a successful seed (or single-zip fallback).
+    /// Preferred when normalizable; enables offline even if game resolve fails,
+    /// as long as the exact UnityDependencies zip is on disk.
+    /// </param>
+    public MelonLoaderOptimizeResult ApplyRecommendedSettings(string gamePath, string? knownUnityVersion)
     {
         if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
         {
@@ -109,7 +117,11 @@ public sealed class MelonLoaderConfigOptimizer
         }
 
         var needsGen = NeedsFirstAssemblyGeneration(gamePath);
-        var forceOffline = CanForceOfflineGeneration(gamePath);
+        string? versionForOffline = null;
+        if (!string.IsNullOrWhiteSpace(knownUnityVersion)
+            && UnityVersionNormalizer.TryNormalize(knownUnityVersion, out var knownNorm))
+            versionForOffline = knownNorm;
+        var forceOffline = CanForceOfflineGeneration(gamePath, versionForOffline);
         var path = GetLoaderConfigPath(gamePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
