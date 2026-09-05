@@ -36,6 +36,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly UpdateChecker _updateChecker;
     readonly ModCatalogService _catalog;
     readonly AssemblyInspector _assemblyInspector;
+    readonly ManagerLogWriter _managerLog;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string, MessageBoxResult, bool>? _confirmChoice;
@@ -114,7 +115,8 @@ public sealed partial class MainViewModel : ObservableObject
         TimeSpan? steamExitTimeout = null,
         TimeSpan? steamExitCooldown = null,
         TimeSpan? steamRestartCooldown = null,
-        Func<string, MessageBoxResult, bool>? confirmChoice = null)
+        Func<string, MessageBoxResult, bool>? confirmChoice = null,
+        ManagerLogWriter? managerLog = null)
     {
         _paths = paths;
         _store = store;
@@ -132,6 +134,7 @@ public sealed partial class MainViewModel : ObservableObject
         _updateChecker = updateChecker ?? new UpdateChecker();
         _catalog = catalog ?? new ModCatalogService();
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
+        _managerLog = managerLog ?? new ManagerLogWriter(paths.LogsDir);
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -194,6 +197,7 @@ public sealed partial class MainViewModel : ObservableObject
         };
 
         _paths.EnsureCreated();
+        _managerLog.PurgeOldFiles();
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
@@ -1055,6 +1059,7 @@ public sealed partial class MainViewModel : ObservableObject
         else
         {
             AppendLog("已请求启动游戏。");
+            AppendLog(LocalizationService.T("LogMelonConsoleHint"));
             if (_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
                 AppendLog("首次启动提示：若长时间黑屏/控制台滚动，是 MelonLoader 正在生成程序集，请耐心等待完成。");
         }
@@ -2626,7 +2631,9 @@ public sealed partial class MainViewModel : ObservableObject
         var archiveA = _branchSwitch.ArchiveCurrentAs(current);
         if (!archiveA.Success)
         {
-            FailWizard(string.IsNullOrWhiteSpace(archiveA.Message) ? LocalizationService.T("FailWizardArchiveCurrentFailed") : archiveA.Message);
+            AbortWizardAfterFailure(string.IsNullOrWhiteSpace(archiveA.Message)
+                ? LocalizationService.T("FailWizardArchiveCurrentFailed")
+                : archiveA.Message);
             return;
         }
 
@@ -2846,6 +2853,55 @@ public sealed partial class MainViewModel : ObservableObject
     {
         AppendLog(message);
         _notify(message);
+    }
+
+    /// <summary>
+    /// Archive/link failure after Declared must not leave a sticky mid-wizard residue.
+    /// If Steam link is still a valid game root, clear wizard step so deploy stays on that path.
+    /// </summary>
+    void AbortWizardAfterFailure(string message)
+    {
+        FailWizard(message);
+        try
+        {
+            var cfg = _branchSwitch.LoadConfig();
+            var linkOk = SteamGameLocator.LooksLikeGameRoot(cfg.SteamLinkPath);
+            var officialOk = SteamGameLocator.LooksLikeGameRoot(cfg.OfficialStorePath);
+            var betaOk = SteamGameLocator.LooksLikeGameRoot(cfg.BetaStorePath);
+
+            // Archive never finished: drop Declared residue. Keep stores only if they already look like games.
+            cfg.Enabled = false;
+            cfg.WizardStep = BranchWizardStep.None;
+            if (!officialOk)
+                cfg.OfficialStorePath = "";
+            if (!betaOk)
+                cfg.BetaStorePath = "";
+            if (linkOk && GamePath != cfg.SteamLinkPath)
+                GamePath = cfg.SteamLinkPath;
+            _branchSwitch.SaveConfig(cfg);
+
+            _suppressBranchSwitchSave = true;
+            try
+            {
+                BranchSwitchEnabled = false;
+                BranchWizardStep = BranchWizardStep.None;
+                IsAwaitingSteamSettle = false;
+                DegradeToManualBeta = false;
+            }
+            finally
+            {
+                _suppressBranchSwitchSave = false;
+            }
+
+            AppendLog(LocalizationService.T("LogWizardAbortedReset"));
+            RefreshStatus();
+            NotifyBranchGates();
+            RefreshBranchStatusText();
+        }
+        catch (Exception ex)
+        {
+            AppendLog("双服向导失败后清理状态时出错：" + ex.Message);
+        }
     }
 
     static bool TryResolveSteamLayout(string gamePath, out string steamLink, out string officialStore, out string betaStore)
@@ -3110,6 +3166,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        _managerLog.Append(line);
         LatestLogLine = line;
         LogText = string.IsNullOrEmpty(LogText) ? line : LogText + Environment.NewLine + line;
     }
