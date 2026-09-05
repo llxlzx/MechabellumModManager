@@ -70,6 +70,8 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SyncLog => T("SyncLog");
     public string LogExpand => T("LogExpand");
     public string LogCollapse => T("LogCollapse");
+    public string InstallMelonLoader => T("InstallMelonLoader");
+    public string InstallMelonLoaderTip => T("InstallMelonLoaderTip");
     public string CurrentProfile => T("CurrentProfile");
     public string FilterSearch => T("FilterSearch");
     public string FilterCategory => T("FilterCategory");

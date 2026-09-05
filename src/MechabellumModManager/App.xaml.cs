@@ -39,6 +39,13 @@ public partial class App : Application
             return;
         }
 
+        if (InstallMelonLoaderCli.TryParseArgs(e.Args, out var melonGamePath, out var melonRedistDir))
+        {
+            var code = InstallMelonLoaderCli.Run(melonGamePath!, melonRedistDir);
+            Shutdown(code);
+            return;
+        }
+
         DispatcherUnhandledException += (_, args) =>
         {
             try

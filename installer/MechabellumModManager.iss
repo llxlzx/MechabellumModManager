@@ -1,4 +1,4 @@
-﻿; Mechabellum Mod Manager — Inno Setup 6
+; Mechabellum Mod Manager — Inno Setup 6
 ; Compile with: ISCC.exe MechabellumModManager.iss
 ; Or run: build-installer.bat
 
@@ -67,11 +67,15 @@ chinesesimplified.StatusDotNet6=正在静默安装 .NET 6 Desktop Runtime（下�
 chinesesimplified.ErrDotNet6=.NET 6 Desktop Runtime 安装未成功（exit %1）。请稍后从 https://dotnet.microsoft.com/download/dotnet/6.0 手动安装。
 chinesesimplified.StatusNoPsDotNet6=无法启动 PowerShell，已跳过 .NET 6 自动安装（可稍后手动安装）。
 chinesesimplified.StatusDotNet6Done=.NET 6 Desktop Runtime 已完成（或已跳过）。
-chinesesimplified.StatusSteamBusyMelon=检测到 Steam 正在运行/下载，或无法确认：跳过向游戏目录写入 MelonLoader，以免打断下载。
+chinesesimplified.StatusSteamBusyMelon=检测到 Steam 正在下载本游戏，已跳过写入 MelonLoader（避免打断下载）。请等下载完成后再运行安装包并勾选 MelonLoader，或自行安装。
+chinesesimplified.WarnSteamBusyMelon=检测到 Steam 正在下载本游戏，安装程序已跳过 MelonLoader。%n%n请等下载完成后再运行本安装包（勾选 MelonLoader），否则管理器会提示「缺少 Loader」，且「应用并启动」不可用。
 chinesesimplified.StatusMelon=正在检测/安装 MelonLoader（已安装则跳过；优先内嵌离线包）…
-chinesesimplified.StatusNoPsMelon=无法启动 PowerShell，已跳过 MelonLoader 自动安装（可稍后手动安装）。
-chinesesimplified.ErrMelon=MelonLoader 安装未成功（exit %1）。%n%nexit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整。%n%n也可取消 MelonLoader 组件后重装管理器，或手动安装：%nhttps://github.com/LavaGang/MelonLoader/releases%n（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）
+chinesesimplified.StatusNoPsMelon=无法启动 PowerShell；将改用管理器内嵌方式安装 MelonLoader。
+chinesesimplified.ErrMelon=MelonLoader 安装未成功（exit %1）。%n%nexit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整；exit 5：游戏正在运行。%n%n也可打开管理器点击「安装 MelonLoader」，或手动安装：%nhttps://github.com/LavaGang/MelonLoader/releases%n（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）
 chinesesimplified.StatusMelonDone=MelonLoader 已完成（或已跳过）。
+chinesesimplified.StatusMelonAlready=检测到 MelonLoader 已就绪，跳过安装。
+chinesesimplified.ErrMelonVerify=MelonLoader 未能正确写入游戏目录。%n%n请关闭游戏后：打开管理器点「安装 MelonLoader」，或重新运行本安装包并勾选 MelonLoader。%n若杀软拦截 version.dll，请允许后再试。
+chinesesimplified.WarnNoPsMelon=无法启动 PowerShell，已改用管理器内嵌方式安装 MelonLoader；若仍失败请打开管理器点「安装 MelonLoader」。
 chinesesimplified.StatusPostDone=后置步骤已处理，即将进入完成页…
 
 english.AppDisplayName=Mechabellum Mod Manager
@@ -100,11 +104,14 @@ english.StatusDotNet6=Quietly installing .NET 6 Desktop Runtime (~50-55 MB downl
 english.ErrDotNet6=.NET 6 Desktop Runtime install failed (exit %1). Install manually from https://dotnet.microsoft.com/download/dotnet/6.0
 english.StatusNoPsDotNet6=Could not start PowerShell; skipped automatic .NET 6 install (you can install it later).
 english.StatusDotNet6Done=.NET 6 Desktop Runtime finished (or skipped).
-english.StatusSteamBusyMelon=Steam appears busy/downloading (or could not be checked): skipping MelonLoader write to the game folder.
+english.StatusSteamBusyMelon=Steam is downloading this game; MelonLoader write was skipped. After the download finishes, re-run Setup with MelonLoader checked, or install MelonLoader manually.
+english.WarnSteamBusyMelon=Steam is downloading this game, so Setup skipped MelonLoader.%n%nAfter the download finishes, re-run this Setup (keep MelonLoader checked). Otherwise the manager will show “Missing Loader” and Apply and Launch will stay disabled.
 english.StatusMelon=Checking/installing MelonLoader (skip if present; prefer embedded offline package)…
-english.StatusNoPsMelon=Could not start PowerShell; skipped automatic MelonLoader install (you can install it later).
-english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: often GitHub download failure; exit 3: incomplete install.%n%nYou can uncheck MelonLoader and reinstall the manager, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
+english.StatusNoPsMelon=Could not start PowerShell; falling back to the manager’s built-in MelonLoader installer.
+english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: often GitHub download failure; exit 3: incomplete install; exit 5: game running.%n%nOr open the manager and click Install MelonLoader, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
 english.StatusMelonDone=MelonLoader finished (or skipped).
+english.StatusMelonAlready=MelonLoader already present; skipping install.
+english.ErrMelonVerify=MelonLoader was not written correctly into the game folder.%n%nClose the game, then open the manager and click Install MelonLoader — or re-run this Setup with MelonLoader checked.%nIf antivirus quarantined version.dll, allow it and retry.
 english.StatusPostDone=Post-install steps done; opening the Completed page…
 
 russian.AppDisplayName=Mechabellum Mod Manager
@@ -133,11 +140,14 @@ russian.StatusDotNet6=Тихая установка .NET 6 Desktop Runtime (~50�
 russian.ErrDotNet6=Установка .NET 6 Desktop Runtime не удалась (код %1). Установите вручную: https://dotnet.microsoft.com/download/dotnet/6.0
 russian.StatusNoPsDotNet6=Не удалось запустить PowerShell; автоматическая установка .NET 6 пропущена (можно установить позже).
 russian.StatusDotNet6Done=.NET 6 Desktop Runtime завершён (или пропущен).
-russian.StatusSteamBusyMelon=Steam занят/загружает (или проверка не удалась): пропуск записи MelonLoader в папку игры.
+russian.StatusSteamBusyMelon=Steam загружает эту игру; запись MelonLoader пропущена. После загрузки снова запустите Setup с MelonLoader или установите вручную.
+russian.WarnSteamBusyMelon=Steam загружает эту игру, поэтому MelonLoader пропущен.%n%nПосле загрузки снова запустите Setup (оставьте MelonLoader) — иначе менеджер покажет «нет Loader», а «Применить и запустить» будет недоступно.
 russian.StatusMelon=Проверка/установка MelonLoader (пропуск, если есть; предпочтение офлайн-пакету)…
 russian.StatusNoPsMelon=Не удалось запустить PowerShell; автоматическая установка MelonLoader пропущена (можно установить позже).
 russian.ErrMelon=Установка MelonLoader не удалась (код %1).%n%nкод 1: неверный путь или файлы заняты; код 2: часто сбой загрузки с GitHub; код 3: неполная установка.%n%nМожно снять MelonLoader и переустановить менеджер, или установить вручную:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Скачайте MelonLoader.x64.zip и распакуйте в папку игры по инструкции.)
 russian.StatusMelonDone=MelonLoader завершён (или пропущен).
+russian.StatusMelonAlready=MelonLoader already present; skipping install.
+russian.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 russian.StatusPostDone=Постустановочные шаги выполнены; переход к странице завершения…
 
 japanese.AppDisplayName=Mechabellum Mod Manager
@@ -166,11 +176,14 @@ japanese.StatusDotNet6=.NET 6 Desktop Runtime をサイレントインストー�
 japanese.ErrDotNet6=.NET 6 Desktop Runtime のインストールに失敗しました（終了コード %1）。https://dotnet.microsoft.com/download/dotnet/6.0 から手動インストールしてください。
 japanese.StatusNoPsDotNet6=PowerShell を起動できませんでした；.NET 6 の自動インストールをスキップしました（後でインストール可能）。
 japanese.StatusDotNet6Done=.NET 6 Desktop Runtime が完了しました（またはスキップ）。
-japanese.StatusSteamBusyMelon=Steam が実行中/ダウンロード中（または確認不可）：ゲームフォルダへの MelonLoader 書き込みをスキップします。
+japanese.StatusSteamBusyMelon=Steam が本ゲームをダウンロード中のため MelonLoader 書き込みをスキップしました。完了後に Setup で MelonLoader を選ぶか手動インストールしてください。
+japanese.WarnSteamBusyMelon=Steam が本ゲームをダウンロード中のため MelonLoader をスキップしました。%n%n完了後に本 Setup を再実行（MelonLoader にチェック）してください。そうしないと「Loader なし」になり「適用して起動」が使えません。
 japanese.StatusMelon=MelonLoader を確認/インストール中（存在すればスキップ；同梱オフラインパッケージを優先）…
 japanese.StatusNoPsMelon=PowerShell を起動できませんでした；MelonLoader の自動インストールをスキップしました（後でインストール可能）。
 japanese.ErrMelon=MelonLoader のインストールに失敗しました（終了コード %1）。%n%n終了コード 1：無効なパスまたはファイルロック；2：多くは GitHub ダウンロード失敗；3：不完全なインストール。%n%nMelonLoader のチェックを外してマネージャーを再インストールするか、手動でインストールしてください：%nhttps://github.com/LavaGang/MelonLoader/releases%n（MelonLoader.x64.zip をダウンロードし、公式手順に従いゲームフォルダに展開）
 japanese.StatusMelonDone=MelonLoader が完了しました（またはスキップ）。
+japanese.StatusMelonAlready=MelonLoader already present; skipping install.
+japanese.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 japanese.StatusPostDone=インストール後処理が終わりました。完了ページへ進みます…
 
 german.AppDisplayName=Mechabellum Mod Manager
@@ -199,21 +212,24 @@ german.StatusDotNet6=.NET 6 Desktop Runtime wird still installiert (~50–55 MB;
 german.ErrDotNet6=.NET 6 Desktop Runtime Installation fehlgeschlagen (Exit %1). Manuell installieren: https://dotnet.microsoft.com/download/dotnet/6.0
 german.StatusNoPsDotNet6=PowerShell konnte nicht gestartet werden; automatische .NET 6-Installation übersprungen (später möglich).
 german.StatusDotNet6Done=.NET 6 Desktop Runtime abgeschlossen (oder übersprungen).
-german.StatusSteamBusyMelon=Steam scheint aktiv/herunterladend (oder Prüfung fehlgeschlagen): MelonLoader-Schreiben in Spielordner übersprungen.
+german.StatusSteamBusyMelon=Steam lädt dieses Spiel; MelonLoader-Schreiben übersprungen. Nach dem Download Setup erneut mit MelonLoader ausführen oder manuell installieren.
+german.WarnSteamBusyMelon=Steam lädt dieses Spiel, daher wurde MelonLoader übersprungen.%n%nNach dem Download Setup erneut ausführen (MelonLoader angehakt). Sonst zeigt der Manager „Loader fehlt“ und Anwenden und Starten bleibt deaktiviert.
 german.StatusMelon=MelonLoader prüfen/installieren (überspringen wenn vorhanden; Offline-Paket bevorzugt)…
 german.StatusNoPsMelon=PowerShell konnte nicht gestartet werden; automatische MelonLoader-Installation übersprungen (später möglich).
 german.ErrMelon=MelonLoader-Installation fehlgeschlagen (Exit %1).%n%nExit 1: ungültiger Pfad oder Dateien gesperrt; Exit 2: oft GitHub-Download-Fehler; Exit 3: unvollständige Installation.%n%nMelonLoader abwählen und Manager neu installieren, oder manuell installieren:%nhttps://github.com/LavaGang/MelonLoader/releases%n(MelonLoader.x64.zip herunterladen und gemäß Anleitung in Spielordner entpacken)
 german.StatusMelonDone=MelonLoader abgeschlossen (oder übersprungen).
+german.StatusMelonAlready=MelonLoader already present; skipping install.
+german.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 german.StatusPostDone=Nachinstallation erledigt; Abschlussseite folgt…
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:TaskDesktop}"; GroupDescription: "{cm:TaskDesktopGroup}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:TaskDesktop}"; GroupDescription: "{cm:TaskDesktopGroup}"
 
 [Components]
 Name: "main"; Description: "{cm:CompMain}"; Types: full compact custom; Flags: fixed
 Name: "dotnet8"; Description: "{cm:CompDotNet8}"; Types: full compact custom
 Name: "dotnet6"; Description: "{cm:CompDotNet6}"; Types: full compact custom
-Name: "melon"; Description: "{cm:CompMelon}"; Types: full custom
+Name: "melon"; Description: "{cm:CompMelon}"; Types: full compact custom
 
 [Files]
 ; Published app + assets (build-installer.bat publishes first)
@@ -284,6 +300,30 @@ begin
   Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Minimized -File "' +
          ScriptPath + '" ' + ExtraArgs;
   if not Exec(PowerShellExe(), Cmd, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    Result := -1;
+    exit;
+  end;
+  Result := ResultCode;
+end;
+
+function LooksLikeMelon(const Path: string): Boolean;
+var
+  Root: string;
+begin
+  Root := AddBackslash(Path);
+  Result := DirExists(Root + 'MelonLoader') and
+            (FileExists(Root + 'version.dll') or FileExists(Root + 'winhttp.dll'));
+end;
+
+function InstallMelonViaApp(const GamePath, Redist: string): Integer;
+var
+  Params: string;
+  ResultCode: Integer;
+begin
+  { Prefer the manager EXE + offline zip — no PowerShell, works when PS is blocked. }
+  Params := '--install-melon-loader --game-path "' + GamePath + '" --redist-dir "' + Redist + '"';
+  if not Exec(ExpandConstant('{app}\{#MyAppExeName}'), Params, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
   begin
     Result := -1;
     exit;
@@ -639,27 +679,29 @@ begin
     Result := Candidate;
 end;
 
-function QuerySteamBusyViaPs: Boolean;
+function QueryGameDownloading(const GamePath: string): Boolean;
 var
   ResultCode: Integer;
-  OutFile, Cmd, S: string;
+  OutFile, Args, S: string;
   Line: AnsiString;
 begin
-  { Default: assume busy so we never write Melon into an active download folder if PS fails. }
-  Result := True;
-  OutFile := ExpandConstant('{tmp}\mmm-steam-busy.txt');
+  { Only busy when THIS game appears mid-download. Steam sitting in tray must not skip Melon. }
+  Result := False;
+  if GamePath = '' then
+    exit;
+
+  OutFile := ExpandConstant('{tmp}\mmm-game-downloading.txt');
   DeleteFile(OutFile);
-  Cmd := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Minimized -Command "' +
-         'if (Get-Process steam,steamwebhelper -ErrorAction SilentlyContinue) { Set-Content -LiteralPath ''' +
-         OutFile + ''' -Value busy } else { Set-Content -LiteralPath ''' + OutFile + ''' -Value idle }"';
-  if not Exec(PowerShellExe(), Cmd, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
+  Args := '-GamePath "' + GamePath + '" -OutFile "' + OutFile + '"';
+  ResultCode := PsFromSrc('Detect-GameDownloading.ps1', Args);
+  if ResultCode <> 0 then
     exit;
   if FileExists(OutFile) and LoadStringFromFile(OutFile, Line) then
   begin
     S := string(Line);
     StringChangeEx(S, #13, '', True);
     StringChangeEx(S, #10, '', True);
-    Result := Pos('busy', LowerCase(Trim(S))) > 0;
+    Result := Pos('downloading', LowerCase(Trim(S))) > 0;
   end;
 end;
 
@@ -726,7 +768,8 @@ begin
   if Code <> 0 then
     SetStatus(CustomMessage('StatusRestoreOptional'));
 
-  SteamBusy := QuerySteamBusyViaPs();
+  { Skip Melon only when THIS game is mid-download — not merely because Steam is open. }
+  SteamBusy := QueryGameDownloading(GamePath);
 
   if WizardIsComponentSelected('dotnet8') then
   begin
@@ -759,18 +802,34 @@ begin
     if SteamBusy then
     begin
       SetStatus(CustomMessage('StatusSteamBusyMelon'));
+      MsgBox(CustomMessage('WarnSteamBusyMelon'), mbInformation, MB_OK);
+    end
+    else if LooksLikeMelon(GamePath) then
+    begin
+      SetStatus(CustomMessage('StatusMelonAlready'));
     end
     else
     begin
       SetStatus(CustomMessage('StatusMelon'));
-      Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
-      Code := PsFromSrc('Install-MelonLoader.ps1', Args);
-      if Code = -1 then
-        SetStatus(CustomMessage('StatusNoPsMelon'))
+      { Primary: manager EXE + embedded zip (no PowerShell). }
+      Code := InstallMelonViaApp(GamePath, Redist);
+      if (Code <> 0) and (not LooksLikeMelon(GamePath)) then
+      begin
+        { Fallback: PowerShell script (same offline zip). }
+        if Code = -1 then
+          SetStatus(CustomMessage('StatusNoPsMelon'));
+        Args := '-GamePath "' + GamePath + '" -RedistDir "' + Redist + '"';
+        Code := PsFromSrc('Install-MelonLoader.ps1', Args);
+      end;
+
+      if LooksLikeMelon(GamePath) then
+        SetStatus(CustomMessage('StatusMelonDone'))
+      else if Code = -1 then
+        MsgBox(CustomMessage('ErrMelonVerify'), mbError, MB_OK)
       else if Code <> 0 then
         MsgBox(FmtMessage(CustomMessage('ErrMelon'), [IntToStr(Code)]), mbError, MB_OK)
       else
-        SetStatus(CustomMessage('StatusMelonDone'));
+        MsgBox(CustomMessage('ErrMelonVerify'), mbError, MB_OK);
     end;
   end;
 

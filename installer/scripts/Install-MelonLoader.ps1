@@ -58,6 +58,11 @@ if (-not (Test-Path $exe) -or -not (Test-Path $ga)) {
     exit 1
 }
 
+if (@(Get-Process -Name "Mechabellum" -ErrorAction SilentlyContinue).Count -gt 0) {
+    Write-Error "Mechabellum is running. Close the game before installing MelonLoader."
+    exit 5
+}
+
 # Same readiness rule as GameDetector: MelonLoader folder + version.dll or winhttp.dll
 if (Test-MelonLoaderInstalled -Root $GamePath) {
     Write-Host "Skip MelonLoader — already installed at $GamePath"

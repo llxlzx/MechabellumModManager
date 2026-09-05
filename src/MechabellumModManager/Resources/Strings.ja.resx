@@ -195,7 +195,37 @@
   <data name="SyncLog" xml:space="preserve">
     <value>実行ログ</value>
   </data>
-    <data name="LogExpand" xml:space="preserve">
+      <data name="InstallMelonLoader" xml:space="preserve">
+    <value>MelonLoaderをインストール</value>
+  </data>
+  <data name="InstallMelonLoaderTip" xml:space="preserve">
+    <value>Writes MelonLoader from the offline zip shipped with Setup (no GitHub needed)</value>
+  </data>
+  <data name="ConfirmInstallMelonLoader" xml:space="preserve">
+    <value>Install MelonLoader into the current game folder? Close the game first.</value>
+  </data>
+  <data name="NotifyMelonInstallNeedGamePath" xml:space="preserve">
+    <value>Set a valid game path in Settings first.</value>
+  </data>
+  <data name="NotifyMelonInstallCloseGame" xml:space="preserve">
+    <value>Close Mechabellum before installing MelonLoader.</value>
+  </data>
+  <data name="LogMelonInstallStart" xml:space="preserve">
+    <value>Installing MelonLoader…</value>
+  </data>
+  <data name="LogMelonInstallLocalZip" xml:space="preserve">
+    <value>Using local offline package: {0}</value>
+  </data>
+  <data name="LogMelonInstallDownload" xml:space="preserve">
+    <value>No local offline package; trying GitHub download…</value>
+  </data>
+  <data name="NotifyMelonInstallOk" xml:space="preserve">
+    <value>MelonLoader installed. If assemblies are still missing, generate them when applying a profile.</value>
+  </data>
+  <data name="NotifyMelonInstallFailed" xml:space="preserve">
+    <value>MelonLoader install failed: {0}</value>
+  </data>
+<data name="LogExpand" xml:space="preserve">
     <value>ログを展開</value>
   </data>
   <data name="LogCollapse" xml:space="preserve">

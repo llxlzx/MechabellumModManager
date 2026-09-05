@@ -292,6 +292,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
+    public bool NeedsMelonLoaderInstall =>
+        GameStatus?.Kind is GameStatusKind.GameOkLoaderMissing or GameStatusKind.LoaderPartial;
+
     public bool CanDeployOrLaunch =>
         IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
 
@@ -497,6 +500,8 @@ public sealed partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsReady));
         OnPropertyChanged(nameof(StatusKindLabel));
+        OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
+        InstallMelonLoaderCommand.NotifyCanExecuteChanged();
         NotifyBranchGates();
     }
 
@@ -1066,6 +1071,55 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void ToggleLogPanel() => IsLogExpanded = !IsLogExpanded;
+
+    [RelayCommand(CanExecute = nameof(NeedsMelonLoaderInstall))]
+    async Task InstallMelonLoaderAsync()
+    {
+        if (!NeedsMelonLoaderInstall) return;
+        if (string.IsNullOrWhiteSpace(GamePath))
+        {
+            _notify(LocalizationService.T("NotifyMelonInstallNeedGamePath"));
+            return;
+        }
+
+        if (!Confirm(LocalizationService.T("ConfirmInstallMelonLoader")))
+            return;
+
+        if (_processProbe.IsGameRunning())
+        {
+            _notify(LocalizationService.T("NotifyMelonInstallCloseGame"));
+            return;
+        }
+
+        AppendLog(LocalizationService.T("LogMelonInstallStart"));
+        try
+        {
+            MelonLoaderInstallResult result;
+            var zip = MelonLoaderDualStoreSync.ResolveLocalZip();
+            if (zip is not null)
+            {
+                AppendLog(string.Format(LocalizationService.T("LogMelonInstallLocalZip"), zip));
+                result = await Task.Run(() => _melonDualSync.InstallFromZip(GamePath, zip)).ConfigureAwait(true);
+            }
+            else
+            {
+                AppendLog(LocalizationService.T("LogMelonInstallDownload"));
+                var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning());
+                result = await installer.InstallAsync(GamePath).ConfigureAwait(true);
+            }
+
+            AppendLog(result.Message);
+            _notify(result.Success
+                ? LocalizationService.T("NotifyMelonInstallOk")
+                : string.Format(LocalizationService.T("NotifyMelonInstallFailed"), result.Message));
+            RefreshStatusCore(offerAssemblyGeneratePrompt: true);
+        }
+        catch (Exception ex)
+        {
+            AppendLog(string.Format(LocalizationService.T("NotifyMelonInstallFailed"), ex.Message));
+            _notify(string.Format(LocalizationService.T("NotifyMelonInstallFailed"), ex.Message));
+        }
+    }
 
     [RelayCommand]
     async Task ReportCatalogModAsync()
