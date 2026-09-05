@@ -23,13 +23,21 @@ Copy-Item "src\MechabellumModManager\Assets\*" $assetsOut -Force
 @(
   "installer\redist\dotnet8",
   "installer\redist\dotnet6",
-  "installer\redist\melonloader"
+  "installer\redist\melonloader",
+  "installer\redist\unity-deps"
 ) | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ | Out-Null }
 
-Write-Host "[2/3] Checking MelonLoader offline redist..."
+Write-Host "[2/3] Checking offline redist (MelonLoader, UnityDependencies, .NET 8)..."
 $melonZip = Join-Path (Get-Location) "installer\redist\melonloader\MelonLoader.x64.zip"
+$unityDepsDir = Join-Path (Get-Location) "installer\redist\unity-deps"
+$dotnet8Dir = Join-Path (Get-Location) "installer\redist\dotnet8"
+
+function Test-NonEmptyFile([string] $Path) {
+    return (Test-Path -LiteralPath $Path) -and ((Get-Item -LiteralPath $Path).Length -gt 0)
+}
+
 if (-not $SkipMelonRedistCheck) {
-    if (-not (Test-Path -LiteralPath $melonZip) -or ((Get-Item -LiteralPath $melonZip).Length -le 0)) {
+    if (-not (Test-NonEmptyFile $melonZip)) {
         Write-Error @"
 Missing MelonLoader offline package (required for release builds).
 Place the official file here:
@@ -42,8 +50,41 @@ Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
         exit 3
     }
     Write-Host "Found MelonLoader redist: $melonZip ($([math]::Round((Get-Item $melonZip).Length / 1MB, 1)) MB)"
+
+    $unityDepsZip = Get-ChildItem -Path $unityDepsDir -Filter "UnityDependencies_*.zip" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Length -gt 0 } |
+        Select-Object -First 1
+    if (-not $unityDepsZip) {
+        Write-Error @"
+Missing UnityDependencies offline package (required for release builds).
+Place at least one non-empty zip here:
+  installer\redist\unity-deps\UnityDependencies_{major.minor.patch}.zip
+Download: https://github.com/LavaGang/Unity-Runtime-Libraries
+Rename upstream files (e.g. 2022.3.62.zip) to UnityDependencies_2022.3.62.zip before placing.
+
+Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
+"@
+        exit 3
+    }
+    Write-Host "Found UnityDependencies redist: $($unityDepsZip.FullName) ($([math]::Round($unityDepsZip.Length / 1MB, 1)) MB)"
+
+    $dotnet8Exe = Get-ChildItem -Path $dotnet8Dir -Filter "windowsdesktop-runtime-8.*-win-x64.exe" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Length -gt 0 } |
+        Select-Object -First 1
+    if (-not $dotnet8Exe) {
+        Write-Error @"
+Missing .NET 8 Desktop Runtime offline installer (required for release builds).
+Place at least one non-empty file here:
+  installer\redist\dotnet8\windowsdesktop-runtime-8.*-win-x64.exe
+Download: https://dotnet.microsoft.com/download/dotnet/8.0
+
+Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
+"@
+        exit 3
+    }
+    Write-Host "Found .NET 8 redist: $($dotnet8Exe.FullName) ($([math]::Round($dotnet8Exe.Length / 1MB, 1)) MB)"
 } else {
-    Write-Warning "SkipMelonRedistCheck set — Setup may lack MelonLoader zip. Do not use for release."
+    Write-Warning "SkipMelonRedistCheck set — Setup may lack MelonLoader, UnityDependencies, or .NET 8 redist. Do not use for release."
 }
 
 Write-Host "[3/3] Compiling Inno Setup..."

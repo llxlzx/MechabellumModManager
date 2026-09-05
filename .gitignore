@@ -10,6 +10,7 @@ publish/
 *.pdb
 installer/redist/**/*.exe
 installer/redist/**/*.zip
+installer/redist/unity-deps/*.zip
 !installer/redist/**/.gitkeep
 !installer/redist/**/README.md
 
