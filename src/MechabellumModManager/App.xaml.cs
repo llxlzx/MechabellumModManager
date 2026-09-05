@@ -88,31 +88,34 @@ public partial class App : Application
             else if (_blockMainClose)
                 e.Cancel = true;
         };
-        window.DataContext = ComposeMainViewModel(window);
+        var vm = ComposeMainViewModel(window, out var criticalOp);
+        window.DataContext = vm;
         MainWindow = window;
         window.Show();
-        OfferCriticalRecoveryIfNeeded(window);
+        OfferCriticalOpRecovery(window, vm, criticalOp);
     }
 
-    static void OfferCriticalRecoveryIfNeeded(MainWindow window)
+    static void OfferCriticalOpRecovery(Window owner, MainViewModel vm, CriticalOpGuard criticalOp)
     {
-        if (window.DataContext is not MainViewModel vm)
-            return;
-        if (!vm.ShouldOfferCriticalRecovery())
+        if (!vm.ShouldOfferCriticalRecovery(criticalOp))
             return;
 
         vm.IsRecoveryGateActive = true;
-        var dialog = new CriticalOpRecoveryDialog { Owner = window };
-        dialog.DiagnosticsRequested += () =>
+        var dialog = new CriticalOpRecoveryDialog(() =>
         {
             if (vm.ExportDiagnosticsCommand.CanExecute(null))
                 vm.ExportDiagnosticsCommand.Execute(null);
+        })
+        {
+            Owner = owner
         };
-        dialog.ShowDialog();
-        if (dialog.ResultChoice == CriticalOpRecoveryChoice.Continue)
-            vm.ApplyRecoveryContinue();
-        else if (dialog.ResultChoice == CriticalOpRecoveryChoice.Repair)
+        if (dialog.ShowDialog() != true)
+            return;
+
+        if (dialog.Choice == CriticalOpRecoveryChoice.Repair)
             _ = vm.ApplyRecoveryRepair();
+        else
+            vm.ApplyRecoveryContinue();
     }
 
     void BeginBusy(Window owner, string title, string message)
@@ -152,7 +155,7 @@ public partial class App : Application
         }
     }
 
-    MainViewModel ComposeMainViewModel(MainWindow window)
+    MainViewModel ComposeMainViewModel(MainWindow window, out CriticalOpGuard criticalOp)
     {
         var store = new JsonStore();
         var paths = ResolvePaths(store);
@@ -169,7 +172,7 @@ public partial class App : Application
         var junctions = new JunctionService();
         var betaEditor = new SteamBetaKeyEditor(probe);
         var branchSwitch = new BranchSwitchService(paths, store, probe, junctions, betaEditor);
-        var criticalOp = new CriticalOpGuard(paths);
+        criticalOp = new CriticalOpGuard(paths);
 
         return new MainViewModel(
             paths,
