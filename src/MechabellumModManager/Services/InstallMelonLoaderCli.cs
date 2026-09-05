@@ -80,6 +80,11 @@ public static class InstallMelonLoaderCli
                 Log("MelonLoader is installed, but offline Il2Cpp generation may fail until UnityDependencies is seeded. Re-run Setup/repair with unity-deps redist.");
             }
 
+            // Re-apply after late seed so force_offline can flip true once the zip lands.
+            var optimize = new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath.Trim());
+            if (optimize.Changed || !string.IsNullOrWhiteSpace(optimize.Message))
+                Log(optimize.Message);
+
             var status = new GameDetector().Detect(gamePath.Trim());
             if (status.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
                 return 0;
