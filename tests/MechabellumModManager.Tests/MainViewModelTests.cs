@@ -216,6 +216,61 @@ public class MainViewModelTests
         vm.LogText.Should().Contain("ghost-deadbeef");
     }
 
+    [Fact]
+    public void NeedsMelonLoaderInstall_true_when_LoaderPresentAssembliesMissing()
+    {
+        using var fx = Fixture.CreateLoaderPresentAssembliesMissing();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+
+        vm.GameStatus!.Kind.Should().Be(GameStatusKind.LoaderPresentAssembliesMissing);
+        vm.NeedsMelonLoaderInstall.Should().BeTrue();
+        vm.InstallMelonLoaderCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RefreshStatus_seeds_UnityDependencies_then_enables_offline_for_assemblies_missing()
+    {
+        using var fx = Fixture.CreateLoaderPresentAssembliesMissing();
+        WriteFakeGlobalgamemanagers(fx.GameRoot, "2022.3.62f3");
+
+        var redistRoot = Path.Combine(AppContext.BaseDirectory, "installer-redist");
+        var unityDeps = Path.Combine(redistRoot, "unity-deps");
+        Directory.CreateDirectory(unityDeps);
+        var zipName = "UnityDependencies_2022.3.62.zip";
+        var stagedZip = Path.Combine(unityDeps, zipName);
+        File.WriteAllText(stagedZip, "deps-payload");
+
+        try
+        {
+            var vm = fx.CreateVm(confirmHighRisk: _ => true);
+            vm.RefreshStatusCommand.Execute(null);
+
+            File.Exists(Path.Combine(
+                fx.GameRoot,
+                "MelonLoader",
+                "Dependencies",
+                "Il2CppAssemblyGenerator",
+                zipName)).Should().BeTrue();
+            var cfg = File.ReadAllText(Path.Combine(fx.GameRoot, "UserData", "Loader.cfg"));
+            cfg.Should().MatchRegex(@"(?im)^\s*force_offline_generation\s*=\s*true\s*$");
+        }
+        finally
+        {
+            try { File.Delete(stagedZip); } catch { /* ignore */ }
+            try { Directory.Delete(unityDeps, true); } catch { /* ignore */ }
+            try { Directory.Delete(redistRoot, true); } catch { /* ignore */ }
+        }
+    }
+
+    static void WriteFakeGlobalgamemanagers(string game, string unityVersion)
+    {
+        var data = Path.Combine(game, "Mechabellum_Data");
+        Directory.CreateDirectory(data);
+        File.WriteAllBytes(
+            Path.Combine(data, "globalgamemanagers"),
+            System.Text.Encoding.ASCII.GetBytes("xxxx" + unityVersion + "yyyy"));
+    }
+
     sealed class RecordingStarter : IProcessStarter
     {
         public List<string> Starts { get; } = new();
@@ -252,7 +307,19 @@ public class MainViewModelTests
             var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-" + Guid.NewGuid().ToString("N"));
             var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-game-" + Guid.NewGuid().ToString("N"));
             CreateReadyGame(gameRoot);
+            return CreateWithGame(dataRoot, gameRoot, highRisk);
+        }
 
+        public static Fixture CreateLoaderPresentAssembliesMissing(bool highRisk = false)
+        {
+            var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-" + Guid.NewGuid().ToString("N"));
+            var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-game-" + Guid.NewGuid().ToString("N"));
+            CreateLoaderMissingAssembliesGame(gameRoot);
+            return CreateWithGame(dataRoot, gameRoot, highRisk);
+        }
+
+        static Fixture CreateWithGame(string dataRoot, string gameRoot, bool highRisk)
+        {
             var fx = new Fixture(dataRoot, gameRoot);
             var pkgId = highRisk ? "cheat-aaaaaaaa" : "cam-aaaaaaaa";
             var displayName = highRisk ? "CheatCam" : "Cam";
@@ -323,6 +390,16 @@ public class MainViewModelTests
             Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "Il2CppAssemblies"));
             File.WriteAllText(Path.Combine(root, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
             File.WriteAllText(Path.Combine(root, "version.dll"), "");
+        }
+
+        static void CreateLoaderMissingAssembliesGame(string root)
+        {
+            Directory.CreateDirectory(root);
+            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
+            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
+            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "net6"));
+            File.WriteAllBytes(Path.Combine(root, "MelonLoader", "net6", "MelonLoader.dll"), new byte[] { 0x4D, 0x5A });
+            File.WriteAllBytes(Path.Combine(root, "version.dll"), new byte[] { 0x4D, 0x5A });
         }
     }
 }

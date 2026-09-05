@@ -293,7 +293,9 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
     public bool NeedsMelonLoaderInstall =>
-        GameStatus?.Kind is GameStatusKind.GameOkLoaderMissing or GameStatusKind.LoaderPartial;
+        GameStatus?.Kind is GameStatusKind.GameOkLoaderMissing
+            or GameStatusKind.LoaderPartial
+            or GameStatusKind.LoaderPresentAssembliesMissing;
 
     public bool CanDeployOrLaunch =>
         IsReady && !IsAwaitingSteamSettle && !IsBranchWizardBlocking && !IsBranchSwitchBusy;
@@ -686,11 +688,28 @@ public sealed partial class MainViewModel : ObservableObject
 
     void TryOptimizeMelonLoader(bool logAlways)
     {
-        if (GameStatus?.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPartial))
+        // Ready / assemblies-missing: seed then optimize (Case B repair via refresh).
+        // LoaderPartial: keep optimize for partial installs.
+        if (GameStatus?.Kind is not (
+            GameStatusKind.Ready or
+            GameStatusKind.LoaderPresentAssembliesMissing or
+            GameStatusKind.LoaderPartial))
             return;
 
         try
         {
+            if (GameStatus.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
+            {
+                var zip = MelonLoaderDualStoreSync.ResolveLocalZip();
+                var seed = _melonDualSync.SeedDependencies(
+                    GamePath,
+                    MelonLoaderDualStoreSync.DeriveRedistDirFromMelonZip(zip));
+                if (seed.Copied)
+                    AppendLog(seed.Message);
+                else if (!seed.Success && logAlways)
+                    AppendLog("警告：UnityDependencies 播种失败 — " + seed.Message);
+            }
+
             var result = _melonOptimizer.ApplyRecommendedSettings(GamePath);
             if (result.Changed || logAlways || !_loggedMelonOptimize)
             {

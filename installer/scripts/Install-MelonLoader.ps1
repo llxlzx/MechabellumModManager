@@ -184,7 +184,7 @@ if (Test-MelonLoaderInstalled -Root $GamePath) {
         Seed-UnityDependencies -Root $GamePath -Redist $RedistDir
         Apply-LoaderCfgOptimizations -Root $GamePath
     } catch {
-        Write-Host "Loader.cfg optimize skipped: $($_.Exception.Message)"
+        Write-Host "UnityDependencies seed / Loader.cfg optimize skipped: $($_.Exception.Message)"
     }
     exit 0
 }
@@ -270,7 +270,7 @@ try {
     Seed-UnityDependencies -Root $GamePath -Redist $RedistDir
     Apply-LoaderCfgOptimizations -Root $GamePath
 } catch {
-    Write-Host "Loader.cfg optimize skipped: $($_.Exception.Message)"
+    Write-Host "UnityDependencies seed / Loader.cfg optimize skipped: $($_.Exception.Message)"
 }
 
 if (-not (Test-MelonLoaderInstalled -Root $GamePath)) {
