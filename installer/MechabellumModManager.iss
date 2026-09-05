@@ -32,6 +32,13 @@ SetupLogging=yes
 ShowLanguageDialog=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
 InfoBeforeFile=
+CloseApplications=force
+CloseApplicationsFilter={#MyAppExeName}
+
+[Messages]
+english.SetupAppRunningError=Setup has detected that %1 is currently running.%n%nPlease close all instances of it now, then click OK to continue, or Cancel to exit.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.
+english.ApplicationsFound2=The following applications are using files that need to be updated by Setup. It is recommended that you allow Setup to automatically close these applications. After Setup has finished, Setup will attempt to restart the applications.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.
+english.ErrorCloseApplications=Setup was unable to automatically close all applications. It is recommended that you close all applications using files that need to be updated by Setup before continuing.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.
 
 [Languages]
 Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"; LicenseFile: "EULA.zh-CN.txt"
