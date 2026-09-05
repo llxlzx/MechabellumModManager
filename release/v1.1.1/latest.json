@@ -1,0 +1,6 @@
+{
+    "publishedAt":  "2026-09-05T07:00:00Z",
+    "version":  "1.1.1",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.1/MechabellumModManager_Setup_v1.1.1.exe",
+    "notes":  "修复未启用双服时残留向导导致「应用并启动」灰掉；覆盖安装即可，无需删配置文件。"
+}

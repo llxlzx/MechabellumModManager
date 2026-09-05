@@ -51,6 +51,30 @@
   <data name="ApplyAndLaunch" xml:space="preserve">
     <value>应用并启动</value>
   </data>
+  <data name="DeployBlockedAssembliesMissing" xml:space="preserve">
+    <value>尚未生成 Il2Cpp 程序集：请先启动一次游戏或同意生成程序集，完成后再应用方案。</value>
+  </data>
+  <data name="DeployBlockedLoaderMissing" xml:space="preserve">
+    <value>尚未安装 MelonLoader：请先点击「安装 MelonLoader」。</value>
+  </data>
+  <data name="DeployBlockedLoaderPartial" xml:space="preserve">
+    <value>MelonLoader 不完整：请重新安装 MelonLoader。</value>
+  </data>
+  <data name="DeployBlockedNotReady" xml:space="preserve">
+    <value>游戏或 MelonLoader 未就绪，无法部署。</value>
+  </data>
+  <data name="DeployBlockedAwaitingSteam" xml:space="preserve">
+    <value>正在等待 Steam 结算 / 双服切换确认，暂不可部署。</value>
+  </data>
+  <data name="DeployBlockedWizardIncomplete" xml:space="preserve">
+    <value>双服向导未完成，暂不可部署。请在设置中继续或拆除双服配置。</value>
+  </data>
+  <data name="DeployBlockedBusy" xml:space="preserve">
+    <value>正在执行双服操作，请稍候。</value>
+  </data>
+  <data name="DeployBlockedGeneric" xml:space="preserve">
+    <value>当前不可部署。</value>
+  </data>
   <data name="CheckUpdates" xml:space="preserve">
     <value>检查更新</value>
   </data>
@@ -272,6 +296,7 @@
   <data name="BranchSwitchHint" xml:space="preserve"><value>需要约两份游戏空间。测试分支名默认 public_test（与 Steam「属性 → 测试」一致，一般不用改）。向导会先另存当前服，再下载另一服，正式服不会被覆盖。</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>未配置</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>配置未完成</value></data>
+  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>向导未完成（不影响部署，可继续或移除）</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>等待 Steam 完成切换</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>正式服</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>测试服</value></data>

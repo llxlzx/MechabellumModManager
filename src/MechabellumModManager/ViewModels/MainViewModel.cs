@@ -251,11 +251,14 @@ public sealed partial class MainViewModel : ObservableObject
     string ResolveInitialGamePath(string? configured)
     {
         var branchCfg = _branchSwitch.LoadConfig();
-        var skipLocator = BranchSwitchEnabled
-            || IsBranchWizardBlocking
+        // Mid-wizard leaves Enabled=false but still owns SteamLinkPath — do not let locator overwrite it.
+        var wizardInProgress = branchCfg.WizardStep is not BranchWizardStep.None
+            and not BranchWizardStep.Ready;
+        var skipLocator = branchCfg.Enabled
+            || wizardInProgress
             || File.Exists(_paths.BranchSwitchJournalPath);
 
-        if ((BranchSwitchEnabled || skipLocator) && !string.IsNullOrWhiteSpace(branchCfg.SteamLinkPath))
+        if ((branchCfg.Enabled || skipLocator) && !string.IsNullOrWhiteSpace(branchCfg.SteamLinkPath))
             return Path.GetFullPath(branchCfg.SteamLinkPath);
 
         if (SteamGameLocator.LooksLikeGameRoot(configured))
@@ -317,16 +320,68 @@ public sealed partial class MainViewModel : ObservableObject
     public bool CanStartBranchWizard =>
         !IsAwaitingSteamSettle && !IsBranchSwitchBusy;
 
+    /// <summary>Wizard left mid-flight (Enabled may still be false until finish).</summary>
+    public bool IsBranchWizardInProgress =>
+        BranchWizardStep is not BranchWizardStep.None and not BranchWizardStep.Ready;
+
+    /// <summary>
+    /// Allow remove when dual-folder is on, or when a paused/abandoned wizard left residue.
+    /// </summary>
     public bool CanTeardownBranchSwitch =>
-        BranchSwitchEnabled && !IsAwaitingSteamSettle && !IsBranchSwitchBusy;
+        (BranchSwitchEnabled || IsBranchWizardInProgress)
+        && !IsAwaitingSteamSettle
+        && !IsBranchSwitchBusy;
 
     public string SettleConfirmButtonText =>
         DegradeToManualBeta
             ? LocalizationService.T("BranchSwitchConfirmManual")
             : LocalizationService.T("BranchSwitchConfirmSettle");
 
+    /// <summary>
+    /// Incomplete dual-folder wizard blocks deploy/launch.
+    /// Only when the feature is enabled — leftover wizardStep with Enabled=false must not brick deploy.
+    /// </summary>
     public bool IsBranchWizardBlocking =>
-        BranchWizardStep is not BranchWizardStep.None and not BranchWizardStep.Ready;
+        BranchSwitchEnabled && IsBranchWizardInProgress;
+
+    /// <summary>Why Apply / Apply-and-launch stay disabled (empty when allowed).</summary>
+    public string DeployBlockedReason
+    {
+        get
+        {
+            if (IsReady
+                && !IsAwaitingSteamSettle
+                && !IsBranchWizardBlocking
+                && !IsBranchSwitchBusy)
+                return "";
+
+            if (!IsReady)
+            {
+                return GameStatus?.Kind switch
+                {
+                    GameStatusKind.LoaderPresentAssembliesMissing =>
+                        LocalizationService.T("DeployBlockedAssembliesMissing"),
+                    GameStatusKind.GameOkLoaderMissing =>
+                        LocalizationService.T("DeployBlockedLoaderMissing"),
+                    GameStatusKind.LoaderPartial =>
+                        LocalizationService.T("DeployBlockedLoaderPartial"),
+                    _ => string.IsNullOrWhiteSpace(GameStatus?.Message)
+                        ? LocalizationService.T("DeployBlockedNotReady")
+                        : GameStatus.Message
+                };
+            }
+
+            if (IsAwaitingSteamSettle)
+                return LocalizationService.T("DeployBlockedAwaitingSteam");
+            if (IsBranchWizardBlocking)
+                return LocalizationService.T("DeployBlockedWizardIncomplete");
+            if (IsBranchSwitchBusy)
+                return LocalizationService.T("DeployBlockedBusy");
+            return LocalizationService.T("DeployBlockedGeneric");
+        }
+    }
+
+    public bool ShowDeployBlockedReason => !string.IsNullOrWhiteSpace(DeployBlockedReason);
 
     public string StatusKindLabel => GameStatus?.Kind switch
     {
@@ -1055,11 +1110,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     async Task TeardownBranchSwitch()
     {
-        if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
+        if (IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
+        if (!BranchSwitchEnabled && !IsBranchWizardInProgress) return;
         if (!Confirm(LocalizationService.T("ConfirmBranchTeardown")))
             return;
 
-        var deleteOther = Confirm(LocalizationService.T("ConfirmBranchDeleteOtherStore"), MessageBoxResult.No);
+        var deleteOther = BranchSwitchEnabled
+            && Confirm(LocalizationService.T("ConfirmBranchDeleteOtherStore"), MessageBoxResult.No);
         IsBranchSwitchBusy = true;
         try
         {
@@ -2958,6 +3015,9 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(CanApplyProfile));
         OnPropertyChanged(nameof(UseApplyAccent));
         OnPropertyChanged(nameof(IsBranchWizardBlocking));
+        OnPropertyChanged(nameof(IsBranchWizardInProgress));
+        OnPropertyChanged(nameof(DeployBlockedReason));
+        OnPropertyChanged(nameof(ShowDeployBlockedReason));
         OnPropertyChanged(nameof(CanSwitchGameBranch));
         OnPropertyChanged(nameof(CanStartBranchWizard));
         OnPropertyChanged(nameof(CanTeardownBranchSwitch));
@@ -2970,7 +3030,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!BranchSwitchEnabled)
             BranchStatusText = BranchWizardStep is BranchWizardStep.None
                 ? LocalizationService.T("BranchStatusUnconfigured")
-                : LocalizationService.T("BranchStatusIncomplete");
+                : LocalizationService.T("BranchStatusWizardPaused");
         else if (IsAwaitingSteamSettle || BranchWizardStep == BranchWizardStep.AwaitingSteamSettle)
             BranchStatusText = LocalizationService.T("BranchStatusWaitingSteam");
         else if (IsBranchWizardBlocking)
