@@ -407,6 +407,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (IsAwaitingSteamSettle || IsBranchWizardInProgress)
         {
             ActiveContentPage = MainContentPage.Settings;
+            ClearRecoveryGate();
             NotifyBranchGates();
             return;
         }
