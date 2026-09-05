@@ -2,9 +2,12 @@
 
 ### 中文
 - 胖安装包内嵌 MelonLoader + UnityDependencies_2022.3.62 + Cpp2IL + .NET 8 离线运行时
-- 首次安装 Melon 可播种 Unity 依赖与 Cpp2IL，无需 GitHub 下载即可走国内离线首启生成
-- force_offline_generation 仅在精确匹配依赖齐全时开启（避免缺 Cpp2IL 时 INTERNAL FAILURE）
+- 首次安装 Melon 可播种 Unity 依赖与 Cpp2IL，国内可离线首启生成
+- 修复「应用方案」：取消勾选 / 导入新 Mod 后可正确变亮并部署
+- 双服归档移动游戏目录遇「访问被拒绝」时自动重试，并补充占用排查提示
 
 ### English
-- Fat Setup: MelonLoader + UnityDependencies_2022.3.62 + Cpp2IL + .NET 8 Desktop Runtime offline
-- Seeds Unity deps and Cpp2IL on first Melon install; exact-match offline generation
+- Fat Setup: MelonLoader + UnityDependencies_2022.3.62 + Cpp2IL + .NET 8 offline
+- Seeds Unity deps and Cpp2IL for offline first Il2Cpp generation
+- Fix Apply profile staying disabled after uncheck / import
+- Retry game-directory move on access denied during dual-store archive

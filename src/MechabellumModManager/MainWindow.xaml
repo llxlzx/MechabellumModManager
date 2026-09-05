@@ -845,6 +845,7 @@
                                     Padding="12,8"
                                     Style="{StaticResource GhostButtonStyle}" />
                             <Button Command="{Binding ApplyProfileCommand}"
+                                    IsEnabled="{Binding CanApplyProfile}"
                                     MinHeight="32"
                                     MinWidth="96"
                                     Margin="8,0,0,0"

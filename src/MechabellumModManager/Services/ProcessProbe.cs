@@ -24,7 +24,10 @@ public sealed class ProcessProbe : IProcessProbe
     {
         // steam.exe can exit briefly while steamwebhelper is still shutting down / holding files.
         // Editing appmanifest in that window commonly crashes the Steam client on next start.
-        return HasProcess("steam") || HasProcess("steamwebhelper");
+        return HasProcess("steam")
+            || HasProcess("steamwebhelper")
+            || HasProcess("GameOverlayUI")
+            || HasProcess("steamerrorreporter");
     }
 
     public bool IsGameOrSteamRunning() => IsGameRunning() || IsSteamRunning();

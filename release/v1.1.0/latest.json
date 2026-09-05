@@ -1,6 +1,6 @@
 {
   "version": "1.1.0",
-  "notes": "胖安装包内嵌 MelonLoader + UnityDependencies_2022.3.62 + Cpp2IL + .NET 8；首次安装可在国内无 VPN 下播种依赖并精确匹配离线生成。 / Fat Setup embeds MelonLoader, UnityDependencies_2022.3.62, Cpp2IL, and .NET 8; exact-match offline Il2Cpp generation without VPN after install.",
+  "notes": "胖安装包内嵌 MelonLoader + UnityDependencies + Cpp2IL + .NET 8；修复「应用方案」勾选/导入后仍灰；双服移动目录访问拒绝时自动重试。 / Fat Setup: Melon+UnityDeps+Cpp2IL+.NET8; fix Apply staying disabled after toggle/import; retry game-folder move on access denied.",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.0/MechabellumModManager_Setup_v1.1.0.exe",
-  "publishedAt": "2026-09-05T05:08:24Z"
+  "publishedAt": "2026-09-05T06:21:48Z"
 }

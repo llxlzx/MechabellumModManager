@@ -751,6 +751,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var pkg = _library.ImportDll(path);
             AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
+            TryEnableImportedPackages(pkg);
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -770,6 +771,7 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 var pkg = _library.CommitStaging(ex.StagingPath, picked.Value);
                 AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
+                TryEnableImportedPackages(pkg);
                 ReloadMods();
                 UpdateLoaderVersionWarning();
                 UpdateFirstAssemblyWarning();
@@ -804,6 +806,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var pkgs = _library.ImportFolder(path);
             AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
+            TryEnableImportedPackages(pkgs);
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -824,6 +827,7 @@ public sealed partial class MainViewModel : ObservableObject
                 _library.DiscardStaging(ex.StagingPath);
                 var pkgs = _library.ImportFolder(path, picked.Value);
                 AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
+                TryEnableImportedPackages(pkgs);
                 ReloadMods();
                 UpdateLoaderVersionWarning();
                 UpdateFirstAssemblyWarning();
@@ -846,6 +850,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var pkgs = _library.ImportZip(path, forceType);
             AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
+            TryEnableImportedPackages(pkgs);
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -866,6 +871,7 @@ public sealed partial class MainViewModel : ObservableObject
                 _library.DiscardStaging(ex.StagingPath);
                 var pkgs = _library.ImportZip(path, picked.Value);
                 AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
+                TryEnableImportedPackages(pkgs);
                 ReloadMods();
                 UpdateLoaderVersionWarning();
                 UpdateFirstAssemblyWarning();
@@ -1434,7 +1440,10 @@ public sealed partial class MainViewModel : ObservableObject
                     AppendLog($"写入目录元数据失败：{metaEx.Message}");
                 }
 
-                AppendLog($"已从目录加入本地库：{pkg.DisplayName} ({pkg.Id})（未启用）");
+                var enabled = TryEnableImportedPackages(pkg);
+                AppendLog(enabled
+                    ? $"已从目录加入本地库并启用：{pkg.DisplayName} ({pkg.Id})"
+                    : $"已从目录加入本地库：{pkg.DisplayName} ({pkg.Id})（未启用）");
                 CatalogStatus = $"已加入本地库：{pkg.DisplayName}";
                 ReloadMods();
                 RefreshCatalogInLibraryFlags();
@@ -1792,6 +1801,40 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Enable newly imported packages on the active profile (skips high-risk unless confirmed).
+    /// Returns true if at least one package was enabled.
+    /// </summary>
+    bool TryEnableImportedPackages(params ModPackage[] packages) =>
+        TryEnableImportedPackages((IEnumerable<ModPackage>)packages);
+
+    bool TryEnableImportedPackages(IEnumerable<ModPackage> packages)
+    {
+        if (SelectedProfile is null) return false;
+        var any = false;
+        foreach (var pkg in packages)
+        {
+            if (pkg is null || string.IsNullOrWhiteSpace(pkg.Id)) continue;
+            if (!_riskGate.CanEnable(pkg.HighRisk, _confirmHighRisk))
+            {
+                AppendLog($"已导入高风险 Mod 但未启用：{pkg.DisplayName}");
+                continue;
+            }
+
+            try
+            {
+                _profiles.SetEnabled(SelectedProfile.Id, pkg.Id, true);
+                any = true;
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"自动启用 {pkg.DisplayName} 失败：{ex.Message}");
+            }
+        }
+
+        return any;
+    }
+
     public void OnModEnabledChanged(ModItemViewModel item, bool enabled)
     {
         if (SelectedProfile is null) return;
@@ -1806,7 +1849,8 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             _profiles.SetEnabled(SelectedProfile.Id, item.Package.Id, enabled);
-            IsDirty = true;
+            // Recompute from profile vs deploy manifest (includes enabled-id set, not only files).
+            RecomputeDirty();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
             AppendLog($"{(enabled ? "启用" : "禁用")}：{item.DisplayName}");
@@ -2138,13 +2182,32 @@ public sealed partial class MainViewModel : ObservableObject
         var desired = BuildDesiredEntries(profile, packages);
         var manifest = _store.LoadOrDefault(CurrentDeployManifestPath(), () => new DeployManifest());
 
+        var desiredIds = profile.EnabledPackageIds
+            .Where(id => packages.ContainsKey(id))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var actualIds = manifest.Files
+            .Select(f => f.PackageId)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
         if (!string.Equals(manifest.ProfileId, profile.Id, StringComparison.OrdinalIgnoreCase))
         {
-            IsDirty = desired.Count > 0 || manifest.Files.Count > 0;
+            IsDirty = desiredIds.Count > 0 || desired.Count > 0 || manifest.Files.Count > 0;
             return;
         }
 
         if (!PathsEqual(manifest.GamePath, GamePath))
+        {
+            IsDirty = true;
+            return;
+        }
+
+        if (desiredIds.Count != actualIds.Count ||
+            !desiredIds.SequenceEqual(actualIds, StringComparer.OrdinalIgnoreCase))
         {
             IsDirty = true;
             return;
