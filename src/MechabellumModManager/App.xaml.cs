@@ -10,6 +10,11 @@ namespace MechabellumModManager;
 
 public partial class App : Application
 {
+    BusyProgressDialog? _busyDialog;
+    Window? _busyOwner;
+    bool _busyOwnerWasEnabled = true;
+    bool _blockMainClose;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         if (InstallConfigSeeder.TryParseArgs(e.Args, out var seedGamePath, out var seedUiLanguage))
@@ -71,12 +76,50 @@ public partial class App : Application
         base.OnStartup(e);
 
         var window = new MainWindow();
+        window.Closing += (_, e) => { if (_blockMainClose) e.Cancel = true; };
         window.DataContext = ComposeMainViewModel(window);
         MainWindow = window;
         window.Show();
     }
 
-    static MainViewModel ComposeMainViewModel(MainWindow window)
+    void BeginBusy(Window owner, string title, string message)
+    {
+        if (_busyDialog is not null)
+        {
+            _busyDialog.Title = title;
+            _busyDialog.SetMessage(message);
+            return;
+        }
+
+        _busyOwner = owner;
+        _busyOwnerWasEnabled = owner.IsEnabled;
+        owner.IsEnabled = false;
+        _blockMainClose = true;
+
+        _busyDialog = new BusyProgressDialog { Owner = owner };
+        _busyDialog.Title = title;
+        _busyDialog.SetMessage(message);
+        _busyDialog.Show();
+    }
+
+    void SetBusyMessage(string message) => _busyDialog?.SetMessage(message);
+
+    void EndBusy()
+    {
+        _blockMainClose = false;
+        if (_busyDialog is not null)
+        {
+            _busyDialog.ForceClose();
+            _busyDialog = null;
+        }
+        if (_busyOwner is not null)
+        {
+            _busyOwner.IsEnabled = _busyOwnerWasEnabled;
+            _busyOwner = null;
+        }
+    }
+
+    MainViewModel ComposeMainViewModel(MainWindow window)
     {
         var store = new JsonStore();
         var paths = ResolvePaths(store);
@@ -126,7 +169,10 @@ public partial class App : Application
             processStarter: starter,
             promptExportDiagnostics: () => PromptExportDiagnostics(window),
             saveZipFile: suggestedName => SaveZipFile(window, suggestedName),
-            revealInExplorer: RevealInExplorer);
+            revealInExplorer: RevealInExplorer,
+            beginBusy: (title, msg) => BeginBusy(window, title, msg),
+            setBusyMessage: SetBusyMessage,
+            endBusy: EndBusy);
     }
 
     static PathsService ResolvePaths(JsonStore store)

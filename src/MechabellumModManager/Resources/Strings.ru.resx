@@ -426,4 +426,9 @@
   <data name="ExportDiagnosticsFailed" xml:space="preserve"><value>Не удалось экспортировать диагностику</value></data>
   <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Веб-почта открыта; вставьте черновик из буфера и приложите zip вручную.</value></data>
   <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail открыт; приложите zip вручную.</value></data>
+  <data name="BusyProgressTitle" xml:space="preserve"><value>Пожалуйста, подождите</value></data>
+  <data name="BusyWaitingSteam" xml:space="preserve"><value>Запрос выхода Steam / игры — не закрывайте менеджер…</value></data>
+  <data name="BusyMovingGameFolder" xml:space="preserve"><value>Перемещение папки игры — не закрывайте менеджер…</value></data>
+  <data name="BusyCreatingJunction" xml:space="preserve"><value>Создание связи каталогов — не закрывайте менеджер…</value></data>
+  <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Подготовка информации о ветке Steam — не закрывайте менеджер…</value></data>
 </root>
