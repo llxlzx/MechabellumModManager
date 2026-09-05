@@ -414,6 +414,46 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task Wizard_ends_busy_before_download_continue_confirm()
+    {
+        using var fx = Fixture.CreateWizardStart();
+        var events = new List<string>();
+        var vm = fx.CreateVm(
+            confirm: msg =>
+            {
+                if (msg.Contains("点「是」继续", StringComparison.Ordinal)
+                    || msg.Contains("click Yes", StringComparison.OrdinalIgnoreCase))
+                {
+                    events.Add("confirm:download-continue");
+                    Fixture.SeedGameRoot(fx.SteamLink, "downloaded");
+                }
+                else
+                {
+                    events.Add("confirm:other");
+                }
+
+                return !msg.Contains("删除另一", StringComparison.Ordinal);
+            },
+            promptText: _ => "publicbeta",
+            beginBusy: (_, m) => events.Add("begin:" + m),
+            setBusyMessage: _ => { },
+            endBusy: () => events.Add("end"));
+        vm.GamePath = fx.SteamLink;
+        vm.BetaBranchName = "publicbeta";
+
+        await vm.StartBranchWizardCommand.ExecuteAsync(null);
+
+        var downloadConfirmIdx = events.FindIndex(e => e == "confirm:download-continue");
+        downloadConfirmIdx.Should().BeGreaterThan(0, "wizard should reach download-continue confirm");
+        var prefix = events.Take(downloadConfirmIdx).ToList();
+        var lastEndBefore = prefix.FindLastIndex(e => e == "end");
+        var lastBeginBefore = prefix.FindLastIndex(e => e.StartsWith("begin:", StringComparison.Ordinal));
+        lastEndBefore.Should().BeGreaterThan(lastBeginBefore,
+            "segment A busy must end before download-continue confirm");
+        events.Count(e => e == "end").Should().Be(events.Count(e => e.StartsWith("begin:", StringComparison.Ordinal)));
+    }
+
+    [Fact]
     public async Task Wizard_archive_A_leaves_steam_link_empty_before_download_B()
     {
         using var fx = Fixture.CreateWizardStart();
