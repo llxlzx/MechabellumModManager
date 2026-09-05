@@ -345,6 +345,19 @@ public sealed partial class MainViewModel : ObservableObject
             IsAwaitingSteamSettle,
             IsWizardWaitingSteam);
 
+    internal async Task RunWithCriticalOpAsync(CriticalOpKind kind, string detail, Func<Task> action)
+    {
+        _criticalOp.Begin(kind, detail);
+        try
+        {
+            await action().ConfigureAwait(true);
+        }
+        finally
+        {
+            _criticalOp.Complete();
+        }
+    }
+
     public bool TryHandleWindowClosing(bool busyDialogOpen, out bool cancel)
     {
         var level = EvaluateCloseOrUpdateGate(busyDialogOpen);
@@ -1267,25 +1280,28 @@ public sealed partial class MainViewModel : ObservableObject
         AppendLog(LocalizationService.T("LogMelonInstallStart"));
         try
         {
-            MelonLoaderInstallResult result;
-            var zip = MelonLoaderDualStoreSync.ResolveLocalZip();
-            if (zip is not null)
+            await RunWithCriticalOpAsync(CriticalOpKind.MelonInstall, "MelonInstall", async () =>
             {
-                AppendLog(string.Format(LocalizationService.T("LogMelonInstallLocalZip"), zip));
-                result = await Task.Run(() => _melonDualSync.InstallFromZip(GamePath, zip)).ConfigureAwait(true);
-            }
-            else
-            {
-                AppendLog(LocalizationService.T("LogMelonInstallDownload"));
-                var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning());
-                result = await installer.InstallAsync(GamePath).ConfigureAwait(true);
-            }
+                MelonLoaderInstallResult result;
+                var zip = MelonLoaderDualStoreSync.ResolveLocalZip();
+                if (zip is not null)
+                {
+                    AppendLog(string.Format(LocalizationService.T("LogMelonInstallLocalZip"), zip));
+                    result = await Task.Run(() => _melonDualSync.InstallFromZip(GamePath, zip)).ConfigureAwait(true);
+                }
+                else
+                {
+                    AppendLog(LocalizationService.T("LogMelonInstallDownload"));
+                    var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning());
+                    result = await installer.InstallAsync(GamePath).ConfigureAwait(true);
+                }
 
-            AppendLog(result.Message);
-            _notify(result.Success
-                ? LocalizationService.T("NotifyMelonInstallOk")
-                : string.Format(LocalizationService.T("NotifyMelonInstallFailed"), result.Message));
-            RefreshStatusCore(offerAssemblyGeneratePrompt: true);
+                AppendLog(result.Message);
+                _notify(result.Success
+                    ? LocalizationService.T("NotifyMelonInstallOk")
+                    : string.Format(LocalizationService.T("NotifyMelonInstallFailed"), result.Message));
+                RefreshStatusCore(offerAssemblyGeneratePrompt: true);
+            }).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -2690,40 +2706,44 @@ public sealed partial class MainViewModel : ObservableObject
                 if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
                     return;
 
-                BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
-
-                var leaveBranch = ActiveGameBranch;
-                var snap = _branchSwitch.TrySnapshotSettledAcf(leaveBranch);
-                if (!snap.Success && !string.IsNullOrWhiteSpace(snap.Message))
-                    AppendLog($"切服前未保存 {leaveBranch} ACF 快照：{snap.Message}");
-
-                var swap = await Task.Run(() => _branchSwitch.TrySwapJunction(target)).ConfigureAwait(true);
-                if (!swap.Success)
+                var detail = target == GameBranch.Beta ? "SwitchToBeta" : "SwitchToOfficial";
+                await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, detail, async () =>
                 {
-                    AppendLog(string.IsNullOrWhiteSpace(swap.Message) ? LocalizationService.T("LogSwapFolderFailed") : swap.Message);
-                    return;
-                }
+                    BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
 
-                BusyMessage(LocalizationService.T("BusySwitchingSteamBranch"));
+                    var leaveBranch = ActiveGameBranch;
+                    var snap = _branchSwitch.TrySnapshotSettledAcf(leaveBranch);
+                    if (!snap.Success && !string.IsNullOrWhiteSpace(snap.Message))
+                        AppendLog($"切服前未保存 {leaveBranch} ACF 快照：{snap.Message}");
 
-                _suppressBranchSwitchSave = true;
-                try
-                {
-                    ActiveGameBranch = target;
-                }
-                finally
-                {
-                    _suppressBranchSwitchSave = false;
-                }
+                    var swap = await Task.Run(() => _branchSwitch.TrySwapJunction(target)).ConfigureAwait(true);
+                    if (!swap.Success)
+                    {
+                        AppendLog(string.IsNullOrWhiteSpace(swap.Message) ? LocalizationService.T("LogSwapFolderFailed") : swap.Message);
+                        return;
+                    }
 
-                SelectBoundProfile(target);
+                    BusyMessage(LocalizationService.T("BusySwitchingSteamBranch"));
 
-                silentResult = _branchSwitch.TryPrepareSteamBranchMetadata(target);
-                if (silentResult.Success
-                    && string.Equals(silentResult.Message, "restored-acf-snapshot", StringComparison.Ordinal))
-                {
-                    AppendLog("已恢复目标服 Steam 清单快照（避免重复下载）");
-                }
+                    _suppressBranchSwitchSave = true;
+                    try
+                    {
+                        ActiveGameBranch = target;
+                    }
+                    finally
+                    {
+                        _suppressBranchSwitchSave = false;
+                    }
+
+                    SelectBoundProfile(target);
+
+                    silentResult = _branchSwitch.TryPrepareSteamBranchMetadata(target);
+                    if (silentResult.Success
+                        && string.Equals(silentResult.Message, "restored-acf-snapshot", StringComparison.Ordinal))
+                    {
+                        AppendLog("已恢复目标服 Steam 清单快照（避免重复下载）");
+                    }
+                }).ConfigureAwait(true);
             }).ConfigureAwait(true);
 
             if (silentResult is not null)
@@ -2839,17 +2859,20 @@ public sealed partial class MainViewModel : ObservableObject
             if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
                 return;
 
-            BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
-            var archiveA = await Task.Run(() => _branchSwitch.ArchiveCurrentAs(current)).ConfigureAwait(true);
-            if (!archiveA.Success)
+            await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, "WizardArchiveA", async () =>
             {
-                segmentAFailure = string.IsNullOrWhiteSpace(archiveA.Message)
-                    ? LocalizationService.T("FailWizardArchiveCurrentFailed")
-                    : archiveA.Message;
-                return;
-            }
+                BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
+                var archiveA = await Task.Run(() => _branchSwitch.ArchiveCurrentAs(current)).ConfigureAwait(true);
+                if (!archiveA.Success)
+                {
+                    segmentAFailure = string.IsNullOrWhiteSpace(archiveA.Message)
+                        ? LocalizationService.T("FailWizardArchiveCurrentFailed")
+                        : archiveA.Message;
+                    return;
+                }
 
-            segmentAOk = true;
+                segmentAOk = true;
+            }).ConfigureAwait(true);
         }).ConfigureAwait(true);
 
         if (segmentAFailure is not null)
@@ -2916,28 +2939,31 @@ public sealed partial class MainViewModel : ObservableObject
             if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
                 return;
 
-            BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
-            var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
-            if (!archiveB.Success)
+            await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, "WizardArchiveB", async () =>
             {
-                segmentBcFailure = string.IsNullOrWhiteSpace(archiveB.Message)
-                    ? LocalizationService.T("FailWizardArchiveOtherFailed")
-                    : archiveB.Message;
-                return;
-            }
+                BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
+                var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
+                if (!archiveB.Success)
+                {
+                    segmentBcFailure = string.IsNullOrWhiteSpace(archiveB.Message)
+                        ? LocalizationService.T("FailWizardArchiveOtherFailed")
+                        : archiveB.Message;
+                    return;
+                }
 
-            BusyMessage(LocalizationService.T("BusyCreatingJunction"));
-            var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
-            if (!link.Success)
-            {
-                segmentBcFailure = string.IsNullOrWhiteSpace(link.Message)
-                    ? LocalizationService.T("FailWizardCreateLinkFailed")
-                    : link.Message;
-                return;
-            }
+                BusyMessage(LocalizationService.T("BusyCreatingJunction"));
+                var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
+                if (!link.Success)
+                {
+                    segmentBcFailure = string.IsNullOrWhiteSpace(link.Message)
+                        ? LocalizationService.T("FailWizardCreateLinkFailed")
+                        : link.Message;
+                    return;
+                }
 
-            ApplyLinkedWizardState(current);
-            linked = true;
+                ApplyLinkedWizardState(current);
+                linked = true;
+            }).ConfigureAwait(true);
         }).ConfigureAwait(true);
 
         if (segmentBcFailure is not null)
@@ -2968,17 +2994,20 @@ public sealed partial class MainViewModel : ObservableObject
         string? linkFailure = null;
         await RunBusyAsync(LocalizationService.T("BusyCreatingJunction"), async () =>
         {
-            var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
-            if (!link.Success)
+            await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, "WizardLink", async () =>
             {
-                linkFailure = string.IsNullOrWhiteSpace(link.Message)
-                    ? LocalizationService.T("FailWizardCreateLinkFailed")
-                    : link.Message;
-                return;
-            }
+                var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
+                if (!link.Success)
+                {
+                    linkFailure = string.IsNullOrWhiteSpace(link.Message)
+                        ? LocalizationService.T("FailWizardCreateLinkFailed")
+                        : link.Message;
+                    return;
+                }
 
-            ApplyLinkedWizardState(current);
-            linked = true;
+                ApplyLinkedWizardState(current);
+                linked = true;
+            }).ConfigureAwait(true);
         }).ConfigureAwait(true);
 
         if (linkFailure is not null)
@@ -3091,32 +3120,38 @@ public sealed partial class MainViewModel : ObservableObject
         if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
             return false;
 
-        var result = _branchSwitch.TryTeardown(deleteOtherStore);
-        if (!result.Success)
+        var ok = false;
+        await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, "Teardown", () =>
         {
-            FailWizard(string.IsNullOrWhiteSpace(result.Message) ? LocalizationService.T("FailWizardTeardownFailed") : result.Message);
-            return false;
-        }
+            var result = _branchSwitch.TryTeardown(deleteOtherStore);
+            if (!result.Success)
+            {
+                FailWizard(string.IsNullOrWhiteSpace(result.Message) ? LocalizationService.T("FailWizardTeardownFailed") : result.Message);
+                return Task.CompletedTask;
+            }
 
-        _suppressBranchSwitchSave = true;
-        try
-        {
-            BranchSwitchEnabled = false;
-            BranchWizardStep = BranchWizardStep.None;
-            IsAwaitingSteamSettle = false;
-            DegradeToManualBeta = false;
-        }
-        finally
-        {
-            _suppressBranchSwitchSave = false;
-        }
+            _suppressBranchSwitchSave = true;
+            try
+            {
+                BranchSwitchEnabled = false;
+                BranchWizardStep = BranchWizardStep.None;
+                IsAwaitingSteamSettle = false;
+                DegradeToManualBeta = false;
+            }
+            finally
+            {
+                _suppressBranchSwitchSave = false;
+            }
 
-        RefreshStatus();
-        NotifyBranchGates();
-        RefreshBranchStatusText();
-        AppendLog(LocalizationService.T("LogBranchTeardownDone"));
-        _notify(LocalizationService.T("NotifyBranchTeardownDone"));
-        return true;
+            RefreshStatus();
+            NotifyBranchGates();
+            RefreshBranchStatusText();
+            AppendLog(LocalizationService.T("LogBranchTeardownDone"));
+            _notify(LocalizationService.T("NotifyBranchTeardownDone"));
+            ok = true;
+            return Task.CompletedTask;
+        }).ConfigureAwait(true);
+        return ok;
     }
 
     void SetWizardStep(BranchWizardStep step)
