@@ -68,6 +68,18 @@ public static class InstallMelonLoaderCli
             if (!result.Success)
                 return 1;
 
+            // Prefer explicit --redist-dir for seed (covers Case B repair / odd zip layouts).
+            var seed = sync.SeedDependencies(gamePath.Trim(), string.IsNullOrWhiteSpace(redistDir) ? null : redistDir.Trim());
+            if (seed.Success)
+            {
+                Log(seed.Message);
+            }
+            else
+            {
+                Log("WARNING: UnityDependencies seed failed — " + seed.Message);
+                Log("MelonLoader is installed, but offline Il2Cpp generation may fail until UnityDependencies is seeded. Re-run Setup/repair with unity-deps redist.");
+            }
+
             var status = new GameDetector().Detect(gamePath.Trim());
             if (status.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
                 return 0;

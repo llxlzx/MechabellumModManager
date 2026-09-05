@@ -81,6 +81,51 @@ function Test-CanForceOfflineGeneration {
     return Test-Path -LiteralPath $zip
 }
 
+function Seed-UnityDependencies {
+    param(
+        [string] $Root,
+        [string] $Redist
+    )
+
+    $unityDepsDir = Join-Path $Redist "unity-deps"
+    if (-not (Test-Path -LiteralPath $unityDepsDir)) {
+        Write-Host "WARNING: UnityDependencies seed skipped — unity-deps not found under $Redist"
+        return
+    }
+
+    $version = Resolve-UnityMajorMinorPatch -Root $Root
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        $zips = @(Get-ChildItem -LiteralPath $unityDepsDir -Filter "UnityDependencies_*.zip" -File -ErrorAction SilentlyContinue)
+        if ($zips.Count -eq 1) {
+            $m = [regex]::Match($zips[0].Name, '^UnityDependencies_(.+)\.zip$', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+            if ($m.Success) {
+                $norm = [regex]::Match($m.Groups[1].Value, '^\s*(\d+)\.(\d+)\.(\d+)\s*$')
+                if ($norm.Success) {
+                    $version = "$($norm.Groups[1].Value).$($norm.Groups[2].Value).$($norm.Groups[3].Value)"
+                    Write-Host "Unity version unresolved; falling back to sole redist zip: $version"
+                }
+            }
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        Write-Host "WARNING: UnityDependencies seed skipped — cannot resolve Unity version and no unique redist zip."
+        return
+    }
+
+    $src = Join-Path $unityDepsDir "UnityDependencies_$version.zip"
+    if (-not (Test-Path -LiteralPath $src)) {
+        Write-Host "WARNING: UnityDependencies seed failed — missing $src"
+        return
+    }
+
+    $destDir = Join-Path $Root "MelonLoader\Dependencies\Il2CppAssemblyGenerator"
+    New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    $dest = Join-Path $destDir "UnityDependencies_$version.zip"
+    Copy-Item -LiteralPath $src -Destination $dest -Force
+    Write-Host "Seeded UnityDependencies_$version.zip into Il2CppAssemblyGenerator"
+}
+
 function Apply-LoaderCfgOptimizations {
     param([string] $Root)
     $userData = Join-Path $Root "UserData"
@@ -136,6 +181,7 @@ if (@(Get-Process -Name "Mechabellum" -ErrorAction SilentlyContinue).Count -gt 0
 if (Test-MelonLoaderInstalled -Root $GamePath) {
     Write-Host "Skip MelonLoader — already installed at $GamePath"
     try {
+        Seed-UnityDependencies -Root $GamePath -Redist $RedistDir
         Apply-LoaderCfgOptimizations -Root $GamePath
     } catch {
         Write-Host "Loader.cfg optimize skipped: $($_.Exception.Message)"
@@ -220,6 +266,8 @@ $($_.Exception.Message)
 }
 
 try {
+    # Seed matching zip BEFORE Loader.cfg optimize so force_offline_generation can become true.
+    Seed-UnityDependencies -Root $GamePath -Redist $RedistDir
     Apply-LoaderCfgOptimizations -Root $GamePath
 } catch {
     Write-Host "Loader.cfg optimize skipped: $($_.Exception.Message)"
