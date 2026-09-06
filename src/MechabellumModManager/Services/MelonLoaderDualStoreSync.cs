@@ -47,6 +47,23 @@ public sealed class MelonLoaderDualStoreSync
         if (status.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
         {
             var zipReady = ResolveLocalZip(localZipPath);
+            if (!string.IsNullOrWhiteSpace(zipReady)
+                && MelonLoaderVersionGate.ShouldUpgradeInstalled(status.MelonLoaderVersion))
+            {
+                var upgraded = InstallFromZip(gamePath, zipReady);
+                if (upgraded.Success)
+                {
+                    return new MelonLoaderInstallResult
+                    {
+                        Success = true,
+                        Message = $"已将 MelonLoader 升级到内置包（最低 {MelonLoaderVersionGate.BundledMinimum}）。\n"
+                                  + upgraded.Message
+                    };
+                }
+
+                return upgraded;
+            }
+
             var seedReady = SeedDependencies(gamePath, DeriveRedistDirFromMelonZip(zipReady));
             // Re-apply after seed so offline can flip true when zip just landed (incl. seed.Version fallback).
             var optimizeReady = seedReady.Success && seedReady.Version != null
