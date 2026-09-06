@@ -31,13 +31,21 @@ public static class BranchStoreHealth
     }
 
     /// <summary>
+    /// Disk side of WaitingDownloadB readiness (ignores Steam/game process).
+    /// </summary>
+    public static bool IsWizardDownloadDiskReady(string? steamLinkPath, string? acfText)
+    {
+        var health = Evaluate(steamLinkPath, acfText);
+        return health.CanPromoteReady;
+    }
+
+    /// <summary>
     /// Wizard WaitingDownloadB auto-continue: complete root + settled ACF + Steam/game not running.
     /// </summary>
     public static bool IsWizardDownloadReady(string? steamLinkPath, string? acfText, bool steamOrGameRunning)
     {
         if (steamOrGameRunning)
             return false;
-        var health = Evaluate(steamLinkPath, acfText);
-        return health.CanPromoteReady;
+        return IsWizardDownloadDiskReady(steamLinkPath, acfText);
     }
 }

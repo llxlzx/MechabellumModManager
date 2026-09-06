@@ -428,7 +428,8 @@
   <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>请自行打开 Steam 完成下载/校验（若需要）。管理器不会自动启动 Steam，以免弹出账户选择器并挡住「继续」。就绪后点结算继续。</value></data>
   <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>管理器已在运行。请使用已打开的窗口。</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>请自行打开 Steam 下载另一服；管理器不会自动启动 Steam。</value></data>
-  <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>正在等待另一服下载完成：请自行打开 Steam 下载，完成后退出 Steam。管理器检测到完整安装后将自动继续，无需点「是」。</value></data>
+  <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>正在等待另一服下载：请自行在 Steam 下载。下完后请完全退出 Steam（托盘→退出），管理器会自动继续。点「确定」只关闭本提示，不会中断等待。</value></data>
+  <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>另一服已下载完成：请完全退出 Steam（托盘→退出），退出后将自动继续</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>已检测到另一服下载完成且 Steam 已退出，自动继续双目录向导。</value></data>
   <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>已恢复 Steam 清单快照，无需自动启动 Steam。游戏就绪后可直接点「继续」。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
@@ -493,7 +494,7 @@
   <data name="TaskMessageMelonInstallLocal" xml:space="preserve"><value>正在从本地离线包安装 MelonLoader…</value></data>
   <data name="NotifySessionLocked" xml:space="preserve"><value>当前有未完成任务，请先完成或取消后再试。</value></data>
   <data name="TaskMessageCatalogRefresh" xml:space="preserve"><value>正在从网络拉取目录…</value></data>
-  <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>请在 Steam 下载另一服并退出 Steam；检测完整后将自动继续（无需点「是」）</value></data>
+  <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>请在 Steam 下载另一服；下完后完全退出 Steam，管理器将自动继续</value></data>
   <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>正在检查更新</value></data>
 
   <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam 已切换到正式服，继续</value></data>

@@ -3350,7 +3350,7 @@ public sealed partial class MainViewModel : ObservableObject
             var title = LocalizationService.T("TaskTitleBranchWizard");
             var msg = BranchWizardStep switch
             {
-                BranchWizardStep.WaitingDownloadB => LocalizationService.T("TaskMessageWizardWaitingDownload"),
+                BranchWizardStep.WaitingDownloadB => ResolveWizardWaitingDownloadTaskMessage(),
                 BranchWizardStep.AwaitingSteamSettle => LocalizationService.T("TaskMessageBranchSettle"),
                 _ => LocalizationService.T("TaskMessageWizardInProgress")
             };
@@ -3734,6 +3734,9 @@ public sealed partial class MainViewModel : ObservableObject
                     return;
                 }
 
+                // Refresh sticky strip so "download done — exit Steam" appears while still waiting.
+                SyncStickyBranchTaskStrip();
+
                 await _delay(interval).ConfigureAwait(true);
                 // Floor pacing: fixtures often inject delay => Task.CompletedTask.
                 await Task.Delay(250, token).ConfigureAwait(true);
@@ -3772,6 +3775,35 @@ public sealed partial class MainViewModel : ObservableObject
         {
             return false;
         }
+    }
+
+    bool IsWizardDownloadDiskReadyNow()
+    {
+        try
+        {
+            var cfg = _branchSwitch.LoadConfig();
+            var link = cfg.SteamLinkPath;
+            string? acfText = null;
+            if (!string.IsNullOrWhiteSpace(link))
+            {
+                var acfPath = SteamBetaKeyEditor.FindAppManifestPath(link);
+                if (File.Exists(acfPath))
+                    acfText = File.ReadAllText(acfPath);
+            }
+
+            return BranchStoreHealth.IsWizardDownloadDiskReady(link, acfText);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    string ResolveWizardWaitingDownloadTaskMessage()
+    {
+        if (IsWizardDownloadDiskReadyNow() && _processProbe.IsGameOrSteamRunning())
+            return LocalizationService.T("TaskMessageWizardWaitingExitSteam");
+        return LocalizationService.T("TaskMessageWizardWaitingDownload");
     }
 
     async Task CompleteWizardAfterDownloadBAsync(GameBranch current)
@@ -4406,7 +4438,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     void RefreshBranchStatusText()
     {
-        if (!BranchSwitchEnabled)
+        if (BranchWizardStep == BranchWizardStep.WaitingDownloadB)
+        {
+            BranchStatusText = ResolveWizardWaitingDownloadTaskMessage();
+        }
+        else if (!BranchSwitchEnabled)
             BranchStatusText = BranchWizardStep is BranchWizardStep.None
                 ? LocalizationService.T("BranchStatusUnconfigured")
                 : LocalizationService.T("BranchStatusWizardPaused");
