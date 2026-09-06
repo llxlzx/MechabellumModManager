@@ -312,6 +312,31 @@ public class SteamBetaKeyEditorTests
     }
 
     [Fact]
+    public void LooksUpdateUnhealthy_detects_518_idle_hang()
+    {
+        var acf =
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"StateFlags"		"518"
+            	"buildid"		"100"
+            	"TargetBuildID"		"0"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            	"BytesToStage"		"0"
+            	"BytesStaged"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksUpdateUnhealthy(acf).Should().BeTrue();
+        SteamBetaKeyEditor.LooksSettledForSnapshot(acf).Should().BeFalse();
+        SteamBetaKeyEditor.DecodeStateFlags("518")
+            .Should().Contain("UpdateRequired")
+            .And.Contain("FullyInstalled")
+            .And.Contain("UpdateStarted");
+    }
+
+    [Fact]
     public void ProcessProbe_can_be_injected()
     {
         var editor = new SteamBetaKeyEditor(new ProcessProbe());

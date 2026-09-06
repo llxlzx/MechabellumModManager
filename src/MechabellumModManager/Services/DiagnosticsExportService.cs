@@ -149,10 +149,28 @@ public sealed class DiagnosticsExportService
             // JSON escapes backslashes; run Redact again for any residual path forms in the document.
             WriteText(staging, "environment.json", redact ? RedactJsonDocument(envJson) : envJson, redact: false);
 
+            var findings = DiagnosticsSummaryBuilder.ExtractFindings(env);
+            var sessionText = request.SessionLogText ?? "";
+            string? managerTail = null;
+            try
+            {
+                var today = Path.Combine(request.Paths.LogsDir, $"manager-{DateTime.Now:yyyyMMdd}.log");
+                if (File.Exists(today))
+                    managerTail = File.ReadAllText(today);
+            }
+            catch { /* ignore */ }
+
+            var summary = DiagnosticsSummaryBuilder.Build(request, findings, sessionText, managerTail);
+            WriteText(staging, "summary.md", redact ? Redact(summary) : summary, redact: false);
+
+            var timeline = DiagnosticsTimelineBuilder.BuildJsonl(sessionText, managerTail);
+            if (!string.IsNullOrWhiteSpace(timeline))
+                WriteText(staging, "timeline.jsonl", redact ? Redact(timeline) : timeline, redact: false);
+
             var readme =
                 "Mechabellum Mod Manager diagnostics pack\n" +
                 $"Redaction: {(redact ? "strong" : "none")}\n" +
-                "Send this zip to llxmod@foxmail.com (attach the file manually).\n" +
+                "Read summary.md first, then send this zip to llxmod@foxmail.com (attach the file manually).\n" +
                 "mailto cannot attach local files automatically.\n";
             if (missing.Count > 0)
                 readme += "Missing:\n- " + string.Join("\n- ", missing) + "\n";

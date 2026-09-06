@@ -265,6 +265,55 @@ public class MainViewModelBranchSwitchTests
             "Apply may succeed; unsettle ACF must still block ClearSteamSettle");
     }
 
+    [Fact]
+    public async Task ConfirmManualBeta_blocks_when_update_unhealthy_518()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.AwaitingSteamSettle,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Beta,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirm: _ => true, notify: notes.Add);
+        vm.GamePath = fx.SteamLink;
+        vm.IsAwaitingSteamSettle = true;
+        vm.BranchWizardStep = BranchWizardStep.AwaitingSteamSettle;
+
+        var steamapps = Path.GetDirectoryName(Path.GetDirectoryName(fx.SteamLink))!;
+        File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"StateFlags"		"518"
+            	"buildid"		"100"
+            	"TargetBuildID"		"0"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            	"BytesToStage"		"0"
+            	"BytesStaged"		"0"
+            	"UserConfig"
+            	{
+            		"BetaKey"		"publicbeta"
+            	}
+            }
+            """);
+
+        await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
+
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        notes.Should().Contain(LocalizationService.T("NotifySettleBlockedUpdateUnhealthy"));
+    }
+
     static void WriteSettledAcf(Fixture fx, string? betaKey)
     {
         var acf = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", "..", "appmanifest_669330.acf"));
@@ -769,6 +818,44 @@ public class MainViewModelBranchSwitchTests
         vm.IsAwaitingSteamSettle.Should().BeTrue();
         File.ReadAllText(fx.Paths.GetDeployManifestPath(GameBranch.Official, enabled: true))
             .Should().Be("""{"gamePath":"legacy"}""");
+    }
+
+    [Fact]
+    public async Task Teardown_from_Beta_switches_Official_first_then_tears_down()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.Junctions.DeleteJunction(fx.SteamLink);
+        fx.Junctions.CreateJunction(fx.SteamLink, fx.BetaStore);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Beta,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+
+        var busy = new List<string>();
+        var vm = fx.CreateVm(
+            confirm: msg => !msg.Contains("删除另一", StringComparison.Ordinal),
+            beginBusy: (_, msg) => busy.Add(msg));
+        vm.GamePath = fx.SteamLink;
+
+        await vm.TeardownBranchSwitchCommand.ExecuteAsync(null);
+
+        busy.Should().Contain(LocalizationService.T("BusySwitchingToOfficialForTeardown"));
+        busy.Should().Contain(LocalizationService.T("BusyTeardownDualFolder"));
+        vm.BranchSwitchEnabled.Should().BeFalse();
+        fx.Junctions.IsJunction(fx.SteamLink).Should().BeFalse();
+        Directory.Exists(fx.SteamLink).Should().BeTrue();
+        File.ReadAllText(Path.Combine(fx.SteamLink, "marker.txt")).Should().Be("official");
+        var acf = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(fx.SteamLink))!, "appmanifest_669330.acf"));
+        // Official prep clears BetaKey
+        acf.Should().NotContain("BetaKey");
     }
 
     [Fact]

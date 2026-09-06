@@ -51,6 +51,13 @@ public partial class App : Application
             return;
         }
 
+        if (SanitizeAcfSnapshotsCli.TryParseArgs(e.Args, out var snapshotsDir, out var betaBranchName))
+        {
+            var code = SanitizeAcfSnapshotsCli.Run(snapshotsDir, betaBranchName);
+            Shutdown(code);
+            return;
+        }
+
         DispatcherUnhandledException += (_, args) =>
         {
             try
@@ -210,7 +217,12 @@ public partial class App : Application
             beginBusy: (title, msg) => BeginBusy(window, title, msg),
             setBusyMessage: SetBusyMessage,
             endBusy: EndBusy,
-            criticalOp: criticalOp);
+            criticalOp: criticalOp,
+            requestProcessExit: () =>
+            {
+                EndBusy();
+                try { Current.Shutdown(); } catch { /* ignore */ }
+            });
     }
 
     static PathsService ResolvePaths(JsonStore store)

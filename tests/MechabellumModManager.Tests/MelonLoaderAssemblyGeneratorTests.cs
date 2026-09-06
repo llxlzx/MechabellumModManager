@@ -5,6 +5,33 @@ using MechabellumModManager.Services;
 public class MelonLoaderAssemblyGeneratorTests
 {
     [Fact]
+    public async Task EnsureAssemblies_cancel_returns_fail_without_throw()
+    {
+        var root = SeedStore(withAssemblies: false);
+        try
+        {
+            using var cts = new CancellationTokenSource();
+            var gen = new MelonLoaderAssemblyGenerator(
+                startProcess: _ => null,
+                delay: async (ts, ct) =>
+                {
+                    cts.Cancel();
+                    await Task.Delay(5, ct);
+                });
+
+            var result = await gen.EnsureAssembliesAsync(
+                root,
+                timeout: TimeSpan.FromSeconds(5),
+                pollInterval: TimeSpan.FromMilliseconds(20),
+                cancellationToken: cts.Token);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Contain("取消");
+        }
+        finally { TryDelete(root); }
+    }
+
+    [Fact]
     public async Task EnsureAssemblies_skips_when_already_Ready()
     {
         var root = SeedStore(withAssemblies: true);

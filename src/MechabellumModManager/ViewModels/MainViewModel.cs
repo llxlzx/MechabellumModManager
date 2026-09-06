@@ -81,6 +81,8 @@ public sealed partial class MainViewModel : ObservableObject
     bool _reporting;
     bool _exportingDiagnostics;
     bool _suppressFilterRefresh;
+    CancellationTokenSource? _busyWorkCts;
+    Action? _requestProcessExit;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -132,7 +134,8 @@ public sealed partial class MainViewModel : ObservableObject
         Action<string, string>? beginBusy = null,
         Action<string>? setBusyMessage = null,
         Action? endBusy = null,
-        CriticalOpGuard? criticalOp = null)
+        CriticalOpGuard? criticalOp = null,
+        Action? requestProcessExit = null)
     {
         _paths = paths;
         _store = store;
@@ -147,6 +150,7 @@ public sealed partial class MainViewModel : ObservableObject
         _melonAssemblyGenerator = melonAssemblyGenerator ?? new MelonLoaderAssemblyGenerator();
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         _steamLocator = steamLocator ?? new SteamGameLocator();
+        _requestProcessExit = requestProcessExit;
         _updateChecker = updateChecker ?? new UpdateChecker();
         _catalog = catalog ?? new ModCatalogService();
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
@@ -525,6 +529,8 @@ public sealed partial class MainViewModel : ObservableObject
                 return true;
             }
 
+            CancelBusyWork();
+            try { _requestProcessExit?.Invoke(); } catch { /* ignore */ }
             cancel = false;
             return false;
         }
@@ -533,10 +539,17 @@ public sealed partial class MainViewModel : ObservableObject
         return false;
     }
 
+    public void CancelBusyWork()
+    {
+        try { _busyWorkCts?.Cancel(); } catch { /* ignore */ }
+    }
+
     string SoftGateStateLabel() =>
         IsWizardWaitingSteam
             ? LocalizationService.T("TaskTitleBranchWizard")
-            : ActiveBranchDisplayName;
+            : HasCurrentTask && !string.IsNullOrWhiteSpace(TaskTitle)
+                ? TaskTitle
+                : ActiveBranchDisplayName;
 
     public bool HasCurrentTask => _taskProgress.HasTask;
     public string TaskTitle => _taskProgress.Title;
@@ -1440,7 +1453,30 @@ public sealed partial class MainViewModel : ObservableObject
         IsBranchSwitchBusy = true;
         try
         {
-            await RunTeardownCoreAsync(deleteOther).ConfigureAwait(true);
+            if (BranchSwitchEnabled && ActiveGameBranch != GameBranch.Official)
+            {
+                var switched = false;
+                await RunBusyAsync(LocalizationService.T("BusySwitchingToOfficialForTeardown"), async () =>
+                {
+                    switched = await SwitchToOfficialForTeardownCoreAsync().ConfigureAwait(true);
+                }).ConfigureAwait(true);
+
+                if (!switched)
+                    return;
+
+                if (IsAwaitingSteamSettle)
+                {
+                    var wait = LocalizationService.T("NotifyTeardownAbortedAwaitSettle");
+                    AppendLog(wait);
+                    _notify(wait);
+                    return;
+                }
+            }
+
+            await RunBusyAsync(LocalizationService.T("BusyTeardownDualFolder"), async () =>
+            {
+                await RunTeardownCoreAsync(deleteOther).ConfigureAwait(true);
+            }).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -1453,6 +1489,70 @@ public sealed partial class MainViewModel : ObservableObject
             NotifyBranchGates();
             RefreshBranchStatusText();
         }
+    }
+
+    /// <summary>
+    /// Swap + Steam metadata to Official without confirm / Melon gen / Steam restart.
+    /// Used before teardown so we never dissolve dual-folder while Beta is live.
+    /// </summary>
+    async Task<bool> SwitchToOfficialForTeardownCoreAsync()
+    {
+        if (_branchSwitch.IsAlignedWith(GameBranch.Official))
+        {
+            _suppressBranchSwitchSave = true;
+            try { ActiveGameBranch = GameBranch.Official; }
+            finally { _suppressBranchSwitchSave = false; }
+            return true;
+        }
+
+        if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
+            return false;
+
+        var prepOk = false;
+        var needsSettle = false;
+        await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, "TeardownSwitchOfficial", async () =>
+        {
+            BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
+
+            var leaveBranch = ActiveGameBranch;
+            var snap = _branchSwitch.TrySnapshotSettledAcf(leaveBranch);
+            if (!snap.Success && !string.IsNullOrWhiteSpace(snap.Message))
+                AppendLog($"切服前未保存 {leaveBranch} ACF 快照：{snap.Message}");
+
+            var swap = await Task.Run(() => _branchSwitch.TrySwapJunction(GameBranch.Official)).ConfigureAwait(true);
+            if (!swap.Success)
+            {
+                AppendLog(MapBranchOperationFailure(swap.Message, LocalizationService.T("LogSwapFolderFailed")));
+                return;
+            }
+
+            BusyMessage(LocalizationService.T("BusySwitchingSteamBranch"));
+
+            _suppressBranchSwitchSave = true;
+            try { ActiveGameBranch = GameBranch.Official; }
+            finally { _suppressBranchSwitchSave = false; }
+
+            SelectBoundProfile(GameBranch.Official);
+
+            var prep = _branchSwitch.TryPrepareSteamBranchMetadata(GameBranch.Official);
+            if (!prep.Success || prep.DegradeToManualBeta)
+            {
+                needsSettle = true;
+                if (!string.IsNullOrWhiteSpace(prep.Message))
+                    AppendLog(prep.Message);
+                EnterSteamSettle();
+                DegradeToManualBeta = true;
+                _notify(LocalizationService.T("NotifyTeardownAbortedAwaitSettle"));
+                return;
+            }
+
+            if (string.Equals(prep.Message, "restored-acf-snapshot", StringComparison.Ordinal))
+                AppendLog("已恢复正式服 Steam 清单快照（解除双服前）");
+
+            prepOk = true;
+        }).ConfigureAwait(true);
+
+        return prepOk && !needsSettle;
     }
 
     [RelayCommand]
@@ -1846,12 +1946,14 @@ public sealed partial class MainViewModel : ObservableObject
                 TryCopyText);
 
             var saved = string.Format(Ui.ExportDiagnosticsSaved, result.ZipPath ?? zipPath);
+            var summaryHint = LocalizationService.T("ExportDiagnosticsSummaryHint");
             AppendLog(saved);
+            AppendLog(summaryHint);
 
             if (!ok)
             {
                 AppendLog($"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
-                _notify($"{saved}\n{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
+                _notify($"{saved}\n{summaryHint}\n{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
                 return;
             }
 
@@ -1859,7 +1961,7 @@ public sealed partial class MainViewModel : ObservableObject
                 ? Ui.ExportDiagnosticsMailOpenedDomestic
                 : Ui.ExportDiagnosticsMailOpenedInternational;
             AppendLog($"{mailMsg}\n{GitHubCommunityLinks.Inbox}");
-            _notify($"{saved}\n{mailMsg}");
+            _notify($"{saved}\n{summaryHint}\n{mailMsg}");
         }
         catch (Exception ex)
         {
@@ -3076,10 +3178,23 @@ public sealed partial class MainViewModel : ObservableObject
 
     async Task RunBusyAsync(string initialMessage, Func<Task> work)
     {
+        var prev = _busyWorkCts;
+        var cts = new CancellationTokenSource();
+        _busyWorkCts = cts;
+        try { prev?.Dispose(); } catch { /* ignore */ }
+
         BusyBegin(initialMessage);
         try { await work().ConfigureAwait(true); }
-        finally { BusyEnd(); }
+        finally
+        {
+            BusyEnd();
+            if (ReferenceEquals(_busyWorkCts, cts))
+                _busyWorkCts = null;
+            try { cts.Dispose(); } catch { /* ignore */ }
+        }
     }
+
+    CancellationToken BusyWorkToken => _busyWorkCts?.Token ?? CancellationToken.None;
 
     void NotifyTaskProgress()
     {
@@ -3615,7 +3730,7 @@ public sealed partial class MainViewModel : ObservableObject
         // Await (do not GetResult) so the WPF dispatcher stays responsive while Unity runs.
         // Blocking the UI thread previously caused Win32Exception 1816 (not enough quota) crashes.
         var gen = await _melonAssemblyGenerator
-            .EnsureAssembliesAsync(storePath, progress: Progress)
+            .EnsureAssembliesAsync(storePath, progress: Progress, cancellationToken: BusyWorkToken)
             .ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(gen.Message))
@@ -3898,6 +4013,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     void DeployBoundProfileAndClearSettle()
     {
+        if (TryBlockSettleWhenUpdateUnhealthy())
+            return;
+
         SelectBoundProfile(ActiveGameBranch);
 
         RefreshStatusCore(offerAssemblyGeneratePrompt: false);
@@ -3948,6 +4066,40 @@ public sealed partial class MainViewModel : ObservableObject
 
         AppendLog($"已保存 {ActiveGameBranch} Steam 清单快照，供下次切服免下载");
         ClearSteamSettle();
+    }
+
+    bool TryBlockSettleWhenUpdateUnhealthy()
+    {
+        try
+        {
+            var link = string.IsNullOrWhiteSpace(GamePath)
+                ? _branchSwitch.LoadConfig().SteamLinkPath
+                : GamePath;
+            if (string.IsNullOrWhiteSpace(link))
+                return false;
+
+            var acfPath = SteamBetaKeyEditor.FindAppManifestPath(link);
+            if (!File.Exists(acfPath))
+                return false;
+
+            var text = File.ReadAllText(acfPath);
+            if (!SteamBetaKeyEditor.LooksUpdateUnhealthy(text))
+                return false;
+
+            var flags = SteamBetaKeyEditor.DecodeStateFlags(
+                SteamBetaKeyEditor.ReadQuotedValue(text, "StateFlags"));
+            var msg = LocalizationService.T("NotifySettleBlockedUpdateUnhealthy");
+            AppendLog(msg);
+            if (!string.IsNullOrWhiteSpace(flags))
+                AppendLog($"StateFlags: {flags}");
+            _notify(msg);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"检查 Steam 更新状态失败：{ex.Message}");
+            return false;
+        }
     }
 
     void ClearSteamSettle()

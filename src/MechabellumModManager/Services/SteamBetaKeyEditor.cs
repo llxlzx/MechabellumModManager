@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -94,6 +95,9 @@ public sealed class SteamBetaKeyEditor
         if (string.IsNullOrWhiteSpace(acfText))
             return false;
 
+        if (LooksUpdateUnhealthy(acfText))
+            return false;
+
         // Steam often leaves BytesToDownload as the last completed transfer size (not "0").
         // Treat completed when remaining is zero OR downloaded already equals to-download.
         var bytesToDownload = ReadQuotedValue(acfText, "BytesToDownload") ?? "0";
@@ -130,6 +134,92 @@ public sealed class SteamBetaKeyEditor
         return true;
     }
 
+    /// <summary>
+    /// Steam stuck/failed update pattern seen in the field: UpdateRequired|FullyInstalled|UpdateStarted (518)
+    /// with TargetBuildID 0 and zero byte counters.
+    /// </summary>
+    public static bool LooksUpdateUnhealthy(string acfText)
+    {
+        if (string.IsNullOrWhiteSpace(acfText))
+            return false;
+
+        if (!TryParseStateFlags(acfText, out var flags))
+            return false;
+
+        const int updateRequired = 2;
+        const int updateStarted = 512;
+        const int updateRunning = 256;
+        const int validating = 8192;
+        const int downloading = 65536;
+
+        var updatingBits = updateRequired | updateStarted | updateRunning | validating | downloading;
+        if ((flags & updatingBits) == 0)
+            return false;
+
+        var bytesToDownload = ReadQuotedValue(acfText, "BytesToDownload") ?? "0";
+        var bytesDownloaded = ReadQuotedValue(acfText, "BytesDownloaded") ?? "0";
+        var bytesToStage = ReadQuotedValue(acfText, "BytesToStage") ?? "0";
+        var bytesStaged = ReadQuotedValue(acfText, "BytesStaged") ?? "0";
+        var targetBuildId = ReadQuotedValue(acfText, "TargetBuildID") ?? "";
+
+        var bytesIdle =
+            bytesToDownload is "0" or ""
+            && bytesDownloaded is "0" or ""
+            && bytesToStage is "0" or ""
+            && bytesStaged is "0" or "";
+
+        // Classic "更新失败" hang: update flags set but no progress and no target build.
+        if (bytesIdle && (string.IsNullOrWhiteSpace(targetBuildId) || targetBuildId == "0"))
+            return true;
+
+        // UpdateStarted without progress for long enough is still unhealthy for settle.
+        if ((flags & updateStarted) != 0 && bytesIdle)
+            return true;
+
+        return false;
+    }
+
+    public static string DecodeStateFlags(string? stateFlagsRaw)
+    {
+        if (!int.TryParse(stateFlagsRaw, out var flags) || flags == 0)
+            return stateFlagsRaw ?? "";
+
+        var names = new List<string>();
+        void Bit(int mask, string name)
+        {
+            if ((flags & mask) != 0)
+                names.Add(name);
+        }
+
+        Bit(1, "Uninstalled");
+        Bit(2, "UpdateRequired");
+        Bit(4, "FullyInstalled");
+        Bit(8, "Encrypted");
+        Bit(16, "Locked");
+        Bit(32, "FilesMissing");
+        Bit(64, "AppRunning");
+        Bit(128, "FilesCorrupt");
+        Bit(256, "UpdateRunning");
+        Bit(512, "UpdateStarted");
+        Bit(1024, "Uninstalling");
+        Bit(2048, "BackupRunning");
+        Bit(4096, "Reconfiguring");
+        Bit(8192, "Validating");
+        Bit(16384, "AddingFiles");
+        Bit(32768, "Preallocating");
+        Bit(65536, "Downloading");
+        Bit(131072, "Staging");
+        Bit(262144, "Committing");
+        return names.Count == 0 ? stateFlagsRaw! : string.Join("|", names);
+    }
+
+    static bool TryParseStateFlags(string acfText, out int flags)
+    {
+        flags = 0;
+        var raw = ReadQuotedValue(acfText, "StateFlags");
+        return !string.IsNullOrWhiteSpace(raw) && int.TryParse(raw, out flags);
+    }
+
     static string? ReadBetaKeyFromBlock(string text, string blockName)
     {
         if (!TryGetQuotedBlock(text, blockName, out var open, out var close))
@@ -140,7 +230,7 @@ public sealed class SteamBetaKeyEditor
         return match.Success ? match.Groups[1].Value : null;
     }
 
-    static string? ReadQuotedValue(string text, string key)
+    public static string? ReadQuotedValue(string text, string key)
     {
         var match = Regex.Match(
             text,

@@ -300,6 +300,26 @@ public class MainViewModelCriticalOpTests
     }
 
     [Fact]
+    public void TryHandleWindowClosing_soft_busy_cancels_work_and_requests_exit()
+    {
+        using var fx = Fixture.CreateReady();
+        var exit = 0;
+        var vm = fx.CreateVm(
+            confirm: _ => true,
+            criticalOp: fx.Guard,
+            requestProcessExit: () => exit++);
+        vm.IsBranchSwitchBusy = true;
+
+        vm.EvaluateCloseOrUpdateGate(busyDialogOpen: true).Should().Be(CriticalOpGateLevel.SoftConfirm);
+
+        var handled = vm.TryHandleWindowClosing(busyDialogOpen: true, out var cancel);
+
+        handled.Should().BeFalse();
+        cancel.Should().BeFalse();
+        exit.Should().Be(1);
+    }
+
+    [Fact]
     public void TryHandleWindowClosing_hard_cancels_when_guard_running()
     {
         using var fx = Fixture.CreateReady();
@@ -437,7 +457,8 @@ public class MainViewModelCriticalOpTests
             Func<string, bool>? confirm = null,
             Action<string>? notify = null,
             UpdateChecker? updateChecker = null,
-            CriticalOpGuard? criticalOp = null)
+            CriticalOpGuard? criticalOp = null,
+            Action? requestProcessExit = null)
         {
             var starter = new NoopStarter();
             var launcher = new GameLauncher(starter, () => false);
@@ -455,7 +476,8 @@ public class MainViewModelCriticalOpTests
                 confirm: confirm ?? (_ => false),
                 notify: notify,
                 processStarter: starter,
-                criticalOp: criticalOp ?? Guard);
+                criticalOp: criticalOp ?? Guard,
+                requestProcessExit: requestProcessExit);
         }
 
         public void WriteBranchConfig(BranchSwitchConfig cfg) =>
