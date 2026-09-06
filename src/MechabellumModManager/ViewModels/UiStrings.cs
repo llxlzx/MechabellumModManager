@@ -123,6 +123,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string BranchSwitchToBeta => T("BranchSwitchToBeta");
     public string BranchSwitchStartWizard => T("BranchSwitchStartWizard");
     public string BranchSwitchTeardown => T("BranchSwitchTeardown");
+    public string BranchSwitchRepairOrphan => T("BranchSwitchRepairOrphan");
     public string BranchSwitchConfirmManual => T("BranchSwitchConfirmManual");
     public string BranchSwitchConfirmSettle => T("BranchSwitchConfirmSettle");
     public string BranchSwitchHint => T("BranchSwitchHint");

@@ -38,6 +38,50 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public async Task WaitingDownloadB_resume_does_not_show_yes_no_confirm()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.Junctions.DeleteJunction(fx.SteamLink);
+        Directory.CreateDirectory(fx.SteamLink);
+        // Incomplete download under Steam link (exe only).
+        File.WriteAllText(Path.Combine(fx.SteamLink, "Mechabellum.exe"), "x");
+
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.WaitingDownloadB,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var confirms = new List<string>();
+        var vm = fx.CreateVm(
+            confirm: msg =>
+            {
+                confirms.Add(msg);
+                return true;
+            },
+            delay: _ => Task.Delay(20));
+        vm.GamePath = fx.SteamLink;
+
+        await vm.StartBranchWizardCommand.ExecuteAsync(null);
+
+        confirms.Should().NotContain(m =>
+            m.Contains("下载另一服", StringComparison.Ordinal)
+            || m.Contains("点「是」", StringComparison.Ordinal)
+            || m.Contains("download the other", StringComparison.OrdinalIgnoreCase));
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        vm.IsBranchSwitchBusy.Should().BeFalse("waiting must not hold Busy");
+        vm.CanTeardownBranchSwitch.Should().BeTrue();
+        vm.CancelBusyWork();
+    }
+
+    [Fact]
     public void Leftover_mid_wizard_with_feature_disabled_session_locks_deploy()
     {
         // Paused wizard (Enabled=false + mid WizardStep) must session-lock Apply / Apply-and-launch.
@@ -62,6 +106,7 @@ public class MainViewModelBranchSwitchTests
         vm.ApplyAndLaunchCommand.CanExecute(null).Should().BeFalse();
         vm.CanTeardownBranchSwitch.Should().BeTrue();
         vm.DeployBlockedReason.Should().NotBeNullOrWhiteSpace();
+        vm.CancelBusyWork();
     }
 
     [Fact]
@@ -888,79 +933,85 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
-    public async Task Wizard_ends_busy_before_download_continue_confirm()
+    public async Task Wizard_ends_busy_before_waiting_download_poll()
     {
         using var fx = Fixture.CreateWizardStart();
         var events = new List<string>();
         var vm = fx.CreateVm(
             confirm: msg =>
             {
-                if (msg.Contains("点「是」继续", StringComparison.Ordinal)
-                    || msg.Contains("click Yes", StringComparison.OrdinalIgnoreCase))
-                {
-                    events.Add("confirm:download-continue");
-                    Fixture.SeedGameRoot(fx.SteamLink, "downloaded");
-                }
-                else
-                {
-                    events.Add("confirm:other");
-                }
-
+                events.Add("confirm:" + (msg.Length > 24 ? msg[..24] : msg));
                 return !msg.Contains("删除另一", StringComparison.Ordinal);
             },
             promptText: _ => "publicbeta",
             beginBusy: (_, m) => events.Add("begin:" + m),
             setBusyMessage: _ => { },
-            endBusy: () => events.Add("end"));
+            endBusy: () => events.Add("end"),
+            delay: _ => Task.Delay(30));
         vm.GamePath = fx.SteamLink;
         vm.BetaBranchName = "publicbeta";
 
         await vm.StartBranchWizardCommand.ExecuteAsync(null);
 
-        var downloadConfirmIdx = events.FindIndex(e => e == "confirm:download-continue");
-        downloadConfirmIdx.Should().BeGreaterThan(0, "wizard should reach download-continue confirm");
-        var prefix = events.Take(downloadConfirmIdx).ToList();
-        var lastEndBefore = prefix.FindLastIndex(e => e == "end");
-        var lastBeginBefore = prefix.FindLastIndex(e => e.StartsWith("begin:", StringComparison.Ordinal));
-        lastEndBefore.Should().BeGreaterThan(lastBeginBefore,
-            "segment A busy must end before download-continue confirm");
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        vm.IsBranchSwitchBusy.Should().BeFalse();
+        events.Should().NotContain(e => e.Contains("点「是」", StringComparison.Ordinal));
         events.Count(e => e == "end").Should().Be(events.Count(e => e.StartsWith("begin:", StringComparison.Ordinal)));
+        vm.CancelBusyWork();
     }
 
     [Fact]
-    public async Task Wizard_archive_A_leaves_steam_link_empty_before_download_B()
+    public async Task Wizard_archive_A_leaves_steam_link_empty_then_auto_continues_when_ready()
     {
         using var fx = Fixture.CreateWizardStart();
         File.WriteAllText(fx.Paths.DeployManifestPath, """{"gamePath":"legacy"}""");
-        var sawEmptyLink = false;
         var vm = fx.CreateVm(
-            confirm: msg =>
-            {
-                if (msg.Contains("点「是」继续", StringComparison.Ordinal)
-                    || msg.Contains("click Yes", StringComparison.OrdinalIgnoreCase))
-                {
-                    Directory.Exists(fx.SteamLink).Should().BeFalse();
-                    fx.Junctions.IsJunction(fx.SteamLink).Should().BeFalse();
-                    sawEmptyLink = true;
-                    Fixture.SeedGameRoot(fx.SteamLink, "downloaded");
-                }
-
-                return !msg.Contains("删除另一", StringComparison.Ordinal);
-            },
-            promptText: _ => "publicbeta");
+            confirm: msg => !msg.Contains("删除另一", StringComparison.Ordinal),
+            promptText: _ => "publicbeta",
+            delay: _ => Task.Delay(40));
         vm.GamePath = fx.SteamLink;
         vm.BetaBranchName = "publicbeta";
 
         await vm.StartBranchWizardCommand.ExecuteAsync(null);
 
-        sawEmptyLink.Should().BeTrue();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        Directory.Exists(fx.SteamLink).Should().BeFalse();
+        fx.Junctions.IsJunction(fx.SteamLink).Should().BeFalse();
+
+        Fixture.SeedGameRoot(fx.SteamLink, "downloaded");
+        var steamapps = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", ".."));
+        File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"StateFlags"		"4"
+            	"buildid"		"200"
+            	"TargetBuildID"		"200"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            	"UserConfig"
+            	{
+            		"language"		"english"
+            		"BetaKey"		"publicbeta"
+            	}
+            }
+            """);
+
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (DateTime.UtcNow < deadline
+               && vm.BranchWizardStep == BranchWizardStep.WaitingDownloadB)
+        {
+            await Task.Delay(100);
+        }
+
+        vm.CancelBusyWork();
         fx.Junctions.IsJunction(fx.SteamLink).Should().BeTrue();
         fx.Junctions.ResolveTarget(fx.SteamLink).Should().Be(Path.GetFullPath(fx.OfficialStore));
         File.ReadAllText(Path.Combine(fx.OfficialStore, "marker.txt")).Should().Be("current");
         File.ReadAllText(Path.Combine(fx.BetaStore, "marker.txt")).Should().Be("downloaded");
         vm.BranchSwitchEnabled.Should().BeTrue();
         vm.ActiveGameBranch.Should().Be(GameBranch.Official);
-        vm.BetaBranchName.Should().Be("publicbeta");
         vm.IsAwaitingSteamSettle.Should().BeTrue();
         File.ReadAllText(fx.Paths.GetDeployManifestPath(GameBranch.Official, enabled: true))
             .Should().Be("""{"gamePath":"legacy"}""");
@@ -1271,6 +1322,7 @@ public class MainViewModelBranchSwitchTests
         var persisted = fx.Store.LoadOrDefault(fx.Paths.ConfigPath, () => new AppConfig()).GamePath;
         persisted.Should().NotBeNullOrWhiteSpace();
         Path.GetFullPath(persisted).Should().Be(Path.GetFullPath(fx.SteamLink));
+        vm.CancelBusyWork();
     }
 
     [Fact]

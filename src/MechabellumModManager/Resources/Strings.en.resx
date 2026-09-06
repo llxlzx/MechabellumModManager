@@ -425,6 +425,8 @@ Current single-folder play is fine. To run the dual-folder wizard again later, d
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam client or the game is still running (including steamwebhelper). Close Steam windows (including the “Who’s playing?” account picker) and the game, then try again; background steamservice can stay.</value></data>
   <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker blocking Continue). Then click settle Continue.</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Open Steam yourself to download the other branch; the manager will not auto-start Steam.</value></data>
+  <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>Waiting for the other branch download: open Steam yourself, finish download, then exit Steam. The manager will continue automatically when the install is complete — no Yes click needed.</value></data>
+  <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>Other branch download looks complete and Steam is closed; continuing dual-folder wizard automatically.</value></data>
   <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. Click Continue when the game is ready.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
@@ -483,7 +485,7 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="TaskMessageMelonInstallLocal" xml:space="preserve"><value>Installing MelonLoader from offline package…</value></data>
   <data name="NotifySessionLocked" xml:space="preserve"><value>A task is still in progress. Finish or cancel it first.</value></data>
   <data name="TaskMessageCatalogRefresh" xml:space="preserve"><value>Fetching catalog from the network…</value></data>
-  <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>Download the other branch in Steam, exit Steam, then continue the wizard</value></data>
+  <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>Download the other branch in Steam and exit Steam; the wizard continues automatically when ready</value></data>
   <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>Checking for updates</value></data>
 
   <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam switched to Official — continue</value></data>
