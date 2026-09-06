@@ -2,6 +2,8 @@ using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 using MechabellumModManager.ViewModels;
+using MechabellumModManager.Tests.Support;
+using Fixture = MechabellumModManager.Tests.Support.MainViewModelFixture;
 
 public class MainViewModelTests
 {
@@ -95,7 +97,7 @@ public class MainViewModelTests
     public void Default_confirmHighRisk_denies_high_risk_enable()
     {
         using var fx = Fixture.CreateReady(highRisk: true);
-        var vm = fx.CreateVm(confirmHighRisk: null);
+        var vm = fx.CreateVm(confirmHighRisk: null, preserveNullConfirmHighRisk: true);
 
         vm.Mods[0].IsEnabled = true;
 
@@ -349,131 +351,5 @@ public class MainViewModelTests
     {
         public List<string> Starts { get; } = new();
         public void StartShell(string uriOrPath) => Starts.Add(uriOrPath);
-    }
-
-    sealed class Fixture : IDisposable
-    {
-        public string DataRoot { get; }
-        public string GameRoot { get; }
-        readonly PathsService _paths;
-        readonly JsonStore _store;
-        readonly ProfileService _profiles;
-        readonly ModLibraryService _library;
-        readonly GameDetector _detector;
-        readonly DeployService _deploy;
-
-        Fixture(string dataRoot, string gameRoot)
-        {
-            DataRoot = dataRoot;
-            GameRoot = gameRoot;
-            _paths = new PathsService(dataRoot);
-            _paths.EnsureCreated();
-            _store = new JsonStore();
-            _profiles = new ProfileService(_paths, _store);
-            _profiles.EnsureDefaults();
-            _library = new ModLibraryService(_paths, new AssemblyInspector(), _store, _profiles);
-            _detector = new GameDetector();
-            _deploy = new DeployService(_paths, _store, new DeployPlanner(), _detector, new ProcessProbe());
-        }
-
-        public static Fixture CreateReady(bool highRisk = false)
-        {
-            var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-" + Guid.NewGuid().ToString("N"));
-            var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-game-" + Guid.NewGuid().ToString("N"));
-            CreateReadyGame(gameRoot);
-            return CreateWithGame(dataRoot, gameRoot, highRisk);
-        }
-
-        public static Fixture CreateLoaderPresentAssembliesMissing(bool highRisk = false)
-        {
-            var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-" + Guid.NewGuid().ToString("N"));
-            var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-vm-game-" + Guid.NewGuid().ToString("N"));
-            CreateLoaderMissingAssembliesGame(gameRoot);
-            return CreateWithGame(dataRoot, gameRoot, highRisk);
-        }
-
-        static Fixture CreateWithGame(string dataRoot, string gameRoot, bool highRisk)
-        {
-            var fx = new Fixture(dataRoot, gameRoot);
-            var pkgId = highRisk ? "cheat-aaaaaaaa" : "cam-aaaaaaaa";
-            var displayName = highRisk ? "CheatCam" : "Cam";
-            var dllName = highRisk ? "CheatCam.dll" : "Cam.dll";
-            var pkgDir = Path.Combine(fx._paths.LibraryRoot, "mods", pkgId);
-            Directory.CreateDirectory(pkgDir);
-            File.WriteAllBytes(Path.Combine(pkgDir, dllName), new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
-            var highRiskJson = highRisk ? "true" : "false";
-            File.WriteAllText(
-                Path.Combine(pkgDir, "package.json"),
-                $$"""
-                {
-                  "id": "{{pkgId}}",
-                  "displayName": "{{displayName}}",
-                  "type": "melon_mod",
-                  "highRisk": {{highRiskJson}},
-                  "files": [ { "relativePathInPackage": "{{dllName}}", "sha256": "aabbccdd" } ]
-                }
-                """);
-            fx._store.Save(Path.Combine(fx._paths.LibraryRoot, "index.json"), new { packageIds = new[] { pkgId } });
-            fx._store.Save(fx._paths.ConfigPath, new AppConfig
-            {
-                GamePath = gameRoot,
-                ActiveProfileId = "default",
-                LaunchMode = LaunchMode.ExeOnly
-            });
-            return fx;
-        }
-
-        public MainViewModel CreateVm(
-            Func<string, bool>? confirmHighRisk,
-            IProcessStarter? starter = null,
-            Func<ModPackageType?>? pickPackageType = null,
-            Func<string?>? openDll = null,
-            Func<string?>? openZip = null)
-        {
-            var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
-            return new MainViewModel(
-                _paths,
-                _store,
-                _detector,
-                _library,
-                _profiles,
-                _deploy,
-                launcher,
-                new RiskGate(),
-                confirmHighRisk: confirmHighRisk,
-                pickPackageType: pickPackageType,
-                openDll: openDll,
-                openZip: openZip);
-        }
-
-        public ModLibraryService Library => _library;
-        public ProfileService Profiles => _profiles;
-        public PathsService Paths => _paths;
-
-        public void Dispose()
-        {
-            if (Directory.Exists(DataRoot)) Directory.Delete(DataRoot, true);
-            if (Directory.Exists(GameRoot)) Directory.Delete(GameRoot, true);
-        }
-
-        static void CreateReadyGame(string root)
-        {
-            Directory.CreateDirectory(root);
-            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
-            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
-            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "Il2CppAssemblies"));
-            File.WriteAllText(Path.Combine(root, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
-            File.WriteAllText(Path.Combine(root, "version.dll"), "");
-        }
-
-        static void CreateLoaderMissingAssembliesGame(string root)
-        {
-            Directory.CreateDirectory(root);
-            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
-            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
-            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "net6"));
-            File.WriteAllBytes(Path.Combine(root, "MelonLoader", "net6", "MelonLoader.dll"), new byte[] { 0x4D, 0x5A });
-            File.WriteAllBytes(Path.Combine(root, "version.dll"), new byte[] { 0x4D, 0x5A });
-        }
     }
 }

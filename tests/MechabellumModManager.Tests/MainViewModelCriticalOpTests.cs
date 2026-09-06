@@ -5,13 +5,15 @@ using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 using MechabellumModManager.ViewModels;
+using MechabellumModManager.Tests.Support;
+using Fixture = MechabellumModManager.Tests.Support.MainViewModelFixture;
 
 public class MainViewModelCriticalOpTests
 {
     [Fact]
     public async Task CheckForUpdates_hard_blocks_when_guard_running()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var handler = new RecordingHttpHandler();
         var checker = new UpdateChecker(new HttpClient(handler), () => "1.0.0");
         var confirms = new List<string>();
@@ -38,7 +40,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public async Task CheckForUpdates_soft_requires_confirm_when_awaiting_settle()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var handler = new RecordingHttpHandler();
         var checker = new UpdateChecker(new HttpClient(handler), () => "1.0.0");
         var confirms = new List<string>();
@@ -74,7 +76,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public async Task RunWithCriticalOpAsync_action_throws_still_completes()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var vm = fx.CreateVm(criticalOp: fx.Guard);
         var began = false;
 
@@ -96,7 +98,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void IsRecoveryGateActive_locks_deploy()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var vm = fx.CreateVm(criticalOp: fx.Guard);
 
         vm.IsReady.Should().BeTrue();
@@ -116,7 +118,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void ApplyRecoveryContinue_clears_stale_Ready_marker()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         WriteInterruptedMarker(fx.Paths);
         var vm = fx.CreateVm(criticalOp: fx.Guard);
         vm.IsRecoveryGateActive = true;
@@ -136,7 +138,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void ShouldOfferCriticalRecovery_true_when_interrupted_marker()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         WriteInterruptedMarker(fx.Paths);
         var vm = fx.CreateVm(criticalOp: fx.Guard);
 
@@ -146,7 +148,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void ShouldOfferCriticalRecovery_false_when_no_marker()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var vm = fx.CreateVm(criticalOp: fx.Guard);
 
         File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
@@ -156,7 +158,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void ApplyRecoveryContinue_mid_wizard_Linked_is_SoftConfirm_not_Allow()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         WriteInterruptedMarker(fx.Paths);
         fx.WriteBranchConfig(new BranchSwitchConfig
         {
@@ -179,7 +181,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void ApplyRecoveryContinue_Enabled_Ready_clears_gate_when_repair_not_offered()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         WriteInterruptedMarker(fx.Paths);
         fx.WriteBranchConfig(new BranchSwitchConfig
         {
@@ -224,7 +226,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void ApplyRecoveryContinue_clears_gate_routes_settle_ui()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         WriteInterruptedMarker(fx.Paths);
         fx.WriteBranchConfig(new BranchSwitchConfig
         {
@@ -252,7 +254,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public async Task ApplyRecoveryRepair_clears_stale_Ready_marker()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         WriteInterruptedMarker(fx.Paths);
         var vm = fx.CreateVm(criticalOp: fx.Guard);
         vm.IsRecoveryGateActive = true;
@@ -266,7 +268,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public async Task ApplyRecoveryRepair_clears_gate_when_settle_or_wizard()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         WriteInterruptedMarker(fx.Paths);
         fx.WriteBranchConfig(new BranchSwitchConfig
         {
@@ -302,7 +304,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void TryHandleWindowClosing_soft_busy_cancels_work_and_requests_exit()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var exit = 0;
         var vm = fx.CreateVm(
             confirm: _ => true,
@@ -322,7 +324,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void TryHandleWindowClosing_hard_cancels_when_guard_running()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var notes = new List<string>();
         var vm = fx.CreateVm(notify: notes.Add, criticalOp: fx.Guard);
         fx.Guard.Begin(CriticalOpKind.MelonInstall, "MelonInstall");
@@ -337,7 +339,7 @@ public class MainViewModelCriticalOpTests
     [Fact]
     public void TryHandleWindowClosing_soft_respects_confirm_when_awaiting_settle()
     {
-        using var fx = Fixture.CreateReady();
+        using var fx = Fixture.CreateReadyForCriticalOp();
         var confirmResult = false;
         var confirms = new List<string>();
         var vm = fx.CreateVm(
@@ -394,156 +396,4 @@ public class MainViewModelCriticalOpTests
         }
     }
 
-    sealed class Fixture : IDisposable
-    {
-        public string DataRoot { get; }
-        public string GameRoot { get; }
-        public PathsService Paths { get; }
-        public CriticalOpGuard Guard { get; }
-        readonly JsonStore _store;
-        readonly ProfileService _profiles;
-        readonly ModLibraryService _library;
-        readonly GameDetector _detector;
-        readonly DeployService _deploy;
-
-        Fixture(string dataRoot, string gameRoot)
-        {
-            DataRoot = dataRoot;
-            GameRoot = gameRoot;
-            Paths = new PathsService(dataRoot);
-            Paths.EnsureCreated();
-            Guard = new CriticalOpGuard(Paths);
-            _store = new JsonStore();
-            _profiles = new ProfileService(Paths, _store);
-            _profiles.EnsureDefaults();
-            _library = new ModLibraryService(Paths, new AssemblyInspector(), _store, _profiles);
-            _detector = new GameDetector();
-            _deploy = new DeployService(Paths, _store, new DeployPlanner(), _detector, new ProcessProbe());
-        }
-
-        public static Fixture CreateReady()
-        {
-            var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-critop-vm-" + Guid.NewGuid().ToString("N"));
-            var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-critop-game-" + Guid.NewGuid().ToString("N"));
-            CreateReadyGame(gameRoot);
-            var fx = new Fixture(dataRoot, gameRoot);
-            SeedLibrary(fx);
-            fx._store.Save(fx.Paths.ConfigPath, new AppConfig
-            {
-                GamePath = gameRoot,
-                ActiveProfileId = "default",
-                LaunchMode = LaunchMode.ExeOnly
-            });
-            return fx;
-        }
-
-        public static Fixture CreateMissingAssemblies()
-        {
-            var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-critop-vm-" + Guid.NewGuid().ToString("N"));
-            var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-critop-game-" + Guid.NewGuid().ToString("N"));
-            CreateMissingAssembliesGame(gameRoot);
-            var fx = new Fixture(dataRoot, gameRoot);
-            SeedLibrary(fx);
-            fx._store.Save(fx.Paths.ConfigPath, new AppConfig
-            {
-                GamePath = gameRoot,
-                ActiveProfileId = "default",
-                LaunchMode = LaunchMode.ExeOnly
-            });
-            return fx;
-        }
-
-        public MainViewModel CreateVm(
-            Func<string, bool>? confirm = null,
-            Action<string>? notify = null,
-            UpdateChecker? updateChecker = null,
-            CriticalOpGuard? criticalOp = null,
-            Action? requestProcessExit = null)
-        {
-            var starter = new NoopStarter();
-            var launcher = new GameLauncher(starter, () => false);
-            return new MainViewModel(
-                Paths,
-                _store,
-                _detector,
-                _library,
-                _profiles,
-                _deploy,
-                launcher,
-                new RiskGate(),
-                updateChecker: updateChecker,
-                confirmHighRisk: _ => true,
-                confirm: confirm ?? (_ => false),
-                notify: notify,
-                processStarter: starter,
-                criticalOp: criticalOp ?? Guard,
-                requestProcessExit: requestProcessExit);
-        }
-
-        public void WriteBranchConfig(BranchSwitchConfig cfg) =>
-            _store.Save(Paths.BranchSwitchConfigPath, cfg);
-
-        public void Dispose()
-        {
-            TryDelete(DataRoot);
-            TryDelete(GameRoot);
-        }
-
-        static void SeedLibrary(Fixture fx)
-        {
-            const string pkgId = "cam-aaaaaaaa";
-            var pkgDir = Path.Combine(fx.Paths.LibraryRoot, "mods", pkgId);
-            Directory.CreateDirectory(pkgDir);
-            File.WriteAllBytes(Path.Combine(pkgDir, "Cam.dll"), new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
-            File.WriteAllText(
-                Path.Combine(pkgDir, "package.json"),
-                """
-                {
-                  "id": "cam-aaaaaaaa",
-                  "displayName": "Cam",
-                  "type": "melon_mod",
-                  "highRisk": false,
-                  "files": [ { "relativePathInPackage": "Cam.dll", "sha256": "aabbccdd" } ]
-                }
-                """);
-            fx._store.Save(Path.Combine(fx.Paths.LibraryRoot, "index.json"), new { packageIds = new[] { pkgId } });
-        }
-
-        static void CreateReadyGame(string root)
-        {
-            Directory.CreateDirectory(root);
-            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
-            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
-            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "Il2CppAssemblies"));
-            File.WriteAllText(Path.Combine(root, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
-            File.WriteAllText(Path.Combine(root, "version.dll"), "");
-        }
-
-        static void CreateMissingAssembliesGame(string root)
-        {
-            Directory.CreateDirectory(root);
-            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
-            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
-            Directory.CreateDirectory(Path.Combine(root, "MelonLoader"));
-            File.WriteAllText(Path.Combine(root, "version.dll"), "");
-        }
-
-                static void TryDelete(string path)
-        {
-            try
-            {
-                if (Directory.Exists(path))
-                    Directory.Delete(path, true);
-            }
-            catch
-            {
-                // Temp leftover is non-fatal.
-            }
-        }
-    }
-
-    sealed class NoopStarter : IProcessStarter
-    {
-        public void StartShell(string uriOrPath) { }
-    }
 }
