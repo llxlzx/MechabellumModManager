@@ -1,7 +1,7 @@
 # 架构稳定化与清拆（C1）— 设计规格
 
 **日期：** 2026-09-06  
-**状态：** 规格已分段确认（§1–§5）；待用户审阅后进入 implementation plan  
+**状态：** 规格已确认；Phase0 实现计划见 `docs/superpowers/plans/2026-09-06-phase0-safety-pad.md`  
 **工作目录：** `D:\gongzuo\钢铁指挥官mod管理器开发`  
 **策略代号：** C1「稳+清组合 / 保守分波」
 
