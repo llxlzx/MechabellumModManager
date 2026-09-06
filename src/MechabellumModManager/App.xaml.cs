@@ -154,6 +154,8 @@ public partial class App : Application
 
         if (dialog.Choice == CriticalOpRecoveryChoice.Repair)
             _ = vm.ApplyRecoveryRepair();
+        else if (dialog.Choice == CriticalOpRecoveryChoice.Abandon)
+            vm.ApplyRecoveryAbandon();
         else
             vm.ApplyRecoveryContinue();
     }

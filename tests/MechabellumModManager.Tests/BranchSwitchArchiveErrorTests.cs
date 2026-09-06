@@ -10,9 +10,8 @@ public class BranchSwitchArchiveErrorTests
             new UnauthorizedAccessException("Access to the path 'd:\\chesed\\steamapps\\common\\Mechabellum' is denied."));
 
         mapped.Should().Contain("访问被拒绝");
-        mapped.Should().Contain("Steam");
-        mapped.Should().Contain("资源管理器");
-        mapped.Should().Contain("管理员");
+        mapped.Should().Contain("steamservice");
+        mapped.Should().Contain("应用并启动");
         mapped.Should().Contain("denied");
     }
 
@@ -67,6 +66,37 @@ public class BranchSwitchArchiveErrorTests
         finally
         {
             try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
+    public void MoveDirectoryWithRetry_clears_readonly_and_moves()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-move-ro-" + Guid.NewGuid().ToString("N"));
+        var src = Path.Combine(root, "src");
+        var dst = Path.Combine(root, "dst");
+        try
+        {
+            Directory.CreateDirectory(src);
+            var file = Path.Combine(src, "ro.txt");
+            File.WriteAllText(file, "x");
+            File.SetAttributes(file, FileAttributes.ReadOnly);
+
+            BranchSwitchService.MoveDirectoryWithRetry(src, dst, attempts: 2, delay: TimeSpan.Zero);
+
+            Directory.Exists(dst).Should().BeTrue();
+            File.Exists(Path.Combine(dst, "ro.txt")).Should().BeTrue();
+            Directory.Exists(src).Should().BeFalse();
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(dst))
+                    BranchSwitchService.ClearReadOnlyAttributes(dst);
+                Directory.Delete(root, true);
+            }
+            catch { /* ignore */ }
         }
     }
 }

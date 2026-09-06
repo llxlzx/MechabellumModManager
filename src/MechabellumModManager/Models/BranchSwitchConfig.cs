@@ -22,4 +22,16 @@ public sealed class BranchSwitchConfig
     public string BetaProfileId { get; set; } = "default";
     public string BetaBranchName { get; set; } = DefaultSteamBetaBranchName;
     public string? ManifestBackupPath { get; set; }
+
+    /// <summary>
+    /// True when this enable-session created/moved Official store; rollback may delete it.
+    /// Cleared when dual reaches Ready.
+    /// </summary>
+    public bool SessionOwnedOfficialStore { get; set; }
+
+    /// <summary>
+    /// True when this enable-session created/moved Beta store; rollback may delete it.
+    /// Cleared when dual reaches Ready.
+    /// </summary>
+    public bool SessionOwnedBetaStore { get; set; }
 }

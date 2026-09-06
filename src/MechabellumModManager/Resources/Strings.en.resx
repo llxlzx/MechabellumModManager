@@ -290,15 +290,21 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
-  <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
+  <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Enable dual-folder</value></data>
+  <data name="BranchSwitchEmergencyRecover" xml:space="preserve"><value>Emergency: single folder</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
   <data name="BranchSwitchRepairOrphan" xml:space="preserve"><value>Restore single folder</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>I selected Test in Steam — continue</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam finished switching — continue</value></data>
-  <data name="BranchSwitchHint" xml:space="preserve"><value>Needs about two game installs of space. Beta name defaults to public_test (Steam → Properties → Betas; usually leave as is). The wizard saves the current install first, then downloads the other — Official is not overwritten.</value></data>
-  <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
-  <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
-  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>Wizard paused (deploy locked; continue or remove)</value></data>
+  <data name="BranchSwitchHint" xml:space="preserve"><value>Three actions: Enable dual (one-shot; cancel/fail rolls back), Switch Official/Test, Emergency single-folder recover. Needs about two installs. Default Steam beta name: public_test.</value></data>
+  <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not enabled</value></data>
+  <data name="BranchStatusIncomplete" xml:space="preserve"><value>Enabling</value></data>
+  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>Enabling (no pause/resume — cancel rolls back or wait)</value></data>
+  <data name="BranchStatusEnabling" xml:space="preserve"><value>Enabling</value></data>
+  <data name="BranchStatusEnablingWaitDownload" xml:space="preserve"><value>Enabling (waiting for Steam download; close rolls back)</value></data>
+  <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>Enabling: waiting for Steam to download the other branch. Official is in a separate store — the game is not missing.</value></data>
+  <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>Enabling: the other branch finished downloading. Fully exit Steam (tray → Exit); the manager continues automatically.</value></data>
+  <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>Needs emergency recover</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam to finish</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Official</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>Beta</value></data>
@@ -342,9 +348,10 @@ Overwrite and take over these files?</value></data>
   <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
 …{0} total</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Cancelled overwriting unmanaged files.</value></data>
-  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Official/Test dual folders are already enabled. Rebuild will safely remove the current setup first (keeping the other folder’s game files), then set up again. Continue?</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Official/Test dual folders are already enabled. To rebuild: use Emergency: single folder first, then Enable dual again. Continue?</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Remove Official/Test dual-folder setup? The manager will switch to Official first, then remove dual folders. Steam will use the Official folder again. Exit Steam and the game first.</value></data>
-  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Dual-branch is off, but a directory junction and/or leftover store folders remain. Restore a single Mechabellum folder (materialize if still a junction). Keeping the other store may still block the wizard. Exit Steam and the game first. Continue?</value></data>
+  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Emergency-restore a single Mechabellum folder (materialize junction/hollow from a complete store when possible). The next dialog asks whether to delete leftover stores. Exit Steam and the game first. Continue?</value></data>
+  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Dual-branch is off, but a directory junction and/or leftover store folders remain. Restore a single Mechabellum folder (materialize if still a junction; if Mechabellum is hollow and another store is complete, move that store back and rename the hollow debris to Mechabellum_incomplete_*). The next dialog asks whether to delete the other store. Exit Steam and the game first. Continue?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>Failed to restore single folder: {0}</value></data>
@@ -369,17 +376,20 @@ Open the GitHub Releases page?</value></data>
   <data name="ConfirmDeleteModFromLibrary" xml:space="preserve"><value>Remove “{0}” from the library? It will also be removed from all profiles.</value></data>
   <data name="ConfirmSwitchGameBranch" xml:space="preserve"><value>Switching Official/Test will exit Steam and the game, then change the folder link and Steam beta setting.
 Make sure Steam is not downloading/updating this game — forcing exit mid-download can break the Steam client. Continue?</value></data>
-  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>This keeps separate folders for Official and Test (about two full installs of disk space).
-The Steam beta name defaults to public_test (editable in Settings).
-It first saves your current install, then downloads the other branch — Test will not overwrite Official.
-Exit Steam and the game first. Start?</value></data>
+  <data name="ConfirmStartDualBranchWizard" xml:space="preserve"><value>Enable Official/Test dual folders (about two installs of disk space).
+Runs as one shot: archive current → download the other → link → settle.
+Cancel or failure rolls back to a single folder (no pause/resume). Exit Steam and the game first. Start?</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Is the current install Official? Choose No if it is currently Test (Beta).</value></data>
   <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Your current install was moved to a separate folder. Open Steam yourself to download the other branch (the manager will not auto-start Steam, to avoid the account picker).
 When finished, exit Steam, then click Yes. No pauses the wizard (you can resume later).</value></data>
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Could not automatically set the other branch’s Steam test channel. Select it manually in Steam, then download.</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Dual-folder wizard paused; you can continue later.</value></data>
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Official/Test dual-folder setup removed.</value></data>
-  <data name="LogWizardAbortedReset" xml:space="preserve"><value>Dual-folder wizard aborted and reset to unconfigured. Confirm the game folder is intact, then Apply &amp; Launch. A working MelonLoader shows a black Melon console (not PowerShell).</value></data>
+  <data name="LogWizardAbortedReset" xml:space="preserve"><value>Enable dual aborted and rolled back to a single folder. Confirm the game folder is intact, then Apply &amp; Launch.</value></data>
+  <data name="LogEnableDualRolledBack" xml:space="preserve"><value>Cancelled enable dual and rolled back to a single folder.</value></data>
+  <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>Enable dual was incomplete and Steam/game is still running, so disk rollback was skipped; session markers kept. Exit Steam, then use Emergency: single folder.</value></data>
+  <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>Enable-dual rollback did not fully succeed: {0}. Use Emergency: single folder.</value></data>
+  <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>Dual-folder is already enabled. To rebuild: Emergency recover to single folder, then Enable dual again.</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>For mods to load, MelonLoader should open a black Melon console (not PowerShell). If it does not, check version.dll / MelonLoader under the game folder and send MelonLoader\Latest.log.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Dual-folder setup removed. In Steam, confirm the current game branch is correct.</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Profile applied to the game folder</value></data>
@@ -408,11 +418,19 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>The game path must be under steamapps\common\Mechabellum.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>The current game path is invalid; cannot start the dual-folder wizard.</value></data>
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>The other branch’s separate folder already exists; cannot archive: {0}</value></data>
+  <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>The other branch folder exists but is incomplete (missing GameAssembly etc.): {0}. Exit Steam, delete that incomplete folder, then continue the wizard — do not keep clicking Continue.</value></data>
+  <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>Other branch folder {0} is complete, but the Steam link path is still a real directory. The manager will not auto-delete game folders. Use Clear isolation in Settings, or exit Steam and resolve the leftover, then restart the wizard.</value></data>
+  <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Steam link path is still occupied (real folder or wrong junction); cannot create the directory link. Clear isolation in Settings, or exit Steam and fix …\common\Mechabellum, then continue.</value></data>
   <data name="FailWizardGamePathIsBranchStore" xml:space="preserve"><value>Game path is a dual-branch store (Mechabellum_official / Mechabellum_beta) and the Steam link folder Mechabellum is missing. Move/restore the active store to …\common\Mechabellum (or verify/reinstall the game), then retry the wizard. Re-running the manager Setup can also auto-fix.</value></data>
   <data name="LogWizardNormalizedStorePath" xml:space="preserve"><value>Normalized game path from store "{0}" to Steam link "{1}".</value></data>
   <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>Dual-folder setup removed; the other branch folder was kept as you chose:
 {0}
 Current single-folder play is fine. To run the dual-folder wizard again later, delete those folders first, or re-run Setup cleanup.</value></data>
+  <data name="NotifyBranchTeardownLeftoverStoresResidual" xml:space="preserve"><value>Dual-folder setup removed, but another branch folder remains on disk (you were not asked about deleting it):
+{0}
+Current single-folder play is fine. To run the dual-folder wizard again later, delete those folders first, or re-run Setup cleanup.</value></data>
+  <data name="FailOrphanSteamLinkNotGameRoot" xml:space="preserve"><value>Steam path Mechabellum is not a complete game root (missing exe / GameAssembly, etc.), and auto-restore from a leftover store failed. Exit Steam, check for complete Mechabellum_official / Mechabellum_beta under …\common\, then use Emergency: single folder; or run Setup cleanup / Steam verify.</value></data>
+  <data name="FailOrphanSteamLinkHollowNoDonor" xml:space="preserve"><value>Steam path Mechabellum is hollow (incomplete), and no complete leftover store (Mechabellum_official / Mechabellum_beta) was found nearby. Use Steam “Verify integrity of game files” or reinstall to repair Mechabellum.</value></data>
   <data name="FailWizardNoAppManifest" xml:space="preserve"><value>appmanifest_669330.acf not found; cannot align the Steam test branch.</value></data>
   <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>Cannot read the Steam manifest (may need elevation or a library move): {0}</value></data>
   <data name="FailWizardArchiveCurrentFailed" xml:space="preserve"><value>Failed to archive the current branch folder.</value></data>
@@ -426,15 +444,15 @@ Current single-folder play is fine. To run the dual-folder wizard again later, d
   <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker). When Steam shows Play, return to Settings and click the gold “…Continue” button to finish settle. OK only closes this tip.</value></data>
   <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>The manager is already running. Use the existing window.</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Open Steam yourself to download the other branch; the manager will not auto-start Steam.</value></data>
-  <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>Waiting for the other branch download: open Steam yourself and download. When finished, fully exit Steam (tray → Exit); the manager continues automatically. OK only closes this tip and does not cancel waiting.</value></data>
+  <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>Waiting for the other branch download: open Steam yourself and download. When finished, fully exit Steam (tray → Exit); the manager continues automatically. OK only closes this tip. Closing the manager or cancelling enable rolls back to a single folder (no pause/resume).</value></data>
   <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>Other branch download complete: fully exit Steam (tray → Exit); the wizard continues automatically after exit</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>Other branch download looks complete and Steam is closed; continuing dual-folder wizard automatically.</value></data>
   <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. When the game is ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>Folder and Steam branch keys are aligned, but the game path is not ready yet (missing binaries or MelonLoader incomplete). Wait for Steam to finish download/verify, then retry.</value></data>
-  <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>If the other branch store is still complete: fully exit Steam, then switch to that branch — or remove dual-folder / restore single folder from the complete store. Steam rewrites the active store through the Mechabellum junction; do not force operations mid-download.</value></data>
-  <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>The active branch store is incomplete (often Steam downloading/verifying; GameAssembly.dll missing). Exit Steam, then switch to the complete other store, or tear down dual-folder and restore from the complete store; or wait until Steam finishes.</value></data>
+  <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>If the other branch store is still complete: fully exit Steam, then switch to that branch — or use Emergency: single folder to restore from the complete store. Steam rewrites the active store through the Mechabellum junction; do not force operations mid-download.</value></data>
+  <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>The active branch store is incomplete (often Steam downloading/verifying; GameAssembly.dll missing). Exit Steam, then switch to the complete other store, or use Emergency: single folder to restore from the complete store; or wait until Steam finishes.</value></data>
   <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>Game path is not ready; cannot finish settle deploy. Wait for Steam download/verify, then confirm again.</value></data>
   <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>Deploy failed during settle; still waiting for Steam settle. Fix the issue and confirm again.</value></data>
   <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam manifest is not stable yet (verify/write). After the download shows complete, wait a moment and confirm again; if it still fails, fully exit Steam and retry.</value></data>
@@ -471,7 +489,7 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="BusyGeneratingMelonAssemblies" xml:space="preserve"><value>Generating MelonLoader assemblies. Do not close the manager…</value></data>
   <data name="BusySwitchingToOfficialForTeardown" xml:space="preserve"><value>Switching to Official before removing dual-folder — do not close the manager…</value></data>
   <data name="BusyTeardownDualFolder" xml:space="preserve"><value>Removing dual-folder setup — do not close the manager…</value></data>
-  <data name="NotifyTeardownAbortedAwaitSettle" xml:space="preserve"><value>Switched to Official, but Steam branch is not ready yet. Finish settle (or wait until Steam update succeeds), then click Remove dual-folder again.</value></data>
+  <data name="NotifyTeardownAbortedAwaitSettle" xml:space="preserve"><value>Switched to Official, but Steam branch is not ready yet. Finish settle (or wait until Steam update succeeds), then click Emergency: single folder.</value></data>
   <data name="NotifySettleBlockedUpdateUnhealthy" xml:space="preserve"><value>Steam update looks stuck/failed. Verify game files in Steam or wait until the game can Start, then continue.</value></data>
   <data name="ExportDiagnosticsSummaryHint" xml:space="preserve"><value>summary.md was generated — send the whole zip to the maintainer.</value></data>
   <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Preparing Steam branch info — do not close the manager…</value></data>
@@ -506,16 +524,19 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="NotifySettleBlockedGameRunning" xml:space="preserve"><value>Game is running; cannot save the manifest snapshot. Close the game and confirm again.</value></data>
   <data name="LogSteamOpenDuringSettleOk" xml:space="preserve"><value>Steam is open: settle will read the manifest and deploy; no need to exit Steam for this.</value></data>
   <data name="NotifySettleClearedSnapshotDeferred" xml:space="preserve"><value>Settle deploy finished; snapshot will be saved later (this switch is done).</value></data>
-  <data name="NotifySettleBlockedSnapshotFailed" xml:space="preserve"><value>Deploy may have finished, but the Steam manifest snapshot was not saved — settle is not cleared. Wait until Steam can Start the game, then continue; or switch to the other complete store / remove dual-folder.</value></data>
+  <data name="NotifySettleBlockedSnapshotFailed" xml:space="preserve"><value>Deploy may have finished, but the Steam manifest snapshot was not saved — settle is not cleared. Wait until Steam can Start the game, then continue. Do not click Play in Steam.</value></data>
+  <data name="NotifySettleBlockedSnapshotNotAligned" xml:space="preserve"><value>The Steam manifest is not aligned with the current store (files may still be writing). Wait until Steam can Start the game, then continue. Do not click Play in Steam.</value></data>
   <data name="NotifyHollowStoreDegraded" xml:space="preserve"><value>The active store is incomplete (not a valid game root). Left Ready and entered repair/settle: verify files in Steam; if the other store is complete you can switch there. Store folders are not deleted.</value></data>
   <data name="NotifySwitchBlockedTargetHollow" xml:space="preserve"><value>Target store is not a complete game root (needs Mechabellum.exe and GameAssembly.dll). Finish downloading that branch in Steam until Play is available before switching; do not rely on a bad skip-download snapshot.</value></data>
   <data name="LogSettleClearedSnapshotDeferred" xml:space="preserve"><value>Deploy succeeded but snapshot was skipped; settle cleared. Snapshot can be taken later.</value></data>
   <data name="CriticalOpBlockUpdate" xml:space="preserve"><value>A disk write or critical operation is in progress. Check for updates after it finishes.</value></data>
   <data name="CriticalOpBlockClose" xml:space="preserve"><value>A disk write or critical operation is in progress. Do not close the manager.</value></data>
   <data name="CriticalOpSoftUpdateConfirm" xml:space="preserve"><value>Still waiting for Steam to switch or download ({0}). Updating the installer may interrupt the flow; open the download link anyway?</value></data>
-  <data name="CriticalOpSoftCloseConfirm" xml:space="preserve"><value>Still waiting for Steam ({0}). You can resume settle or the wizard later; close anyway?</value></data>
+  <data name="CriticalOpSoftCloseConfirm" xml:space="preserve"><value>Still waiting for Steam ({0}). Closing cancels unfinished enable-dual (rolls back to a single folder) or cancels settle wait. Close anyway?</value></data>
   <data name="CriticalOpRecoveryTitle" xml:space="preserve"><value>Unfinished critical operation detected</value></data>
-  <data name="CriticalOpRecoveryBody" xml:space="preserve"><value>A mode switch, Melon install, or repair may have been interrupted. Continue the unfinished step, or run repair.</value></data>
+  <data name="CriticalOpRecoveryBody" xml:space="preserve"><value>A mode switch, Melon install, or repair may have been interrupted. Continue, run repair, or abandon and clear residual state (game folders are not deleted).</value></data>
   <data name="CriticalOpRecoveryContinue" xml:space="preserve"><value>Continue unfinished operation</value></data>
   <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>Run repair / safe cleanup</value></data>
-  <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data></root>
+  <data name="CriticalOpRecoveryAbandon" xml:space="preserve"><value>Abandon and clear</value></data>
+  <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data>
+  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data></root>

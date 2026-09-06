@@ -122,6 +122,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string BranchSwitchToOfficial => T("BranchSwitchToOfficial");
     public string BranchSwitchToBeta => T("BranchSwitchToBeta");
     public string BranchSwitchStartWizard => T("BranchSwitchStartWizard");
+    public string BranchSwitchEmergencyRecover => T("BranchSwitchEmergencyRecover");
     public string BranchSwitchTeardown => T("BranchSwitchTeardown");
     public string BranchSwitchRepairOrphan => T("BranchSwitchRepairOrphan");
     public string PureGameCleanupButton => T("PureGameCleanupButton");

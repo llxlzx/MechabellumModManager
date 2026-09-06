@@ -15,6 +15,30 @@ function Test-MelonLoaderInstalled {
     return (Test-Path $melonDir) -and $proxy
 }
 
+function Get-MelonFileVersion {
+    param([string] $Root)
+    $candidates = @(
+        (Join-Path $Root "MelonLoader\net6\MelonLoader.dll"),
+        (Join-Path $Root "MelonLoader\net472\MelonLoader.dll"),
+        (Join-Path $Root "MelonLoader\net35\MelonLoader.dll"),
+        (Join-Path $Root "MelonLoader\MelonLoader.dll")
+    )
+    foreach ($dll in $candidates) {
+        if (-not (Test-Path -LiteralPath $dll)) { continue }
+        try {
+            $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dll)
+            $raw = $info.FileVersion
+            if (-not [string]::IsNullOrWhiteSpace($raw)) {
+                return $raw.Trim()
+            }
+        } catch {
+            continue
+        }
+    }
+    return $null
+}
+
+
 function Test-HasIl2CppAssemblies {
     param([string] $Root)
     $assemblies = Join-Path $Root "MelonLoader\Il2CppAssemblies"
@@ -220,15 +244,37 @@ if (@(Get-Process -Name "Mechabellum" -ErrorAction SilentlyContinue).Count -gt 0
 }
 
 # Same readiness rule as GameDetector: MelonLoader folder + version.dll or winhttp.dll
+# Skip only when installed version is readable and >= 0.7.3; otherwise upgrade in place.
 if (Test-MelonLoaderInstalled -Root $GamePath) {
-    Write-Host "Skip MelonLoader — already installed at $GamePath"
-    try {
-        $seededVersion = Seed-UnityDependencies -Root $GamePath -Redist $RedistDir
-        Apply-LoaderCfgOptimizations -Root $GamePath -KnownUnityVersion $seededVersion
-    } catch {
-        Write-Host "UnityDependencies seed / Loader.cfg optimize skipped: $($_.Exception.Message)"
+    $installedVerText = Get-MelonFileVersion -Root $GamePath
+    $installedVer = $null
+    if (-not [string]::IsNullOrWhiteSpace($installedVerText)) {
+        try {
+            $installedVer = [version]$installedVerText
+        } catch {
+            $m = [regex]::Match($installedVerText, '^\s*(\d+)\.(\d+)\.(\d+)')
+            if ($m.Success) {
+                $installedVer = [version]"$($m.Groups[1].Value).$($m.Groups[2].Value).$($m.Groups[3].Value)"
+            }
+        }
     }
-    exit 0
+
+    if ($null -ne $installedVer -and $installedVer -ge [version]'0.7.3') {
+        Write-Host "Skip MelonLoader — already installed (v$installedVerText) at $GamePath"
+        try {
+            $seededVersion = Seed-UnityDependencies -Root $GamePath -Redist $RedistDir
+            Apply-LoaderCfgOptimizations -Root $GamePath -KnownUnityVersion $seededVersion
+        } catch {
+            Write-Host "UnityDependencies seed / Loader.cfg optimize skipped: $($_.Exception.Message)"
+        }
+        exit 0
+    }
+
+    if ([string]::IsNullOrWhiteSpace($installedVerText)) {
+        Write-Host "MelonLoader present but version unreadable — upgrade needed; continuing install at $GamePath"
+    } else {
+        Write-Host "MelonLoader present (v$installedVerText) is older than 0.7.3 — upgrade needed; continuing install at $GamePath"
+    }
 }
 
 $zipUrl = "https://github.com/LavaGang/MelonLoader/releases/latest/download/MelonLoader.x64.zip"

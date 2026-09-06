@@ -302,6 +302,108 @@ public class MainViewModelCriticalOpTests
     }
 
     [Fact]
+    public void TryHandleWindowClosing_soft_accept_abandons_incomplete_wizard()
+    {
+        using var fx = Fixture.CreateReadyForCriticalOp();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.None,
+            ActiveBranch = GameBranch.Official,
+            SteamLinkPath = fx.GameRoot,
+            OfficialStorePath = fx.GameRoot + "_official",
+            SessionOwnedOfficialStore = true
+        });
+        var exit = 0;
+        var vm = fx.CreateVm(
+            confirm: _ => true,
+            criticalOp: fx.Guard,
+            requestProcessExit: () => exit++);
+
+        // In-session mid-enable (not sticky resume after restart).
+        vm.BranchWizardStep = BranchWizardStep.WaitingDownloadB;
+        vm.IsBranchWizardInProgress.Should().BeTrue();
+        vm.IsSessionLocked.Should().BeTrue();
+
+        var handled = vm.TryHandleWindowClosing(busyDialogOpen: false, out var cancel);
+
+        handled.Should().BeFalse();
+        cancel.Should().BeFalse();
+        exit.Should().Be(1);
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.None);
+        vm.IsBranchWizardInProgress.Should().BeFalse();
+        vm.IsSessionLocked.Should().BeFalse();
+        vm.HasCurrentTask.Should().BeFalse();
+        fx.LoadBranchConfig().WizardStep.Should().Be(BranchWizardStep.None);
+    }
+
+    [Fact]
+    public void TryHandleWindowClosing_soft_accept_keeps_dual_when_enabled_settle()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.Guard = new CriticalOpGuard(fx.Paths);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.AwaitingSteamSettle,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+        var exit = 0;
+        var vm = fx.CreateVm(
+            confirm: _ => true,
+            criticalOp: fx.Guard,
+            requestProcessExit: () => exit++);
+        vm.GamePath = fx.SteamLink;
+        vm.IsAwaitingSteamSettle = true;
+        vm.BranchSwitchEnabled.Should().BeTrue();
+
+        var handled = vm.TryHandleWindowClosing(busyDialogOpen: false, out var cancel);
+
+        handled.Should().BeFalse();
+        cancel.Should().BeFalse();
+        exit.Should().Be(1);
+        vm.BranchSwitchEnabled.Should().BeTrue();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.Ready);
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
+        fx.LoadBranchConfig().Enabled.Should().BeTrue();
+        fx.LoadBranchConfig().WizardStep.Should().Be(BranchWizardStep.Ready);
+        Directory.Exists(fx.OfficialStore).Should().BeTrue();
+        Directory.Exists(fx.BetaStore).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ApplyRecoveryAbandon_clears_wizard_and_recovery_gate()
+    {
+        using var fx = Fixture.CreateReadyForCriticalOp();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.None,
+            SteamLinkPath = fx.GameRoot,
+            SessionOwnedOfficialStore = true
+        });
+        WriteInterruptedMarker(fx.Paths);
+        var vm = fx.CreateVm(criticalOp: fx.Guard);
+        vm.BranchWizardStep = BranchWizardStep.WaitingDownloadB;
+        vm.IsRecoveryGateActive = true;
+        vm.ShouldOfferCriticalRecovery(fx.Guard).Should().BeTrue();
+
+        vm.ApplyRecoveryAbandon();
+
+        vm.IsRecoveryGateActive.Should().BeFalse();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.None);
+        vm.IsBranchWizardInProgress.Should().BeFalse();
+        vm.HasCurrentTask.Should().BeFalse();
+        File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
+    }
+
+    [Fact]
     public void TryHandleWindowClosing_soft_busy_cancels_work_and_requests_exit()
     {
         using var fx = Fixture.CreateReadyForCriticalOp();

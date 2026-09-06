@@ -58,4 +58,23 @@ public class TaskProgressSessionTests
         s.HasTask.Should().BeTrue();
         s.Message.Should().Be("Still waiting confirm");
     }
+
+    [Fact]
+    public void Sticky_nested_diagnostics_export_complete_restores_outer_kind()
+    {
+        // Field bug: ExportDiagnostics Begin nests under sticky wizard, finally only Clear when
+        // Kind==DiagnosticsExport — Kind stays BranchWizard so packaging message stuck forever.
+        var s = new TaskProgressSession();
+        s.Begin(ManagerTaskKind.BranchWizard, "双路向导进行中", "等待下载", sessionLock: true, sticky: true);
+        s.Begin(ManagerTaskKind.DiagnosticsExport, "诊断", "正在打包日志与配置…", sessionLock: false);
+        s.Kind.Should().Be(ManagerTaskKind.BranchWizard);
+        s.Message.Should().Be("正在打包日志与配置…");
+        s.IsNested.Should().BeTrue();
+        s.Complete();
+        s.IsNested.Should().BeFalse();
+        s.Kind.Should().Be(ManagerTaskKind.BranchWizard);
+        s.HasTask.Should().BeTrue();
+        s.Report("等待下载");
+        s.Message.Should().Be("等待下载");
+    }
 }

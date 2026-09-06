@@ -25,6 +25,60 @@ function Test-MelonReady([string] $Root) {
     return $melon -and $proxy
 }
 
+function Test-IsBranchStore([string] $Path) {
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
+    try {
+        $n = [IO.Path]::GetFileName([IO.Path]::GetFullPath($Path))
+        return ($n -eq "Mechabellum_official") -or ($n -eq "Mechabellum_beta")
+    } catch { return $false }
+}
+
+function Get-SiblingSteamLink([string] $StoreOrLink) {
+    $full = [IO.Path]::GetFullPath($StoreOrLink)
+    $common = [IO.Path]::GetDirectoryName($full)
+    return Join-Path $common "Mechabellum"
+}
+
+<#
+.SYNOPSIS
+When GamePath points at Mechabellum_official/beta and Mechabellum is missing,
+rename the store to Mechabellum (only if Steam is idle and dual-folder is off).
+When Mechabellum already looks like a game, prefer that link path.
+#>
+function Normalize-GamePathAwayFromStore([string] $Path, [bool] $DualEnabled) {
+    if (-not (Test-IsBranchStore $Path)) { return [IO.Path]::GetFullPath($Path) }
+
+    $store = [IO.Path]::GetFullPath($Path)
+    $link = Get-SiblingSteamLink $store
+
+    if (Test-LooksLikeGame $link) {
+        Write-Host "Preferring Steam link over store: $link (was $store)"
+        return [IO.Path]::GetFullPath($link)
+    }
+
+    if ($DualEnabled) {
+        Write-Host "Dual-folder enabled — leaving store path as-is: $store"
+        return $store
+    }
+
+    if (Test-SteamBusy) {
+        Write-Host "WARN: Path is branch store ($store) but Mechabellum is missing; Steam busy — cannot rename. Re-run Setup after Steam exits."
+        return $store
+    }
+
+    if (Test-Path -LiteralPath $link) {
+        Write-Host "WARN: Mechabellum exists at $link but is not a valid game root; leaving store $store"
+        return $store
+    }
+
+    Write-Host "Normalizing leftover store to Steam link: $store -> $link"
+    Move-Item -LiteralPath $store -Destination $link
+    if (-not (Test-LooksLikeGame $link)) {
+        Write-Host "WARN: Move finished but $link does not look like a game root."
+    }
+    return [IO.Path]::GetFullPath($link)
+}
+
 $appData = Join-Path $env:APPDATA "MechabellumModManager"
 $branchPath = Join-Path $appData "branch-switch.json"
 $configPath = Join-Path $appData "config.json"
@@ -54,9 +108,39 @@ if (Test-Path -LiteralPath $branchPath) {
     }
 }
 
+$resolved = Normalize-GamePathAwayFromStore $resolved $enabled
+
 if (-not (Test-LooksLikeGame $resolved)) {
     Write-Error "Resolved game path is invalid: $resolved"
     exit 1
+}
+
+# When dual-folder is off, clear stale store paths in branch-switch.json and warn about leftovers.
+if ((Test-Path -LiteralPath $branchPath) -and -not $enabled) {
+    try {
+        $bs = Get-Content -LiteralPath $branchPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $common = [IO.Path]::GetDirectoryName($resolved)
+        $leftovers = @()
+        foreach ($name in @("Mechabellum_official", "Mechabellum_beta")) {
+            $c = Join-Path $common $name
+            if ((Test-Path -LiteralPath $c) -and (Test-LooksLikeGame $c)) { $leftovers += $c }
+        }
+        if ($leftovers.Count -gt 0) {
+            Write-Host "WARN: Leftover dual-folder stores still on disk (block wizard until deleted):"
+            $leftovers | ForEach-Object { Write-Host "  $_" }
+        }
+
+        $bs.steamLinkPath = $resolved
+        $bs.officialStorePath = ""
+        $bs.betaStorePath = ""
+        $bs.enabled = $false
+        [IO.File]::WriteAllText($branchPath, ($bs | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
+        Write-Host "Cleared stale dual-folder store paths in branch-switch.json; steamLinkPath=$resolved"
+        $official = $null
+        $beta = $null
+    } catch {
+        Write-Host "Could not rewrite branch-switch.json: $($_.Exception.Message)"
+    }
 }
 
 # Write / merge config.json (preserve unknown keys + uiLanguage)
@@ -151,4 +235,3 @@ if ($enabled -and $null -ne $activeBranch) {
 
 Write-Host "Restore/write complete."
 exit 0
-

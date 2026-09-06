@@ -16,6 +16,16 @@ public static class BranchOpMessages
     public const string SnapshotNotAligned = "Live install is not aligned with the branch being snapshotted.";
     public const string SnapshotBetaKeyInvalid = "ACF BetaKey does not match the branch snapshot.";
     public const string SnapshotBuildIdCollision = "Official and beta ACF snapshots share the same buildid; refuse fake skip-download snapshot.";
+    public const string LiveLinkMissing = "Steam link path is missing for live wizard snapshot.";
+    public const string LiveLinkIsJunction = "Steam link is a junction; live wizard snapshot requires a real download folder.";
+    public const string LiveLinkNotGameRoot = "Steam link is not a valid game root for live wizard snapshot.";
+    public const string StorePathAlreadyExists = "Store path already exists.";
+    public const string StorePathExistsIncomplete = "Store path already exists but is not a complete game root.";
+    public const string StorePathExistsLinkConflict = "Store path already exists and Steam link is still a real directory; refuse auto-delete.";
+    public const string SteamLinkPathAlreadyExists = "Steam link path already exists.";
+    public const string SteamLinkPathWrongJunction = "Steam link junction points at a different store.";
+    public const string SteamLinkHollowNoDonor =
+        "Steam link path is not a valid game root, and no complete leftover store was found to restore from.";
 }
 
 public sealed class BranchOperationResult
@@ -32,6 +42,10 @@ public sealed class BranchOperationResult
 
     public bool IsManifestNotSettled =>
         Message.Contains("not settled", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsSnapshotNotAligned =>
+        string.Equals(Message, BranchOpMessages.SnapshotNotAligned, StringComparison.Ordinal)
+        || Message.Contains("not aligned", StringComparison.OrdinalIgnoreCase);
 
     public bool IsGameRunningBlock =>
         string.Equals(Message, BranchOpMessages.GameRunning, StringComparison.Ordinal)
@@ -287,12 +301,12 @@ public sealed class BranchSwitchService
         if (string.IsNullOrWhiteSpace(store) || !LooksLikeGameRoot(store))
             return BranchOperationResult.Fail(BranchOpMessages.StoreNotGameRoot);
 
-        if (!IsAlignedWith(branch))
-            return BranchOperationResult.Fail(BranchOpMessages.SnapshotNotAligned);
-
         var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
         if (!File.Exists(acf))
             return BranchOperationResult.Fail(BranchOpMessages.ManifestMissing);
+
+        if (!IsAlignedWith(branch))
+            return BranchOperationResult.Fail(BranchOpMessages.SnapshotNotAligned);
 
         var text = File.ReadAllText(acf);
         if (!SteamBetaKeyEditor.LooksSettledForSnapshot(text))
@@ -317,6 +331,69 @@ public sealed class BranchSwitchService
             catch
             {
                 // If sibling cannot be read, do not block save of a valid live snapshot.
+            }
+        }
+
+        var snapshotPath = _paths.GetSteamAcfSnapshotPath(branch);
+        Directory.CreateDirectory(Path.GetDirectoryName(snapshotPath)!);
+        File.Copy(acf, snapshotPath, overwrite: true);
+        return BranchOperationResult.Ok(snapshotPath);
+    }
+
+    /// <summary>
+    /// Wizard-only: snapshot live ACF for the branch just downloaded at Steam link (real folder, store not yet created).
+    /// On same-buildid collision with sibling, delete sibling then write (live wins over poison AppData).
+    /// </summary>
+    public BranchOperationResult TrySnapshotLiveAcfForWizardBranch(GameBranch branch)
+    {
+        if (_probe.IsGameRunning())
+            return BranchOperationResult.Fail(BranchOpMessages.GameRunning);
+
+        var cfg = LoadConfig();
+        if (string.IsNullOrWhiteSpace(cfg.SteamLinkPath))
+            return BranchOperationResult.Fail(BranchOpMessages.LiveLinkMissing);
+
+        var link = Path.GetFullPath(cfg.SteamLinkPath);
+        if (_junctions.IsJunction(link))
+            return BranchOperationResult.Fail(BranchOpMessages.LiveLinkIsJunction);
+
+        if (!LooksLikeGameRoot(link))
+            return BranchOperationResult.Fail(BranchOpMessages.LiveLinkNotGameRoot);
+
+        var acf = SteamBetaKeyEditor.FindAppManifestPath(link);
+        if (!File.Exists(acf))
+            return BranchOperationResult.Fail(BranchOpMessages.ManifestMissing);
+
+        var text = File.ReadAllText(acf);
+        if (!SteamBetaKeyEditor.LooksSettledForSnapshot(text))
+            return BranchOperationResult.Fail(BranchOpMessages.ManifestNotSettled);
+
+        var betaName = cfg.BetaBranchName ?? BranchSwitchConfig.DefaultSteamBetaBranchName;
+        if (!SteamAcfSnapshotSanitizer.IsValidSnapshot(text, branch, betaName))
+            return BranchOperationResult.Fail(BranchOpMessages.SnapshotBetaKeyInvalid);
+
+        var otherBranch = branch == GameBranch.Official ? GameBranch.Beta : GameBranch.Official;
+        var otherPath = _paths.GetSteamAcfSnapshotPath(otherBranch);
+        if (File.Exists(otherPath))
+        {
+            try
+            {
+                var otherText = File.ReadAllText(otherPath);
+                var officialText = branch == GameBranch.Official ? text : otherText;
+                var betaText = branch == GameBranch.Beta ? text : otherText;
+                if (SteamAcfSnapshotSanitizer.HasBuildIdCollision(officialText, betaText))
+                {
+                    try { File.Delete(otherPath); }
+                    catch (Exception ex)
+                    {
+                        return BranchOperationResult.Fail(
+                            BranchOpMessages.SnapshotBuildIdCollision + " (cannot delete sibling: " + ex.Message + ")");
+                    }
+                }
+            }
+            catch
+            {
+                // unreadable sibling: still allow writing live
             }
         }
 
@@ -530,6 +607,7 @@ public sealed class BranchSwitchService
                 return BranchOperationResult.Fail("Steam link path still exists after archive.");
 
             SetStorePath(cfg, branch, dest);
+            MarkSessionOwned(cfg, branch);
             cfg.WizardStep = BranchWizardStep.ArchivedA;
             SaveConfig(cfg);
             return BranchOperationResult.Ok();
@@ -552,8 +630,41 @@ public sealed class BranchSwitchService
             return BranchOperationResult.Fail("Branch switch paths are not configured.");
 
         dest = Path.GetFullPath(dest);
+        link = Path.GetFullPath(link);
+
         if (PathExists(dest))
-            return BranchOperationResult.Fail("Store path already exists.");
+        {
+            if (!LooksLikeGameRoot(dest))
+                return BranchOperationResult.Fail(BranchOpMessages.StorePathExistsIncomplete);
+
+            // Takeover when dest is already a complete store and Steam link is gone (prior partial success).
+            if (!PathExists(link))
+            {
+                SetStorePath(cfg, branch, dest);
+                MarkSessionOwned(cfg, branch);
+                cfg.WizardStep = BranchWizardStep.ArchivedB;
+                SaveConfig(cfg);
+                return BranchOperationResult.Ok("took-over-existing-store");
+            }
+
+            if (_junctions.IsJunction(link))
+            {
+                var live = _junctions.ResolveTarget(link);
+                if (!string.IsNullOrWhiteSpace(live) && PathsEqual(live, dest))
+                {
+                    SetStorePath(cfg, branch, dest);
+                    MarkSessionOwned(cfg, branch);
+                    cfg.WizardStep = BranchWizardStep.ArchivedB;
+                    SaveConfig(cfg);
+                    return BranchOperationResult.Ok("took-over-existing-store-linked");
+                }
+
+                return BranchOperationResult.Fail(BranchOpMessages.SteamLinkPathWrongJunction);
+            }
+
+            // dest complete + link still a real directory — do not auto-delete user data.
+            return BranchOperationResult.Fail(BranchOpMessages.StorePathExistsLinkConflict);
+        }
 
         if (_junctions.IsJunction(link))
             return BranchOperationResult.Fail("Downloaded path is a junction; refusing to archive the link.");
@@ -571,6 +682,7 @@ public sealed class BranchSwitchService
                 return BranchOperationResult.Fail("Steam link path still exists after archive.");
 
             SetStorePath(cfg, branch, dest);
+            MarkSessionOwned(cfg, branch);
             cfg.WizardStep = BranchWizardStep.ArchivedB;
             SaveConfig(cfg);
             return BranchOperationResult.Ok();
@@ -606,11 +718,11 @@ public sealed class BranchSwitchService
                 return BranchOperationResult.Ok();
             }
 
-            return BranchOperationResult.Fail("Steam link path already exists.");
+            return BranchOperationResult.Fail(BranchOpMessages.SteamLinkPathWrongJunction);
         }
 
         if (PathExists(link))
-            return BranchOperationResult.Fail("Steam link path already exists.");
+            return BranchOperationResult.Fail(BranchOpMessages.SteamLinkPathAlreadyExists);
 
         if (!LooksLikeGameRoot(store))
             return BranchOperationResult.Fail("Store path is not a valid game root.");
@@ -739,6 +851,8 @@ public sealed class BranchSwitchService
                 cfg.WizardStep = BranchWizardStep.None;
                 cfg.OfficialStorePath = "";
                 cfg.BetaStorePath = "";
+                cfg.SessionOwnedOfficialStore = false;
+                cfg.SessionOwnedBetaStore = false;
                 cfg.SteamLinkPath = link;
                 SaveConfig(cfg);
                 ClearJournal();
@@ -754,6 +868,216 @@ public sealed class BranchSwitchService
         {
             return BranchOperationResult.Fail(ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Cancel/fail enable-dual: materialize single Mechabellum and delete only session-owned stores.
+    /// </summary>
+    public BranchOperationResult TryRollbackEnableSession(string? preferredLinkPath = null)
+    {
+        var cfg = LoadConfig();
+        void ClearWizardFlags(BranchSwitchConfig c)
+        {
+            c.Enabled = false;
+            c.WizardStep = BranchWizardStep.None;
+            c.SessionOwnedOfficialStore = false;
+            c.SessionOwnedBetaStore = false;
+        }
+
+        if (_probe.IsGameOrSteamRunning())
+        {
+            ClearWizardFlags(cfg);
+            SaveConfig(cfg);
+            return BranchOperationResult.Fail("Game or Steam is running.");
+        }
+
+        var link = ResolveOrphanLinkPath(preferredLinkPath, cfg);
+        if (string.IsNullOrWhiteSpace(link))
+        {
+            ClearWizardFlags(cfg);
+            cfg.OfficialStorePath = "";
+            cfg.BetaStorePath = "";
+            SaveConfig(cfg);
+            return BranchOperationResult.Fail("Steam link path is not configured.");
+        }
+
+        link = Path.GetFullPath(link);
+        var deleteOfficial = cfg.SessionOwnedOfficialStore;
+        var deleteBeta = cfg.SessionOwnedBetaStore;
+
+        // Prefer materializing a complete session store back to the Steam link.
+        string? donor = null;
+        foreach (var candidate in new[] { cfg.OfficialStorePath, cfg.BetaStorePath }
+                     .Concat(SteamBranchLayout.EnumerateExistingStoreFolders(link)))
+        {
+            if (string.IsNullOrWhiteSpace(candidate) || !Directory.Exists(candidate))
+                continue;
+            var full = Path.GetFullPath(candidate);
+            if (PathsEqual(full, link))
+                continue;
+            if (!LooksLikeGameRoot(full))
+                continue;
+            donor = full;
+            break;
+        }
+
+        try
+        {
+            if (_junctions.IsJunction(link))
+            {
+                var live = _junctions.ResolveTarget(link);
+                _junctions.DeleteJunction(link);
+                if (!string.IsNullOrWhiteSpace(live) && LooksLikeGameRoot(live) && !PathExists(link))
+                    MoveDirectoryWithRetry(Path.GetFullPath(live), link);
+                else if (!string.IsNullOrWhiteSpace(donor) && !PathExists(link))
+                    MoveDirectoryWithRetry(donor, link);
+            }
+            else if (!LooksLikeGameRoot(link) && !string.IsNullOrWhiteSpace(donor))
+            {
+                if (PathExists(link))
+                {
+                    var aside = Path.Combine(
+                        Path.GetDirectoryName(link)!,
+                        "Mechabellum_incomplete_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
+                    MoveDirectoryWithRetry(link, aside);
+                }
+
+                MoveDirectoryWithRetry(donor, link);
+            }
+            else if (!PathExists(link) && !string.IsNullOrWhiteSpace(donor))
+            {
+                MoveDirectoryWithRetry(donor, link);
+            }
+
+            void TryDeleteStore(string? path, bool owned)
+            {
+                if (!owned || string.IsNullOrWhiteSpace(path))
+                    return;
+                try
+                {
+                    var full = Path.GetFullPath(path);
+                    if (PathsEqual(full, link))
+                        return;
+                    if (Directory.Exists(full))
+                        Directory.Delete(full, recursive: true);
+                }
+                catch
+                {
+                    // Best-effort; emergency recover can clean leftovers.
+                }
+            }
+
+            TryDeleteStore(cfg.OfficialStorePath, deleteOfficial);
+            TryDeleteStore(cfg.BetaStorePath, deleteBeta);
+            foreach (var leftover in SteamBranchLayout.EnumerateExistingStoreFolders(link))
+            {
+                var name = Path.GetFileName(leftover);
+                if (string.Equals(name, SteamBranchLayout.OfficialStoreFolderName, StringComparison.OrdinalIgnoreCase))
+                    TryDeleteStore(leftover, deleteOfficial);
+                else if (string.Equals(name, SteamBranchLayout.BetaStoreFolderName, StringComparison.OrdinalIgnoreCase))
+                    TryDeleteStore(leftover, deleteBeta);
+            }
+
+            cfg.Enabled = false;
+            cfg.WizardStep = BranchWizardStep.None;
+            cfg.OfficialStorePath = "";
+            cfg.BetaStorePath = "";
+            cfg.SessionOwnedOfficialStore = false;
+            cfg.SessionOwnedBetaStore = false;
+            cfg.SteamLinkPath = link;
+            SaveConfig(cfg);
+            ClearJournal();
+            return BranchOperationResult.Ok();
+        }
+        catch (Exception ex)
+        {
+            // Still clear sticky wizard flags so UI does not resume mid-enable.
+            try
+            {
+                cfg.Enabled = false;
+                cfg.WizardStep = BranchWizardStep.None;
+                cfg.SessionOwnedOfficialStore = false;
+                cfg.SessionOwnedBetaStore = false;
+                SaveConfig(cfg);
+            }
+            catch { /* ignore */ }
+
+            return BranchOperationResult.Fail(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// One recovery path: teardown if dual on / mid-enable layout, else orphan repair.
+    /// </summary>
+    public BranchOperationResult TryEmergencyRecoverToSingle(bool deleteOtherStore, string? preferredLinkPath = null)
+    {
+        var cfg = LoadConfig();
+
+        // Pending enable-session residue (e.g. load while Steam was busy kept SessionOwned*).
+        if (!cfg.Enabled
+            && (cfg.SessionOwnedOfficialStore || cfg.SessionOwnedBetaStore))
+        {
+            var roll = TryRollbackEnableSession(preferredLinkPath);
+            if (roll.Success)
+            {
+                // Still delete non-session leftovers if user asked.
+                if (deleteOtherStore)
+                {
+                    var orphanAfter = InspectOrphanDualLayout(preferredLinkPath);
+                    if (orphanAfter.IsOrphan)
+                        return TryRepairOrphanDualLayout(deleteOtherStore: true, preferredLinkPath);
+                }
+
+                return roll;
+            }
+            // Fall through if rollback could not run (e.g. Steam still running).
+        }
+
+        if (cfg.Enabled
+            || cfg.WizardStep is not BranchWizardStep.None and not BranchWizardStep.Ready)
+        {
+            var tear = TryTeardown(deleteOtherStore);
+            if (tear.Success)
+                return tear;
+            // Fall through to orphan repair when teardown cannot run (e.g. empty paths).
+        }
+
+        var orphan = InspectOrphanDualLayout(preferredLinkPath);
+        if (orphan.IsOrphan)
+            return TryRepairOrphanDualLayout(deleteOtherStore, preferredLinkPath);
+
+        cfg.Enabled = false;
+        cfg.WizardStep = BranchWizardStep.None;
+        cfg.OfficialStorePath = "";
+        cfg.BetaStorePath = "";
+        cfg.SessionOwnedOfficialStore = false;
+        cfg.SessionOwnedBetaStore = false;
+        if (!string.IsNullOrWhiteSpace(preferredLinkPath))
+        {
+            try { cfg.SteamLinkPath = Path.GetFullPath(preferredLinkPath); }
+            catch { /* keep prior */ }
+        }
+
+        SaveConfig(cfg);
+        return BranchOperationResult.Ok("Nothing to repair.");
+    }
+
+    public void ClearSessionStoreOwnership()
+    {
+        var cfg = LoadConfig();
+        if (!cfg.SessionOwnedOfficialStore && !cfg.SessionOwnedBetaStore)
+            return;
+        cfg.SessionOwnedOfficialStore = false;
+        cfg.SessionOwnedBetaStore = false;
+        SaveConfig(cfg);
+    }
+
+    static void MarkSessionOwned(BranchSwitchConfig cfg, GameBranch branch)
+    {
+        if (branch == GameBranch.Official)
+            cfg.SessionOwnedOfficialStore = true;
+        else
+            cfg.SessionOwnedBetaStore = true;
     }
 
     /// <summary>
@@ -845,7 +1169,32 @@ public sealed class BranchSwitchService
             }
             else if (!LooksLikeGameRoot(link))
             {
-                return BranchOperationResult.Fail("Steam link path is not a valid game root.");
+                var donor = ResolveCompleteOtherStore(
+                    LoadConfig(),
+                    currentStore: null,
+                    link);
+                if (string.IsNullOrWhiteSpace(donor) || !LooksLikeGameRoot(donor))
+                    return BranchOperationResult.Fail(BranchOpMessages.SteamLinkHollowNoDonor);
+
+                try
+                {
+                    // Preserve hollow debris (may contain saves under *_Data) by renaming aside.
+                    if (PathExists(link))
+                    {
+                        var aside = Path.Combine(
+                            Path.GetDirectoryName(link)!,
+                            "Mechabellum_incomplete_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
+                        MoveDirectoryWithRetry(link, aside);
+                    }
+
+                    MoveDirectoryWithRetry(donor, link);
+                    if (!LooksLikeGameRoot(link))
+                        return BranchOperationResult.Fail("Restored path is not a valid game root.");
+                }
+                catch (Exception ex)
+                {
+                    return BranchOperationResult.Fail(ex.Message);
+                }
             }
 
             if (deleteOtherStore)
@@ -867,6 +1216,8 @@ public sealed class BranchSwitchService
             cfg.SteamLinkPath = link;
             cfg.OfficialStorePath = "";
             cfg.BetaStorePath = "";
+            cfg.SessionOwnedOfficialStore = false;
+            cfg.SessionOwnedBetaStore = false;
             SaveConfig(cfg);
             ClearJournal();
             return BranchOperationResult.Ok();
