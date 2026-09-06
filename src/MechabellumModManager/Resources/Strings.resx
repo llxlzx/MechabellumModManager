@@ -511,7 +511,7 @@
   <data name="NotifySettleClearedSnapshotDeferred" xml:space="preserve"><value>已完成结算部署；清单快照稍后补存（不影响本次切换）。</value></data>
   <data name="NotifySettleBlockedSnapshotFailed" xml:space="preserve"><value>部署可能已完成，但 Steam 清单快照未保存，结算未结束。请确认 Steam 可「开始游戏」后再点继续；也可切到另一完整仓或解除双服。</value></data>
   <data name="NotifyHollowStoreDegraded" xml:space="preserve"><value>当前激活仓不完整（缺少有效游戏根）。已退出「就绪」并进入待修：请在 Steam 验证游戏文件；若另一服完整可先切过去。不会删除仓目录。</value></data>
-  <data name="NotifySwitchBlockedTargetHollow" xml:space="preserve"><value>目标服目录不是完整游戏根（需要 Mechabellum.exe 与 GameAssembly.dll）。请先在 Steam 完成下载/验证，或选择另一完整仓。</value></data>
+  <data name="NotifySwitchBlockedTargetHollow" xml:space="preserve"><value>目标服目录不是完整游戏根（需要 Mechabellum.exe 与 GameAssembly.dll）。请先在 Steam 把该服下载到可「开始游戏」，再切服；不要依赖错误的「免下载」快照。</value></data>
   <data name="LogSettleClearedSnapshotDeferred" xml:space="preserve"><value>部署已成功，但清单快照未保存；已结束结算。可稍后在切服前再补快照。</value></data>
   <data name="CriticalOpBlockUpdate" xml:space="preserve"><value>正在进行写盘/关键操作，请完成后再检查更新。</value></data>
   <data name="CriticalOpBlockClose" xml:space="preserve"><value>正在进行写盘/关键操作，请勿关闭管理器。</value></data>
