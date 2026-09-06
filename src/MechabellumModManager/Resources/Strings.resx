@@ -345,13 +345,15 @@
 …共 {0} 个</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>已取消覆盖非托管文件。</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>已启用正式服/测试服双目录。重建将先安全解除当前配置（保留另一目录中的游戏文件），再重新设置。是否继续？</value></data>
-  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>确定解除正式服/测试服双目录配置？将先切换到正式服，再解除双目录；当前使用的目录会重新作为 Steam 游戏路径；须先退出 Steam 与游戏。</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>确定解除正式服/测试服双目录？将先切换到正式服再解除；解除后 Steam 游戏路径会回到正式服那份目录。请先退出 Steam 与游戏。</value></data>
   <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>检测到双服已关闭，但磁盘上仍有目录联接或残留独立目录。将恢复为单一 Mechabellum 目录（若仍是联接则拆掉并移回）。若选择保留另一仓，再次开双服向导仍可能被阻挡。须先退出 Steam 与游戏。继续？</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>已恢复为单目录 Mechabellum。</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>已恢复为单目录 Mechabellum。</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>恢复单目录失败：{0}</value></data>
   <data name="NotifyOrphanRepairFailedGeneric" xml:space="preserve"><value>恢复单目录失败。</value></data>
-  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>是否同时删除另一服的独立游戏目录？其中文件将永久删除。（建议选「否」）</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>是否同时删除另一服的独立游戏目录？删除后不可恢复。
+选「是」：现在清掉，之后可立刻再开双服向导。
+选「否」（推荐）：保留该目录；不影响当前游玩。若以后要再启用双服，需先手动删除或运行安装包清理。</value></data>
   <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>双服向导失败：{0}</value></data>
   <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>解除双服配置失败：{0}</value></data>
   <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam 仍在运行。若下载已完成，可直接确认结算（保存快照只需读取清单）。</value></data>
@@ -410,7 +412,9 @@
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>另一服的独立目录已存在，无法归档：{0}</value></data>
   <data name="FailWizardGamePathIsBranchStore" xml:space="preserve"><value>当前游戏路径是双服仓目录（Mechabellum_official / Mechabellum_beta），且缺少 Steam 链路目录 Mechabellum。请先把正在使用的仓移回/恢复为 …\common\Mechabellum（或重装/校验游戏），再开双服向导。也可重新运行管理器安装包自动修复。</value></data>
   <data name="LogWizardNormalizedStorePath" xml:space="preserve"><value>已将游戏路径从双服仓「{0}」归一到 Steam 链路「{1}」。</value></data>
-  <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>双服已解除，但仍检测到残留独立目录（会阻挡再次向导）：{0}。确认不需要后请手动删除，或重新运行安装包自动清理/归一到 Mechabellum。</value></data>
+  <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>双服已解除，并按你的选择保留了另一服目录：
+{0}
+这不影响当前单目录游玩。若要再次启用双服向导，请先删除上述目录，或重新运行安装包自动清理。</value></data>
   <data name="FailWizardNoAppManifest" xml:space="preserve"><value>未找到 appmanifest_669330.acf，无法对齐 Steam 测试分支。</value></data>
   <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>无法读取 Steam 清单（可能需要提权或迁库）：{0}</value></data>
   <data name="FailWizardArchiveCurrentFailed" xml:space="preserve"><value>归档当前服失败。</value></data>

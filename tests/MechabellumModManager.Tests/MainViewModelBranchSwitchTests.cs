@@ -1025,7 +1025,7 @@ public class MainViewModelBranchSwitchTests
         await vm.TeardownBranchSwitchCommand.ExecuteAsync(null);
 
         Directory.Exists(fx.BetaStore).Should().BeTrue();
-        (vm.LogText + string.Join('\n', notes)).Should().Contain("残留");
+        (vm.LogText + string.Join('\n', notes)).Should().Contain("再次启用双服");
     }
 
     [Fact]

@@ -13,24 +13,47 @@ public partial class ConfirmDialog : Window
             : title;
         MessageText.Text = message ?? "";
 
+        var accent = (Style)FindResource("AccentButtonStyle");
+        var ghost = (Style)FindResource("GhostButtonStyle");
+
         if (yesNo)
         {
             YesButton.Content = LocalizationService.T("DialogYes");
             NoButton.Content = LocalizationService.T("DialogNo");
             NoButton.Visibility = Visibility.Visible;
-            YesButton.IsDefault = defaultYes;
-            NoButton.IsCancel = true;
-            if (!defaultYes)
+
+            // Visual primary must match keyboard default (Enter).
+            if (defaultYes)
             {
+                YesButton.Style = accent;
+                NoButton.Style = ghost;
+                YesButton.IsDefault = true;
+                NoButton.IsDefault = false;
+                NoButton.IsCancel = true;
+            }
+            else
+            {
+                YesButton.Style = ghost;
+                NoButton.Style = accent;
                 YesButton.IsDefault = false;
                 NoButton.IsDefault = true;
-                NoButton.Focus();
+                YesButton.IsCancel = false;
+                NoButton.IsCancel = true;
             }
+
+            Loaded += (_, _) =>
+            {
+                if (defaultYes)
+                    YesButton.Focus();
+                else
+                    NoButton.Focus();
+            };
         }
         else
         {
             YesButton.Content = LocalizationService.T("Ok");
             NoButton.Visibility = Visibility.Collapsed;
+            YesButton.Style = accent;
             YesButton.IsDefault = true;
             YesButton.IsCancel = true;
         }
