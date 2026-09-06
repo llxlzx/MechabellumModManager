@@ -419,6 +419,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Steam 終了要求に失敗：{0}</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam またはゲームが動作中です（steamwebhelper 含む）。タスクマネージャーで終了してから再試行してください。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>フォルダ切替に失敗しました。</value></data>
+  <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>マネージャーは既に起動しています。開いているウィンドウを使ってください。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>すでにこのブランチです（フォルダと Steam ベータは整合済み）。切替不要。</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>フォルダと Steam 分岐キーは一致していますが、ゲームパスが未準備です（実行ファイル不足または MelonLoader 未完了）。Steam のダウンロード/検証完了後に再試行してください。</value></data>
   <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>他方ストアが完了している場合：Steam を完全終了してから他方へ切替、または二系統解除/単一フォルダ復元を使ってください。Steam は Mechabellum ジャンクション経由で現行ストアを書き換えます。ダウンロード中は強制操作しないでください。</value></data>

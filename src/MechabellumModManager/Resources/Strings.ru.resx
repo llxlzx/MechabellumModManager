@@ -419,6 +419,7 @@
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Не удалось запросить выход из Steam: {0}</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam или игра ещё запущены (включая steamwebhelper). Завершите процессы в диспетчере задач и повторите.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Не удалось переключить папки.</value></data>
+  <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>Менеджер уже запущен. Используйте открытое окно.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Уже на этой ветке (папка и бета Steam совпадают). Переключение не нужно.</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>Папка и ключи ветки Steam совпадают, но путь игры ещё не готов (нет exe или MelonLoader не готов). Дождитесь загрузки/проверки Steam и повторите.</value></data>
   <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>Если другой склад ещё полон: полностью закройте Steam и переключитесь туда — или снимите двухветочье / восстановите одну папку из целого склада. Steam пишет в активный склад через junction Mechabellum; не форсируйте операции во время загрузки.</value></data>
