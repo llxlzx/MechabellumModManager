@@ -42,4 +42,29 @@ public class CriticalOpGateTests
                 wizardInProgress: true)
             .Should().Be(CriticalOpGateLevel.HardBlock);
     }
+
+    [Theory]
+    [InlineData(true, true, true, false, true, true, CriticalOpGateLevel.HardBlock)]   // Guard 胜 Soft
+    [InlineData(false, false, false, true, true, true, CriticalOpGateLevel.HardBlock)] // Recovery 胜 Soft
+    [InlineData(false, true, false, false, true, false, CriticalOpGateLevel.SoftConfirm)] // Busy+Settle
+    [InlineData(false, false, true, false, false, true, CriticalOpGateLevel.SoftConfirm)] // BranchBusy+Wizard
+    [InlineData(false, true, true, false, true, true, CriticalOpGateLevel.SoftConfirm)]   // 多 Soft 仍 Soft
+    public void Classify_combination_priority(
+        bool guardRunning,
+        bool busyDialogOpen,
+        bool branchSwitchBusy,
+        bool recoveryModalPending,
+        bool awaitingSteamSettle,
+        bool wizardInProgress,
+        CriticalOpGateLevel expected)
+    {
+        CriticalOpGate.Classify(
+                guardRunning,
+                busyDialogOpen,
+                branchSwitchBusy,
+                recoveryModalPending,
+                awaitingSteamSettle,
+                wizardInProgress)
+            .Should().Be(expected);
+    }
 }
