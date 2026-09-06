@@ -451,6 +451,11 @@
     <value>已跳过立即生成程序集；需要时可点击「应用方案」再试，或手动启动一次游戏。</value>
   </data>
   <data name="ExportDiagnosticsButton" xml:space="preserve"><value>导出诊断包</value></data>
+  <data name="PureGameCleanupButton" xml:space="preserve"><value>彻底清理（还原纯净游戏）</value></data>
+  <data name="ConfirmPureGameCleanup" xml:space="preserve"><value>将按白名单清理 Melon/Mods/管理器数据，并在双服已启用且正式服完整时解除双服。不会删除游戏本体或 .NET。是否继续？</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOther" xml:space="preserve"><value>是否删除另一侧游戏仓（通常为测试服副本，体积大且不可恢复）？选「否」则只解除双服并保留另一侧仓。</value></data>
+  <data name="NotifyPureGameCleanupDone" xml:space="preserve"><value>清理完成。管理器将退出；可用「卸载程序」删除安装目录。</value></data>
+  <data name="NotifyPureGameCleanupFailed" xml:space="preserve"><value>清理未完成：{0}</value></data>
   <data name="ExportDiagnosticsTitle" xml:space="preserve"><value>导出诊断包</value></data>
   <data name="ExportDiagnosticsConsent" xml:space="preserve"><value>将打包管理器日志、配置、双服状态与 MelonLoader 日志等，便于排查问题。原样模式可能包含本机路径与用户名；也可选择强脱敏。邮件无法自动附加 zip，请手动附上导出的文件。</value></data>
   <data name="ExportDiagnosticsModeFull" xml:space="preserve"><value>原样收录（可能含路径/用户名）</value></data>

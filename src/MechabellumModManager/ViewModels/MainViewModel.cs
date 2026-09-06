@@ -1944,6 +1944,63 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    void PureGameCleanup()
+    {
+        if (IsBranchSwitchBusy || IsSessionLocked)
+        {
+            _notify(LocalizationService.T("NotifySessionLocked"));
+            return;
+        }
+
+        if (!Confirm(LocalizationService.T("ConfirmPureGameCleanup"), MessageBoxResult.No))
+            return;
+
+        var deleteOther = BranchSwitchEnabled
+            && Confirm(LocalizationService.T("ConfirmPureGameCleanupDeleteOther"), MessageBoxResult.No);
+
+        var cfg = LoadConfig();
+        var branch = _branchSwitch.LoadConfig();
+        var request = new PureGameCleanupRequest
+        {
+            ConfigGamePath = string.IsNullOrWhiteSpace(GamePath) ? cfg.GamePath : GamePath,
+            Branch = branch,
+            ManagerAppDataRoot = _paths.DataRoot,
+            ConfirmDeleteOtherStore = deleteOther
+        };
+
+        var plan = PureGameCleanupPlanner.Build(request);
+        if (plan.IsAborted)
+        {
+            AppendLog(plan.AbortReason!);
+            _notify(string.Format(LocalizationService.T("NotifyPureGameCleanupFailed"), plan.AbortReason));
+            return;
+        }
+
+        var summary = string.Join("\n", plan.Actions.Select(a => $"• {a.Kind}: {a.Path}"));
+        if (!Confirm(LocalizationService.T("ConfirmPureGameCleanup") + "\n\n" + summary, MessageBoxResult.No))
+            return;
+
+        try
+        {
+            var executor = new PureGameCleanupExecutor(_processProbe, _branchSwitch, AppendLog);
+            var result = executor.Execute(request, dryRun: false);
+            if (!result.Success)
+            {
+                _notify(string.Format(LocalizationService.T("NotifyPureGameCleanupFailed"), result.Message));
+                return;
+            }
+
+            _notify(LocalizationService.T("NotifyPureGameCleanupDone"));
+            Application.Current?.Shutdown(0);
+        }
+        catch (Exception ex)
+        {
+            AppendLog(ex.Message);
+            _notify(string.Format(LocalizationService.T("NotifyPureGameCleanupFailed"), ex.Message));
+        }
+    }
+
+    [RelayCommand]
     void ExportDiagnostics()
     {
         if (_exportingDiagnostics) return;

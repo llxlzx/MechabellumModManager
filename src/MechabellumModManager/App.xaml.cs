@@ -60,6 +60,24 @@ public partial class App : Application
             return;
         }
 
+        if (PureGameCleanupCli.TryParseArgs(
+                e.Args,
+                out var cleanupGamePath,
+                out var cleanupDryRun,
+                out var cleanupConfirmOther,
+                out var cleanupSkipAppData,
+                out var cleanupSkipMelon))
+        {
+            var code = PureGameCleanupCli.Run(
+                cleanupGamePath,
+                cleanupDryRun,
+                cleanupConfirmOther,
+                cleanupSkipAppData,
+                cleanupSkipMelon);
+            Shutdown(code);
+            return;
+        }
+
         DispatcherUnhandledException += (_, args) =>
         {
             try

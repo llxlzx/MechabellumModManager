@@ -449,6 +449,11 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
     <value>Skipped generating assemblies now. You can try again via Apply Profile, or launch the game once manually.</value>
   </data>
   <data name="ExportDiagnosticsButton" xml:space="preserve"><value>Export Diagnostics</value></data>
+  <data name="PureGameCleanupButton" xml:space="preserve"><value>Thorough cleanup (vanilla game)</value></data>
+  <data name="ConfirmPureGameCleanup" xml:space="preserve"><value>This will whitelist-clean Melon/Mods/manager data, and tear down dual-folder if enabled and Official is complete. Game binaries and .NET are never removed. Continue?</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOther" xml:space="preserve"><value>Also delete the other branch store (usually the beta copy — large and irreversible)? Choose No to tear down dual-folder but keep the other store.</value></data>
+  <data name="NotifyPureGameCleanupDone" xml:space="preserve"><value>Cleanup finished. The manager will exit; use Programs and Features to remove the install folder.</value></data>
+  <data name="NotifyPureGameCleanupFailed" xml:space="preserve"><value>Cleanup incomplete: {0}</value></data>
   <data name="ExportDiagnosticsTitle" xml:space="preserve"><value>Export Diagnostics</value></data>
   <data name="ExportDiagnosticsConsent" xml:space="preserve"><value>This pack includes manager logs, config, dual-branch state, and MelonLoader logs to help troubleshoot. Full mode may include local paths and usernames; you can choose strong redaction instead. Email cannot attach the zip automatically — please attach the saved file manually.</value></data>
   <data name="ExportDiagnosticsModeFull" xml:space="preserve"><value>Full (may include paths/usernames)</value></data>
