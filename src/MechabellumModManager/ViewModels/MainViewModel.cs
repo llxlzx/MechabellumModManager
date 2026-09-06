@@ -64,6 +64,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly CriticalOpGuard _criticalOp;
     readonly IProcessProbe _processProbe;
     readonly IProcessStarter _processStarter;
+    readonly ISteamLifecycle _steamLifecycle;
     readonly TaskProgressSession _taskProgress = new();
     readonly Func<TimeSpan, Task> _delay;
     readonly TimeSpan _steamExitTimeout;
@@ -135,7 +136,8 @@ public sealed partial class MainViewModel : ObservableObject
         Action<string>? setBusyMessage = null,
         Action? endBusy = null,
         CriticalOpGuard? criticalOp = null,
-        Action? requestProcessExit = null)
+        Action? requestProcessExit = null,
+        ISteamLifecycle? steamLifecycle = null)
     {
         _paths = paths;
         _store = store;
@@ -185,6 +187,14 @@ public sealed partial class MainViewModel : ObservableObject
         _steamExitTimeout = steamExitTimeout ?? TimeSpan.FromSeconds(45);
         _steamExitCooldown = steamExitCooldown ?? TimeSpan.FromSeconds(3);
         _steamRestartCooldown = steamRestartCooldown ?? TimeSpan.FromSeconds(2);
+        _steamLifecycle = steamLifecycle ?? new SteamLifecycle(
+            _processProbe,
+            _processStarter,
+            _delay,
+            _steamExitTimeout,
+            _steamExitCooldown,
+            log: AppendLog,
+            notify: msg => _notify(msg));
         _branchSwitch = branchSwitch ?? new BranchSwitchService(
             paths,
             store,
@@ -3543,7 +3553,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (_steamRestartCooldown > TimeSpan.Zero)
             await _delay(_steamRestartCooldown).ConfigureAwait(true);
-        TryStartSteam();
+        AppendLog(LocalizationService.T("NotifyOpenSteamManuallyForWizardDownload"));
 
         if (!Confirm(LocalizationService.T("ConfirmDownloadOtherBranchContinue")))
         {
@@ -3931,53 +3941,18 @@ public sealed partial class MainViewModel : ObservableObject
         return true;
     }
 
-    async Task<bool> WaitForSteamAndGameExitAsync()
+    async Task<bool> WaitForSteamAndGameExitAsync() =>
+        await _steamLifecycle.EnsureClientAndGameExitedAsync().ConfigureAwait(true);
+
+    /// <summary>
+    /// Do not auto-launch Steam via protocol URIs: with multi-account "ask who is playing"
+    /// enabled, steam://open/games pops the account picker and fights WaitForExit.
+    /// Prompt the user to open Steam themselves when a download/validate is needed.
+    /// </summary>
+    void PreferManualSteamOpen(string reasonKey)
     {
-        if (!_processProbe.IsGameOrSteamRunning())
-            return true;
-
-        try
-        {
-            _processStarter.StartShell("steam://exit");
-        }
-        catch (Exception ex)
-        {
-            AppendLog(string.Format(LocalizationService.T("LogSteamExitRequestFailed"), ex.Message));
-        }
-
-        var deadline = DateTime.UtcNow + _steamExitTimeout;
-        while (_processProbe.IsGameOrSteamRunning() && DateTime.UtcNow < deadline)
-            await _delay(TimeSpan.FromMilliseconds(250)).ConfigureAwait(true);
-
-        if (_processProbe.IsGameOrSteamRunning())
-        {
-            AppendLog(LocalizationService.T("LogSteamOrGameStillRunning"));
-            return false;
-        }
-
-        if (_steamExitCooldown > TimeSpan.Zero)
-            await _delay(_steamExitCooldown).ConfigureAwait(true);
-
-        // Re-check after cooldown: steamwebhelper often lags behind steam.exe.
-        if (_processProbe.IsGameOrSteamRunning())
-        {
-            AppendLog(LocalizationService.T("LogSteamOrGameStillRunning"));
-            return false;
-        }
-
-        return true;
-    }
-
-    void TryStartSteam()
-    {
-        try
-        {
-            _processStarter.StartShell("steam://open/games");
-        }
-        catch (Exception ex)
-        {
-            AppendLog($"启动 Steam 失败：{ex.Message}");
-        }
+        var msg = LocalizationService.T(reasonKey);
+        _steamLifecycle.PreferManualOpen(msg);
     }
 
     void EnterSteamSettle()
@@ -4006,7 +3981,17 @@ public sealed partial class MainViewModel : ObservableObject
         DegradeToManualBeta = false;
         if (_steamRestartCooldown > TimeSpan.Zero)
             await _delay(_steamRestartCooldown).ConfigureAwait(true);
-        TryStartSteam();
+
+        var restored = string.Equals(silent.Message, "restored-acf-snapshot", StringComparison.Ordinal);
+        if (restored)
+        {
+            AppendLog(LocalizationService.T("LogSettleSnapshotNoAutoSteam"));
+        }
+        else
+        {
+            PreferManualSteamOpen("NotifyOpenSteamManuallyForSettle");
+        }
+
         if (!string.IsNullOrWhiteSpace(successLog))
             AppendLog(successLog);
     }
