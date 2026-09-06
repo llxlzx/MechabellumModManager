@@ -80,7 +80,7 @@ public class PureGameCleanupWhitelistTests
 public class PureGameCleanupPlannerTests
 {
     [Fact]
-    public void Aborts_when_dual_enabled_and_official_hollow()
+    public void Hollow_official_skips_teardown_but_still_plans_melon_on_complete_stores()
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-plan-" + Guid.NewGuid().ToString("N"));
         var official = Path.Combine(root, "Mechabellum_official");
@@ -91,6 +91,7 @@ public class PureGameCleanupPlannerTests
         Directory.CreateDirectory(beta);
         File.WriteAllText(Path.Combine(beta, "Mechabellum.exe"), "x");
         File.WriteAllText(Path.Combine(beta, "GameAssembly.dll"), "x");
+        Directory.CreateDirectory(Path.Combine(beta, "Mods"));
         try
         {
             var plan = PureGameCleanupPlanner.Build(new PureGameCleanupRequest
@@ -107,9 +108,12 @@ public class PureGameCleanupPlannerTests
                 SkipAppData = true
             });
 
-            plan.IsAborted.Should().BeTrue();
-            plan.AbortExitCode.Should().Be(3);
-            plan.Actions.Should().BeEmpty();
+            plan.IsAborted.Should().BeFalse();
+            plan.Actions.Should().NotContain(a => a.Kind == CleanupActionKind.TeardownDualFolder);
+            plan.Actions.Should().Contain(a =>
+                a.Kind == CleanupActionKind.DeleteDirectory
+                && a.Path.Contains("Mechabellum_beta", StringComparison.OrdinalIgnoreCase)
+                && a.Path.EndsWith("Mods", StringComparison.OrdinalIgnoreCase));
         }
         finally
         {

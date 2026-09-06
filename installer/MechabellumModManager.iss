@@ -268,17 +268,39 @@ Name: "{autodesktop}\{cm:AppDisplayName}"; Filename: "{app}\{#MyAppExeName}"; Ta
 ; "completion" wait / possible UI flash (duplicate finish experience).
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:RunNow,{cm:AppDisplayName}}"; Flags: nowait postinstall skipifsilent
 
-[UninstallRun]
-; Thorough game cleanup before removing {app}. Never uninstalls .NET.
-; --confirm-delete-other-store: remove beta store only when Official is complete (exe aborts otherwise).
-Filename: "{app}\{#MyAppExeName}"; Parameters: "--pure-game-cleanup --confirm-delete-other-store"; RunOnceId: "PureGameCleanup"; Flags: waituntilterminated skipifdoesntexist
-
 [Code]
 var
   GamePathPage: TInputDirWizardPage;
   RiskLabel: TNewStaticText;
   G_PostGamePath: string;
   G_PostUiLang: string;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  ResultCode: Integer;
+  ExePath: string;
+begin
+  { Run BEFORE files are deleted. [UninstallRun] defaults to after delete and would skip.}
+  if CurUninstallStep = usUninstall then
+  begin
+    ExePath := ExpandConstant('{app}\{#MyAppExeName}');
+    if FileExists(ExePath) then
+    begin
+      if Exec(ExePath, '--pure-game-cleanup --confirm-delete-other-store', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+      begin
+        if ResultCode <> 0 then
+          MsgBox(
+            '游戏内 Melon/Mods 清理未完全成功（退出码 ' + IntToStr(ResultCode) + '）。' + #13#10 +
+            '管理器安装目录仍会删除。请查看日志：' + #13#10 +
+            '%AppData%\MechabellumModManager\pure-game-cleanup.log' + #13#10 +
+            '若 Steam 在运行，双服可能未解除；Mods 一般仍会尽量清理。',
+            mbInformation, MB_OK);
+      end
+      else
+        MsgBox('无法启动游戏残留清理程序。管理器安装目录仍会删除。', mbError, MB_OK);
+    end;
+  end;
+end;
 
 function GetPostGamePath(Param: string): string;
 begin
