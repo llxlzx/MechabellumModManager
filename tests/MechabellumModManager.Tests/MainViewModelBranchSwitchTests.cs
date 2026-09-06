@@ -316,6 +316,143 @@ public class MainViewModelBranchSwitchTests
         notes.Should().Contain(LocalizationService.T("NotifySettleBlockedUpdateUnhealthy"));
     }
 
+    [Fact]
+    public async Task ConfirmManualBeta_keeps_settle_when_acf_snapshot_missing()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirm: _ => true, notify: notes.Add);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+        vm.Mods[0].IsEnabled = true;
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        WriteSettledAcf(fx, betaKey: "public_test");
+
+        var acf = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", "..", "appmanifest_669330.acf"));
+        File.Delete(acf);
+
+        await vm.ConfirmManualBetaCommand.ExecuteAsync(null);
+
+        vm.IsAwaitingSteamSettle.Should().BeTrue(
+            "snapshot failure must not ClearSteamSettle (no deferred Ready)");
+        notes.Should().Contain(LocalizationService.T("NotifySettleBlockedSnapshotFailed"));
+    }
+
+    [Fact]
+    public void Refresh_degrades_ready_when_active_store_hollow()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        File.Delete(Path.Combine(fx.OfficialStore, "GameAssembly.dll"));
+
+        var notes = new List<string>();
+        var vm = fx.CreateVm(notify: notes.Add);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.AwaitingSteamSettle);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        Directory.Exists(fx.OfficialStore).Should().BeTrue();
+        notes.Should().Contain(LocalizationService.T("NotifyHollowStoreDegraded"));
+    }
+
+    [Fact]
+    public void Refresh_does_not_degrade_ready_for_acf_hardfault_when_root_intact()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var acf = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", "..", "appmanifest_669330.acf"));
+        File.WriteAllText(acf,
+            """
+            "AppState"
+            {
+            	"StateFlags"		"1190"
+            	"buildid"		"1"
+            	"TargetBuildID"		"1"
+            	"BytesToDownload"		"100"
+            	"BytesDownloaded"		"0"
+            }
+            """);
+
+        var vm = fx.CreateVm();
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.Ready);
+        vm.IsAwaitingSteamSettle.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Hollow_ready_degraded_can_switch_to_complete_other_store()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        File.Delete(Path.Combine(fx.OfficialStore, "GameAssembly.dll"));
+
+        var vm = fx.CreateVm(confirm: _ => true);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        vm.CanSwitchGameBranch.Should().BeTrue();
+        vm.CanTeardownBranchSwitch.Should().BeTrue();
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+
+        vm.ActiveGameBranch.Should().Be(GameBranch.Beta);
+        SteamGameLocator.LooksLikeGameRoot(fx.BetaStore).Should().BeTrue();
+    }
+
     static void WriteSettledAcf(Fixture fx, string? betaKey)
     {
         var acf = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", "..", "appmanifest_669330.acf"));
@@ -1302,7 +1439,7 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
-    public void AwaitingSteamSettle_disables_switch_wizard_teardown()
+    public void AwaitingSteamSettle_keeps_switch_teardown_escape_but_blocks_wizard()
     {
         using var fx = Fixture.CreateReady();
         fx.WriteBranchConfig(new BranchSwitchConfig
@@ -1322,9 +1459,9 @@ public class MainViewModelBranchSwitchTests
 
         vm.IsAwaitingSteamSettle = true;
 
-        vm.CanSwitchGameBranch.Should().BeFalse();
+        vm.CanSwitchGameBranch.Should().BeTrue("escape to complete other store must stay available");
         vm.CanStartBranchWizard.Should().BeFalse();
-        vm.CanTeardownBranchSwitch.Should().BeFalse();
+        vm.CanTeardownBranchSwitch.Should().BeTrue("teardown must stay available during settle");
     }
 
     [Fact]

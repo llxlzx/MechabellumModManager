@@ -572,8 +572,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
 
+    /// <summary>
+    /// Switch stays available during settle so a hollow active store can escape to the complete other store.
+    /// </summary>
     public bool CanSwitchGameBranch =>
-        BranchSwitchEnabled && !IsAwaitingSteamSettle && !IsBranchSwitchBusy;
+        BranchSwitchEnabled && !IsBranchSwitchBusy;
 
     public bool CanStartBranchWizard =>
         !IsAwaitingSteamSettle && !IsBranchSwitchBusy;
@@ -584,10 +587,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// Allow remove when dual-folder is on, or when a paused/abandoned wizard left residue.
+    /// Allowed during settle so hollow-Ready degrade does not trap the user.
     /// </summary>
     public bool CanTeardownBranchSwitch =>
         (BranchSwitchEnabled || IsBranchWizardInProgress)
-        && !IsAwaitingSteamSettle
         && !IsBranchSwitchBusy;
 
     /// <summary>
@@ -942,6 +945,44 @@ public sealed partial class MainViewModel : ObservableObject
             ScheduleAssemblyGeneratePrompt();
         OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
+        TryDegradeHollowReadyStore();
+    }
+
+    /// <summary>
+    /// False BranchWizardStep.Ready while active store/link is not a game root → settle/repair.
+    /// Does not degrade for ACF-only faults while the root is still intact.
+    /// </summary>
+    void TryDegradeHollowReadyStore()
+    {
+        if (!BranchSwitchEnabled || BranchWizardStep != BranchWizardStep.Ready)
+            return;
+
+        try
+        {
+            var cfg = _branchSwitch.LoadConfig();
+            var store = ActiveGameBranch == GameBranch.Official
+                ? cfg.OfficialStorePath
+                : cfg.BetaStorePath;
+            var storeConfigured = !string.IsNullOrWhiteSpace(store);
+            var linkConfigured = !string.IsNullOrWhiteSpace(cfg.SteamLinkPath);
+            // Incomplete config is not the field hollow-Ready case — avoid false degrade in tests/setup.
+            if (!storeConfigured && !linkConfigured)
+                return;
+
+            var storeOk = !storeConfigured || SteamGameLocator.LooksLikeGameRoot(store);
+            var linkOk = !linkConfigured || SteamGameLocator.LooksLikeGameRoot(cfg.SteamLinkPath);
+            if (storeOk && linkOk)
+                return;
+
+            EnterSteamSettle();
+            var msg = LocalizationService.T("NotifyHollowStoreDegraded");
+            AppendLog(msg);
+            _notify(msg);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"检查空壳仓失败：{ex.Message}");
+        }
     }
 
     public bool CanOfferAssemblyGeneratePrompt =>
@@ -1444,7 +1485,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     async Task TeardownBranchSwitch()
     {
-        if (IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
+        if (IsBranchSwitchBusy) return;
         if (!BranchSwitchEnabled && !IsBranchWizardInProgress) return;
         if (!Confirm(LocalizationService.T("ConfirmBranchTeardown")))
             return;
@@ -3261,7 +3302,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     async Task SwitchToBranchAsync(GameBranch target)
     {
-        if (!BranchSwitchEnabled || IsBranchSwitchBusy || IsAwaitingSteamSettle) return;
+        if (!BranchSwitchEnabled || IsBranchSwitchBusy) return;
+
+        try
+        {
+            var cfg = _branchSwitch.LoadConfig();
+            var targetStore = target == GameBranch.Official ? cfg.OfficialStorePath : cfg.BetaStorePath;
+            if (!SteamGameLocator.LooksLikeGameRoot(targetStore))
+            {
+                var msg = LocalizationService.T("NotifySwitchBlockedTargetHollow");
+                AppendLog(msg);
+                _notify(msg);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"切服前检查目标仓失败：{ex.Message}");
+            return;
+        }
 
         if (_branchSwitch.IsAlignedWith(target))
         {
@@ -4033,10 +4092,9 @@ public sealed partial class MainViewModel : ObservableObject
                 return;
             }
 
-            // Deploy already succeeded; snapshot is best-effort. Clear settle so UI matches Steam.
-            AppendLog(LocalizationService.T("LogSettleClearedSnapshotDeferred"));
-            _notify(LocalizationService.T("NotifySettleClearedSnapshotDeferred"));
-            ClearSteamSettle();
+            // Never promote Ready without a successful snapshot — hollow/corrupt ACF must stay in settle.
+            AppendLog(LocalizationService.T("LogSettleKeptAwaiting"));
+            _notify(LocalizationService.T("NotifySettleBlockedSnapshotFailed"));
             return;
         }
 

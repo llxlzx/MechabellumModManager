@@ -4,6 +4,17 @@ using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
 
+/// <summary>Stable English failure tokens for branch ops (map to UI in ViewModel).</summary>
+public static class BranchOpMessages
+{
+    public const string GameRunning = "Game is running.";
+    public const string GameOrSteamRunning = "Game or Steam is running.";
+    public const string SteamLinkMissing = "Steam link path is not configured.";
+    public const string StoreNotGameRoot = "Branch store is not a valid game root.";
+    public const string ManifestMissing = "Manifest not found.";
+    public const string ManifestNotSettled = "Manifest is not settled; skip snapshot.";
+}
+
 public sealed class BranchOperationResult
 {
     public bool Success { get; init; }
@@ -15,6 +26,39 @@ public sealed class BranchOperationResult
 
     public static BranchOperationResult Fail(string message, bool degradeToManualBeta = false) =>
         new() { Success = false, Message = message, DegradeToManualBeta = degradeToManualBeta };
+
+    public bool IsManifestNotSettled =>
+        Message.Contains("not settled", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsGameRunningBlock =>
+        string.Equals(Message, BranchOpMessages.GameRunning, StringComparison.Ordinal)
+        || Message.Contains("Game is running", StringComparison.OrdinalIgnoreCase);
+}
+
+
+public sealed class OrphanDualLayoutInfo
+{
+    public static OrphanDualLayoutInfo None { get; } = new(false, false, "", null, Array.Empty<string>());
+
+    public OrphanDualLayoutInfo(
+        bool isOrphan,
+        bool linkIsJunction,
+        string steamLinkPath,
+        string? junctionTarget,
+        IReadOnlyList<string> leftoverStorePaths)
+    {
+        IsOrphan = isOrphan;
+        LinkIsJunction = linkIsJunction;
+        SteamLinkPath = steamLinkPath;
+        JunctionTarget = junctionTarget;
+        LeftoverStorePaths = leftoverStorePaths;
+    }
+
+    public bool IsOrphan { get; }
+    public bool LinkIsJunction { get; }
+    public string SteamLinkPath { get; }
+    public string? JunctionTarget { get; }
+    public IReadOnlyList<string> LeftoverStorePaths { get; }
 }
 
 public sealed class BranchSwitchService
@@ -100,8 +144,13 @@ public sealed class BranchSwitchService
         if (!string.IsNullOrWhiteSpace(liveTarget))
             previousStore = liveTarget;
 
-        if (string.IsNullOrWhiteSpace(previousStore) || !LooksLikeGameRoot(previousStore))
-            return BranchOperationResult.Fail("Current store is not a valid game root.");
+        if (string.IsNullOrWhiteSpace(previousStore))
+            return BranchOperationResult.Fail("Current store path is unknown.");
+
+        // Steam may hollow the active store mid-download (exe left, GameAssembly gone).
+        // Still allow leaving that store when the target is a complete game root.
+        if (!Directory.Exists(previousStore))
+            return BranchOperationResult.Fail("Current store is missing.");
 
         if (!string.IsNullOrWhiteSpace(liveTarget))
         {
@@ -223,24 +272,25 @@ public sealed class BranchSwitchService
 
     public BranchOperationResult TrySnapshotSettledAcf(GameBranch branch)
     {
-        if (_probe.IsGameOrSteamRunning())
-            return BranchOperationResult.Fail("Game or Steam is running.");
+        // Read-only live ACF → AppData snapshot. Steam may stay open; game running can lock files.
+        if (_probe.IsGameRunning())
+            return BranchOperationResult.Fail(BranchOpMessages.GameRunning);
 
         var cfg = LoadConfig();
         if (string.IsNullOrWhiteSpace(cfg.SteamLinkPath))
-            return BranchOperationResult.Fail("Steam link path is not configured.");
+            return BranchOperationResult.Fail(BranchOpMessages.SteamLinkMissing);
 
         var store = StorePath(cfg, branch);
         if (string.IsNullOrWhiteSpace(store) || !LooksLikeGameRoot(store))
-            return BranchOperationResult.Fail("Branch store is not a valid game root.");
+            return BranchOperationResult.Fail(BranchOpMessages.StoreNotGameRoot);
 
         var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
         if (!File.Exists(acf))
-            return BranchOperationResult.Fail("Manifest not found.");
+            return BranchOperationResult.Fail(BranchOpMessages.ManifestMissing);
 
         var text = File.ReadAllText(acf);
         if (!SteamBetaKeyEditor.LooksSettledForSnapshot(text))
-            return BranchOperationResult.Fail("Manifest is not settled; skip snapshot.");
+            return BranchOperationResult.Fail(BranchOpMessages.ManifestNotSettled);
 
         var snapshotPath = _paths.GetSteamAcfSnapshotPath(branch);
         Directory.CreateDirectory(Path.GetDirectoryName(snapshotPath)!);
@@ -380,6 +430,8 @@ public sealed class BranchSwitchService
                     return BranchOperationResult.Fail("Junction target is missing.");
 
                 real = Path.GetFullPath(real);
+                if (!LooksLikeGameRoot(real))
+                    return BranchOperationResult.Fail("Current game path is not a valid game root.");
                 if (PathExists(dest))
                 {
                     if (!PathsEqual(real, dest))
@@ -390,13 +442,29 @@ public sealed class BranchSwitchService
                 else
                 {
                     _junctions.DeleteJunction(link);
-                    MoveDirectoryWithRetry(real, dest);
+                    try
+                    {
+                        MoveDirectoryWithRetry(real, dest);
+                    }
+                    catch
+                    {
+                        // Junction already removed — restore Steam link or the library path is hollow.
+                        if (Directory.Exists(real) && !PathExists(link))
+                        {
+                            try { _junctions.CreateJunction(link, real); }
+                            catch { /* surface original move error */ }
+                        }
+                        throw;
+                    }
                 }
             }
             else if (Directory.Exists(link))
             {
                 if (PathExists(dest))
                     return BranchOperationResult.Fail("Store path already exists.");
+
+                if (!LooksLikeGameRoot(link))
+                    return BranchOperationResult.Fail("Current game path is not a valid game root.");
 
                 if (!TryProbeDirectoryWritable(link, out var probeError))
                     return BranchOperationResult.Fail(probeError);
@@ -551,11 +619,20 @@ public sealed class BranchSwitchService
 
             try
             {
-                if (!string.IsNullOrWhiteSpace(currentStore) && Directory.Exists(currentStore))
+                // Prefer a complete store when the junction target was hollowed by Steam download/validate.
+                var materializeFrom = currentStore;
+                if (string.IsNullOrWhiteSpace(materializeFrom) || !LooksLikeGameRoot(materializeFrom))
+                {
+                    var fallback = ResolveCompleteOtherStore(cfg, currentStore, link);
+                    if (!string.IsNullOrWhiteSpace(fallback))
+                        materializeFrom = fallback;
+                }
+
+                if (!string.IsNullOrWhiteSpace(materializeFrom) && Directory.Exists(materializeFrom))
                 {
                     if (!PathExists(link))
-                        MoveDirectoryWithRetry(currentStore, link);
-                    else if (!PathsEqual(currentStore, link))
+                        MoveDirectoryWithRetry(materializeFrom, link);
+                    else if (!PathsEqual(materializeFrom, link))
                     {
                         RollbackTeardownLink(link, unlinkedStore, deletedJunction);
                         return BranchOperationResult.Fail("Steam link path already exists.");
@@ -565,25 +642,45 @@ public sealed class BranchSwitchService
                 if (!LooksLikeGameRoot(link))
                 {
                     RollbackTeardownLink(link, unlinkedStore, deletedJunction);
-                    return BranchOperationResult.Fail("Restored path is not a valid game root.");
+                    return BranchOperationResult.Fail(
+                        "Restored path is not a valid game root. If Steam is downloading into the active store, wait until it finishes or switch to the complete other store first.");
                 }
 
                 var currentBranch = cfg.ActiveBranch;
-                if (!string.IsNullOrWhiteSpace(currentStore))
+                if (!string.IsNullOrWhiteSpace(materializeFrom))
                 {
-                    if (!string.IsNullOrWhiteSpace(cfg.OfficialStorePath) && PathsEqual(currentStore, cfg.OfficialStorePath))
+                    if (!string.IsNullOrWhiteSpace(cfg.OfficialStorePath) && PathsEqual(materializeFrom, cfg.OfficialStorePath))
                         currentBranch = GameBranch.Official;
-                    else if (!string.IsNullOrWhiteSpace(cfg.BetaStorePath) && PathsEqual(currentStore, cfg.BetaStorePath))
+                    else if (!string.IsNullOrWhiteSpace(cfg.BetaStorePath) && PathsEqual(materializeFrom, cfg.BetaStorePath))
                         currentBranch = GameBranch.Beta;
                 }
 
-                var otherStore = OtherStorePath(cfg, currentStore);
+                var otherStore = OtherStorePath(cfg, materializeFrom);
+                if (string.IsNullOrWhiteSpace(otherStore) || !Directory.Exists(otherStore))
+                {
+                    // Disk leftovers when JSON paths were cleared or current was hollow.
+                    otherStore = SteamBranchLayout.EnumerateExistingStoreFolders(link)
+                        .Select(Path.GetFullPath)
+                        .FirstOrDefault(p => !PathsEqual(p, link) && !PathsEqual(p, materializeFrom));
+                }
+
                 if (deleteOtherStore
                     && !string.IsNullOrWhiteSpace(otherStore)
                     && Directory.Exists(otherStore)
                     && !PathsEqual(otherStore, link))
                 {
                     Directory.Delete(otherStore, recursive: true);
+                }
+
+                // Hollow leftover that was the old junction target (not moved).
+                if (deleteOtherStore
+                    && !string.IsNullOrWhiteSpace(unlinkedStore)
+                    && Directory.Exists(unlinkedStore)
+                    && !PathsEqual(unlinkedStore, link)
+                    && !LooksLikeGameRoot(unlinkedStore))
+                {
+                    try { Directory.Delete(unlinkedStore, recursive: true); }
+                    catch { /* best-effort */ }
                 }
 
                 RestoreLegacyManifestFrom(currentBranch);
@@ -607,6 +704,160 @@ public sealed class BranchSwitchService
         {
             return BranchOperationResult.Fail(ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Disk-aware orphan detection when dual-folder config is off but junction/leftover stores remain.
+    /// </summary>
+    public OrphanDualLayoutInfo InspectOrphanDualLayout(string? preferredLinkPath = null)
+    {
+        var cfg = LoadConfig();
+        var link = ResolveOrphanLinkPath(preferredLinkPath, cfg);
+        if (string.IsNullOrWhiteSpace(link))
+            return OrphanDualLayoutInfo.None;
+
+        try { link = Path.GetFullPath(link); }
+        catch { return OrphanDualLayoutInfo.None; }
+
+        var isJunction = PathExists(link) && _junctions.IsJunction(link);
+        string? junctionTarget = null;
+        if (isJunction)
+        {
+            var live = _junctions.ResolveTarget(link);
+            if (!string.IsNullOrWhiteSpace(live))
+            {
+                try { junctionTarget = Path.GetFullPath(live); }
+                catch { junctionTarget = live; }
+            }
+        }
+
+        var leftovers = SteamBranchLayout.EnumerateExistingStoreFolders(link)
+            .Where(LooksLikeGameRoot)
+            .Select(Path.GetFullPath)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var isOrphan = isJunction || leftovers.Count > 0;
+        return new OrphanDualLayoutInfo(isOrphan, isJunction, link, junctionTarget, leftovers);
+    }
+
+    /// <summary>
+    /// Materialize Mechabellum if it is still a junction; optionally delete leftover store folders.
+    /// Other-store discovery is disk-based (JSON paths may be empty after a partial teardown).
+    /// </summary>
+    public BranchOperationResult TryRepairOrphanDualLayout(bool deleteOtherStore, string? preferredLinkPath = null)
+    {
+        if (_probe.IsGameOrSteamRunning())
+            return BranchOperationResult.Fail("Game or Steam is running.");
+
+        var info = InspectOrphanDualLayout(preferredLinkPath);
+        if (!info.IsOrphan)
+            return BranchOperationResult.Ok("Nothing to repair.");
+
+        var link = info.SteamLinkPath;
+        string? unlinkedStore = null;
+        var deletedJunction = false;
+
+        try
+        {
+            if (info.LinkIsJunction)
+            {
+                var currentStore = info.JunctionTarget;
+                if (string.IsNullOrWhiteSpace(currentStore) || !Directory.Exists(currentStore))
+                    return BranchOperationResult.Fail("Junction target is missing.");
+
+                currentStore = Path.GetFullPath(currentStore);
+                unlinkedStore = currentStore;
+                _junctions.DeleteJunction(link);
+                deletedJunction = true;
+
+                try
+                {
+                    if (!PathExists(link))
+                        MoveDirectoryWithRetry(currentStore, link);
+                    else if (!PathsEqual(currentStore, link))
+                    {
+                        RollbackTeardownLink(link, unlinkedStore, deletedJunction);
+                        return BranchOperationResult.Fail("Steam link path already exists.");
+                    }
+
+                    if (!LooksLikeGameRoot(link))
+                    {
+                        RollbackTeardownLink(link, unlinkedStore, deletedJunction);
+                        return BranchOperationResult.Fail("Restored path is not a valid game root.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    RollbackTeardownLink(link, unlinkedStore, deletedJunction);
+                    return BranchOperationResult.Fail(ex.Message);
+                }
+            }
+            else if (!LooksLikeGameRoot(link))
+            {
+                return BranchOperationResult.Fail("Steam link path is not a valid game root.");
+            }
+
+            if (deleteOtherStore)
+            {
+                foreach (var store in SteamBranchLayout.EnumerateExistingStoreFolders(link)
+                             .Where(LooksLikeGameRoot)
+                             .Select(Path.GetFullPath))
+                {
+                    if (PathsEqual(store, link))
+                        continue;
+                    if (Directory.Exists(store))
+                        Directory.Delete(store, recursive: true);
+                }
+            }
+
+            var cfg = LoadConfig();
+            cfg.Enabled = false;
+            cfg.WizardStep = BranchWizardStep.None;
+            cfg.SteamLinkPath = link;
+            cfg.OfficialStorePath = "";
+            cfg.BetaStorePath = "";
+            SaveConfig(cfg);
+            ClearJournal();
+            return BranchOperationResult.Ok();
+        }
+        catch (Exception ex)
+        {
+            RollbackTeardownLink(link, unlinkedStore, deletedJunction);
+            return BranchOperationResult.Fail(ex.Message);
+        }
+    }
+
+    static string ResolveOrphanLinkPath(string? preferredLinkPath, BranchSwitchConfig cfg)
+    {
+        if (!string.IsNullOrWhiteSpace(preferredLinkPath))
+        {
+            try
+            {
+                var preferred = Path.GetFullPath(preferredLinkPath);
+                if (SteamBranchLayout.TryGetCanonicalSteamLink(preferred, out var fromStore))
+                    return fromStore;
+                return preferred;
+            }
+            catch
+            {
+                // fall through
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(cfg.SteamLinkPath))
+        {
+            try { return Path.GetFullPath(cfg.SteamLinkPath); }
+            catch { /* fall through */ }
+        }
+
+        foreach (var candidate in new[] { cfg.OfficialStorePath, cfg.BetaStorePath })
+        {
+            if (SteamBranchLayout.TryGetCanonicalSteamLink(candidate, out var link))
+                return link;
+        }
+
+        return "";
     }
 
     void RollbackTeardownLink(string link, string? store, bool deletedJunction)
@@ -653,6 +904,40 @@ public sealed class BranchSwitchService
     {
         CopyOverwrite(_paths.GetDeployManifestPath(current, enabled: true), _paths.DeployManifestPath);
         CopyOverwrite(_paths.GetDeployManifestPrevPath(current, enabled: true), _paths.DeployManifestPrevPath);
+    }
+
+    static string? ResolveCompleteOtherStore(BranchSwitchConfig cfg, string? currentStore, string link)
+    {
+        var candidates = new List<string>();
+        var configuredOther = OtherStorePath(cfg, currentStore);
+        if (!string.IsNullOrWhiteSpace(configuredOther))
+            candidates.Add(configuredOther);
+
+        foreach (var path in new[] { cfg.OfficialStorePath, cfg.BetaStorePath })
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+                candidates.Add(path);
+        }
+
+        candidates.AddRange(SteamBranchLayout.EnumerateExistingStoreFolders(link));
+
+        foreach (var raw in candidates)
+        {
+            try
+            {
+                var full = Path.GetFullPath(raw);
+                if (PathsEqual(full, link)) continue;
+                if (!string.IsNullOrWhiteSpace(currentStore) && PathsEqual(full, currentStore)) continue;
+                if (LooksLikeGameRoot(full))
+                    return full;
+            }
+            catch
+            {
+                // skip bad path
+            }
+        }
+
+        return null;
     }
 
     static string OtherStorePath(BranchSwitchConfig cfg, string? currentStore)
@@ -785,6 +1070,10 @@ public sealed class BranchSwitchService
     /// Directory.Move fails when Explorer/AV/indexer still holds a handle even after Steam exits.
     /// Retry briefly before surfacing access-denied guidance.
     /// </summary>
+    /// <summary>
+    /// Prefer same-volume rename; if Access Denied (AV/indexer/steamservice/cwd handle),
+    /// clear read-only and fall back to copy+delete so dual-folder can finish without Steam UI.
+    /// </summary>
     internal static void MoveDirectoryWithRetry(
         string source,
         string dest,
@@ -802,11 +1091,17 @@ public sealed class BranchSwitchService
                 Thread.Sleep(span);
         };
 
+        source = Path.GetFullPath(source);
+        dest = Path.GetFullPath(dest);
+        if (string.Equals(source, dest, StringComparison.OrdinalIgnoreCase))
+            return;
+
         Exception? last = null;
         for (var i = 0; i < attempts; i++)
         {
             try
             {
+                ClearReadOnlyAttributes(source);
                 Directory.Move(source, dest);
                 return;
             }
@@ -819,7 +1114,98 @@ public sealed class BranchSwitchService
             }
         }
 
-        throw last ?? new IOException("Directory.Move failed.");
+        // Rename failed after retries — copy then delete (handles root-dir locks / stubborn ACL).
+        try
+        {
+            ClearReadOnlyAttributes(source);
+            if (Directory.Exists(dest))
+                throw last ?? new IOException("Destination already exists after failed rename.");
+
+            CopyDirectoryRecursive(source, dest);
+            try
+            {
+                ClearReadOnlyAttributes(source);
+                Directory.Delete(source, recursive: true);
+            }
+            catch (Exception delEx) when (delEx is UnauthorizedAccessException or IOException)
+            {
+                // Leave dest intact; do not roll back — source may still be partially locked.
+                throw new IOException(
+                    "已复制到目标目录，但删除原目录失败（仍有文件被占用）。请手动确认后重试或重启后再试。\n"
+                    + "原始信息：" + delEx.Message,
+                    delEx);
+            }
+
+            if (Directory.Exists(source))
+                throw new IOException("Copy-delete move left the source directory in place.");
+            return;
+        }
+        catch (IOException ex) when (ex.Message.StartsWith("已复制到目标目录", StringComparison.Ordinal))
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            // Roll back partial copy if source still exists.
+            try
+            {
+                if (Directory.Exists(source) && Directory.Exists(dest))
+                    Directory.Delete(dest, recursive: true);
+            }
+            catch
+            {
+                // ignore rollback errors
+            }
+
+            throw last ?? ex;
+        }
+    }
+
+    internal static void ClearReadOnlyAttributes(string root)
+    {
+        if (!Directory.Exists(root))
+            return;
+
+        foreach (var path in Directory.EnumerateFileSystemEntries(root, "*", SearchOption.AllDirectories))
+        {
+            try
+            {
+                var attrs = File.GetAttributes(path);
+                if ((attrs & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(path, attrs & ~FileAttributes.ReadOnly);
+            }
+            catch
+            {
+                // Best-effort; move/copy will surface hard failures.
+            }
+        }
+
+        try
+        {
+            var rootAttrs = File.GetAttributes(root);
+            if ((rootAttrs & FileAttributes.ReadOnly) != 0)
+                File.SetAttributes(root, rootAttrs & ~FileAttributes.ReadOnly);
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    static void CopyDirectoryRecursive(string source, string dest)
+    {
+        Directory.CreateDirectory(dest);
+        foreach (var file in Directory.EnumerateFiles(source))
+        {
+            var name = Path.GetFileName(file);
+            File.Copy(file, Path.Combine(dest, name), overwrite: true);
+        }
+
+        foreach (var dir in Directory.EnumerateDirectories(source))
+        {
+            var name = Path.GetFileName(dir);
+            CopyDirectoryRecursive(dir, Path.Combine(dest, name));
+        }
     }
 
     static bool TryProbeDirectoryWritable(string dir, out string error)
@@ -852,9 +1238,11 @@ public sealed class BranchSwitchService
             || msg.Contains("denied", StringComparison.OrdinalIgnoreCase)
             || msg.Contains("拒绝访问", StringComparison.OrdinalIgnoreCase))
         {
-            return "无法移动游戏目录（访问被拒绝）。请确认已完全退出 Steam 与游戏（含 steamwebhelper），"
-                   + "关闭资源管理器中打开的该游戏文件夹，临时关闭对该目录的杀软占用，检查文件夹只读属性；"
-                   + "仍失败时请以管理员身份运行管理器后重试。\n"
+            return "无法移动游戏目录（访问被拒绝）。即使已退出 Steam 客户端与游戏，仍可能被 "
+                   + "Steam 后台服务（steamservice）、Windows 搜索索引、杀软或其它程序占用目录句柄。"
+                   + "可尝试：任务管理器结束 steamservice、重启后再开管理器（管理员）、"
+                   + "确认未把游戏目录设为终端/IDE 当前目录。"
+                   + "若不需要正式服/测试服双目录，可忽略向导，直接「应用并启动」使用 Mod。\n"
                    + "原始信息：" + msg;
         }
 

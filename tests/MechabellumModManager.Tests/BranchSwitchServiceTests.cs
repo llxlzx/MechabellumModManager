@@ -137,6 +137,58 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void Snapshot_succeeds_while_Steam_running_when_acf_settled()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        File.WriteAllText(h.AcfPath, """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"100"
+	"TargetBuildID"		"100"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+}
+""");
+        h.Probe.SteamRunning = true;
+
+        var result = h.Svc.TrySnapshotSettledAcf(GameBranch.Official);
+
+        result.Success.Should().BeTrue();
+        File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official)).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Snapshot_refuses_when_game_running()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        File.WriteAllText(h.AcfPath, """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"100"
+	"TargetBuildID"		"100"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+}
+""");
+        h.Probe.GameRunning = true;
+
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Success.Should().BeFalse();
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Message.Should().Contain("Game");
+    }
+
+    [Fact]
     public void Snapshot_accepts_completed_transfer_counters()
     {
         using var h = Harness.CreateReadyDualFolder();
@@ -316,6 +368,19 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void ArchiveCurrentAs_refuses_hollow_game_root()
+    {
+        using var h = Harness.CreateWizardStart();
+        File.Delete(Path.Combine(h.SteamLink, "GameAssembly.dll"));
+
+        var result = h.Svc.ArchiveCurrentAs(GameBranch.Official);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("not a valid game root");
+        Directory.Exists(h.SteamLink).Should().BeTrue();
+    }
+
+    [Fact]
     public void ArchiveDownloadedAs_then_CreateLinkTo_follows_spec_order()
     {
         using var h = Harness.CreateWizardStart();
@@ -461,7 +526,9 @@ public class BranchSwitchServiceTests
     public void Teardown_move_fail_restores_junction_and_keeps_enabled()
     {
         using var h = Harness.CreateReadyDualFolder();
+        // Both stores incomplete → no fallback materialize source.
         File.Delete(Path.Combine(h.OfficialStore, "Mechabellum.exe"));
+        File.Delete(Path.Combine(h.BetaStore, "Mechabellum.exe"));
 
         var result = h.Svc.TryTeardown(deleteOtherStore: false);
 
@@ -478,6 +545,7 @@ public class BranchSwitchServiceTests
     {
         using var h = Harness.CreateReadyDualFolder();
         File.Delete(Path.Combine(h.OfficialStore, "Mechabellum.exe"));
+        File.Delete(Path.Combine(h.BetaStore, "Mechabellum.exe"));
         h.Junctions.RemainingCreateFailures = 1;
 
         var result = h.Svc.TryTeardown(deleteOtherStore: false);
@@ -542,6 +610,44 @@ public class BranchSwitchServiceTests
         h.Junctions.IsJunction(h.SteamLink).Should().BeFalse();
         Directory.Exists(h.SteamLink).Should().BeFalse();
         File.ReadAllText(Path.Combine(h.BetaStore, "marker.txt")).Should().Be("beta");
+    }
+
+    [Fact]
+    public void SwapJunction_allows_leaving_incomplete_current_store_when_target_valid()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Junctions.DeleteJunction(h.SteamLink);
+        h.Junctions.CreateJunction(h.SteamLink, h.BetaStore);
+        h.Cfg.ActiveBranch = GameBranch.Beta;
+        h.Svc.SaveConfig(h.Cfg);
+        File.Delete(Path.Combine(h.BetaStore, "GameAssembly.dll"));
+
+        var result = h.Svc.TrySwapJunction(GameBranch.Official);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        h.Junctions.ResolveTarget(h.SteamLink).Should().Be(Path.GetFullPath(h.OfficialStore));
+        h.Svc.LoadConfig().ActiveBranch.Should().Be(GameBranch.Official);
+        File.Exists(Path.Combine(h.BetaStore, "Mechabellum.exe")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Teardown_when_current_store_hollow_materializes_complete_other_store()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Junctions.DeleteJunction(h.SteamLink);
+        h.Junctions.CreateJunction(h.SteamLink, h.BetaStore);
+        h.Cfg.ActiveBranch = GameBranch.Beta;
+        h.Svc.SaveConfig(h.Cfg);
+        File.Delete(Path.Combine(h.BetaStore, "GameAssembly.dll"));
+
+        var result = h.Svc.TryTeardown(deleteOtherStore: false);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        h.Junctions.IsJunction(h.SteamLink).Should().BeFalse();
+        File.Exists(Path.Combine(h.SteamLink, "GameAssembly.dll")).Should().BeTrue();
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("official");
+        Directory.Exists(h.BetaStore).Should().BeTrue();
+        h.Svc.LoadConfig().Enabled.Should().BeFalse();
     }
 
     static void SeedGameRoot(string dir, string marker)
