@@ -48,9 +48,13 @@ public sealed class PureGameCleanupExecutor
             return result;
         }
 
-        if (_probe.IsGameOrSteamRunning())
+        foreach (var note in plan.Notes)
+            L(note);
+
+        // Game must be closed for Melon DLL/folder deletes. Steam is only required for dual-folder teardown.
+        if (_probe.IsGameRunning())
         {
-            const string msg = "游戏或 Steam 客户端仍在运行。请先完全退出后再清理。";
+            const string msg = "游戏仍在运行。请先退出 Mechabellum 后再清理。";
             L(msg);
             result.Success = false;
             result.ExitCode = 2;
@@ -68,6 +72,13 @@ public sealed class PureGameCleanupExecutor
             return result;
         }
 
+        var steamBlocksTeardown = _probe.IsSteamRunning();
+        if (steamBlocksTeardown
+            && plan.Actions.Any(a => a.Kind == CleanupActionKind.TeardownDualFolder))
+        {
+            L("Steam 客户端仍在运行：跳过解除双服/删仓，继续清理 Melon/Mods 与管理器数据。请之后手动解除双服或退出 Steam 再卸一次。");
+        }
+
         foreach (var action in plan.Actions)
         {
             try
@@ -75,6 +86,12 @@ public sealed class PureGameCleanupExecutor
                 switch (action.Kind)
                 {
                     case CleanupActionKind.TeardownDualFolder:
+                        if (steamBlocksTeardown)
+                        {
+                            L("已跳过：" + action.Reason);
+                            break;
+                        }
+
                         if (_branchSwitch is null)
                         {
                             const string msg = "缺少 BranchSwitchService，无法解除双服。";
