@@ -220,13 +220,16 @@
     <value>実行ログ</value>
   </data>
       <data name="InstallMelonLoader" xml:space="preserve">
-    <value>MelonLoaderをインストール</value>
+    <value>MelonLoaderをインストール/アップグレード</value>
   </data>
   <data name="InstallMelonLoaderTip" xml:space="preserve">
     <value>Writes MelonLoader from the offline zip shipped with Setup (no GitHub needed)</value>
   </data>
   <data name="ConfirmInstallMelonLoader" xml:space="preserve">
     <value>Install MelonLoader into the current game folder? Close the game first.</value>
+  </data>
+  <data name="ConfirmUpgradeMelonLoader" xml:space="preserve">
+    <value>インストール済みの MelonLoader が同梱の 0.7.3 より古いです。オフラインパッケージで現在のゲームフォルダへ上書きアップグレードしますか？先にゲームを終了してください。</value>
   </data>
   <data name="NotifyMelonInstallNeedGamePath" xml:space="preserve">
     <value>Set a valid game path in Settings first.</value>
@@ -289,12 +292,13 @@
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
+  <data name="BranchSwitchRepairOrphan" xml:space="preserve"><value>単一フォルダに復元</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Steam でテスト版を選択済み — 続行</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam の切替完了 — 続行</value></data>
   <data name="BranchSwitchHint" xml:space="preserve"><value>約2部の容量が必要。分岐名は既定 public_test（Steam「プロパティ → ベータ」。通常変更不要）。現在のインストールを先に退避してからもう一方を取得し、正式版は上書きされません。</value></data>
   <data name="BranchStatusUnconfigured" xml:space="preserve"><value>Not configured</value></data>
   <data name="BranchStatusIncomplete" xml:space="preserve"><value>Setup incomplete</value></data>
-  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>ウィザード未完了（配置可；続行または解除）</value></data>
+  <data name="BranchStatusWizardPaused" xml:space="preserve"><value>Wizard paused (deploy locked; continue or remove)</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Steam の切替完了を待機</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>正式版</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>テスト版</value></data>
@@ -340,11 +344,16 @@
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>管理対象外ファイルの上書きをキャンセルしました。</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>正式/テストの二系統は既に有効です。再構築は現在の設定を安全に解除してから（他方フォルダのゲームは保持）再設定します。続行しますか？</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>正式/テスト二系統を解除しますか？使用中のフォルダが再び Steam のゲームパスになります。先に Steam とゲームを終了してください。</value></data>
+  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>二系統はオフですが、ジャンクションまたは残留ストアが残っています。単一の Mechabellum に復元します（ジャンクションなら実体化）。他方を残すとウィザードが再び失敗することがあります。先に Steam とゲームを終了してください。続行しますか？</value></data>
+  <data name="LogOrphanRepairDone" xml:space="preserve"><value>単一フォルダ Mechabellum に復元しました。</value></data>
+  <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>単一フォルダ Mechabellum に復元しました。</value></data>
+  <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>単一フォルダ復元に失敗：{0}</value></data>
+  <data name="NotifyOrphanRepairFailedGeneric" xml:space="preserve"><value>単一フォルダ復元に失敗しました。</value></data>
   <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>もう一方の独立ゲームフォルダも削除しますか？中のファイルは完全に削除されます。（推奨：「いいえ」）</value></data>
   <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>二系統ウィザード失敗：{0}</value></data>
   <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>二系統解除に失敗：{0}</value></data>
-  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam が動作中です。ブランチ切替が終わるまで待ってから配置してください。</value></data>
-  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam が動作中です。それでも配置しますか？ゲームファイルがロックされる可能性があります。</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam is still running. If the download finished, you can confirm settle (snapshot only reads the manifest).</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam is still running. After download finishes, settle usually works — continue?</value></data>
   <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
 
 {1}
@@ -397,6 +406,9 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>ゲームパスは steamapps\common\Mechabellum 配下である必要があります。</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>現在のゲームパスが無効なため、二系統ウィザードを開始できません。</value></data>
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>他方の独立フォルダが既に存在するためアーカイブできません：{0}</value></data>
+  <data name="FailWizardGamePathIsBranchStore" xml:space="preserve"><value>ゲームパスが二系統ストア（Mechabellum_official / Mechabellum_beta）で、Steam リンク Mechabellum がありません。使用中のストアを …\common\Mechabellum に戻してからウィザードを再実行してください。セットアップの再実行でも自動修復できます。</value></data>
+  <data name="LogWizardNormalizedStorePath" xml:space="preserve"><value>ゲームパスをストア「{0}」から Steam リンク「{1}」へ正規化しました。</value></data>
+  <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>二系統は解除済みですが残留ストアがあります（ウィザードを阻害）：{0}。不要なら削除するか、セットアップ再実行で Mechabellum へ正規化してください。</value></data>
   <data name="FailWizardNoAppManifest" xml:space="preserve"><value>appmanifest_669330.acf が見つからず、Steam テストブランチを整合できません。</value></data>
   <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>Steam マニフェストを読めません（権限昇格やライブラリ移動が必要な場合あり）：{0}</value></data>
   <data name="FailWizardArchiveCurrentFailed" xml:space="preserve"><value>現在のブランチのアーカイブに失敗しました。</value></data>
@@ -409,9 +421,11 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>フォルダ切替に失敗しました。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>すでにこのブランチです（フォルダと Steam ベータは整合済み）。切替不要。</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>フォルダと Steam 分岐キーは一致していますが、ゲームパスが未準備です（実行ファイル不足または MelonLoader 未完了）。Steam のダウンロード/検証完了後に再試行してください。</value></data>
+  <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>他方ストアが完了している場合：Steam を完全終了してから他方へ切替、または二系統解除/単一フォルダ復元を使ってください。Steam は Mechabellum ジャンクション経由で現行ストアを書き換えます。ダウンロード中は強制操作しないでください。</value></data>
+  <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>現行ストアが不完全です（Steam ダウンロード/検証中で GameAssembly.dll 欠落など）。Steam 終了後、完了している他方へ切替、または二系統解除して完了ストアから復元するか、ダウンロード完了を待ってください。</value></data>
   <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>ゲームパスが未準備のため決済デプロイできません。Steam 完了後に再度確認してください。</value></data>
   <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>決済時のデプロイに失敗しました。Steam 決済待ちのままです。修正後に再確認してください。</value></data>
-  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam マニフェストが未安定です（ダウンロード/更新中）。決済は終了しません。完了後に再確認してください。</value></data>
+  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam manifest is not stable yet (verify/write). After the download shows complete, wait a moment and confirm again; if it still fails, fully exit Steam and retry.</value></data>
   <data name="LogSettleKeptAwaiting" xml:space="preserve"><value>Steam 決済状態は維持されています（後で再確認できます）。</value></data>
   <data name="LogMelonLaunchVerifyHint" xml:space="preserve"><value>約30秒以内に MelonLoader の黒いコンソールが出るか確認してください。出ない場合 Melon 未ロードです。version.dll / MelonLoader を確認し診断をエクスポートしてください。</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>正式/テストのどちらかに MelonLoader がありません。インストーラーで MelonLoader を入れるか、先に Loader がある方へ入れてください。</value></data>
@@ -436,7 +450,40 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="BusyWaitingSteam" xml:space="preserve"><value>Steam / ゲームの終了を要求しています。マネージャーを閉じないでください…</value></data>
   <data name="BusyMovingGameFolder" xml:space="preserve"><value>ゲームフォルダーを移動しています。マネージャーを閉じないでください…</value></data>
   <data name="BusyCreatingJunction" xml:space="preserve"><value>ディレクトリジャンクションを作成しています。マネージャーを閉じないでください…</value></data>
+  <data name="BusyGeneratingMelonAssemblies" xml:space="preserve"><value>MelonLoader アセンブリを生成しています。マネージャーを閉じないでください…</value></data>
   <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Steam ブランチ情報を準備しています。マネージャーを閉じないでください…</value></data>
+  <data name="TaskMessageDiagnostics" xml:space="preserve"><value>Packaging logs and config…</value></data>
+  <data name="TaskMessageDeploy" xml:space="preserve"><value>Writing profile into the game folder…</value></data>
+  <data name="TaskTitleCatalogRefresh" xml:space="preserve"><value>Refreshing mod catalog</value></data>
+  <data name="TaskTitleMelonInstall" xml:space="preserve"><value>Installing MelonLoader</value></data>
+  <data name="TaskTitleDeploy" xml:space="preserve"><value>Deploying profile</value></data>
+  <data name="TaskMessageWizardInProgress" xml:space="preserve"><value>Dual-folder setup incomplete; write actions are locked</value></data>
+  <data name="TaskTitleDiagnostics" xml:space="preserve"><value>Exporting diagnostics</value></data>
+  <data name="TaskTitleCatalogDownload" xml:space="preserve"><value>Downloading mod</value></data>
+  <data name="TaskMessageMelonInstall" xml:space="preserve"><value>Installing or upgrading MelonLoader…</value></data>
+  <data name="TaskTitleBranchSettle" xml:space="preserve"><value>Waiting for Steam settle</value></data>
+  <data name="TaskMessageCatalogDownload" xml:space="preserve"><value>Downloading into the local library…</value></data>
+  <data name="TaskMessageBranchSettle" xml:space="preserve"><value>Confirm after Steam has switched to the target branch</value></data>
+  <data name="TaskTitleBranchWizard" xml:space="preserve"><value>Dual-folder wizard in progress</value></data>
+  <data name="TaskMessageCheckUpdate" xml:space="preserve"><value>Checking for a new manager version…</value></data>
+  <data name="TaskMessageMelonInstallLocal" xml:space="preserve"><value>Installing MelonLoader from offline package…</value></data>
+  <data name="NotifySessionLocked" xml:space="preserve"><value>A task is still in progress. Finish or cancel it first.</value></data>
+  <data name="TaskMessageCatalogRefresh" xml:space="preserve"><value>Fetching catalog from the network…</value></data>
+  <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>Download the other branch in Steam, exit Steam, then continue the wizard</value></data>
+  <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>Checking for updates</value></data>
+
+  <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam switched to Official — continue</value></data>
+  <data name="BranchStatusWaitingSteamFmt" xml:space="preserve"><value>Waiting for Steam to finish switching to {0}</value></data>
+  <data name="BranchSwitchConfirmManualOfficial" xml:space="preserve"><value>I selected Official in Steam — continue</value></data>
+  <data name="BranchSwitchConfirmSettleBeta" xml:space="preserve"><value>Steam switched to Beta — continue</value></data>
+  <data name="TaskMessageBranchSettleFmt" xml:space="preserve"><value>Confirm after Steam has switched to {0} (path may be invalid while downloading)</value></data>
+  <data name="LogSettleKeptAwaitingDownloadFmt" xml:space="preserve"><value>Game folder not ready (may still be downloading {0}). Wait until Mechabellum.exe / GameAssembly.dll exist, then continue.</value></data>
+  <data name="ConfirmDeployWhileGameRunning" xml:space="preserve"><value>The game is still running. Deploy anyway? Files may be locked.</value></data>
+  <data name="NotifyGameStillRunningSettle" xml:space="preserve"><value>The game is still running and may lock files. Close it, then confirm settle.</value></data>
+  <data name="NotifySettleBlockedGameRunning" xml:space="preserve"><value>Game is running; cannot save the manifest snapshot. Close the game and confirm again.</value></data>
+  <data name="LogSteamOpenDuringSettleOk" xml:space="preserve"><value>Steam is open: settle will read the manifest and deploy; no need to exit Steam for this.</value></data>
+  <data name="NotifySettleClearedSnapshotDeferred" xml:space="preserve"><value>Settle deploy finished; snapshot will be saved later (this switch is done).</value></data>
+  <data name="LogSettleClearedSnapshotDeferred" xml:space="preserve"><value>Deploy succeeded but snapshot was skipped; settle cleared. Snapshot can be taken later.</value></data>
   <data name="CriticalOpBlockUpdate" xml:space="preserve"><value>A disk write or critical operation is in progress. Check for updates after it finishes.</value></data>
   <data name="CriticalOpBlockClose" xml:space="preserve"><value>A disk write or critical operation is in progress. Do not close the manager.</value></data>
   <data name="CriticalOpSoftUpdateConfirm" xml:space="preserve"><value>Still waiting for Steam to switch or download ({0}). Updating the installer may interrupt the flow; open the download link anyway?</value></data>
@@ -445,5 +492,4 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="CriticalOpRecoveryBody" xml:space="preserve"><value>A mode switch, Melon install, or repair may have been interrupted. Continue the unfinished step, or run repair.</value></data>
   <data name="CriticalOpRecoveryContinue" xml:space="preserve"><value>Continue unfinished operation</value></data>
   <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>Run repair / safe cleanup</value></data>
-  <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data>
-</root>
+  <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data></root>

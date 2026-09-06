@@ -103,7 +103,7 @@ Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
     }
     Write-Host "Found .NET 8 redist: $($dotnet8Exe.FullName) ($([math]::Round($dotnet8Exe.Length / 1MB, 1)) MB)"
 } else {
-    Write-Warning "SkipMelonRedistCheck set 鈥?Setup may lack MelonLoader, UnityDependencies, Cpp2IL, or .NET 8 redist. Do not use for release."
+    Write-Warning "SkipMelonRedistCheck set — Setup may lack MelonLoader, UnityDependencies, Cpp2IL, or .NET 8 redist. Do not use for release."
 }
 
 

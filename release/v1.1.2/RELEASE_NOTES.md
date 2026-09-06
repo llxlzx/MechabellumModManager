@@ -23,6 +23,11 @@
 ### MelonLoader
 - 捆绑 MelonLoader **0.7.3**；若本机仍为 **0.7.1**（或更旧），可通过 **Setup 勾选安装 MelonLoader**，或在管理器内 **安装 / 升级 MelonLoader**，升级到 0.7.3。
 
+### UI 假死修复（Melon 程序集）
+- 切服/向导后生成 MelonLoader 程序集改为异步 Busy 等待，不再在 UI 线程 GetResult 阻塞（可避免 Win32 1816 配额不足导致的僵尸窗口）。
+- 中途向导步骤关闭/检查更新改为 SoftConfirm（不再误放行 Allow）。
+- 恢复门：无可用「修复」或拆除成功后清除卡住的 HardBlock；恢复弹窗期间不弹出程序集生成确认。
+
 ### 升级说明
 - 覆盖安装 Setup（可勾选 MelonLoader 以从 0.7.1 升到 0.7.3）。若当前仓被 Steam 掏空：先完全退出 Steam，再切正式服或解除双服/恢复单目录。
 ### 安装包（v1.1.2 续）
