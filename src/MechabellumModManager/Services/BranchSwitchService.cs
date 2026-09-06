@@ -13,6 +13,9 @@ public static class BranchOpMessages
     public const string StoreNotGameRoot = "Branch store is not a valid game root.";
     public const string ManifestMissing = "Manifest not found.";
     public const string ManifestNotSettled = "Manifest is not settled; skip snapshot.";
+    public const string SnapshotNotAligned = "Live install is not aligned with the branch being snapshotted.";
+    public const string SnapshotBetaKeyInvalid = "ACF BetaKey does not match the branch snapshot.";
+    public const string SnapshotBuildIdCollision = "Official and beta ACF snapshots share the same buildid; refuse fake skip-download snapshot.";
 }
 
 public sealed class BranchOperationResult
@@ -284,6 +287,9 @@ public sealed class BranchSwitchService
         if (string.IsNullOrWhiteSpace(store) || !LooksLikeGameRoot(store))
             return BranchOperationResult.Fail(BranchOpMessages.StoreNotGameRoot);
 
+        if (!IsAlignedWith(branch))
+            return BranchOperationResult.Fail(BranchOpMessages.SnapshotNotAligned);
+
         var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
         if (!File.Exists(acf))
             return BranchOperationResult.Fail(BranchOpMessages.ManifestMissing);
@@ -291,6 +297,28 @@ public sealed class BranchSwitchService
         var text = File.ReadAllText(acf);
         if (!SteamBetaKeyEditor.LooksSettledForSnapshot(text))
             return BranchOperationResult.Fail(BranchOpMessages.ManifestNotSettled);
+
+        var betaName = cfg.BetaBranchName ?? BranchSwitchConfig.DefaultSteamBetaBranchName;
+        if (!SteamAcfSnapshotSanitizer.IsValidSnapshot(text, branch, betaName))
+            return BranchOperationResult.Fail(BranchOpMessages.SnapshotBetaKeyInvalid);
+
+        var otherPath = _paths.GetSteamAcfSnapshotPath(
+            branch == GameBranch.Official ? GameBranch.Beta : GameBranch.Official);
+        if (File.Exists(otherPath))
+        {
+            try
+            {
+                var otherText = File.ReadAllText(otherPath);
+                var officialText = branch == GameBranch.Official ? text : otherText;
+                var betaText = branch == GameBranch.Beta ? text : otherText;
+                if (SteamAcfSnapshotSanitizer.HasBuildIdCollision(officialText, betaText))
+                    return BranchOperationResult.Fail(BranchOpMessages.SnapshotBuildIdCollision);
+            }
+            catch
+            {
+                // If sibling cannot be read, do not block save of a valid live snapshot.
+            }
+        }
 
         var snapshotPath = _paths.GetSteamAcfSnapshotPath(branch);
         Directory.CreateDirectory(Path.GetDirectoryName(snapshotPath)!);
@@ -314,6 +342,28 @@ public sealed class BranchSwitchService
         var snapshotText = File.ReadAllText(snapshotPath);
         if (!SteamBetaKeyEditor.LooksSettledForSnapshot(snapshotText))
             return BranchOperationResult.Fail("ACF snapshot is not settled.");
+
+        var betaName = cfg.BetaBranchName ?? BranchSwitchConfig.DefaultSteamBetaBranchName;
+        if (!SteamAcfSnapshotSanitizer.IsValidSnapshot(snapshotText, branch, betaName))
+            return BranchOperationResult.Fail(BranchOpMessages.SnapshotBetaKeyInvalid);
+
+        var otherPath = _paths.GetSteamAcfSnapshotPath(
+            branch == GameBranch.Official ? GameBranch.Beta : GameBranch.Official);
+        if (File.Exists(otherPath))
+        {
+            try
+            {
+                var otherText = File.ReadAllText(otherPath);
+                var officialText = branch == GameBranch.Official ? snapshotText : otherText;
+                var betaText = branch == GameBranch.Beta ? snapshotText : otherText;
+                if (SteamAcfSnapshotSanitizer.HasBuildIdCollision(officialText, betaText))
+                    return BranchOperationResult.Fail(BranchOpMessages.SnapshotBuildIdCollision);
+            }
+            catch
+            {
+                // ignore unreadable sibling
+            }
+        }
 
         var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
         if (!File.Exists(acf) && !Directory.Exists(Path.GetDirectoryName(acf)))

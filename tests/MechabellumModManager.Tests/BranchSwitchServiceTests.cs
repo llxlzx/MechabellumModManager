@@ -112,6 +112,123 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void Snapshot_refuses_when_not_aligned_with_branch()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        // SampleAcf still has BetaKey oldbeta while junction points at Official.
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Success.Should().BeFalse();
+        h.Svc.TrySnapshotSettledAcf(GameBranch.Official).Message.Should()
+            .Be(BranchOpMessages.SnapshotNotAligned);
+    }
+
+    [Fact]
+    public void Snapshot_refuses_when_sibling_snapshot_has_same_buildid()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        var officialAcf = """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"25139974"
+	"TargetBuildID"		"25139974"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+	}
+}
+""";
+        var betaPoison = """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"25139974"
+	"TargetBuildID"		"25139974"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+}
+""";
+        Directory.CreateDirectory(h.Paths.SteamAcfSnapshotsDir);
+        File.WriteAllText(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Beta), betaPoison);
+        File.WriteAllText(h.AcfPath, officialAcf);
+
+        var result = h.Svc.TrySnapshotSettledAcf(GameBranch.Official);
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be(BranchOpMessages.SnapshotBuildIdCollision);
+        File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Restore_refuses_when_snapshot_pair_shares_buildid()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        Directory.CreateDirectory(h.Paths.SteamAcfSnapshotsDir);
+        var sameBuild = """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"25139974"
+	"TargetBuildID"		"25139974"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+	}
+}
+""";
+        var betaSame = """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"25139974"
+	"TargetBuildID"		"25139974"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+}
+""";
+        File.WriteAllText(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official), sameBuild);
+        File.WriteAllText(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Beta), betaSame);
+
+        var result = h.Svc.TryRestoreAcfSnapshot(GameBranch.Official);
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be(BranchOpMessages.SnapshotBuildIdCollision);
+    }
+
+    [Fact]
     public void Snapshot_skips_when_acf_is_downloading()
     {
         using var h = Harness.CreateReadyDualFolder();
