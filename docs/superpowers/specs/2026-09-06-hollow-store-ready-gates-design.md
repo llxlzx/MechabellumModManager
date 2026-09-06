@@ -1,7 +1,7 @@
 # 空壳仓 / 假 Ready 硬门 — 设计规格（独立热修）
 
 **日期：** 2026-09-06  
-**状态：** 规格待用户审阅  
+**状态：** 规格已确认；实现计划见 `docs/superpowers/plans/2026-09-06-hollow-store-ready-gates.md`  
 **工作目录：** `D:\gongzuo\钢铁指挥官mod管理器开发`  
 **策略：** 独立热修（不并入 C1 Phase1）；可先发版防空壳，再继续架构分波  
 **关联：** 现场诊断（Official 空壳 + ACF `StateFlags=1190` + `WizardStep=Ready`）；C1 见 `2026-09-06-architecture-stability-cleanup-design.md`
