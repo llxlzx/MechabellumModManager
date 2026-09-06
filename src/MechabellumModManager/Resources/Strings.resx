@@ -426,6 +426,7 @@
   <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit 未生效（常见于「谁要玩游戏」账户选择器），正在强制结束 Steam 客户端进程…</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 客户端或游戏仍在运行（含 steamwebhelper）。请关闭 Steam 窗口（含「谁要玩游戏」账户选择器）与游戏后再试；后台 steamservice 可保留。</value></data>
   <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>请自行打开 Steam 完成下载/校验（若需要）。管理器不会自动启动 Steam，以免弹出账户选择器并挡住「继续」。就绪后点结算继续。</value></data>
+  <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>管理器已在运行。请使用已打开的窗口。</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>请自行打开 Steam 下载另一服；管理器不会自动启动 Steam。</value></data>
   <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>正在等待另一服下载完成：请自行打开 Steam 下载，完成后退出 Steam。管理器检测到完整安装后将自动继续，无需点「是」。</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>已检测到另一服下载完成且 Steam 已退出，自动继续双目录向导。</value></data>

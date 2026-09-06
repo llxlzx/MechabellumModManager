@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading;
 using System.Windows;
 using MechabellumModManager.Dialogs;
 using MechabellumModManager.Models;
@@ -14,6 +15,7 @@ public partial class App : Application
     Window? _busyOwner;
     bool _busyOwnerWasEnabled = true;
     bool _blockMainClose;
+    Mutex? _singleInstanceMutex;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -79,6 +81,19 @@ public partial class App : Application
                 return;
             }
         };
+
+        // UI single-instance only (CLI helpers above skip this).
+        LocalizationService.Apply(LocalizationService.ResolveSystemLanguage());
+        if (!SingleInstanceGate.TryAcquire(out _singleInstanceMutex))
+        {
+            MessageBox.Show(
+                LocalizationService.T("NotifyManagerAlreadyRunning"),
+                "Mechabellum Mod Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            Shutdown(0);
+            return;
+        }
 
         base.OnStartup(e);
 
