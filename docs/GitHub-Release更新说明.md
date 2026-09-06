@@ -15,6 +15,11 @@ For maintainers: how to build the Setup and publish a GitHub Release.
 
 ## 版本速记 / Release notes
 
+### v1.1.4
+
+- 启用双服收尾恢复正式服 Steam 清单快照，避免 Steam 经联接重写下穿 `_official`；结算失败不再怂恿急救/切仓；双仓结构完成后清除 SessionOwned。
+- Enable-dual restores the Official ACF snapshot so Steam does not rewrite `_official`; settle copy no longer suggests Emergency/switch; session-owned flags clear once both stores are linked.
+
 ### v1.0.9
 
 - 独占页面布局；目录/本地库密度与视觉抛光；「已装 Mod / Mod 工坊」命名；运行日志可展开收起。

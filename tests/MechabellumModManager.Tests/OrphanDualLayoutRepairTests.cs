@@ -80,6 +80,23 @@ public class OrphanDualLayoutRepairTests
     }
 
     [Fact]
+    public void Repair_hollow_link_materializes_from_complete_leftover_store()
+    {
+        using var h = OrphanHarness.CreateHollowLinkWithCompleteBeta();
+
+        var result = h.Svc.TryRepairOrphanDualLayout(deleteOtherStore: false, preferredLinkPath: h.SteamLink);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        File.Exists(Path.Combine(h.SteamLink, "GameAssembly.dll")).Should().BeTrue();
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("beta");
+        Directory.Exists(h.BetaStore).Should().BeFalse();
+        // Hollow debris moved aside, not deleted.
+        Directory.GetDirectories(Path.GetDirectoryName(h.SteamLink)!)
+            .Any(d => Path.GetFileName(d).StartsWith("Mechabellum_incomplete_", StringComparison.OrdinalIgnoreCase))
+            .Should().BeTrue();
+    }
+
+    [Fact]
     public void Repair_refuses_when_steam_running()
     {
         using var h = OrphanHarness.CreateJunctionOrphan();
@@ -158,6 +175,23 @@ public class OrphanDualLayoutRepairTests
         {
             var h = CreateCore();
             Seed(h.SteamLink, "link");
+            Seed(h.BetaStore, "beta");
+            h.Svc.SaveConfig(new BranchSwitchConfig
+            {
+                Enabled = false,
+                WizardStep = BranchWizardStep.None,
+                SteamLinkPath = h.SteamLink,
+                OfficialStorePath = "",
+                BetaStorePath = ""
+            });
+            return h;
+        }
+
+        public static OrphanHarness CreateHollowLinkWithCompleteBeta()
+        {
+            var h = CreateCore();
+            Directory.CreateDirectory(Path.Combine(h.SteamLink, "Mechabellum_Data"));
+            File.WriteAllText(Path.Combine(h.SteamLink, "Mechabellum_Data", "note.txt"), "hollow");
             Seed(h.BetaStore, "beta");
             h.Svc.SaveConfig(new BranchSwitchConfig
             {

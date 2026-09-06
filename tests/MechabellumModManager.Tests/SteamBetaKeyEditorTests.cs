@@ -392,6 +392,59 @@ public class SteamBetaKeyEditorTests
     }
 
     [Fact]
+    public void LooksSettledForSnapshot_true_for_fully_installed_plus_app_running_68()
+    {
+        // 4|64 — Steam often leaves AppRunning after exit; must NOT use string Contains('6').
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"68"
+            	"buildid"		"100"
+            	"TargetBuildID"		"100"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksSettledForSnapshot(acf).Should().BeTrue();
+    }
+
+    [Fact]
+    public void LooksSettledForSnapshot_true_for_fully_installed_plus_locked_20()
+    {
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"20"
+            	"buildid"		"100"
+            	"TargetBuildID"		"100"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksSettledForSnapshot(acf).Should().BeTrue();
+    }
+
+    [Fact]
+    public void LooksSettledForSnapshot_false_for_update_required_plus_fully_installed_6()
+    {
+        // 2|4 — must reject via bit flags (old Contains('6') was accidental; we still reject UpdateRequired).
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"6"
+            	"buildid"		"100"
+            	"TargetBuildID"		"100"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksSettledForSnapshot(acf).Should().BeFalse();
+    }
+
+    [Fact]
     public void ProcessProbe_can_be_injected()
     {
         var editor = new SteamBetaKeyEditor(new ProcessProbe());

@@ -29,7 +29,8 @@ public static class DiagnosticsSummaryBuilder
         DiagnosticsExportRequest request,
         IReadOnlyList<string> findings,
         string? sessionTail,
-        string? managerTail)
+        string? managerTail,
+        string? authoritativeGameStatusKind = null)
     {
         var sb = new StringBuilder();
         sb.AppendLine("# Mechabellum Mod Manager — 诊断摘要");
@@ -40,7 +41,10 @@ public static class DiagnosticsSummaryBuilder
         sb.AppendLine($"- 当前分支：{request.ActiveGameBranch ?? "(无)"}");
         sb.AppendLine($"- 双服启用：{request.BranchSwitchEnabled}");
         sb.AppendLine($"- 等待 Steam 结算：{request.IsAwaitingSteamSettle}");
-        sb.AppendLine($"- 游戏状态：{request.GameStatusKind ?? "(无)"}");
+        var statusKind = !string.IsNullOrWhiteSpace(authoritativeGameStatusKind)
+            ? authoritativeGameStatusKind
+            : request.GameStatusKind;
+        sb.AppendLine($"- 游戏状态：{statusKind ?? "(无)"}");
         if (!string.IsNullOrWhiteSpace(request.GameStatusMessage))
             sb.AppendLine($"- 状态说明：{request.GameStatusMessage}");
         sb.AppendLine();
@@ -99,13 +103,13 @@ public static class DiagnosticsSummaryBuilder
 
         if (set.Contains("orphan_dual_layout") || set.Contains("leftover_dual_store_folders"))
         {
-            tips.Add("存在双服残留：可在设置页使用「恢复为单目录」或先切正式服再解除双服。");
+            tips.Add("存在双服残留：可在设置页使用「急救恢复单目录」。");
         }
 
         if (string.Equals(request.ActiveGameBranch, "Beta", StringComparison.OrdinalIgnoreCase)
             && request.BranchSwitchEnabled)
         {
-            tips.Add("当前为测试服双目录：解除双服前请先切到正式服，避免 Steam 内容文件损毁。");
+            tips.Add("当前为测试服双目录：急救前建议先切到正式服，避免 Steam 内容文件损毁。");
         }
 
         if (tips.Count == 0)

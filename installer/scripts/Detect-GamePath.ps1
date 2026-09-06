@@ -106,16 +106,30 @@ function Find-Candidates {
 }
 
 function Prefer-Path([System.Collections.Generic.List[string]] $Candidates) {
-    # Prefer official store as the "stable root" for installer default,
-    # then Steam link folder, then beta.
-    $official = $Candidates | Where-Object { ([IO.Path]::GetFileName($_)) -eq "Mechabellum_official" } | Select-Object -First 1
-    if ($official) { return $official }
+    # Prefer Steam link folder Mechabellum (never write store path as gamePath when link exists).
+    # Only fall back to official/beta stores when Mechabellum is missing.
     $link = $Candidates | Where-Object { ([IO.Path]::GetFileName($_)) -eq "Mechabellum" } | Select-Object -First 1
     if ($link) { return $link }
+    $official = $Candidates | Where-Object { ([IO.Path]::GetFileName($_)) -eq "Mechabellum_official" } | Select-Object -First 1
+    if ($official) { return $official }
     $beta = $Candidates | Where-Object { ([IO.Path]::GetFileName($_)) -eq "Mechabellum_beta" } | Select-Object -First 1
     if ($beta) { return $beta }
     if ($Candidates.Count -gt 0) { return $Candidates[0] }
     return $null
+}
+
+function Resolve-PreferSteamLink([string] $Path) {
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $Path }
+    try {
+        $full = [IO.Path]::GetFullPath($Path)
+        $name = [IO.Path]::GetFileName($full)
+        if ($name -ne "Mechabellum_official" -and $name -ne "Mechabellum_beta") { return $full }
+        $common = [IO.Path]::GetDirectoryName($full)
+        if ([string]::IsNullOrWhiteSpace($common)) { return $full }
+        $link = Join-Path $common "Mechabellum"
+        if (Test-LooksLikeGame $link) { return [IO.Path]::GetFullPath($link) }
+        return $full
+    } catch { return $Path }
 }
 
 $appData = Join-Path $env:APPDATA "MechabellumModManager"
@@ -139,7 +153,7 @@ if (Test-Path -LiteralPath $branchCfg) {
     try {
         $bs = Get-Content -LiteralPath $branchCfg -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($bs.steamLinkPath -and (Test-LooksLikeGame ([string]$bs.steamLinkPath))) {
-            Emit ([IO.Path]::GetFullPath([string]$bs.steamLinkPath)) "branch-switch"
+            Emit (Resolve-PreferSteamLink ([string]$bs.steamLinkPath)) "branch-switch"
         }
     } catch { }
 }
@@ -149,7 +163,7 @@ if (Test-Path -LiteralPath $configPath) {
     try {
         $cfg = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($cfg.gamePath -and (Test-LooksLikeGame ([string]$cfg.gamePath))) {
-            Emit ([IO.Path]::GetFullPath([string]$cfg.gamePath)) "config"
+            Emit (Resolve-PreferSteamLink ([string]$cfg.gamePath)) "config"
         }
     } catch { }
 }
@@ -164,4 +178,4 @@ if ([string]::IsNullOrWhiteSpace($path)) {
     exit 2
 }
 
-Emit $path "scan"
+Emit (Resolve-PreferSteamLink $path) "scan"

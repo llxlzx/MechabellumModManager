@@ -136,15 +136,21 @@ public sealed class SteamBetaKeyEditor
         if (!string.Equals(buildId, targetBuildId, StringComparison.Ordinal))
             return false;
 
-        var stateFlags = ReadQuotedValue(acfText, "StateFlags");
-        // Prefer Fully Installed (4). Reject known updating/downloading masks.
-        if (!string.IsNullOrWhiteSpace(stateFlags)
-            && stateFlags != "4"
-            && (stateFlags.Contains('6', StringComparison.Ordinal)
-                || stateFlags == "1190"
-                || stateFlags == "1026"
-                || stateFlags == "1538"
-                || stateFlags == "1158"))
+        // Bitwise: require FullyInstalled; allow only benign extras (AppRunning/Locked/Encrypted).
+        // Do NOT use string Contains('6') — that falsely rejects StateFlags "68".
+        if (!TryParseStateFlags(acfText, out var flags))
+            return false;
+
+        const int fullyInstalled = 4;
+        const int encrypted = 8;
+        const int locked = 16;
+        const int appRunning = 64;
+        const int benign = encrypted | locked | appRunning;
+        const int allowed = fullyInstalled | benign;
+
+        if ((flags & fullyInstalled) == 0)
+            return false;
+        if ((flags & ~allowed) != 0)
             return false;
 
         return true;

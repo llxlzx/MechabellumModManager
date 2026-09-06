@@ -139,6 +139,16 @@ public sealed class DiagnosticsExportService
                 var probeBundle = DiagnosticsProbeBuilder.Build(request);
                 foreach (var kv in probeBundle)
                     env[kv.Key] = kv.Value;
+
+                // Prefer probe Detect() over possibly-stale VM cache (field: summary Ready vs probe GameMissing).
+                if (probeBundle.TryGetValue("probe", out var probeObj)
+                    && probeObj is Dictionary<string, object?> probeDict
+                    && probeDict.TryGetValue("gameStatusKind", out var probeKind)
+                    && probeKind is string probeKindStr
+                    && !string.IsNullOrWhiteSpace(probeKindStr))
+                {
+                    env["gameStatusKind"] = probeKindStr;
+                }
             }
             catch
             {
@@ -160,7 +170,13 @@ public sealed class DiagnosticsExportService
             }
             catch { /* ignore */ }
 
-            var summary = DiagnosticsSummaryBuilder.Build(request, findings, sessionText, managerTail);
+            var summaryStatusKind = env.TryGetValue("gameStatusKind", out var gsk) ? gsk?.ToString() : request.GameStatusKind;
+            var summary = DiagnosticsSummaryBuilder.Build(
+                request,
+                findings,
+                sessionText,
+                managerTail,
+                authoritativeGameStatusKind: summaryStatusKind);
             WriteText(staging, "summary.md", redact ? Redact(summary) : summary, redact: false);
 
             var timeline = DiagnosticsTimelineBuilder.BuildJsonl(sessionText, managerTail);

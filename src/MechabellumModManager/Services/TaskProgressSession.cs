@@ -33,8 +33,11 @@ public sealed class TaskProgressSession
 
     public bool HasTask => Kind != ManagerTaskKind.None;
     public bool IsIndeterminate => HasTask && Percent is null;
+    /// <summary>True when a nested Begin is active under a sticky outer task.</summary>
+    public bool IsNested => _nestDepth > 1;
 
-    public void Begin(
+    /// <returns>True when nested under an existing sticky task (Kind unchanged).</returns>
+    public bool Begin(
         ManagerTaskKind kind,
         string title,
         string message,
@@ -49,7 +52,7 @@ public sealed class TaskProgressSession
             _nestDepth++;
             if (!string.IsNullOrWhiteSpace(message))
                 Message = message;
-            return;
+            return true;
         }
 
         Kind = kind;
@@ -59,6 +62,7 @@ public sealed class TaskProgressSession
         SessionLock = sessionLock;
         IsSticky = sticky;
         _nestDepth = 1;
+        return false;
     }
 
     public void Report(string? message = null, double? percent = null)

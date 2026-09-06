@@ -7,7 +7,8 @@ namespace MechabellumModManager.Dialogs;
 public enum CriticalOpRecoveryChoice
 {
     Continue,
-    Repair
+    Repair,
+    Abandon
 }
 
 public partial class CriticalOpRecoveryDialog : Window
@@ -23,6 +24,7 @@ public partial class CriticalOpRecoveryDialog : Window
         BodyText.Text = LocalizationService.T("CriticalOpRecoveryBody");
         ContinueButton.Content = LocalizationService.T("CriticalOpRecoveryContinue");
         RepairButton.Content = LocalizationService.T("CriticalOpRecoveryRepair");
+        AbandonButton.Content = LocalizationService.T("CriticalOpRecoveryAbandon");
         DiagnosticsButton.Content = LocalizationService.T("CriticalOpRecoveryDiagnostics");
         DiagnosticsButton.Visibility = diagnosticsRequested is null
             ? Visibility.Collapsed
@@ -42,6 +44,12 @@ public partial class CriticalOpRecoveryDialog : Window
     void Repair_Click(object sender, RoutedEventArgs e)
     {
         _choice = CriticalOpRecoveryChoice.Repair;
+        DialogResult = true;
+    }
+
+    void Abandon_Click(object sender, RoutedEventArgs e)
+    {
+        _choice = CriticalOpRecoveryChoice.Abandon;
         DialogResult = true;
     }
 

@@ -523,6 +523,118 @@ public class BranchSwitchServiceTests
     }
 
     [Fact]
+    public void ArchiveDownloadedAs_takes_over_when_dest_complete_and_link_gone()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        SeedGameRoot(h.BetaStore, "already-there");
+
+        var result = h.Svc.ArchiveDownloadedAs(GameBranch.Beta);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        result.Message.Should().Contain("took-over");
+        h.Svc.LoadConfig().WizardStep.Should().Be(BranchWizardStep.ArchivedB);
+        File.ReadAllText(Path.Combine(h.BetaStore, "marker.txt")).Should().Be("already-there");
+    }
+
+    [Fact]
+    public void ArchiveDownloadedAs_refuses_when_dest_complete_and_link_still_real_dir()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        SeedGameRoot(h.BetaStore, "dest");
+        SeedGameRoot(h.SteamLink, "leftover");
+
+        var result = h.Svc.ArchiveDownloadedAs(GameBranch.Beta);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be(BranchOpMessages.StorePathExistsLinkConflict);
+    }
+
+    [Fact]
+    public void TrySnapshotLiveAcfForWizardBranch_writes_beta_without_store_yet()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        SeedGameRoot(h.SteamLink, "downloaded-beta");
+        var betaAcf = """
+"AppState"
+{
+	"appid"		"669330"
+	"StateFlags"		"4"
+	"buildid"		"200"
+	"TargetBuildID"		"200"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+}
+""";
+        File.WriteAllText(h.AcfPath, betaAcf);
+
+        var snap = h.Svc.TrySnapshotLiveAcfForWizardBranch(GameBranch.Beta);
+        snap.Success.Should().BeTrue(because: snap.Message);
+        File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Beta)).Should().BeTrue();
+        File.ReadAllText(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Beta)).Should().Contain("\"buildid\"\t\t\"200\"");
+    }
+
+    [Fact]
+    public void TrySnapshotLiveAcfForWizardBranch_replaces_poison_sibling_same_buildid()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        SeedGameRoot(h.SteamLink, "downloaded-beta");
+        var poisonOfficial = """
+"AppState"
+{
+	"StateFlags"		"4"
+	"buildid"		"200"
+	"TargetBuildID"		"200"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig" { "language" "english" }
+	"MountedConfig" { "language" "english" }
+}
+""";
+        var betaAcf = """
+"AppState"
+{
+	"StateFlags"		"4"
+	"buildid"		"200"
+	"TargetBuildID"		"200"
+	"BytesToDownload"		"0"
+	"BytesDownloaded"		"0"
+	"UserConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+	"MountedConfig"
+	{
+		"language"		"english"
+		"BetaKey"		"publicbeta"
+	}
+}
+""";
+        Directory.CreateDirectory(h.Paths.SteamAcfSnapshotsDir);
+        File.WriteAllText(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official), poisonOfficial);
+        File.WriteAllText(h.AcfPath, betaAcf);
+
+        var snap = h.Svc.TrySnapshotLiveAcfForWizardBranch(GameBranch.Beta);
+        snap.Success.Should().BeTrue(because: snap.Message);
+        File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Official)).Should().BeFalse();
+        File.Exists(h.Paths.GetSteamAcfSnapshotPath(GameBranch.Beta)).Should().BeTrue();
+    }
+
+    [Fact]
     public void CreateLinkTo_existing_junction_to_target_is_success()
     {
         using var h = Harness.CreateReadyDualFolder();
@@ -765,6 +877,65 @@ public class BranchSwitchServiceTests
         File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("official");
         Directory.Exists(h.BetaStore).Should().BeTrue();
         h.Svc.LoadConfig().Enabled.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RollbackEnableSession_deletes_only_session_owned_stores()
+    {
+        using var h = Harness.CreateWizardStart();
+        SeedGameRoot(h.OfficialStore, "official-session");
+        SeedGameRoot(h.BetaStore, "preexisting-beta");
+        // Mid-enable: Official was archived this session; Steam link empty; Beta leftover not session-owned.
+        if (Directory.Exists(h.SteamLink))
+            Directory.Delete(h.SteamLink, recursive: true);
+        h.Cfg.Enabled = false;
+        h.Cfg.WizardStep = BranchWizardStep.WaitingDownloadB;
+        h.Cfg.SteamLinkPath = h.SteamLink;
+        h.Cfg.OfficialStorePath = h.OfficialStore;
+        h.Cfg.BetaStorePath = h.BetaStore;
+        h.Cfg.ActiveBranch = GameBranch.Official;
+        h.Cfg.SessionOwnedOfficialStore = true;
+        h.Cfg.SessionOwnedBetaStore = false;
+        h.Svc.SaveConfig(h.Cfg);
+
+        var result = h.Svc.TryRollbackEnableSession(h.SteamLink);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        Directory.Exists(h.OfficialStore).Should().BeFalse();
+        Directory.Exists(h.BetaStore).Should().BeTrue();
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("official-session");
+        var cfg = h.Svc.LoadConfig();
+        cfg.WizardStep.Should().Be(BranchWizardStep.None);
+        cfg.SessionOwnedOfficialStore.Should().BeFalse();
+        cfg.SessionOwnedBetaStore.Should().BeFalse();
+        cfg.OfficialStorePath.Should().BeEmpty();
+        cfg.BetaStorePath.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void RollbackEnableSession_keeps_non_owned_leftover_stores()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        // Materialize Official into Steam link first so rollback has a real link + leftover Beta.
+        h.Junctions.DeleteJunction(h.SteamLink);
+        if (Directory.Exists(h.SteamLink))
+            Directory.Delete(h.SteamLink, recursive: true);
+        Directory.Move(h.OfficialStore, h.SteamLink);
+        h.Cfg.Enabled = false;
+        h.Cfg.WizardStep = BranchWizardStep.ArchivedA;
+        h.Cfg.SteamLinkPath = h.SteamLink;
+        h.Cfg.OfficialStorePath = h.OfficialStore;
+        h.Cfg.BetaStorePath = h.BetaStore;
+        h.Cfg.SessionOwnedOfficialStore = false;
+        h.Cfg.SessionOwnedBetaStore = false;
+        h.Svc.SaveConfig(h.Cfg);
+
+        var result = h.Svc.TryRollbackEnableSession(h.SteamLink);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        Directory.Exists(h.BetaStore).Should().BeTrue();
+        File.Exists(Path.Combine(h.SteamLink, "Mechabellum.exe")).Should().BeTrue();
+        h.Svc.LoadConfig().WizardStep.Should().Be(BranchWizardStep.None);
     }
 
     static void SeedGameRoot(string dir, string marker)
