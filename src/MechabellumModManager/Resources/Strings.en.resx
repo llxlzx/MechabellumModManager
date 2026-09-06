@@ -343,13 +343,15 @@ Overwrite and take over these files?</value></data>
 …{0} total</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Cancelled overwriting unmanaged files.</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Official/Test dual folders are already enabled. Rebuild will safely remove the current setup first (keeping the other folder’s game files), then set up again. Continue?</value></data>
-  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Remove Official/Test dual-folder setup? The manager will switch to Official first, then remove dual folders. The folder in use will become the Steam game path again. Exit Steam and the game first.</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Remove Official/Test dual-folder setup? The manager will switch to Official first, then remove dual folders. Steam will use the Official folder again. Exit Steam and the game first.</value></data>
   <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Dual-branch is off, but a directory junction and/or leftover store folders remain. Restore a single Mechabellum folder (materialize if still a junction). Keeping the other store may still block the wizard. Exit Steam and the game first. Continue?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>Failed to restore single folder: {0}</value></data>
   <data name="NotifyOrphanRepairFailedGeneric" xml:space="preserve"><value>Failed to restore single folder.</value></data>
-  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Also delete the other branch’s separate game folder? Its files will be permanently removed. (Recommended: No)</value></data>
+  <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Also delete the other branch’s separate game folder? This cannot be undone.
+Yes: delete now so you can run the dual-folder wizard again immediately.
+No (recommended): keep the folder; current play is unaffected. To enable dual-folder later, delete it manually or re-run Setup cleanup.</value></data>
   <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>Dual-branch wizard failed: {0}</value></data>
   <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>Failed to remove dual-branch setup: {0}</value></data>
   <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam is still running. If the download finished, you can confirm settle (snapshot only reads the manifest).</value></data>
@@ -408,7 +410,9 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>The other branch’s separate folder already exists; cannot archive: {0}</value></data>
   <data name="FailWizardGamePathIsBranchStore" xml:space="preserve"><value>Game path is a dual-branch store (Mechabellum_official / Mechabellum_beta) and the Steam link folder Mechabellum is missing. Move/restore the active store to …\common\Mechabellum (or verify/reinstall the game), then retry the wizard. Re-running the manager Setup can also auto-fix.</value></data>
   <data name="LogWizardNormalizedStorePath" xml:space="preserve"><value>Normalized game path from store "{0}" to Steam link "{1}".</value></data>
-  <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>Dual-branch setup removed, but leftover store folders remain (they block the wizard): {0}. Delete them if unused, or re-run Setup to normalize back to Mechabellum.</value></data>
+  <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>Dual-folder setup removed; the other branch folder was kept as you chose:
+{0}
+Current single-folder play is fine. To run the dual-folder wizard again later, delete those folders first, or re-run Setup cleanup.</value></data>
   <data name="FailWizardNoAppManifest" xml:space="preserve"><value>appmanifest_669330.acf not found; cannot align the Steam test branch.</value></data>
   <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>Cannot read the Steam manifest (may need elevation or a library move): {0}</value></data>
   <data name="FailWizardArchiveCurrentFailed" xml:space="preserve"><value>Failed to archive the current branch folder.</value></data>

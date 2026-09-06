@@ -22,13 +22,10 @@
                         MinWidth="96"
                         MinHeight="32"
                         Margin="0,0,8,0"
-                        IsDefault="True"
-                        Style="{StaticResource AccentButtonStyle}"
                         Click="Yes_Click" />
                 <Button x:Name="NoButton"
                         MinWidth="96"
                         MinHeight="32"
-                        IsCancel="True"
                         Click="No_Click" />
             </StackPanel>
             <TextBlock x:Name="MessageText"
