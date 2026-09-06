@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -376,7 +376,7 @@
 步骤：先保存你现在的这一份，再下载另一服；不会用测试服覆盖掉正式服。
 开始前请退出 Steam 与游戏。是否开始？</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>当前安装的是正式服吗？选「否」表示当前是测试服。</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>当前这一服已另存到独立目录。请在 Steam 中下载另一服（下载会写到 Steam 的游戏路径）。
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>当前这一服已另存到独立目录。请自行打开 Steam 下载另一服（管理器不会自动启动 Steam，以免弹出账户选择器）。
 下载完成后请退出 Steam，再点「是」继续。点「否」将暂停向导（稍后可继续）。</value></data>
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>未能自动设置另一服的 Steam 测试分支。请在 Steam 中手动选择后再下载。</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>双目录向导已暂停，可稍后继续。</value></data>
@@ -421,9 +421,13 @@
   <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>归档另一服失败。</value></data>
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>创建目录联接失败。</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>解除双目录配置失败。</value></data>
-  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>双目录向导已完成，正在等待 Steam 完成分支切换。</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>双目录向导已完成。若需 Steam 下载/校验，请自行打开 Steam；就绪后点「继续」（管理器不会自动启动 Steam）。</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>请求退出 Steam 失败：{0}</value></data>
-  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 或游戏仍在运行（含 steamwebhelper）。请在任务管理器中结束相关进程后再切服。</value></data>
+  <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit 未生效（常见于「谁要玩游戏」账户选择器），正在强制结束 Steam 客户端进程…</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 客户端或游戏仍在运行（含 steamwebhelper）。请关闭 Steam 窗口（含「谁要玩游戏」账户选择器）与游戏后再试；后台 steamservice 可保留。</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>请自行打开 Steam 完成下载/校验（若需要）。管理器不会自动启动 Steam，以免弹出账户选择器并挡住「继续」。就绪后点结算继续。</value></data>
+  <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>请自行打开 Steam 下载另一服；管理器不会自动启动 Steam。</value></data>
+  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>已恢复 Steam 清单快照，无需自动启动 Steam。游戏就绪后可直接点「继续」。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>当前已是该服（目录与 Steam 测试分支已对齐），无需再次切换。</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>目录与 Steam 分支键已对齐，但当前游戏路径尚未就绪（缺少可执行文件或 MelonLoader 未完成）。请等待 Steam 完成下载/校验后再试。</value></data>
@@ -454,7 +458,7 @@
   <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>已打开网页邮箱；请粘贴剪贴板内容，并手动附加诊断 zip。</value></data>
   <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>已打开 Gmail 撰写页；请手动附加诊断 zip。</value></data>
   <data name="BusyProgressTitle" xml:space="preserve"><value>请稍候</value></data>
-  <data name="BusyWaitingSteam" xml:space="preserve"><value>正在请求退出 Steam / 游戏，请勿关闭管理器…</value></data>
+  <data name="BusyWaitingSteam" xml:space="preserve"><value>正在退出 Steam / 游戏（含账户选择器），请勿关闭管理器…</value></data>
   <data name="BusyMovingGameFolder" xml:space="preserve"><value>正在移动游戏目录，请勿关闭管理器…</value></data>
   <data name="BusyCreatingJunction" xml:space="preserve"><value>正在创建目录联接，请勿关闭管理器…</value></data>
   <data name="BusyGeneratingMelonAssemblies" xml:space="preserve"><value>正在生成 MelonLoader 程序集，请勿关闭管理器…</value></data>

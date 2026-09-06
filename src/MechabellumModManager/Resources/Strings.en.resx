@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -374,7 +374,7 @@ The Steam beta name defaults to public_test (editable in Settings).
 It first saves your current install, then downloads the other branch — Test will not overwrite Official.
 Exit Steam and the game first. Start?</value></data>
   <data name="ConfirmCurrentIsOfficial" xml:space="preserve"><value>Is the current install Official? Choose No if it is currently Test (Beta).</value></data>
-  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Your current install was moved to a separate folder. In Steam, download the other branch (it writes into Steam’s game path).
+  <data name="ConfirmDownloadOtherBranchContinue" xml:space="preserve"><value>Your current install was moved to a separate folder. Open Steam yourself to download the other branch (the manager will not auto-start Steam, to avoid the account picker).
 When finished, exit Steam, then click Yes. No pauses the wizard (you can resume later).</value></data>
   <data name="NotifySilentBetaFailedOther" xml:space="preserve"><value>Could not automatically set the other branch’s Steam test channel. Select it manually in Steam, then download.</value></data>
   <data name="LogDualBranchWizardPaused" xml:space="preserve"><value>Dual-folder wizard paused; you can continue later.</value></data>
@@ -419,9 +419,13 @@ Current single-folder play is fine. To run the dual-folder wizard again later, d
   <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>Failed to archive the other branch folder.</value></data>
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>Failed to create the directory link.</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Failed to remove dual-folder setup.</value></data>
-  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished; waiting for Steam to finish switching branches.</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished. Open Steam yourself if you need download/verify; then click Continue (the manager will not auto-start Steam).</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Failed to request Steam exit: {0}</value></data>
-  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam or the game is still running (including steamwebhelper). End those processes in Task Manager, then try again.</value></data>
+  <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit had no effect (common with the “Who’s playing?” account picker); force-closing Steam client processes…</value></data>
+  <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam client or the game is still running (including steamwebhelper). Close Steam windows (including the “Who’s playing?” account picker) and the game, then try again; background steamservice can stay.</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker blocking Continue). Then click settle Continue.</value></data>
+  <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Open Steam yourself to download the other branch; the manager will not auto-start Steam.</value></data>
+  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. Click Continue when the game is ready.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>Folder and Steam branch keys are aligned, but the game path is not ready yet (missing binaries or MelonLoader incomplete). Wait for Steam to finish download/verify, then retry.</value></data>
@@ -452,7 +456,7 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="ExportDiagnosticsMailOpenedDomestic" xml:space="preserve"><value>Web mail opened; paste the clipboard draft and attach the diagnostics zip manually.</value></data>
   <data name="ExportDiagnosticsMailOpenedInternational" xml:space="preserve"><value>Gmail compose opened; please attach the diagnostics zip manually.</value></data>
   <data name="BusyProgressTitle" xml:space="preserve"><value>Please wait</value></data>
-  <data name="BusyWaitingSteam" xml:space="preserve"><value>Requesting Steam / game to exit — do not close the manager…</value></data>
+  <data name="BusyWaitingSteam" xml:space="preserve"><value>Closing Steam / game (including account picker) — do not close the manager…</value></data>
   <data name="BusyMovingGameFolder" xml:space="preserve"><value>Moving the game folder — do not close the manager…</value></data>
   <data name="BusyCreatingJunction" xml:space="preserve"><value>Creating directory junction — do not close the manager…</value></data>
   <data name="BusyGeneratingMelonAssemblies" xml:space="preserve"><value>Generating MelonLoader assemblies. Do not close the manager…</value></data>
