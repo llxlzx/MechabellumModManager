@@ -486,16 +486,9 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            var inspect = _branchSwitch.GetType().GetMethod("InspectOrphanDualLayout", new[] { typeof(string) });
-            if (inspect is null)
+            if (string.IsNullOrWhiteSpace(GamePath))
                 return false;
-
-            var info = inspect.Invoke(_branchSwitch, new object?[] { GamePath });
-            if (info is null)
-                return false;
-
-            var prop = info.GetType().GetProperty("IsOrphan");
-            return prop?.GetValue(info) is true;
+            return _branchSwitch.InspectOrphanDualLayout(GamePath).IsOrphan;
         }
         catch
         {
@@ -507,14 +500,12 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            var prop = GetType().GetProperty("RepairOrphanDualLayoutCommand");
-            var cmd = prop?.GetValue(this);
-            if (cmd is IAsyncRelayCommand asyncCmd && asyncCmd.CanExecute(null))
-                await asyncCmd.ExecuteAsync(null).ConfigureAwait(true);
+            if (RepairOrphanDualLayoutCommand.CanExecute(null))
+                await RepairOrphanDualLayoutCommand.ExecuteAsync(null).ConfigureAwait(true);
         }
         catch
         {
-            // Repair command is optional when orphan WIP is not present.
+            // Repair must not block recovery routing.
         }
     }
 
