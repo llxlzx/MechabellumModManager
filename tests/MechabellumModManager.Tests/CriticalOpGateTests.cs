@@ -5,8 +5,8 @@ public class CriticalOpGateTests
 {
     [Theory]
     [InlineData(true, false, false, false, false, false, CriticalOpGateLevel.HardBlock)]
-    [InlineData(false, true, false, false, false, false, CriticalOpGateLevel.HardBlock)]
-    [InlineData(false, false, true, false, false, false, CriticalOpGateLevel.HardBlock)]
+    [InlineData(false, true, false, false, false, false, CriticalOpGateLevel.SoftConfirm)]
+    [InlineData(false, false, true, false, false, false, CriticalOpGateLevel.SoftConfirm)]
     [InlineData(false, false, false, true, false, false, CriticalOpGateLevel.HardBlock)]
     [InlineData(false, false, false, false, true, false, CriticalOpGateLevel.SoftConfirm)]
     [InlineData(false, false, false, false, false, true, CriticalOpGateLevel.SoftConfirm)]

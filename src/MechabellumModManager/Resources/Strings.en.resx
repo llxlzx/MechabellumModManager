@@ -343,7 +343,7 @@ Overwrite and take over these files?</value></data>
 …{0} total</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Cancelled overwriting unmanaged files.</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Official/Test dual folders are already enabled. Rebuild will safely remove the current setup first (keeping the other folder’s game files), then set up again. Continue?</value></data>
-  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Remove Official/Test dual-folder setup? The folder in use will become the Steam game path again. Exit Steam and the game first.</value></data>
+  <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Remove Official/Test dual-folder setup? The manager will switch to Official first, then remove dual folders. The folder in use will become the Steam game path again. Exit Steam and the game first.</value></data>
   <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Dual-branch is off, but a directory junction and/or leftover store folders remain. Restore a single Mechabellum folder (materialize if still a junction). Keeping the other store may still block the wizard. Exit Steam and the game first. Continue?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
@@ -452,6 +452,11 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="BusyMovingGameFolder" xml:space="preserve"><value>Moving the game folder — do not close the manager…</value></data>
   <data name="BusyCreatingJunction" xml:space="preserve"><value>Creating directory junction — do not close the manager…</value></data>
   <data name="BusyGeneratingMelonAssemblies" xml:space="preserve"><value>Generating MelonLoader assemblies. Do not close the manager…</value></data>
+  <data name="BusySwitchingToOfficialForTeardown" xml:space="preserve"><value>Switching to Official before removing dual-folder — do not close the manager…</value></data>
+  <data name="BusyTeardownDualFolder" xml:space="preserve"><value>Removing dual-folder setup — do not close the manager…</value></data>
+  <data name="NotifyTeardownAbortedAwaitSettle" xml:space="preserve"><value>Switched to Official, but Steam branch is not ready yet. Finish settle (or wait until Steam update succeeds), then click Remove dual-folder again.</value></data>
+  <data name="NotifySettleBlockedUpdateUnhealthy" xml:space="preserve"><value>Steam update looks stuck/failed. Verify game files in Steam or wait until the game can Start, then continue.</value></data>
+  <data name="ExportDiagnosticsSummaryHint" xml:space="preserve"><value>summary.md was generated — send the whole zip to the maintainer.</value></data>
   <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Preparing Steam branch info — do not close the manager…</value></data>
   <data name="TaskMessageDiagnostics" xml:space="preserve"><value>Packaging logs and config…</value></data>
   <data name="TaskMessageDeploy" xml:space="preserve"><value>Writing profile into the game folder…</value></data>

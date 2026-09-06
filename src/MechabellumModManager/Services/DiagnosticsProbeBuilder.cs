@@ -148,11 +148,14 @@ public static class DiagnosticsProbeBuilder
                 if (File.Exists(acfPath))
                 {
                     var text = File.ReadAllText(acfPath);
+                    var stateFlags = ReadAcfValue(text, "StateFlags");
                     acf = new Dictionary<string, object?>
                     {
                         ["exists"] = true,
                         ["settled"] = SteamBetaKeyEditor.LooksSettledForSnapshot(text),
-                        ["StateFlags"] = ReadAcfValue(text, "StateFlags"),
+                        ["updateUnhealthy"] = SteamBetaKeyEditor.LooksUpdateUnhealthy(text),
+                        ["StateFlags"] = stateFlags,
+                        ["StateFlagsDecoded"] = SteamBetaKeyEditor.DecodeStateFlags(stateFlags),
                         ["buildid"] = ReadAcfValue(text, "buildid"),
                         ["TargetBuildID"] = ReadAcfValue(text, "TargetBuildID"),
                         ["BytesToDownload"] = ReadAcfValue(text, "BytesToDownload"),
@@ -213,6 +216,9 @@ public static class DiagnosticsProbeBuilder
         if (string.Equals(statusKind, nameof(GameStatusKind.GameMissing), StringComparison.Ordinal))
             findings.Add("game_missing");
 
+        if (SteamBranchLayout.IsBranchStorePath(request.GamePath))
+            findings.Add("game_path_is_branch_store");
+
         if (melon.TryGetValue("exists", out var ex) && ex is false)
             findings.Add("melon_log_missing");
         else if (melon.TryGetValue("staleOrIncomplete", out var stale) && stale is true)
@@ -224,6 +230,16 @@ public static class DiagnosticsProbeBuilder
             findings.Add("melon_proxy_dll_missing");
 
         var enabled = branch.TryGetValue("enabled", out var en) && en is true;
+        if (!enabled)
+        {
+            if (SteamBranchLayout.EnumerateExistingStoreFolders(request.GamePath).Any(LooksLikeGameRoot)
+                || (branch.TryGetValue("steamLinkIsJunction", out var junc) && junc is true))
+                findings.Add("orphan_dual_layout");
+
+            if (SteamBranchLayout.EnumerateExistingStoreFolders(request.GamePath).Any())
+                findings.Add("leftover_dual_store_folders");
+        }
+
         if (enabled)
         {
             if (branch.TryGetValue("steamLinkIsJunction", out var j) && j is false)
@@ -231,13 +247,20 @@ public static class DiagnosticsProbeBuilder
             if (branch.TryGetValue("linkLooksLikeGameRoot", out var linkOk) && linkOk is false
                 && ((branch.TryGetValue("officialLooksLikeGameRoot", out var o) && o is true)
                     || (branch.TryGetValue("betaLooksLikeGameRoot", out var b) && b is true)))
+            {
                 findings.Add("link_incomplete_but_store_valid");
+                findings.Add("active_store_incomplete");
+            }
 
             if (branch.TryGetValue("acf", out var acfObj) && acfObj is Dictionary<string, object?> acf)
             {
-                if (acf.TryGetValue("exists", out var acfEx) && acfEx is true
-                    && acf.TryGetValue("settled", out var settled) && settled is false)
-                    findings.Add("acf_not_settled");
+                if (acf.TryGetValue("exists", out var acfEx) && acfEx is true)
+                {
+                    if (acf.TryGetValue("updateUnhealthy", out var unhealthy) && unhealthy is true)
+                        findings.Add("acf_update_unhealthy");
+                    else if (acf.TryGetValue("settled", out var settled) && settled is false)
+                        findings.Add("acf_not_settled");
+                }
             }
 
             if (request.IsAwaitingSteamSettle)

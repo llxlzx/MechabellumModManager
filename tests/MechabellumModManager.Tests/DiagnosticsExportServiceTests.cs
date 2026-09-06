@@ -119,6 +119,56 @@ public class DiagnosticsExportServiceTests
         env.Should().Contain("\"staleOrIncomplete\": true");
         env.Should().Contain("\"launchMode\": \"SteamThenExe\"");
         env.Should().Contain("\"hasPreferencesLoaded\": false");
+        archive.GetEntry("summary.md").Should().NotBeNull();
+        var summary = new StreamReader(archive.GetEntry("summary.md")!.Open()).ReadToEnd();
+        summary.Should().Contain("Findings");
+        summary.Should().Contain("melon_log_stale_or_incomplete");
+        summary.Should().Contain("建议下一步");
+    }
+
+    [Fact]
+    public void Export_includes_summary_and_timeline_for_session_events()
+    {
+        using var fx = new Fixture();
+        File.WriteAllText(fx.Paths.BranchSwitchConfigPath,
+            System.Text.Json.JsonSerializer.Serialize(new BranchSwitchConfig
+            {
+                Enabled = true,
+                WizardStep = BranchWizardStep.AwaitingSteamSettle,
+                SteamLinkPath = Path.Combine(fx.Root, "steam", "Mechabellum"),
+                ActiveBranch = GameBranch.Beta
+            }));
+        var zip = Path.Combine(fx.Root, "summary.zip");
+        var svc = new DiagnosticsExportService();
+        var result = svc.ExportToFile(zip, new DiagnosticsExportRequest
+        {
+            Paths = fx.Paths,
+            GamePath = Path.Combine(fx.Root, "no-game"),
+            SessionLogText =
+                """
+                [11:25:01] 正在生成 MelonLoader 程序集…
+                [11:25:31] 等待 MelonLoader 生成 Il2Cpp 程序集…
+                [12:00:00] 已导出诊断包：x.zip
+                """,
+            AppVersion = "1.1.3",
+            BranchSwitchEnabled = true,
+            BranchWizardStep = "AwaitingSteamSettle",
+            ActiveGameBranch = "Beta",
+            IsAwaitingSteamSettle = true,
+            Redaction = DiagnosticsRedactionMode.None,
+            LogWriter = new ManagerLogWriter(fx.Paths.LogsDir)
+        });
+
+        result.Success.Should().BeTrue();
+        using var archive = ZipFile.OpenRead(zip);
+        var summary = new StreamReader(archive.GetEntry("summary.md")!.Open()).ReadToEnd();
+        summary.Should().Contain("1.1.3");
+        summary.Should().Contain("awaiting_steam_settle");
+        summary.Should().Contain("建议下一步");
+
+        var timeline = new StreamReader(archive.GetEntry("timeline.jsonl")!.Open()).ReadToEnd();
+        timeline.Should().Contain("melon_gen_start");
+        timeline.Should().Contain("diag_export");
     }
 
     [Fact]
@@ -183,6 +233,77 @@ public class DiagnosticsExportServiceTests
         env.Should().Contain("acf_not_settled");
         env.Should().Contain("ready_without_branch_deploy_manifest");
         env.Should().Contain("\"settled\": false");
+    }
+
+    [Fact]
+    public void Export_probe_flags_game_path_is_branch_store()
+    {
+        using var fx = new Fixture();
+        var common = Path.Combine(fx.Root, "steamapps", "common");
+        var official = Path.Combine(common, "Mechabellum_official");
+        Directory.CreateDirectory(official);
+        File.WriteAllText(Path.Combine(official, "Mechabellum.exe"), "x");
+        File.WriteAllText(Path.Combine(official, "GameAssembly.dll"), "x");
+
+        var zip = Path.Combine(fx.Root, "store-path.zip");
+        var svc = new DiagnosticsExportService();
+        var result = svc.ExportToFile(zip, new DiagnosticsExportRequest
+        {
+            Paths = fx.Paths,
+            GamePath = official,
+            SessionLogText = "session",
+            AppVersion = "1.1.2",
+            Redaction = DiagnosticsRedactionMode.None,
+            LogWriter = new ManagerLogWriter(fx.Paths.LogsDir)
+        });
+
+        result.Success.Should().BeTrue();
+        using var archive = ZipFile.OpenRead(zip);
+        var env = new StreamReader(archive.GetEntry("environment.json")!.Open()).ReadToEnd();
+        env.Should().Contain("game_path_is_branch_store");
+    }
+
+    [Fact]
+    public void Export_probe_flags_leftover_dual_store_folders_when_disabled()
+    {
+        using var fx = new Fixture();
+        var common = Path.Combine(fx.Root, "steamapps", "common");
+        var link = Path.Combine(common, "Mechabellum");
+        var beta = Path.Combine(common, "Mechabellum_beta");
+        Directory.CreateDirectory(link);
+        Directory.CreateDirectory(beta);
+        File.WriteAllText(Path.Combine(link, "Mechabellum.exe"), "x");
+        File.WriteAllText(Path.Combine(link, "GameAssembly.dll"), "x");
+        File.WriteAllText(Path.Combine(beta, "Mechabellum.exe"), "x");
+        File.WriteAllText(Path.Combine(beta, "GameAssembly.dll"), "x");
+        File.WriteAllText(fx.Paths.BranchSwitchConfigPath,
+            System.Text.Json.JsonSerializer.Serialize(new BranchSwitchConfig
+            {
+                Enabled = false,
+                WizardStep = BranchWizardStep.None,
+                SteamLinkPath = link
+            }));
+
+        var zip = Path.Combine(fx.Root, "leftover.zip");
+        var svc = new DiagnosticsExportService();
+        var result = svc.ExportToFile(zip, new DiagnosticsExportRequest
+        {
+            Paths = fx.Paths,
+            GamePath = link,
+            SessionLogText = "session",
+            AppVersion = "1.1.2",
+            BranchSwitchEnabled = false,
+            BranchWizardStep = "None",
+            Redaction = DiagnosticsRedactionMode.None,
+            LogWriter = new ManagerLogWriter(fx.Paths.LogsDir)
+        });
+
+        result.Success.Should().BeTrue();
+        using var archive = ZipFile.OpenRead(zip);
+        var env = new StreamReader(archive.GetEntry("environment.json")!.Open()).ReadToEnd();
+        env.Should().Contain("leftover_dual_store_folders");
+        env.Should().Contain("orphan_dual_layout");
+        env.Should().NotContain("game_path_is_branch_store");
     }
 
     sealed class Fixture : IDisposable

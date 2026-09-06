@@ -20,8 +20,13 @@ public static class CriticalOpGate
         if (recoveryModalPending)
             return CriticalOpGateLevel.HardBlock;
 
-        if (guardRunning || busyDialogOpen || branchSwitchBusy)
+        // Disk CriticalOp must not be interrupted mid-write.
+        if (guardRunning)
             return CriticalOpGateLevel.HardBlock;
+
+        // Busy / branch work: SoftConfirm so user can cancel and exit (avoids zombie process).
+        if (busyDialogOpen || branchSwitchBusy)
+            return CriticalOpGateLevel.SoftConfirm;
 
         if (awaitingSteamSettle || wizardInProgress)
             return CriticalOpGateLevel.SoftConfirm;

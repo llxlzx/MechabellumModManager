@@ -146,6 +146,9 @@ public sealed class MelonLoaderAssemblyGenerator
             long? lastSize = null;
             var stableHits = 0;
             var deadline = DateTime.UtcNow + wait;
+            var startedUtc = DateTime.UtcNow;
+            var lastHeartbeatUtc = startedUtc;
+            var heartbeat = TimeSpan.FromSeconds(30);
 
             while (DateTime.UtcNow < deadline)
             {
@@ -175,7 +178,19 @@ public sealed class MelonLoaderAssemblyGenerator
                     }
                 }
 
-                progress?.Invoke("等待 MelonLoader 生成 Il2Cpp 程序集…");
+                var now = DateTime.UtcNow;
+                if (now - lastHeartbeatUtc >= heartbeat)
+                {
+                    var elapsed = (int)(now - startedUtc).TotalSeconds;
+                    var remain = Math.Max(0, (int)(deadline - now).TotalSeconds);
+                    progress?.Invoke($"仍在等待 MelonLoader 生成程序集… 已用时 {elapsed}s，剩余约 {remain}s");
+                    lastHeartbeatUtc = now;
+                }
+                else
+                {
+                    progress?.Invoke("等待 MelonLoader 生成 Il2Cpp 程序集…");
+                }
+
                 await _delay(interval, cancellationToken).ConfigureAwait(false);
             }
 
