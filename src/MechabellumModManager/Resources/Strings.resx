@@ -421,17 +421,17 @@
   <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>归档另一服失败。</value></data>
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>创建目录联接失败。</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>解除双目录配置失败。</value></data>
-  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>双目录向导已完成。若需 Steam 下载/校验，请自行打开 Steam；就绪后点「继续」（管理器不会自动启动 Steam）。</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>双目录向导已完成。若需 Steam 下载/校验，请自行打开 Steam（管理器不会自动启动）。就绪后回到设置页点金色的「…继续」完成结算。</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>请求退出 Steam 失败：{0}</value></data>
   <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit 未生效（常见于「谁要玩游戏」账户选择器），正在强制结束 Steam 客户端进程…</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam 客户端或游戏仍在运行（含 steamwebhelper）。请关闭 Steam 窗口（含「谁要玩游戏」账户选择器）与游戏后再试；后台 steamservice 可保留。</value></data>
-  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>请自行打开 Steam 完成下载/校验（若需要）。管理器不会自动启动 Steam，以免弹出账户选择器并挡住「继续」。就绪后点结算继续。</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>请自行打开 Steam 完成下载/校验（若需要）。管理器不会自动启动 Steam，以免弹出账户选择器。Steam 显示可「开始游戏」后，回到设置页点金色的「…继续」完成结算。点「确定」只关闭本提示。</value></data>
   <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>管理器已在运行。请使用已打开的窗口。</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>请自行打开 Steam 下载另一服；管理器不会自动启动 Steam。</value></data>
   <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>正在等待另一服下载：请自行在 Steam 下载。下完后请完全退出 Steam（托盘→退出），管理器会自动继续。点「确定」只关闭本提示，不会中断等待。</value></data>
   <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>另一服已下载完成：请完全退出 Steam（托盘→退出），退出后将自动继续</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>已检测到另一服下载完成且 Steam 已退出，自动继续双目录向导。</value></data>
-  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>已恢复 Steam 清单快照，无需自动启动 Steam。游戏就绪后可直接点「继续」。</value></data>
+  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>已恢复 Steam 清单快照，无需自动启动 Steam。游戏就绪后请在设置页点金色的「…继续」完成结算。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>当前已是该服（目录与 Steam 测试分支已对齐），无需再次切换。</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>目录与 Steam 分支键已对齐，但当前游戏路径尚未就绪（缺少可执行文件或 MelonLoader 未完成）。请等待 Steam 完成下载/校验后再试。</value></data>

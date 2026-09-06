@@ -415,7 +415,9 @@
   <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>Не удалось архивировать другую ветку.</value></data>
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>Не удалось создать связь каталога.</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Не удалось снять двухкаталожную настройку.</value></data>
-  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Мастер двух каталогов завершён; ожидаем завершения смены ветки в Steam.</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished. Open Steam yourself if needed (manager will not auto-start). When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker). When Steam shows Play, return to Settings and click the gold “…Continue” button to finish settle. OK only closes this tip.</value></data>
+  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Не удалось запросить выход из Steam: {0}</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam или игра ещё запущены (включая steamwebhelper). Завершите процессы в диспетчере задач и повторите.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Не удалось переключить папки.</value></data>

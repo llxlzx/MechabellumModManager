@@ -415,7 +415,9 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>他方ブランチのアーカイブに失敗しました。</value></data>
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>ディレクトリ連結の作成に失敗しました。</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>二系統設定の解除に失敗しました。</value></data>
-  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>二系統ウィザード完了。Steam のブランチ切替完了を待機中。</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished. Open Steam yourself if needed (manager will not auto-start). When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker). When Steam shows Play, return to Settings and click the gold “…Continue” button to finish settle. OK only closes this tip.</value></data>
+  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Steam 終了要求に失敗：{0}</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam またはゲームが動作中です（steamwebhelper 含む）。タスクマネージャーで終了してから再試行してください。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>フォルダ切替に失敗しました。</value></data>
