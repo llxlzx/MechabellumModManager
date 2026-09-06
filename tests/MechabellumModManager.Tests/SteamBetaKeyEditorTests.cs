@@ -337,6 +337,61 @@ public class SteamBetaKeyEditorTests
     }
 
     [Fact]
+    public void LooksAcfHardFault_true_for_1190()
+    {
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"1190"
+            	"buildid"		"1"
+            	"TargetBuildID"		"1"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksAcfHardFault(acf).Should().BeTrue();
+        SteamBetaKeyEditor.LooksSettledForSnapshot(acf).Should().BeFalse();
+    }
+
+    [Fact]
+    public void LooksAcfHardFault_blocks_settled_when_fully_installed_plus_corrupt()
+    {
+        // 4|128 = 132 — previously could pass LooksSettledForSnapshot if only special-cased masks were checked.
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"132"
+            	"buildid"		"100"
+            	"TargetBuildID"		"100"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksAcfHardFault(acf).Should().BeTrue();
+        SteamBetaKeyEditor.LooksSettledForSnapshot(acf).Should().BeFalse();
+    }
+
+    [Fact]
+    public void LooksSettledForSnapshot_still_true_for_fully_installed_4()
+    {
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"4"
+            	"buildid"		"100"
+            	"TargetBuildID"		"100"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksAcfHardFault(acf).Should().BeFalse();
+        SteamBetaKeyEditor.LooksSettledForSnapshot(acf).Should().BeTrue();
+    }
+
+    [Fact]
     public void ProcessProbe_can_be_injected()
     {
         var editor = new SteamBetaKeyEditor(new ProcessProbe());
