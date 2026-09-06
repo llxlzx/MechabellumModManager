@@ -90,9 +90,25 @@ public sealed class SteamBetaKeyEditor
         return TryGetQuotedBlock(text, "MountedConfig", out _, out _);
     }
 
+    public static bool LooksAcfHardFault(string acfText)
+    {
+        if (string.IsNullOrWhiteSpace(acfText))
+            return false;
+        if (!TryParseStateFlags(acfText, out var flags))
+            return false;
+
+        const int filesMissing = 32;
+        const int filesCorrupt = 128;
+        const int uninstalling = 1024;
+        return (flags & (filesMissing | filesCorrupt | uninstalling)) != 0;
+    }
+
     public static bool LooksSettledForSnapshot(string acfText)
     {
         if (string.IsNullOrWhiteSpace(acfText))
+            return false;
+
+        if (LooksAcfHardFault(acfText))
             return false;
 
         if (LooksUpdateUnhealthy(acfText))
