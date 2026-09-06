@@ -85,9 +85,13 @@ public class BranchStoreHealthTests
             File.WriteAllText(Path.Combine(dir, "GameAssembly.dll"), "x");
             BranchStoreHealth.IsWizardDownloadReady(dir, SettledAcf(), steamOrGameRunning: true)
                 .Should().BeFalse();
+            BranchStoreHealth.IsWizardDownloadDiskReady(dir, SettledAcf())
+                .Should().BeTrue();
             BranchStoreHealth.IsWizardDownloadReady(dir, SettledAcf(), steamOrGameRunning: false)
                 .Should().BeTrue();
             BranchStoreHealth.IsWizardDownloadReady(dir, null, steamOrGameRunning: false)
+                .Should().BeFalse();
+            BranchStoreHealth.IsWizardDownloadDiskReady(dir, null)
                 .Should().BeFalse();
         }
         finally

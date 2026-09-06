@@ -45,6 +45,8 @@ public class MainViewModelBranchSwitchTests
         Directory.CreateDirectory(fx.SteamLink);
         // Incomplete download under Steam link (exe only).
         File.WriteAllText(Path.Combine(fx.SteamLink, "Mechabellum.exe"), "x");
+        // Other store must NOT look complete, or resume skips WaitingDownloadB and tries link.
+        Directory.Delete(fx.BetaStore, recursive: true);
 
         fx.WriteBranchConfig(new BranchSwitchConfig
         {
@@ -60,24 +62,86 @@ public class MainViewModelBranchSwitchTests
         });
 
         var confirms = new List<string>();
+        var notifies = new List<string>();
         var vm = fx.CreateVm(
             confirm: msg =>
             {
                 confirms.Add(msg);
                 return true;
             },
+            notify: notifies.Add,
             delay: _ => Task.Delay(20));
         vm.GamePath = fx.SteamLink;
 
         await vm.StartBranchWizardCommand.ExecuteAsync(null);
 
         confirms.Should().NotContain(m =>
-            m.Contains("下载另一服", StringComparison.Ordinal)
-            || m.Contains("点「是」", StringComparison.Ordinal)
-            || m.Contains("download the other", StringComparison.OrdinalIgnoreCase));
+            m.Contains("点「是」", StringComparison.Ordinal)
+            || m.Contains("no Yes click", StringComparison.OrdinalIgnoreCase));
+        notifies.Should().Contain(m =>
+            m.Contains("确定", StringComparison.Ordinal)
+            || m.Contains("OK only closes", StringComparison.OrdinalIgnoreCase));
+        notifies.Should().NotContain(m =>
+            m.Contains("点「是」", StringComparison.Ordinal)
+            || m.Contains("no Yes click", StringComparison.OrdinalIgnoreCase));
         vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
         vm.IsBranchSwitchBusy.Should().BeFalse("waiting must not hold Busy");
         vm.CanTeardownBranchSwitch.Should().BeTrue();
+        vm.CancelBusyWork();
+    }
+
+    [Fact]
+    public async Task WaitingDownloadB_complete_disk_with_steam_open_shows_exit_steam_task()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.Junctions.DeleteJunction(fx.SteamLink);
+        Directory.CreateDirectory(fx.SteamLink);
+        File.WriteAllText(Path.Combine(fx.SteamLink, "Mechabellum.exe"), "x");
+        File.WriteAllText(Path.Combine(fx.SteamLink, "GameAssembly.dll"), "x");
+        Directory.Delete(fx.BetaStore, recursive: true);
+
+        var steamApps = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", ".."));
+        Directory.CreateDirectory(steamApps);
+        File.WriteAllText(
+            Path.Combine(steamApps, "appmanifest_669330.acf"),
+            """
+            "AppState"
+            {
+            	"StateFlags"		"4"
+            	"buildid"		"1"
+            	"TargetBuildID"		"1"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            }
+            """);
+
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.WaitingDownloadB,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        fx.Probe.SteamRunning = true;
+        var vm = fx.CreateVm(delay: _ => Task.Delay(20));
+        vm.GamePath = fx.SteamLink;
+
+        await vm.StartBranchWizardCommand.ExecuteAsync(null);
+
+        var status = vm.BranchStatusText ?? "";
+        var task = vm.TaskMessage ?? "";
+        (status.Contains("退出 Steam", StringComparison.Ordinal)
+         || status.Contains("exit Steam", StringComparison.OrdinalIgnoreCase))
+            .Should().BeTrue($"BranchStatusText={status}");
+        (task.Contains("退出 Steam", StringComparison.Ordinal)
+         || task.Contains("exit Steam", StringComparison.OrdinalIgnoreCase))
+            .Should().BeTrue($"TaskMessage={task}");
         vm.CancelBusyWork();
     }
 
