@@ -419,17 +419,17 @@ Current single-folder play is fine. To run the dual-folder wizard again later, d
   <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>Failed to archive the other branch folder.</value></data>
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>Failed to create the directory link.</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Failed to remove dual-folder setup.</value></data>
-  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished. Open Steam yourself if you need download/verify; then click Continue (the manager will not auto-start Steam).</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished. Open Steam yourself if you need download/verify (the manager will not auto-start Steam). When ready, return to Settings and click the gold “…Continue” button to finish settle.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Failed to request Steam exit: {0}</value></data>
   <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit had no effect (common with the “Who’s playing?” account picker); force-closing Steam client processes…</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam client or the game is still running (including steamwebhelper). Close Steam windows (including the “Who’s playing?” account picker) and the game, then try again; background steamservice can stay.</value></data>
-  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker blocking Continue). Then click settle Continue.</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker). When Steam shows Play, return to Settings and click the gold “…Continue” button to finish settle. OK only closes this tip.</value></data>
   <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>The manager is already running. Use the existing window.</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Open Steam yourself to download the other branch; the manager will not auto-start Steam.</value></data>
   <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>Waiting for the other branch download: open Steam yourself and download. When finished, fully exit Steam (tray → Exit); the manager continues automatically. OK only closes this tip and does not cancel waiting.</value></data>
   <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>Other branch download complete: fully exit Steam (tray → Exit); the wizard continues automatically after exit</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>Other branch download looks complete and Steam is closed; continuing dual-folder wizard automatically.</value></data>
-  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. Click Continue when the game is ready.</value></data>
+  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. When the game is ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Already on this branch (folder and Steam beta are aligned). No switch needed.</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>Folder and Steam branch keys are aligned, but the game path is not ready yet (missing binaries or MelonLoader incomplete). Wait for Steam to finish download/verify, then retry.</value></data>

@@ -415,7 +415,9 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="FailWizardArchiveOtherFailed" xml:space="preserve"><value>Archivieren des anderen Zweigs fehlgeschlagen.</value></data>
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>Verzeichnisverknüpfung fehlgeschlagen.</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Entfernen des Doppelordners fehlgeschlagen.</value></data>
-  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Doppelordner-Assistent fertig; warte auf Steam-Zweigwechsel.</value></data>
+  <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished. Open Steam yourself if needed (manager will not auto-start). When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker). When Steam shows Play, return to Settings and click the gold “…Continue” button to finish settle. OK only closes this tip.</value></data>
+  <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Steam-Beenden fehlgeschlagen: {0}</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam oder Spiel läuft noch (inkl. steamwebhelper). Prozesse im Task-Manager beenden, dann erneut versuchen.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Ordnerwechsel fehlgeschlagen.</value></data>
