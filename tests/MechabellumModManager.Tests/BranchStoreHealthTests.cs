@@ -74,6 +74,28 @@ public class BranchStoreHealthTests
         }
     }
 
+    [Fact]
+    public void Wizard_download_ready_requires_root_settled_and_steam_exited()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "mmm-health-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "Mechabellum.exe"), "x");
+            File.WriteAllText(Path.Combine(dir, "GameAssembly.dll"), "x");
+            BranchStoreHealth.IsWizardDownloadReady(dir, SettledAcf(), steamOrGameRunning: true)
+                .Should().BeFalse();
+            BranchStoreHealth.IsWizardDownloadReady(dir, SettledAcf(), steamOrGameRunning: false)
+                .Should().BeTrue();
+            BranchStoreHealth.IsWizardDownloadReady(dir, null, steamOrGameRunning: false)
+                .Should().BeFalse();
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* ignore */ }
+        }
+    }
+
     static string SettledAcf() =>
         """
         "AppState"

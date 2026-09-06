@@ -83,6 +83,9 @@ public sealed partial class MainViewModel : ObservableObject
     bool _exportingDiagnostics;
     bool _suppressFilterRefresh;
     CancellationTokenSource? _busyWorkCts;
+    CancellationTokenSource? _wizardDownloadPollCts;
+    int _wizardDownloadPollGeneration;
+    bool _wizardArchiveBRunning;
     Action? _requestProcessExit;
 
     public IRelayCommand ApplyProfileCommand { get; }
@@ -543,6 +546,7 @@ public sealed partial class MainViewModel : ObservableObject
     public void CancelBusyWork()
     {
         try { _busyWorkCts?.Cancel(); } catch { /* ignore */ }
+        StopWizardDownloadPoll();
     }
 
     string SoftGateStateLabel() =>
@@ -946,6 +950,16 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
         TryDegradeHollowReadyStore();
+        EnsureWizardDownloadPollRunning();
+    }
+
+    void EnsureWizardDownloadPollRunning()
+    {
+        if (BranchWizardStep != BranchWizardStep.WaitingDownloadB)
+            return;
+        if (_wizardDownloadPollCts is { IsCancellationRequested: false })
+            return;
+        StartWizardDownloadPoll(ActiveGameBranch);
     }
 
     /// <summary>
@@ -1490,6 +1504,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!Confirm(LocalizationService.T("ConfirmBranchTeardown")))
             return;
 
+        StopWizardDownloadPoll();
         var deleteOther = BranchSwitchEnabled
             && Confirm(LocalizationService.T("ConfirmBranchDeleteOtherStore"), MessageBoxResult.No);
         IsBranchSwitchBusy = true;
@@ -3175,6 +3190,7 @@ public sealed partial class MainViewModel : ObservableObject
             RecomputeDirty();
             RefreshBranchStatusText();
             NotifyBranchGates();
+            // Poll starts from RefreshStatusCore / Resume — not during ctor Load.
         }
         catch
         {
@@ -3182,6 +3198,7 @@ public sealed partial class MainViewModel : ObservableObject
             IsAwaitingSteamSettle = false;
             DegradeToManualBeta = false;
             BranchWizardStep = BranchWizardStep.None;
+            StopWizardDownloadPoll();
             RefreshBranchStatusText();
             NotifyBranchGates();
         }
@@ -3563,7 +3580,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!segmentAOk)
             return;
 
-        SetWizardStep(BranchWizardStep.WaitingDownloadB);
+        // Stay on ArchivedA until silent-beta prep finishes; Continue sets WaitingDownloadB.
         await ContinueWizardAfterArchiveAAsync(current).ConfigureAwait(true);
     }
 
@@ -3590,6 +3607,15 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        // Resume mid-wait only — do not force Steam exit (would cancel an in-progress download).
+        if (cfg.WizardStep == BranchWizardStep.WaitingDownloadB)
+        {
+            SetWizardStep(BranchWizardStep.WaitingDownloadB);
+            PreferManualSteamOpen("NotifyWizardWaitingDownloadAuto");
+            StartWizardDownloadPoll(current);
+            return;
+        }
+
         if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
             return;
 
@@ -3603,62 +3629,183 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (_steamRestartCooldown > TimeSpan.Zero)
             await _delay(_steamRestartCooldown).ConfigureAwait(true);
-        AppendLog(LocalizationService.T("NotifyOpenSteamManuallyForWizardDownload"));
 
-        if (!Confirm(LocalizationService.T("ConfirmDownloadOtherBranchContinue")))
-        {
-            AppendLog(LocalizationService.T("LogDualBranchWizardPaused"));
+        SetWizardStep(BranchWizardStep.WaitingDownloadB);
+        PreferManualSteamOpen("NotifyWizardWaitingDownloadAuto");
+        StartWizardDownloadPoll(current);
+    }
+
+    void StopWizardDownloadPoll()
+    {
+        try { _wizardDownloadPollCts?.Cancel(); }
+        catch { /* ignore */ }
+        _wizardDownloadPollCts?.Dispose();
+        _wizardDownloadPollCts = null;
+        _wizardDownloadPollGeneration++;
+    }
+
+    void StartWizardDownloadPoll(GameBranch current)
+    {
+        if (BranchWizardStep != BranchWizardStep.WaitingDownloadB)
             return;
-        }
 
+        StopWizardDownloadPoll();
+        var cts = new CancellationTokenSource();
+        _wizardDownloadPollCts = cts;
+        var gen = _wizardDownloadPollGeneration;
+        var token = cts.Token;
+        _ = RunWizardDownloadPollAsync(current, gen, token);
+        RefreshBranchStatusText();
+    }
+
+    async Task RunWizardDownloadPollAsync(GameBranch current, int generation, CancellationToken token)
+    {
+        var interval = TimeSpan.FromSeconds(2);
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                if (generation != _wizardDownloadPollGeneration)
+                    return;
+                if (BranchWizardStep != BranchWizardStep.WaitingDownloadB)
+                    return;
+
+                if (!_wizardArchiveBRunning && !IsBranchSwitchBusy && IsWizardDownloadReadyNow())
+                {
+                    AppendLog(LocalizationService.T("LogWizardDownloadAutoContinue"));
+                    await CompleteWizardAfterDownloadBAsync(current).ConfigureAwait(true);
+                    return;
+                }
+
+                await _delay(interval).ConfigureAwait(true);
+                // Floor pacing: fixtures often inject delay => Task.CompletedTask.
+                await Task.Delay(250, token).ConfigureAwait(true);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // expected on teardown / cancel
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"等待另一服下载时出错：{ex.Message}");
+        }
+    }
+
+    bool IsWizardDownloadReadyNow()
+    {
+        try
+        {
+            var cfg = _branchSwitch.LoadConfig();
+            var link = cfg.SteamLinkPath;
+            string? acfText = null;
+            if (!string.IsNullOrWhiteSpace(link))
+            {
+                var acfPath = SteamBetaKeyEditor.FindAppManifestPath(link);
+                if (File.Exists(acfPath))
+                    acfText = File.ReadAllText(acfPath);
+            }
+
+            return BranchStoreHealth.IsWizardDownloadReady(
+                link,
+                acfText,
+                _processProbe.IsGameOrSteamRunning());
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    async Task CompleteWizardAfterDownloadBAsync(GameBranch current)
+    {
+        if (_wizardArchiveBRunning || IsBranchSwitchBusy)
+            return;
+        if (BranchWizardStep != BranchWizardStep.WaitingDownloadB)
+            return;
+        if (!IsWizardDownloadReadyNow())
+            return;
+
+        _wizardArchiveBRunning = true;
+        StopWizardDownloadPoll();
+        IsBranchSwitchBusy = true;
+        var other = current == GameBranch.Official ? GameBranch.Beta : GameBranch.Official;
+        var cfg = _branchSwitch.LoadConfig();
+        var otherStore = other == GameBranch.Official ? cfg.OfficialStorePath : cfg.BetaStorePath;
         var linked = false;
         string? segmentBcFailure = null;
-        await RunBusyAsync(LocalizationService.T("BusyWaitingSteam"), async () =>
+        try
         {
-            if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
-                return;
-
-            await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, "WizardArchiveB", async () =>
+            await RunBusyAsync(LocalizationService.T("BusyWaitingSteam"), async () =>
             {
-                BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
-                var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
-                if (!archiveB.Success)
-                {
-                    var destHint = string.IsNullOrWhiteSpace(otherStore)
-                        ? (other == GameBranch.Official
-                            ? SteamBranchLayout.OfficialStoreFolderName
-                            : SteamBranchLayout.BetaStoreFolderName)
-                        : otherStore;
-                    segmentBcFailure = MapArchiveFailureMessage(archiveB.Message, destHint);
+                if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
                     return;
-                }
 
-                BusyMessage(LocalizationService.T("BusyCreatingJunction"));
-                var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
-                if (!link.Success)
+                await RunWithCriticalOpAsync(CriticalOpKind.BranchDiskWrite, "WizardArchiveB", async () =>
                 {
-                    segmentBcFailure = string.IsNullOrWhiteSpace(link.Message)
-                        ? LocalizationService.T("FailWizardCreateLinkFailed")
-                        : link.Message;
-                    return;
-                }
+                    BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
+                    var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
+                    if (!archiveB.Success)
+                    {
+                        var destHint = string.IsNullOrWhiteSpace(otherStore)
+                            ? (other == GameBranch.Official
+                                ? SteamBranchLayout.OfficialStoreFolderName
+                                : SteamBranchLayout.BetaStoreFolderName)
+                            : otherStore;
+                        segmentBcFailure = MapArchiveFailureMessage(archiveB.Message, destHint);
+                        return;
+                    }
 
-                ApplyLinkedWizardState(current);
-                linked = true;
+                    BusyMessage(LocalizationService.T("BusyCreatingJunction"));
+                    var link = await Task.Run(() => _branchSwitch.CreateLinkTo(current)).ConfigureAwait(true);
+                    if (!link.Success)
+                    {
+                        segmentBcFailure = string.IsNullOrWhiteSpace(link.Message)
+                            ? LocalizationService.T("FailWizardCreateLinkFailed")
+                            : link.Message;
+                        return;
+                    }
+
+                    ApplyLinkedWizardState(current);
+                    linked = true;
+                }).ConfigureAwait(true);
             }).ConfigureAwait(true);
-        }).ConfigureAwait(true);
 
-        if (segmentBcFailure is not null)
-        {
-            FailWizard(segmentBcFailure);
-            return;
+            if (segmentBcFailure is not null)
+            {
+                FailWizard(segmentBcFailure);
+                SetWizardStep(BranchWizardStep.WaitingDownloadB);
+                StartWizardDownloadPoll(current);
+                return;
+            }
+
+            if (!linked)
+            {
+                SetWizardStep(BranchWizardStep.WaitingDownloadB);
+                StartWizardDownloadPoll(current);
+                return;
+            }
+
+            var silent = _branchSwitch.TrySilentSetBeta(current);
+            await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
         }
-
-        if (!linked)
-            return;
-
-        var silent = _branchSwitch.TrySilentSetBeta(current);
-        await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
+        catch (Exception ex)
+        {
+            FailWizard(string.Format(LocalizationService.T("NotifyBranchWizardFailed"), ex.Message));
+            if (BranchWizardStep == BranchWizardStep.WaitingDownloadB
+                || BranchWizardStep is BranchWizardStep.ArchivedA or BranchWizardStep.None)
+            {
+                SetWizardStep(BranchWizardStep.WaitingDownloadB);
+                StartWizardDownloadPoll(current);
+            }
+        }
+        finally
+        {
+            _wizardArchiveBRunning = false;
+            IsBranchSwitchBusy = false;
+            NotifyBranchGates();
+            RefreshBranchStatusText();
+        }
     }
 
     async Task FinishWizardAfterStoresReadyAsync(GameBranch current)
@@ -3896,6 +4043,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     void FailWizard(string message)
     {
+        StopWizardDownloadPoll();
         AppendLog(message);
         _notify(message);
     }
@@ -3906,6 +4054,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// </summary>
     void AbortWizardAfterFailure(string message)
     {
+        StopWizardDownloadPoll();
         FailWizard(message);
         try
         {

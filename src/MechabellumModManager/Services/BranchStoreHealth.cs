@@ -29,4 +29,15 @@ public static class BranchStoreHealth
 
         return new BranchStoreHealthResult(root, hard, snap, root && snap, reason);
     }
+
+    /// <summary>
+    /// Wizard WaitingDownloadB auto-continue: complete root + settled ACF + Steam/game not running.
+    /// </summary>
+    public static bool IsWizardDownloadReady(string? steamLinkPath, string? acfText, bool steamOrGameRunning)
+    {
+        if (steamOrGameRunning)
+            return false;
+        var health = Evaluate(steamLinkPath, acfText);
+        return health.CanPromoteReady;
+    }
 }
