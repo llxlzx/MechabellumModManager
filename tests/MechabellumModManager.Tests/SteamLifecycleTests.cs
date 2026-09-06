@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MechabellumModManager.Services;
+using MechabellumModManager.Tests.Support;
 
 public class SteamLifecycleTests
 {
@@ -9,33 +10,10 @@ public class SteamLifecycleTests
         public void StartShell(string uriOrPath) => Starts.Add(uriOrPath);
     }
 
-    // Minimal fake — replace with Support.FakeProcessProbe in Task 5
-    sealed class FakeProbe : IProcessProbe
-    {
-        public bool GameRunning { get; set; }
-        public bool SteamRunning { get; set; }
-        public int ForceCloseCalls { get; private set; }
-        public bool ForceCloseClearsRunning { get; set; }
-
-        public bool IsGameRunning() => GameRunning;
-        public bool IsSteamRunning() => SteamRunning;
-        public bool IsGameOrSteamRunning() => GameRunning || SteamRunning;
-
-        public void ForceCloseSteamClientAndGame()
-        {
-            ForceCloseCalls++;
-            if (ForceCloseClearsRunning)
-            {
-                SteamRunning = false;
-                GameRunning = false;
-            }
-        }
-    }
-
     [Fact]
     public async Task EnsureExited_when_already_stopped_does_not_call_exit_or_force()
     {
-        var probe = new FakeProbe();
+        var probe = new FakeProcessProbe();
         var starter = new RecordingStarter();
         var life = new SteamLifecycle(probe, starter, _ => Task.CompletedTask,
             exitTimeout: TimeSpan.Zero, exitCooldown: TimeSpan.Zero);
@@ -48,7 +26,7 @@ public class SteamLifecycleTests
     [Fact]
     public async Task EnsureExited_when_client_running_requests_exit_then_force_close()
     {
-        var probe = new FakeProbe { SteamRunning = true, ForceCloseClearsRunning = true };
+        var probe = new FakeProcessProbe { SteamRunning = true, ForceCloseClearsRunning = true };
         var starter = new RecordingStarter();
         var life = new SteamLifecycle(probe, starter, _ => Task.CompletedTask,
             exitTimeout: TimeSpan.FromSeconds(1), exitCooldown: TimeSpan.Zero);
@@ -62,7 +40,7 @@ public class SteamLifecycleTests
     [Fact]
     public async Task EnsureExited_when_only_game_running_skips_steam_exit_but_force_closes()
     {
-        var probe = new FakeProbe { GameRunning = true, ForceCloseClearsRunning = true };
+        var probe = new FakeProcessProbe { GameRunning = true, ForceCloseClearsRunning = true };
         var starter = new RecordingStarter();
         var life = new SteamLifecycle(probe, starter, _ => Task.CompletedTask,
             exitTimeout: TimeSpan.FromSeconds(1), exitCooldown: TimeSpan.Zero);
@@ -75,7 +53,7 @@ public class SteamLifecycleTests
     [Fact]
     public async Task EnsureExited_returns_false_if_still_running_after_force()
     {
-        var probe = new FakeProbe { SteamRunning = true, ForceCloseClearsRunning = false };
+        var probe = new FakeProcessProbe { SteamRunning = true, ForceCloseClearsRunning = false };
         var starter = new RecordingStarter();
         var logs = new List<string>();
         var life = new SteamLifecycle(probe, starter, _ => Task.CompletedTask,
@@ -91,7 +69,7 @@ public class SteamLifecycleTests
         var starter = new RecordingStarter();
         var logs = new List<string>();
         var notes = new List<string>();
-        var life = new SteamLifecycle(new FakeProbe(), starter, log: logs.Add, notify: notes.Add);
+        var life = new SteamLifecycle(new FakeProcessProbe(), starter, log: logs.Add, notify: notes.Add);
 
         life.PreferManualOpen("please open steam yourself");
 

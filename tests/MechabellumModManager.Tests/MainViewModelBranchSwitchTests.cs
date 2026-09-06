@@ -2,6 +2,8 @@ using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 using MechabellumModManager.ViewModels;
+using MechabellumModManager.Tests.Support;
+using Fixture = MechabellumModManager.Tests.Support.MainViewModelFixture;
 using System.Windows;
 
 public class MainViewModelBranchSwitchTests
@@ -405,6 +407,7 @@ public class MainViewModelBranchSwitchTests
 
         starter.Starts.Should().Contain("steam://exit");
         starter.Starts.Should().NotContain("steam://open/games");
+        fx.Probe.ForceCloseCalls.Should().BeGreaterThan(0);
         vm.ActiveGameBranch.Should().Be(GameBranch.Official);
         vm.IsAwaitingSteamSettle.Should().BeFalse();
         File.ReadAllText(Path.Combine(fx.SteamLink, "marker.txt")).Should().Be("official");
@@ -643,7 +646,13 @@ public class MainViewModelBranchSwitchTests
         vm.ActiveGameBranch.Should().Be(GameBranch.Beta);
         vm.IsAwaitingSteamSettle.Should().BeTrue();
         vm.CanDeployOrLaunch.Should().BeFalse();
-        starter.Starts.Should().Contain("steam://open/games");
+        starter.Starts.Should().NotContain("steam://open/games");
+        vm.LogText.Should().Match(s =>
+            s.Contains("不会自动启动 Steam", StringComparison.Ordinal)
+            || s.Contains("no need to auto-start Steam", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("will not auto-start Steam", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("Open Steam yourself", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("请自行打开 Steam", StringComparison.Ordinal));
         File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
 
         WriteSettledAcf(fx, betaKey: "publicbeta");
@@ -1335,264 +1344,5 @@ public class MainViewModelBranchSwitchTests
     {
         public List<string> Starts { get; } = new();
         public void StartShell(string uriOrPath) => Starts.Add(uriOrPath);
-    }
-
-    sealed class Fixture : IDisposable
-    {
-        public string DataRoot { get; }
-        public string GameRoot { get; }
-        public string SteamLink { get; set; } = "";
-        public string OfficialStore { get; set; } = "";
-        public string BetaStore { get; set; } = "";
-        public PathsService Paths { get; }
-        public JsonStore Store { get; }
-        public ProfileService Profiles { get; }
-        public FakeProcessProbe Probe { get; } = new();
-        public JunctionService Junctions { get; } = new();
-        readonly ModLibraryService _library;
-        readonly GameDetector _detector;
-        readonly DeployService _deploy;
-        readonly BranchSwitchService _branchSwitch;
-
-        Fixture(string dataRoot, string gameRoot)
-        {
-            DataRoot = dataRoot;
-            GameRoot = gameRoot;
-            Paths = new PathsService(dataRoot);
-            Paths.EnsureCreated();
-            Store = new JsonStore();
-            Profiles = new ProfileService(Paths, Store);
-            Profiles.EnsureDefaults();
-            _library = new ModLibraryService(Paths, new AssemblyInspector(), Store, Profiles);
-            _detector = new GameDetector();
-            _deploy = new DeployService(Paths, Store, new DeployPlanner(), _detector, new ProcessProbe());
-            _branchSwitch = new BranchSwitchService(
-                Paths, Store, Probe, Junctions, new SteamBetaKeyEditor(Probe));
-        }
-
-        public static Fixture CreateReady()
-        {
-            var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-bsvm-" + Guid.NewGuid().ToString("N"));
-            var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-bsvm-game-" + Guid.NewGuid().ToString("N"));
-            CreateReadyGame(gameRoot);
-
-            var fx = new Fixture(dataRoot, gameRoot);
-            SeedLibrary(fx);
-            fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
-            {
-                GamePath = gameRoot,
-                ActiveProfileId = "default",
-                LaunchMode = LaunchMode.ExeOnly
-            });
-            return fx;
-        }
-
-        public static Fixture CreateReadyDualFolder()
-        {
-            var root = Path.Combine(Path.GetTempPath(), "mmm-bsvm-d-" + Guid.NewGuid().ToString("N"));
-            var dataRoot = Path.Combine(root, "data");
-            var steamapps = Path.Combine(root, "steamapps");
-            var common = Path.Combine(steamapps, "common");
-            Directory.CreateDirectory(common);
-
-            var official = Path.Combine(common, "Mechabellum_official");
-            var beta = Path.Combine(common, "Mechabellum_beta");
-            var steamLink = Path.Combine(common, "Mechabellum");
-            CreateReadyGame(official);
-            CreateReadyGame(beta);
-            File.WriteAllText(Path.Combine(official, "marker.txt"), "official");
-            File.WriteAllText(Path.Combine(beta, "marker.txt"), "beta");
-
-            var fx = new Fixture(dataRoot, steamLink);
-            fx.SteamLink = steamLink;
-            fx.OfficialStore = official;
-            fx.BetaStore = beta;
-            fx.Junctions.CreateJunction(steamLink, official);
-            File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
-                """
-                "AppState"
-                {
-                	"appid"		"669330"
-                	"UserConfig"
-                	{
-                		"language"		"english"
-                		"BetaKey"		"oldbeta"
-                	}
-                }
-                """);
-
-            SeedLibrary(fx);
-            fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
-            {
-                GamePath = steamLink,
-                ActiveProfileId = "default",
-                LaunchMode = LaunchMode.ExeOnly
-            });
-            return fx;
-        }
-
-        public static Fixture CreateWizardStart()
-        {
-            var root = Path.Combine(Path.GetTempPath(), "mmm-bsvm-w-" + Guid.NewGuid().ToString("N"));
-            var dataRoot = Path.Combine(root, "data");
-            var steamapps = Path.Combine(root, "steamapps");
-            var common = Path.Combine(steamapps, "common");
-            Directory.CreateDirectory(common);
-
-            var steamLink = Path.Combine(common, "Mechabellum");
-            var official = Path.Combine(common, "Mechabellum_official");
-            var beta = Path.Combine(common, "Mechabellum_beta");
-            SeedGameRoot(steamLink, "current");
-            CreateReadyGame(steamLink);
-
-            var fx = new Fixture(dataRoot, steamLink);
-            fx.SteamLink = steamLink;
-            fx.OfficialStore = official;
-            fx.BetaStore = beta;
-            File.WriteAllText(Path.Combine(steamapps, "appmanifest_669330.acf"),
-                """
-                "AppState"
-                {
-                	"appid"		"669330"
-                	"UserConfig"
-                	{
-                		"language"		"english"
-                		"BetaKey"		"oldbeta"
-                	}
-                }
-                """);
-
-            SeedLibrary(fx);
-            fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
-            {
-                GamePath = steamLink,
-                ActiveProfileId = "default",
-                LaunchMode = LaunchMode.ExeOnly
-            });
-            return fx;
-        }
-
-        static void SeedLibrary(Fixture fx)
-        {
-            const string pkgId = "cam-aaaaaaaa";
-            var pkgDir = Path.Combine(fx.Paths.LibraryRoot, "mods", pkgId);
-            Directory.CreateDirectory(pkgDir);
-            File.WriteAllBytes(Path.Combine(pkgDir, "Cam.dll"), new byte[] { 0x4D, 0x5A, 0x90, 0x00 });
-            File.WriteAllText(
-                Path.Combine(pkgDir, "package.json"),
-                """
-                {
-                  "id": "cam-aaaaaaaa",
-                  "displayName": "Cam",
-                  "type": "melon_mod",
-                  "highRisk": false,
-                  "files": [ { "relativePathInPackage": "Cam.dll", "sha256": "aabbccdd" } ]
-                }
-                """);
-            fx.Store.Save(Path.Combine(fx.Paths.LibraryRoot, "index.json"), new { packageIds = new[] { pkgId } });
-        }
-
-        public MainViewModel CreateVm(
-            Func<string, bool>? confirm = null,
-            IProcessStarter? starter = null,
-            Func<TimeSpan, Task>? delay = null,
-            TimeSpan? steamExitTimeout = null,
-            Func<string, string?>? promptText = null,
-            Action<string>? notify = null,
-            Func<string, MessageBoxResult, bool>? confirmChoice = null,
-            Action<string, string>? beginBusy = null,
-            Action<string>? setBusyMessage = null,
-            Action? endBusy = null,
-            Func<string?>? browseFolder = null,
-            CriticalOpGuard? criticalOp = null)
-        {
-            var launcher = new GameLauncher(starter ?? new RecordingStarter(), () => false);
-            return new MainViewModel(
-                Paths,
-                Store,
-                _detector,
-                _library,
-                Profiles,
-                _deploy,
-                launcher,
-                new RiskGate(),
-                confirmHighRisk: _ => true,
-                confirm: confirm ?? (_ => false),
-                notify: notify,
-                browseFolder: browseFolder,
-                promptText: promptText,
-                branchSwitch: _branchSwitch,
-                processProbe: Probe,
-                processStarter: starter ?? new RecordingStarter(),
-                delay: delay ?? (_ => Task.CompletedTask),
-                steamExitTimeout: steamExitTimeout ?? TimeSpan.FromMilliseconds(50),
-                steamExitCooldown: TimeSpan.Zero,
-                steamRestartCooldown: TimeSpan.Zero,
-                confirmChoice: confirmChoice,
-                beginBusy: beginBusy,
-                setBusyMessage: setBusyMessage,
-                endBusy: endBusy,
-                criticalOp: criticalOp);
-        }
-
-        public void WriteBranchConfig(BranchSwitchConfig cfg) =>
-            _branchSwitch.SaveConfig(cfg);
-
-        public BranchSwitchConfig LoadBranchConfig() => _branchSwitch.LoadConfig();
-
-        public void Dispose()
-        {
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(SteamLink) && Junctions.IsJunction(SteamLink))
-                    Junctions.DeleteJunction(SteamLink);
-            }
-            catch
-            {
-                // Best-effort unlink.
-            }
-
-            TryDelete(DataRoot);
-            TryDelete(GameRoot);
-            if (!string.IsNullOrWhiteSpace(SteamLink))
-            {
-                var root = Path.GetFullPath(Path.Combine(SteamLink, "..", "..", ".."));
-                TryDelete(root);
-            }
-        }
-
-        static void TryDelete(string path)
-        {
-            try
-            {
-                if (Directory.Exists(path))
-                    Directory.Delete(path, true);
-            }
-            catch
-            {
-                // Temp leftover is non-fatal.
-            }
-        }
-
-        static void CreateReadyGame(string root)
-        {
-            Directory.CreateDirectory(root);
-            File.WriteAllText(Path.Combine(root, "Mechabellum.exe"), "");
-            File.WriteAllText(Path.Combine(root, "GameAssembly.dll"), "");
-            Directory.CreateDirectory(Path.Combine(root, "MelonLoader", "Il2CppAssemblies"));
-            File.WriteAllText(Path.Combine(root, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
-            File.WriteAllText(Path.Combine(root, "version.dll"), "");
-        }
-
-        public static void SeedGameRoot(string dir, string marker)
-        {
-            Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, "Mechabellum.exe"), "exe");
-            File.WriteAllText(Path.Combine(dir, "GameAssembly.dll"), "dll");
-            File.WriteAllText(Path.Combine(dir, "marker.txt"), marker);
-            Directory.CreateDirectory(Path.Combine(dir, "MelonLoader", "Il2CppAssemblies"));
-            File.WriteAllText(Path.Combine(dir, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "asm");
-            File.WriteAllText(Path.Combine(dir, "version.dll"), "");
-        }
     }
 }

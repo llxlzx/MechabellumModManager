@@ -1,6 +1,7 @@
 using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
+using MechabellumModManager.Tests.Support;
 
 public class BranchSwitchServiceTests
 {
@@ -673,15 +674,6 @@ public class BranchSwitchServiceTests
             }
         }
     }
-}
-
-sealed class FakeProcessProbe : IProcessProbe
-{
-    public bool GameRunning { get; set; }
-    public bool SteamRunning { get; set; }
-    public bool IsGameRunning() => GameRunning;
-    public bool IsSteamRunning() => SteamRunning;
-    public bool IsGameOrSteamRunning() => GameRunning || SteamRunning;
 }
 
 sealed class ControllableJunctionService : IJunctionService
