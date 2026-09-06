@@ -268,6 +268,11 @@ Name: "{autodesktop}\{cm:AppDisplayName}"; Filename: "{app}\{#MyAppExeName}"; Ta
 ; "completion" wait / possible UI flash (duplicate finish experience).
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:RunNow,{cm:AppDisplayName}}"; Flags: nowait postinstall skipifsilent
 
+[UninstallRun]
+; Thorough game cleanup before removing {app}. Never uninstalls .NET.
+; --confirm-delete-other-store: remove beta store only when Official is complete (exe aborts otherwise).
+Filename: "{app}\{#MyAppExeName}"; Parameters: "--pure-game-cleanup --confirm-delete-other-store"; RunOnceId: "PureGameCleanup"; Flags: waituntilterminated skipifdoesntexist
+
 [Code]
 var
   GamePathPage: TInputDirWizardPage;

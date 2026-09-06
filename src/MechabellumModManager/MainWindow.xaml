@@ -511,6 +511,12 @@
                                 MinWidth="96"
                                 Margin="0,0,12,0"
                                 Style="{StaticResource GhostButtonStyle}" />
+                        <Button Content="{Binding Ui.PureGameCleanupButton}"
+                                Command="{Binding PureGameCleanupCommand}"
+                                DockPanel.Dock="Left"
+                                MinWidth="140"
+                                Margin="0,0,12,0"
+                                Style="{StaticResource GhostButtonStyle}" />
                         <TextBlock Text="{Binding Ui.Language}"
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
