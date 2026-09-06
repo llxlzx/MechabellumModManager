@@ -149,6 +149,41 @@
                                        TextWrapping="Wrap"
                                        Margin="0,6,0,0"
                                        FontSize="11" />
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding HasCurrentTask, Converter={StaticResource BoolToVis}}">
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding TaskTitle}"
+                                               FontWeight="SemiBold"
+                                               FontSize="12"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding TaskPercentLabel}"
+                                               FontSize="11"
+                                               Margin="8,0,0,0"
+                                               Visibility="{Binding ShowTaskPercent, Converter={StaticResource BoolToVis}}"
+                                               Foreground="{StaticResource AccentAmberHotBrush}" />
+                                </Grid>
+                                <TextBlock Text="{Binding TaskMessage}"
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"
+                                           ToolTip="{Binding TaskMessage}"
+                                           Margin="0,0,0,4" />
+                                <ProgressBar Height="6"
+                                             Minimum="0"
+                                             Maximum="100"
+                                             Value="{Binding TaskProgressValue, Mode=OneWay}"
+                                             IsIndeterminate="{Binding IsTaskIndeterminate, Mode=OneWay}"
+                                             Background="{StaticResource BgElevatedBrush}"
+                                             Foreground="{StaticResource AccentAmberBrush}"
+                                             BorderThickness="0" />
+                            </StackPanel>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -427,6 +462,14 @@
                             <Button Content="{Binding Ui.BranchSwitchTeardown}"
                                     Command="{Binding TeardownBranchSwitchCommand}"
                                     IsEnabled="{Binding CanTeardownBranchSwitch}"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    MinWidth="120"
+                                    Margin="0,0,8,4"
+                                    Padding="12,6" />
+                            <Button Content="{Binding Ui.BranchSwitchRepairOrphan}"
+                                    Command="{Binding RepairOrphanDualLayoutCommand}"
+                                    IsEnabled="{Binding CanRepairOrphanDualLayout}"
+                                    Visibility="{Binding ShowRepairOrphanDualLayout, Converter={StaticResource BoolToVis}}"
                                     Style="{StaticResource GhostButtonStyle}"
                                     MinWidth="120"
                                     Margin="0,0,8,4"
