@@ -130,13 +130,13 @@ public static class DiagnosticsSummaryBuilder
 
         if (set.Contains("orphan_dual_layout") || set.Contains("leftover_dual_store_folders"))
         {
-            tips.Add("存在双服残留：可在设置页使用「急救恢复单目录」。");
+            tips.Add("存在双服残留：可在设置页使用「还原官方目录」。");
         }
 
         if (string.Equals(request.ActiveGameBranch, "Beta", StringComparison.OrdinalIgnoreCase)
             && request.BranchSwitchEnabled)
         {
-            tips.Add("当前为测试服双目录：急救前建议先切到正式服，避免 Steam 内容文件损毁。");
+            tips.Add("当前为测试服双目录：还原官方目录前建议先切到正式服，避免 Steam 内容文件损毁。");
         }
 
         if (tips.Count == 0)

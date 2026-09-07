@@ -118,9 +118,9 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ```json
 {
-  "version": "1.0.5",
+  "version": "1.1.6",
   "notes": "本版更新说明……",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.0.5/MechabellumModManager_Setup_v1.0.5.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.6/MechabellumModManager_Setup_v1.1.6.exe",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
@@ -202,7 +202,7 @@ git push origin master
 
 ## 6. 当前最新本地对照（写作时） (中文)
 
-- 程序 / Setup：**v1.0.9**（当前最新）→ 仓库内相对路径 `release/v1.0.9/`
+- 程序 / Setup：**v1.1.6**（当前最新）→ 仓库内相对路径 `release/v1.1.6/`
 - 安装包与本体产物均整理在上述 `release/vX.Y.Z/` 目录（勿依赖本机个人测试文件夹路径）
 
 ---
@@ -373,7 +373,7 @@ Players: **Browse mods → Refresh catalog**. Author flow: that repo’s `README
 
 ## 6. Local paths (at write time) (English)
 
-- App / Setup: **v1.0.9** (current latest) → `release/v1.0.9/` relative to this repo
+- App / Setup: **v1.1.6** (current latest) → `release/v1.1.6/` relative to this repo
 - Keep packaged artifacts under `release/vX.Y.Z/` (do not rely on personal install-test folders)
 
 ---

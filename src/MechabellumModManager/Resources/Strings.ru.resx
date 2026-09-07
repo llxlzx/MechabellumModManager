@@ -316,7 +316,7 @@
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
-  <data name="BranchSwitchEmergencyRecover" xml:space="preserve"><value>Срочно: одна папка</value></data>
+  <data name="BranchSwitchEmergencyRecover" xml:space="preserve"><value>Восстановить официальную папку</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
   <data name="BranchSwitchRepairOrphan" xml:space="preserve"><value>Восстановить одну папку</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Тестовая выбрана в Steam — продолжить</value></data>
@@ -329,7 +329,7 @@
   <data name="BranchStatusEnablingWaitDownload" xml:space="preserve"><value>Включение (ожидание загрузки Steam; закрытие откатит)</value></data>
   <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>Включение: Steam качает другую ветку (игра не пропала).</value></data>
   <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>Другая ветка скачана: закройте Steam из трея, затем архивация.</value></data>
-  <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>Нужно срочное восстановление</value></data>
+  <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>Нужно восстановить официальную папку</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Ожидание завершения Steam</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Официальная</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>Тестовая</value></data>
@@ -373,12 +373,12 @@
   <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
 …всего {0}</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Перезапись неуправляемых файлов отменена.</value></data>
-  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Двухкаталожная схема уже включена. Для пересборки сначала «Срочно: одна папка», затем снова включите дуал. Продолжить?</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Двухкаталожная схема уже включена. Для пересборки сначала «Восстановить официальную папку», затем снова включите дуал. Продолжить?</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Снять двухкаталожную настройку? Используемый каталог снова станет путём игры в Steam. Сначала закройте Steam и игру.</value></data>
-  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад). Срочно восстановить одну папку Mechabellum (по возможности материализовать junction/пустой каркас из полного склада). Следующий диалог спросит, удалять ли остатки. Сначала закройте Steam и игру. Продолжить?</value></data>
-  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад). Срочное восстановление только сворачивает оставшуюся папку в один Mechabellum. Официальную ветку оно не создаст. Официальный склад отсутствует или неполон — дождитесь загрузки Steam. Сейчас не переключайте ветки и не удаляйте менеджер. Продолжение оставит только текущую папку. Продолжить?</value></data>
-  <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam пишет в папку игры. Дождитесь, пока будет доступен Запуск. До этого не используйте срочное восстановление, не переключайте склады и не удаляйте менеджер.</value></data>
-  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад). Двухветочье выключено, но junction и/или остатки складов ещё на диске. Восстановить одну папку Mechabellum (материализовать junction). Сохранение другого склада может снова блокировать мастер. Сначала закройте Steam и игру. Продолжить?</value></data>
+  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Восстанавливает официальную папку игры (у Steam останется только одна папка Mechabellum). Связи/пустые оболочки снимаются, файлы по возможности возвращаются из полной папки. Следующий диалог спросит, удалять ли лишнюю папку игры. Сначала закройте Steam и игру. Продолжить?</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>Восстанавливает официальную папку игры (у Steam останется только одна папка Mechabellum). Можно только свернуть оставшуюся папку в один Mechabellum. Официальную ветку оно не создаст. Официальная папка отсутствует или неполна — дождитесь загрузки Steam. Сейчас не переключайте папки и не удаляйте менеджер. Продолжение оставит только текущую папку. Продолжить?</value></data>
+  <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam пишет в папку игры. Дождитесь, пока будет доступен Запуск. До этого не нажимайте «Восстановить официальную папку», не переключайте папки и не удаляйте менеджер.</value></data>
+  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Восстанавливает официальную папку игры (у Steam останется только одна папка Mechabellum). Двухветочье выключено, но junction и/или остатки папок ещё на диске. Восстановить одну папку Mechabellum (материализовать junction). Сохранение другой папки может снова блокировать мастер. Сначала закройте Steam и игру. Продолжить?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Восстановлена одна папка Mechabellum.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Восстановлена одна папка Mechabellum.</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>Не удалось восстановить одну папку: {0}</value></data>
@@ -413,7 +413,7 @@
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка официальная/тестовая снята.</value></data>
   <data name="LogWizardAbortedReset" xml:space="preserve"><value>Мастер двойной ветки прерван и сброшен. Проверьте папку игры, затем «Применить и запустить». Рабочий MelonLoader показывает чёрную консоль Melon (это не PowerShell).</value></data>
   <data name="LogEnableDualRolledBack" xml:space="preserve"><value>Включение дуала отменено и откат к одной папке выполнен.</value></data>
-  <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>Включение дуала не завершено, а Steam/игра ещё работают — откат диска пропущен, метки сессии сохранены. Закройте Steam и нажмите «Срочно: одна папка».</value></data>
+  <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>Включение дуала не завершено, а Steam/игра ещё работают — откат диска пропущен, метки сессии сохранены. Закройте Steam и нажмите «Восстановить официальную папку».</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>Чтобы моды загрузились, MelonLoader должен открыть чёрную консоль Melon (это не PowerShell). Если нет — проверьте version.dll / MelonLoader и пришлите MelonLoader\Latest.log.</value></data>
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Запуск запрошен; проверяю, появился ли процесс игры…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>Процесс игры обнаружен.</value></data>
@@ -446,7 +446,7 @@
   <data name="LabelSummary" xml:space="preserve"><value>Описание</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Путь к игре должен быть в steamapps\common\Mechabellum.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>Текущий путь к игре недействителен; мастер двух каталогов нельзя начать.</value></data>
-  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Отдельная папка другой ветки уже существует; архивирование невозможно: {0}. Сначала аварийное восстановление в одну папку или при чистом восстановлении отметьте «удалить другой склад» (необратимо).</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Отдельная папка другой ветки уже существует; архивирование невозможно: {0}. Сначала «Восстановить официальную папку» или при чистом восстановлении отметьте «удалить другой склад» (необратимо).</value></data>
   <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>The other branch folder exists but is incomplete (missing GameAssembly etc.): {0}. Exit Steam, delete that incomplete folder, then continue the wizard — do not keep clicking Continue.</value></data>
   <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>Other branch folder {0} is complete, but the Steam link path is still a real directory. The manager will not auto-delete game folders. Use Clear isolation in Settings, or exit Steam and resolve the leftover, then restart the wizard.</value></data>
   <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Steam link path is still occupied (real folder or wrong junction); cannot create the directory link. Clear isolation in Settings, or exit Steam and fix …\common\Mechabellum, then continue.</value></data>
@@ -454,7 +454,7 @@
   <data name="LogWizardNormalizedStorePath" xml:space="preserve"><value>Путь игры нормализован со склада «{0}» на ссылку Steam «{1}».</value></data>
   <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>Двухветочье снято, но остались папки складов (мешают мастеру): {0}. Удалите при ненадобности или перезапустите Setup для нормализации в Mechabellum.</value></data>
   <data name="NotifyBranchTeardownLeftoverStoresResidual" xml:space="preserve"><value>Двухветочье снято, но остались папки складов (без подтверждения удаления): {0}. Удалите при ненадобности или перезапустите Setup для нормализации в Mechabellum.</value></data>
-  <data name="FailOrphanSteamLinkNotGameRoot" xml:space="preserve"><value>Путь Steam Mechabellum неполный, и автовосстановление из остаточного склада не удалось. Закройте Steam, проверьте Mechabellum_official / Mechabellum_beta, затем «Срочно: одна папка» или Setup / проверку Steam.</value></data>
+  <data name="FailOrphanSteamLinkNotGameRoot" xml:space="preserve"><value>Путь Steam Mechabellum неполный, и автовосстановление из остаточной папки не удалось. Закройте Steam, проверьте Mechabellum_official / Mechabellum_beta, затем «Восстановить официальную папку» или Setup / проверку Steam.</value></data>
   <data name="FailOrphanSteamLinkHollowNoDonor" xml:space="preserve"><value>Mechabellum пустой/неполный, и рядом нет полного склада (Mechabellum_official / Mechabellum_beta). Используйте проверку файлов Steam или переустановку.</value></data>
   <data name="FailWizardNoAppManifest" xml:space="preserve"><value>Не найден appmanifest_669330.acf; нельзя выровнять тестовую ветку Steam.</value></data>
   <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>Не удалось прочитать манифест Steam (могут понадобиться права или перенос библиотеки): {0}</value></data>
@@ -471,8 +471,8 @@
   <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>Менеджер уже запущен. Используйте открытое окно.</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>Уже на этой ветке (папка и бета Steam совпадают). Переключение не нужно.</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>Папка и ключи ветки Steam совпадают, но путь игры ещё не готов (нет exe или MelonLoader не готов). Дождитесь загрузки/проверки Steam и повторите.</value></data>
-  <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>Если другой склад ещё полон: полностью закройте Steam и переключитесь туда — или «Срочно: одна папка» из целого склада. Steam пишет в активный склад через junction Mechabellum; не форсируйте операции во время загрузки.</value></data>
-  <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>Активный склад неполон (часто Steam качает/проверяет; нет GameAssembly.dll). Закройте Steam, переключитесь на целый другой склад или «Срочно: одна папка» из целого склада — либо дождитесь конца загрузки.</value></data>
+  <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>Если другая папка ещё полна: полностью закройте Steam и переключитесь туда — или «Восстановить официальную папку» из целой папки. Steam пишет в активную папку через junction Mechabellum; не форсируйте операции во время загрузки.</value></data>
+  <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>Активная папка неполна (часто Steam качает/проверяет; нет GameAssembly.dll). Закройте Steam, переключитесь на целую другую папку или «Восстановить официальную папку» из целой папки — либо дождитесь конца загрузки.</value></data>
   <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>Путь игры не готов — завершить settle/деплой нельзя. Дождитесь Steam и подтвердите снова.</value></data>
   <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>Деплой при settle не удался; ожидание Steam settle сохраняется. Исправьте и подтвердите снова.</value></data>
   <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam manifest is not stable yet (verify/write). After the download shows complete, wait a moment and confirm again; if it still fails, fully exit Steam and retry.</value></data>
@@ -562,7 +562,7 @@
   <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>Каталог недоступен, офлайн-кэш: {0}.</value></data>
   <data name="CatalogFetchHintNoMirror" xml:space="preserve"><value>Укажите зеркало в настройках или включите системный прокси и обновите.</value></data>
   <data name="CatalogFetchHintMirrorFailed" xml:space="preserve"><value>Зеркало тоже не сработало. Проверьте адрес или системный прокси.</value></data>
-  <data name="EmergencyRecoverLead" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад).</value></data>
+  <data name="EmergencyRecoverLead" xml:space="preserve"><value>Восстанавливает официальную папку игры (у Steam останется только одна папка Mechabellum).</value></data>
   <data name="ConfirmPureGameCleanupDeleteOtherOption" xml:space="preserve"><value>Также удалить другой склад (необратимо, по умолчанию выкл.)</value></data>
   <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
 
@@ -574,7 +574,7 @@
 Clash нужен системный прокси/TUN.
 GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value></data>
   <data name="UpdateFailedCopiedHint" xml:space="preserve"><value>Инструкции скопированы в буфер.</value></data>
-  <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam BetaKey ({1}) не совпадает с текущим хранилищем ({0}). Не запускайте аварийное восстановление.</value></data>
+  <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam BetaKey ({1}) не совпадает с текущей папкой ({0}). Не нажимайте «Восстановить официальную папку».</value></data>
   <data name="NotifyDeployFailed" xml:space="preserve"><value>Развёртывание не удалось: {0}</value></data>
   <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>Не удалось задать Steam beta для другого хранилища; мастер прерван: {0}</value></data>
   <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>Мастер двух папок не завершён</value></data>
