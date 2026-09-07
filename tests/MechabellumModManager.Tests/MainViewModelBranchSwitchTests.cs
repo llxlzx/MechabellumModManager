@@ -742,6 +742,21 @@ public class MainViewModelBranchSwitchTests
         SteamGameLocator.LooksLikeGameRoot(fx.BetaStore).Should().BeTrue();
     }
 
+    /// <summary>
+    /// Leaving WaitingDownloadB only means auto-continue started; the wizard is still finishing.
+    /// Wait for the state the test actually asserts, otherwise the check races the background poll.
+    /// </summary>
+    static async Task WaitForWizardFinishAsync(MainViewModel vm)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(20);
+        while (DateTime.UtcNow < deadline
+               && !vm.IsAwaitingSteamSettle
+               && vm.BranchWizardStep != BranchWizardStep.Ready)
+        {
+            await Task.Delay(50);
+        }
+    }
+
     static void WriteSettledAcf(Fixture fx, string? betaKey, string buildId = "200")
     {
         var acf = Path.GetFullPath(Path.Combine(fx.SteamLink, "..", "..", "appmanifest_669330.acf"));
@@ -1374,12 +1389,7 @@ public class MainViewModelBranchSwitchTests
             }
             """);
 
-        var deadline = DateTime.UtcNow.AddSeconds(15);
-        while (DateTime.UtcNow < deadline
-               && vm.BranchWizardStep == BranchWizardStep.WaitingDownloadB)
-        {
-            await Task.Delay(100);
-        }
+        await WaitForWizardFinishAsync(vm);
 
         vm.CancelBusyWork();
         fx.Junctions.IsJunction(fx.SteamLink).Should().BeTrue();
@@ -1432,12 +1442,7 @@ public class MainViewModelBranchSwitchTests
         Fixture.SeedGameRoot(fx.SteamLink, "downloaded");
         WriteSettledAcf(fx, betaKey: "publicbeta", buildId: "200");
 
-        var deadline = DateTime.UtcNow.AddSeconds(15);
-        while (DateTime.UtcNow < deadline
-               && vm.BranchWizardStep == BranchWizardStep.WaitingDownloadB)
-        {
-            await Task.Delay(100);
-        }
+        await WaitForWizardFinishAsync(vm);
 
         vm.CancelBusyWork();
         vm.BranchSwitchEnabled.Should().BeTrue();

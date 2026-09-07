@@ -1,5 +1,6 @@
 using System.IO;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MechabellumModManager.Models;
@@ -242,6 +243,12 @@ public sealed class ModCatalogService
         LastDownloadSource = RemoteFetch.ClassifySource(fetched.Used);
         var resp = fetched.Response;
 
+        // A downloaded mod is a .NET assembly MelonLoader loads into the game, so anything that
+        // did not come straight from the signed-TLS GitHub repo must carry a catalog hash.
+        var expectedHash = NormalizeHash(mod.Sha256);
+        if (expectedHash is null && LastDownloadSource != RemoteFetch.GithubSource)
+            throw new InvalidOperationException(MissingHashMessage);
+
         if (resp.Content.Headers.ContentLength is long declared && declared > MaxDownloadBytes)
             throw new InvalidOperationException(
                 $"Catalog download exceeds size limit ({MaxDownloadBytes} bytes).");
@@ -250,26 +257,61 @@ public sealed class ModCatalogService
         if (!string.IsNullOrWhiteSpace(dir))
             Directory.CreateDirectory(dir);
 
-        await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-        await using var file = File.Create(destPath);
-        var buffer = new byte[81920];
-        long total = 0;
-        while (true)
+        using var hasher = SHA256.Create();
+        await using (var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false))
+        await using (var file = File.Create(destPath))
         {
-            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
-            if (read <= 0)
-                break;
-            total += read;
-            if (total > MaxDownloadBytes)
+            var buffer = new byte[81920];
+            long total = 0;
+            while (true)
             {
-                await file.DisposeAsync().ConfigureAwait(false);
-                try { File.Delete(destPath); } catch { /* best effort */ }
-                throw new InvalidOperationException(
-                    $"Catalog download exceeds size limit ({MaxDownloadBytes} bytes).");
+                var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
+                if (read <= 0)
+                    break;
+                total += read;
+                if (total > MaxDownloadBytes)
+                {
+                    await file.DisposeAsync().ConfigureAwait(false);
+                    TryDeleteFile(destPath);
+                    throw new InvalidOperationException(
+                        $"Catalog download exceeds size limit ({MaxDownloadBytes} bytes).");
+                }
+
+                hasher.TransformBlock(buffer, 0, read, null, 0);
+                await file.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
             }
 
-            await file.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+            hasher.TransformFinalBlock([], 0, 0);
         }
+
+        if (expectedHash is null)
+            return;
+
+        var actualHash = Convert.ToHexString(hasher.Hash ?? []).ToLowerInvariant();
+        if (!string.Equals(actualHash, expectedHash, StringComparison.Ordinal))
+        {
+            TryDeleteFile(destPath);
+            throw new InvalidOperationException(
+                $"下载文件校验失败（目录声明 {expectedHash[..Math.Min(12, expectedHash.Length)]}…，实际 {actualHash[..12]}…）。文件已丢弃，请稍后重试或改用 GitHub 源。");
+        }
+    }
+
+    internal const string MissingHashMessage =
+        "该目录条目缺少 sha256 校验值，无法确认镜像下载的文件是否被篡改，已拒绝下载。请联系目录维护者补充校验值。";
+
+    /// <summary>Lower-case hex digest, or null when the catalog does not declare one.</summary>
+    static string? NormalizeHash(string? sha256)
+    {
+        var value = (sha256 ?? "").Trim();
+        if (value.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
+            value = value["sha256:".Length..].Trim();
+        return value.Length == 64 && value.All(Uri.IsHexDigit) ? value.ToLowerInvariant() : null;
+    }
+
+    static void TryDeleteFile(string path)
+    {
+        try { File.Delete(path); }
+        catch { /* best effort */ }
     }
 
     /// <summary>

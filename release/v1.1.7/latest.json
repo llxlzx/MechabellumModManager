@@ -1,0 +1,7 @@
+{
+  "version": "1.1.7",
+  "notes": "安全与稳定性大修：修复启动自动回滚可能删除原始安装、Mod 下载校验 sha256、只允许 https 链接、诊断包 json 脱敏、配置原子写入，并补齐日德俄文案。\nSafety audit: rollback no longer deletes the original install, mod downloads verify sha256, https-only links, diagnostics json redaction, atomic config writes, and 33 missing ja/de/ru strings.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.7/MechabellumModManager_Setup_v1.1.7.exe",
+  "publishedAt": "2026-09-07T15:30:00Z",
+  "build": "v1.1.7-safety-audit"
+}

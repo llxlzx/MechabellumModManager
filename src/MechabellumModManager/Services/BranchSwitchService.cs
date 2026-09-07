@@ -82,6 +82,7 @@ public sealed class BranchSwitchService
 {
     const string PhaseUnlinking = "unlinking";
     const string PhaseUnlinked = "unlinked";
+    const string PhaseArchiving = "archiving";
 
     static readonly JsonSerializerOptions JournalJsonOptions = new()
     {
@@ -488,6 +489,9 @@ public sealed class BranchSwitchService
         if (string.IsNullOrWhiteSpace(link))
             return BranchOperationResult.Fail("Journal is missing the Steam link path.");
 
+        if (string.Equals(journal.Phase, PhaseArchiving, StringComparison.Ordinal))
+            return RepairInterruptedArchive(journal, Path.GetFullPath(link));
+
         if (_junctions.IsJunction(link))
         {
             var live = _junctions.ResolveTarget(link);
@@ -535,6 +539,51 @@ public sealed class BranchSwitchService
         }
     }
 
+    /// <summary>
+    /// Resolves an archive move that was cut short. Exactly one side holds the complete install,
+    /// so this only records which one — it never moves a partially copied game.
+    /// </summary>
+    BranchOperationResult RepairInterruptedArchive(BranchSwitchJournal journal, string link)
+    {
+        var dest = journal.TargetStorePath;
+        var source = journal.PreviousStorePath;
+
+        if (PathExists(link))
+        {
+            // The link survived, so the move never got far enough to matter.
+            ClearJournal();
+            return BranchOperationResult.Ok("archive-not-started");
+        }
+
+        if (LooksLikeGameRoot(dest))
+        {
+            var cfg = LoadConfig();
+            SetStorePath(cfg, journal.TargetBranch, Path.GetFullPath(dest));
+            MarkSessionOwned(cfg, journal.TargetBranch, SessionStoreSource.ArchivedOriginal);
+            cfg.WizardStep = BranchWizardStep.ArchivedA;
+            SaveConfig(cfg);
+            ClearJournal();
+            return BranchOperationResult.Ok("archive-completed");
+        }
+
+        // The junction was removed before the move started: point Steam back at the install.
+        if (!string.IsNullOrWhiteSpace(source) && !PathsEqual(source, link) && LooksLikeGameRoot(source))
+        {
+            try
+            {
+                _junctions.CreateJunction(link, Path.GetFullPath(source));
+                ClearJournal();
+                return BranchOperationResult.Ok("archive-relinked");
+            }
+            catch (Exception ex)
+            {
+                return BranchOperationResult.Fail(ex.Message);
+            }
+        }
+
+        return BranchOperationResult.Fail("Archive was interrupted and left no complete game folder.");
+    }
+
     public BranchOperationResult ArchiveCurrentAs(GameBranch branch)
     {
         if (_probe.IsGameOrSteamRunning())
@@ -547,6 +596,22 @@ public sealed class BranchSwitchService
             return BranchOperationResult.Fail("Branch switch paths are not configured.");
 
         dest = Path.GetFullPath(dest);
+        link = Path.GetFullPath(link);
+
+        // This move relocates the player's only install, so record where it came from before
+        // touching the disk: a crash mid-move otherwise leaves no way to tell what happened.
+        var archiveSource = _junctions.IsJunction(link)
+            ? _junctions.ResolveTarget(link) ?? link
+            : link;
+        SaveJournal(new BranchSwitchJournal
+        {
+            Phase = PhaseArchiving,
+            PreviousBranch = branch,
+            TargetBranch = branch,
+            SteamLinkPath = link,
+            PreviousStorePath = Path.GetFullPath(archiveSource),
+            TargetStorePath = dest
+        });
 
         try
         {
@@ -607,9 +672,10 @@ public sealed class BranchSwitchService
                 return BranchOperationResult.Fail("Steam link path still exists after archive.");
 
             SetStorePath(cfg, branch, dest);
-            MarkSessionOwned(cfg, branch);
+            MarkSessionOwned(cfg, branch, SessionStoreSource.ArchivedOriginal);
             cfg.WizardStep = BranchWizardStep.ArchivedA;
             SaveConfig(cfg);
+            ClearJournal();
             return BranchOperationResult.Ok();
         }
         catch (Exception ex)
@@ -641,7 +707,7 @@ public sealed class BranchSwitchService
             if (!PathExists(link))
             {
                 SetStorePath(cfg, branch, dest);
-                MarkSessionOwned(cfg, branch);
+                MarkSessionOwned(cfg, branch, SessionStoreSource.FreshDownload);
                 cfg.WizardStep = BranchWizardStep.ArchivedB;
                 SaveConfig(cfg);
                 return BranchOperationResult.Ok("took-over-existing-store");
@@ -653,7 +719,7 @@ public sealed class BranchSwitchService
                 if (!string.IsNullOrWhiteSpace(live) && PathsEqual(live, dest))
                 {
                     SetStorePath(cfg, branch, dest);
-                    MarkSessionOwned(cfg, branch);
+                    MarkSessionOwned(cfg, branch, SessionStoreSource.FreshDownload);
                     cfg.WizardStep = BranchWizardStep.ArchivedB;
                     SaveConfig(cfg);
                     return BranchOperationResult.Ok("took-over-existing-store-linked");
@@ -682,7 +748,7 @@ public sealed class BranchSwitchService
                 return BranchOperationResult.Fail("Steam link path still exists after archive.");
 
             SetStorePath(cfg, branch, dest);
-            MarkSessionOwned(cfg, branch);
+            MarkSessionOwned(cfg, branch, SessionStoreSource.FreshDownload);
             cfg.WizardStep = BranchWizardStep.ArchivedB;
             SaveConfig(cfg);
             return BranchOperationResult.Ok();
@@ -851,8 +917,7 @@ public sealed class BranchSwitchService
                 cfg.WizardStep = BranchWizardStep.None;
                 cfg.OfficialStorePath = "";
                 cfg.BetaStorePath = "";
-                cfg.SessionOwnedOfficialStore = false;
-                cfg.SessionOwnedBetaStore = false;
+                cfg.ClearSessionStoreOwnership();
                 cfg.SteamLinkPath = link;
                 SaveConfig(cfg);
                 ClearJournal();
@@ -880,8 +945,7 @@ public sealed class BranchSwitchService
         {
             c.Enabled = false;
             c.WizardStep = BranchWizardStep.None;
-            c.SessionOwnedOfficialStore = false;
-            c.SessionOwnedBetaStore = false;
+            c.ClearSessionStoreOwnership();
         }
 
         if (_probe.IsGameOrSteamRunning())
@@ -904,6 +968,8 @@ public sealed class BranchSwitchService
         link = Path.GetFullPath(link);
         var deleteOfficial = cfg.SessionOwnedOfficialStore;
         var deleteBeta = cfg.SessionOwnedBetaStore;
+        var downloadedThisSession = cfg.SessionDownloadedBranch;
+        var preserved = new List<string>();
 
         // Prefer materializing a complete session store back to the Steam link.
         string? donor = null;
@@ -921,16 +987,40 @@ public sealed class BranchSwitchService
             break;
         }
 
+        // The store holding the install the player already had before this session started.
+        // ArchiveCurrentAs emptied the Steam link, so whatever sits there now is a build Steam
+        // downloaded for the wizard, and the archived original outranks it.
+        string? archivedOriginal = null;
+        foreach (var (branch, candidate) in new[]
+                 {
+                     (GameBranch.Official, cfg.OfficialStorePath),
+                     (GameBranch.Beta, cfg.BetaStorePath)
+                 })
+        {
+            var owned = branch == GameBranch.Official ? deleteOfficial : deleteBeta;
+            if (!owned || downloadedThisSession == branch || string.IsNullOrWhiteSpace(candidate))
+                continue;
+            var full = Path.GetFullPath(candidate);
+            if (PathsEqual(full, link) || !LooksLikeGameRoot(full))
+                continue;
+            archivedOriginal = full;
+            break;
+        }
+
         try
         {
             if (_junctions.IsJunction(link))
             {
                 var live = _junctions.ResolveTarget(link);
                 _junctions.DeleteJunction(link);
-                if (!string.IsNullOrWhiteSpace(live) && LooksLikeGameRoot(live) && !PathExists(link))
-                    MoveDirectoryWithRetry(Path.GetFullPath(live), link);
-                else if (!string.IsNullOrWhiteSpace(donor) && !PathExists(link))
-                    MoveDirectoryWithRetry(donor, link);
+                // Always hand the player back the install they had before this session.
+                var restore = archivedOriginal;
+                if (string.IsNullOrWhiteSpace(restore))
+                    restore = !string.IsNullOrWhiteSpace(live) && LooksLikeGameRoot(live)
+                        ? Path.GetFullPath(live)
+                        : donor;
+                if (!string.IsNullOrWhiteSpace(restore) && !PathExists(link))
+                    MoveDirectoryWithRetry(restore, link);
             }
             else if (!LooksLikeGameRoot(link) && !string.IsNullOrWhiteSpace(donor))
             {
@@ -948,8 +1038,15 @@ public sealed class BranchSwitchService
             {
                 MoveDirectoryWithRetry(donor, link);
             }
+            else if (archivedOriginal is not null && Directory.Exists(link))
+            {
+                // Discard the wizard download occupying the link and restore the original install.
+                ClearReadOnlyAttributes(link);
+                Directory.Delete(link, recursive: true);
+                MoveDirectoryWithRetry(archivedOriginal, link);
+            }
 
-            void TryDeleteStore(string? path, bool owned)
+            void TryDeleteStore(string? path, GameBranch branch, bool owned)
             {
                 if (!owned || string.IsNullOrWhiteSpace(path))
                     return;
@@ -958,8 +1055,18 @@ public sealed class BranchSwitchService
                     var full = Path.GetFullPath(path);
                     if (PathsEqual(full, link))
                         return;
-                    if (Directory.Exists(full))
-                        Directory.Delete(full, recursive: true);
+                    if (!Directory.Exists(full))
+                        return;
+
+                    // A complete install that Steam did not download this session can only be the
+                    // player's archived original: materializing it back failed, so keep it.
+                    if (LooksLikeGameRoot(full) && downloadedThisSession != branch)
+                    {
+                        preserved.Add(full);
+                        return;
+                    }
+
+                    Directory.Delete(full, recursive: true);
                 }
                 catch
                 {
@@ -967,37 +1074,41 @@ public sealed class BranchSwitchService
                 }
             }
 
-            TryDeleteStore(cfg.OfficialStorePath, deleteOfficial);
-            TryDeleteStore(cfg.BetaStorePath, deleteBeta);
+            TryDeleteStore(cfg.OfficialStorePath, GameBranch.Official, deleteOfficial);
+            TryDeleteStore(cfg.BetaStorePath, GameBranch.Beta, deleteBeta);
             foreach (var leftover in SteamBranchLayout.EnumerateExistingStoreFolders(link))
             {
                 var name = Path.GetFileName(leftover);
                 if (string.Equals(name, SteamBranchLayout.OfficialStoreFolderName, StringComparison.OrdinalIgnoreCase))
-                    TryDeleteStore(leftover, deleteOfficial);
+                    TryDeleteStore(leftover, GameBranch.Official, deleteOfficial);
                 else if (string.Equals(name, SteamBranchLayout.BetaStoreFolderName, StringComparison.OrdinalIgnoreCase))
-                    TryDeleteStore(leftover, deleteBeta);
+                    TryDeleteStore(leftover, GameBranch.Beta, deleteBeta);
             }
 
             cfg.Enabled = false;
             cfg.WizardStep = BranchWizardStep.None;
-            cfg.OfficialStorePath = "";
-            cfg.BetaStorePath = "";
-            cfg.SessionOwnedOfficialStore = false;
-            cfg.SessionOwnedBetaStore = false;
+            if (preserved.Count == 0)
+            {
+                cfg.OfficialStorePath = "";
+                cfg.BetaStorePath = "";
+            }
+
+            cfg.ClearSessionStoreOwnership();
             cfg.SteamLinkPath = link;
             SaveConfig(cfg);
             ClearJournal();
-            return BranchOperationResult.Ok();
+            return preserved.Count == 0
+                ? BranchOperationResult.Ok()
+                : BranchOperationResult.Ok("preserved-store:" + string.Join(";", preserved));
         }
         catch (Exception ex)
         {
-            // Still clear sticky wizard flags so UI does not resume mid-enable.
+            // Clear sticky wizard flags so UI does not resume mid-enable, but keep store
+            // ownership: the disk is still mid-rollback and emergency recover needs it.
             try
             {
                 cfg.Enabled = false;
                 cfg.WizardStep = BranchWizardStep.None;
-                cfg.SessionOwnedOfficialStore = false;
-                cfg.SessionOwnedBetaStore = false;
                 SaveConfig(cfg);
             }
             catch { /* ignore */ }
@@ -1050,8 +1161,7 @@ public sealed class BranchSwitchService
         cfg.WizardStep = BranchWizardStep.None;
         cfg.OfficialStorePath = "";
         cfg.BetaStorePath = "";
-        cfg.SessionOwnedOfficialStore = false;
-        cfg.SessionOwnedBetaStore = false;
+        cfg.ClearSessionStoreOwnership();
         if (!string.IsNullOrWhiteSpace(preferredLinkPath))
         {
             try { cfg.SteamLinkPath = Path.GetFullPath(preferredLinkPath); }
@@ -1067,17 +1177,30 @@ public sealed class BranchSwitchService
         var cfg = LoadConfig();
         if (!cfg.SessionOwnedOfficialStore && !cfg.SessionOwnedBetaStore)
             return;
-        cfg.SessionOwnedOfficialStore = false;
-        cfg.SessionOwnedBetaStore = false;
+        cfg.ClearSessionStoreOwnership();
         SaveConfig(cfg);
     }
 
-    static void MarkSessionOwned(BranchSwitchConfig cfg, GameBranch branch)
+    enum SessionStoreSource
+    {
+        /// <summary>Store received the player's pre-existing install; rollback must move it back, never delete it.</summary>
+        ArchivedOriginal,
+
+        /// <summary>Store received a build Steam downloaded during this session; rollback may delete it.</summary>
+        FreshDownload
+    }
+
+    static void MarkSessionOwned(BranchSwitchConfig cfg, GameBranch branch, SessionStoreSource source)
     {
         if (branch == GameBranch.Official)
             cfg.SessionOwnedOfficialStore = true;
         else
             cfg.SessionOwnedBetaStore = true;
+
+        if (source == SessionStoreSource.FreshDownload)
+            cfg.SessionDownloadedBranch = branch;
+        else if (cfg.SessionDownloadedBranch == branch)
+            cfg.SessionDownloadedBranch = null;
     }
 
     /// <summary>
@@ -1216,8 +1339,7 @@ public sealed class BranchSwitchService
             cfg.SteamLinkPath = link;
             cfg.OfficialStorePath = "";
             cfg.BetaStorePath = "";
-            cfg.SessionOwnedOfficialStore = false;
-            cfg.SessionOwnedBetaStore = false;
+            cfg.ClearSessionStoreOwnership();
             SaveConfig(cfg);
             ClearJournal();
             return BranchOperationResult.Ok();

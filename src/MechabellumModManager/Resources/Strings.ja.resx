@@ -557,6 +557,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="MirrorBaseUrl" xml:space="preserve"><value>国内ミラー基点</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>空欄なら GitHub のみ。リポジトリと同型、例 https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
+  <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>安全でないリンクをブロックしました（https のみ許可）: {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>{0} 件を読み込み（オフラインキャッシュ、更新: {1}）</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>カタログ取得失敗: {0}。</value></data>
   <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>カタログ取得失敗。オフラインキャッシュを使用: {0}。</value></data>
@@ -586,4 +587,38 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NotifyEmptyProfileNoMods" xml:space="preserve"><value>このプロファイルでは Mod が有効になっていないため、ゲーム内に Mod は出ません。</value></data>
   <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>アセンブリを生成した直後のため、今回は exe を直接起動します（起動設定は変えません）。</value></data>
   <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>今回の起動では Loader が注入されませんでした。起動方式を「exe のみ」に変えて「適用して起動」し、Melon の黒コンソールを確認してください。</value></data>
+  <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>デュアルフォルダー有効化のロールバックが完全には成功しませんでした: {0}。「公式フォルダに戻す」を使用してください。</value></data>
+  <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>デュアルフォルダーは既に有効です。作り直す場合は、先に「公式フォルダに戻す」を実行してから再度有効化してください。</value></data>
+  <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit が効きませんでした（アカウント選択画面でよく起きます）。Steam クライアントのプロセスを強制終了します…</value></data>
+  <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>もう一方のブランチをダウンロードするには、ご自身で Steam を開いてください。管理ツールは Steam を自動起動しません。</value></data>
+  <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>現在インストールされているのはどちらのブランチですか？公式版かテスト版を選んでください。</value></data>
+  <data name="PureGameCleanupButton" xml:space="preserve"><value>徹底クリーンアップ（バニラに戻す）</value></data>
+  <data name="ConfirmPureGameCleanup" xml:space="preserve"><value>Melon・Mods・管理ツールのデータをホワイトリスト方式で削除し、デュアルフォルダーが有効かつ公式版が完全なら解除します。ゲーム本体と .NET は削除しません。続行しますか？</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOther" xml:space="preserve"><value>もう一方のブランチの保管フォルダー（通常はテスト版のコピー。容量が大きく復元不可）も削除しますか？「いいえ」を選ぶと、デュアルフォルダーは解除しつつ保管フォルダーは残します。</value></data>
+  <data name="NotifyPureGameCleanupDone" xml:space="preserve"><value>クリーンアップが完了しました。管理ツールを終了します。インストールフォルダーは「アプリと機能」から削除してください。</value></data>
+  <data name="NotifyPureGameCleanupFailed" xml:space="preserve"><value>クリーンアップが完了しませんでした: {0}</value></data>
+  <data name="BusySwitchingToOfficialForTeardown" xml:space="preserve"><value>デュアルフォルダー解除の前に公式版へ切り替えています。管理ツールを閉じないでください…</value></data>
+  <data name="BusyTeardownDualFolder" xml:space="preserve"><value>デュアルフォルダー構成を解除しています。管理ツールを閉じないでください…</value></data>
+  <data name="NotifyTeardownAbortedAwaitSettle" xml:space="preserve"><value>公式版に切り替えましたが、Steam のブランチがまだ整っていません。決済を完了する（または Steam の更新が成功するまで待つ）してから「公式フォルダに戻す」を押してください。</value></data>
+  <data name="NotifySettleBlockedUpdateUnhealthy" xml:space="preserve"><value>Steam の更新が停止または失敗しているようです。Steam でファイルの整合性を確認するか、ゲームを開始できる状態になるまで待ってから続行してください。</value></data>
+  <data name="ExportDiagnosticsSummaryHint" xml:space="preserve"><value>summary.md を生成しました。zip 全体を開発者に送ってください。</value></data>
+  <data name="DiagnosisTitle_critical_op_interrupted" xml:space="preserve"><value>前回の重要な操作が完了していません</value></data>
+  <data name="DiagnosisAction_critical_op_interrupted" xml:space="preserve"><value>中断された操作を完了するか破棄してください。同時にブランチ切替やセットアップを実行しないでください。</value></data>
+  <data name="DiagnosisTitle_game_or_link_incomplete" xml:space="preserve"><value>ゲームパスまたはフォルダーリンクが不完全です</value></data>
+  <data name="DiagnosisAction_game_or_link_incomplete" xml:space="preserve"><value>続行を連打しないでください。Steam のダウンロード完了を待つか、ファイルの整合性を確認してください。</value></data>
+  <data name="DiagnosisTitle_steam_update_unhealthy" xml:space="preserve"><value>Steam の更新が停止または未完了です</value></data>
+  <data name="DiagnosisAction_steam_update_unhealthy" xml:space="preserve"><value>プレイできる状態になるまで Steam の更新を完了させ、その後 Steam を完全に終了してください。</value></data>
+  <data name="DiagnosisTitle_melon_needs_upgrade" xml:space="preserve"><value>MelonLoader が同梱の 0.7.3 より古いです</value></data>
+  <data name="DiagnosisAction_melon_needs_upgrade" xml:space="preserve"><value>管理ツールの「MelonLoader をインストール」で 0.7.3 に更新してから、ゲームを起動してください。</value></data>
+  <data name="DiagnosisTitle_loader_not_injected" xml:space="preserve"><value>今回の起動で Loader が注入されませんでした</value></data>
+  <data name="DiagnosisAction_loader_not_injected" xml:space="preserve"><value>ゲームと Steam を終了し、「適用して起動」で約 20 秒待ってください。それでも注入されない場合は診断情報を書き出してください。</value></data>
+  <data name="DiagnosisTitle_catalog_or_update_network" xml:space="preserve"><value>カタログまたは更新確認がネットワークで失敗しました</value></data>
+  <data name="DiagnosisAction_catalog_or_update_network" xml:space="preserve"><value>システムのプロキシまたはミラー設定を確認してから、更新の再取得を試してください。</value></data>
+  <data name="DiagnosisTitle_deploy_blocked_or_failed" xml:space="preserve"><value>プロファイルの適用がブロックまたは失敗しました</value></data>
+  <data name="DiagnosisAction_deploy_blocked_or_failed" xml:space="preserve"><value>ダイアログに出た不足パッケージやファイルロックを解消し、ゲームを閉じてから再度適用してください。</value></data>
+  <data name="DiagnosisTitle_acf_beta_mismatch" xml:space="preserve"><value>Steam のブランチが管理ツールの保管フォルダーと一致しません</value></data>
+  <data name="DiagnosisAction_acf_beta_mismatch" xml:space="preserve"><value>デュアルフォルダーの故障ではありません。Steam のベータ設定だけでなく、管理ツール側でブランチを切り替えてください。</value></data>
+  <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>阻害する問題は見つかりませんでした</value></data>
+  <data name="DiagnosisAction_healthy" xml:space="preserve"><value>管理ツールの案内に従ってください。</value></data>
+  <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>ミラーの URL は https である必要があります。この設定を無視しました: {0}</value></data>
 </root>

@@ -577,6 +577,7 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Domestic mirror base</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Leave empty to use GitHub only. Same layout as the repos, e.g. https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
+  <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Blocked an unsafe link (https only): {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Loaded {0} entries (offline cache, catalog updated: {1})</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>Catalog fetch failed: {0}.</value></data>
   <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>Catalog fetch failed, using offline cache: {0}.</value></data>
@@ -624,4 +625,5 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="DiagnosisAction_acf_beta_mismatch" xml:space="preserve"><value>This is not a broken dual-folder. Switch branches in the manager, not only in Steam betas.</value></data>
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>No blocking issue found</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Follow the manager prompts.</value></data>
+  <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Mirror address must use https; setting ignored: {0}</value></data>
 </root>

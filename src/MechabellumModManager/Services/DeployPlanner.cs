@@ -162,12 +162,24 @@ public sealed class DeployPlanner
     private static string NormalizeRelative(string relativePath) =>
         relativePath.Replace('\\', '/').Trim('/');
 
+    /// <summary>
+    /// A manifest is a plain file on disk that anything can edit, and the planner turns its
+    /// entries straight into deletes. A path that escapes the game folder is never legitimate.
+    /// </summary>
     private static string ToAbsoluteUnderGame(string gamePath, string relativePath)
     {
+        var root = Path.GetFullPath(gamePath);
         var combined = Path.Combine(
-            gamePath,
+            root,
             relativePath.Replace('/', Path.DirectorySeparatorChar));
-        return Path.GetFullPath(combined);
+        var full = Path.GetFullPath(combined);
+
+        var prefix = root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Manifest entry resolves outside the game folder: {relativePath}");
+
+        return full;
     }
 
     private static bool PathsEqual(string a, string b)

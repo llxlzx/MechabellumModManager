@@ -319,8 +319,7 @@ public sealed class DiagnosticsExportService
                 return;
             }
 
-            var text = File.ReadAllText(sourcePath);
-            WriteText(staging, relative, text, redact);
+            WriteText(staging, relative, ReadTextCapped(sourcePath), redact);
         }
         catch
         {
@@ -329,15 +328,40 @@ public sealed class DiagnosticsExportService
         }
     }
 
+    /// <summary>A runaway MelonLoader log can reach gigabytes; keep only the tail.</summary>
+    const long MaxCopiedBytes = 8L * 1024 * 1024;
+
+    static string ReadTextCapped(string sourcePath)
+    {
+        var info = new FileInfo(sourcePath);
+        if (info.Length <= MaxCopiedBytes)
+            return File.ReadAllText(sourcePath);
+
+        using var stream = File.OpenRead(sourcePath);
+        stream.Seek(-MaxCopiedBytes, SeekOrigin.End);
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        return $"[truncated: kept the last {MaxCopiedBytes / (1024 * 1024)} MB of {info.Length} bytes]\n"
+               + reader.ReadToEnd();
+    }
+
     static void WriteText(string staging, string relative, string text, bool redact)
     {
         var dest = Path.Combine(staging, relative.Replace('/', Path.DirectorySeparatorChar));
         var dir = Path.GetDirectoryName(dest);
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
-        var body = redact ? Redact(text) : text;
+        var body = redact ? RedactFor(relative, text) : text;
         File.WriteAllText(dest, body, Encoding.UTF8);
     }
+
+    /// <summary>
+    /// JSON on disk escapes separators as <c>\\</c>, which the plain-text patterns never match.
+    /// </summary>
+    static string RedactFor(string relative, string text) =>
+        relative.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+        || relative.EndsWith(".jsonl", StringComparison.OrdinalIgnoreCase)
+            ? RedactJsonDocument(text)
+            : Redact(text);
 
     internal static string Redact(string text)
     {
@@ -358,6 +382,17 @@ public sealed class DiagnosticsExportService
             @"([A-Za-z]:\\Users\\)([^\\/]+)",
             "$1<User>",
             RegexOptions.IgnoreCase);
+
+        result = Regex.Replace(
+            result,
+            @"([A-Za-z]:/Users/)([^\\/]+)",
+            "$1<User>",
+            RegexOptions.IgnoreCase);
+
+        // Paths outside \Users\ (custom profile roots, game folders named after the player).
+        var userName = Environment.UserName;
+        if (userName.Length >= 4)
+            result = ReplaceIgnoreCase(result, userName, "<User>");
 
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         if (!string.IsNullOrWhiteSpace(appData))

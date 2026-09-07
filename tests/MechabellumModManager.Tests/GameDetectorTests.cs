@@ -161,6 +161,55 @@ public class GameDetectorTests
     }
 
     [Fact]
+    public void Assembly_generation_after_a_stale_launch_stamp_is_not_injected()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            // Last launch is from a previous session; this session only ran Apply, and the
+            // Il2Cpp generation touched Latest.log. That must not count as an injection.
+            var staleLaunch = new DateTimeOffset(2026, 9, 6, 21, 0, 0, TimeSpan.FromHours(8));
+            var applyStarted = new DateTimeOffset(2026, 9, 7, 18, 10, 0, TimeSpan.FromHours(8));
+            var logWrite = new DateTimeOffset(2026, 9, 7, 18, 12, 0, TimeSpan.FromHours(8));
+            var now = new DateTimeOffset(2026, 9, 7, 18, 13, 0, TimeSpan.FromHours(8));
+            WriteLatestLog(root, "0.7.3", logWrite.LocalDateTime, "6 Mods loaded.\n");
+
+            var s = new GameDetector().Detect(
+                root,
+                lastLaunchRequestedAt: staleLaunch,
+                now: now,
+                applyStartedAt: applyStarted);
+
+            s.LoaderInjected.Should().BeFalse();
+            s.Message.Should().Contain("未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void Launch_after_assembly_generation_is_injected()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var applyStarted = new DateTimeOffset(2026, 9, 7, 18, 10, 0, TimeSpan.FromHours(8));
+            var launch = new DateTimeOffset(2026, 9, 7, 18, 12, 0, TimeSpan.FromHours(8));
+            var logWrite = new DateTimeOffset(2026, 9, 7, 18, 12, 30, TimeSpan.FromHours(8));
+            var now = new DateTimeOffset(2026, 9, 7, 18, 13, 0, TimeSpan.FromHours(8));
+            WriteLatestLog(root, "0.7.3", logWrite.LocalDateTime, "6 Mods loaded.\n");
+
+            var s = new GameDetector().Detect(
+                root,
+                lastLaunchRequestedAt: launch,
+                now: now,
+                applyStartedAt: applyStarted);
+
+            s.LoaderInjected.Should().BeTrue();
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void Recent_launch_within_settle_does_not_mark_not_injected()
     {
         var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);

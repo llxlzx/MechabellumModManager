@@ -580,6 +580,7 @@
   <data name="MirrorBaseUrl" xml:space="preserve"><value>国内镜像基址</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>留空则只访问 GitHub。需与仓库同构，例如 https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>源={0}</value></data>
+  <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>已拦截不安全的链接（仅允许 https）：{0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>已加载 {0} 个条目（离线缓存，目录更新：{1}）</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>拉取目录失败：{0}。</value></data>
   <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>拉取目录失败，已改用离线缓存：{0}。</value></data>
@@ -627,4 +628,5 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="DiagnosisAction_acf_beta_mismatch" xml:space="preserve"><value>这不是双服损坏。切服请走管理器，不要只在 Steam 勾选测试分支。</value></data>
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>未发现阻断问题</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>按管理器提示操作即可。</value></data>
+  <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>镜像地址必须使用 https，已忽略该设置：{0}</value></data>
 </root>

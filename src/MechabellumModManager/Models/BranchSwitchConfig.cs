@@ -34,4 +34,18 @@ public sealed class BranchSwitchConfig
     /// Cleared when dual reaches Ready.
     /// </summary>
     public bool SessionOwnedBetaStore { get; set; }
+
+    /// <summary>
+    /// Store filled by a fresh Steam download this enable-session. Only this store may be
+    /// auto-deleted while it is still a complete install: every other store can be the
+    /// player's archived original, which rollback must never destroy.
+    /// </summary>
+    public GameBranch? SessionDownloadedBranch { get; set; }
+
+    public void ClearSessionStoreOwnership()
+    {
+        SessionOwnedOfficialStore = false;
+        SessionOwnedBetaStore = false;
+        SessionDownloadedBranch = null;
+    }
 }

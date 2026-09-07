@@ -267,6 +267,78 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
+    public async Task DownloadModAsync_rejects_content_that_does_not_match_catalog_sha256()
+    {
+        var handler = new ScriptedHttpHandler(_ => ScriptedHttpHandler.Bytes(HttpStatusCode.OK, "malicious"u8.ToArray()));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http);
+        var dest = Path.Combine(Path.GetTempPath(), "mmm-dl-" + Guid.NewGuid().ToString("N"), "Mod.dll");
+
+        var act = async () => await svc.DownloadModAsync(
+            new CatalogMod { File = "mods/x/Mod.dll", Sha256 = new string('a', 64) },
+            dest);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        File.Exists(dest).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DownloadModAsync_accepts_content_matching_catalog_sha256()
+    {
+        var payload = "trusted-mod-bytes"u8.ToArray();
+        var handler = new ScriptedHttpHandler(_ => ScriptedHttpHandler.Bytes(HttpStatusCode.OK, payload));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http);
+        var dest = Path.Combine(Path.GetTempPath(), "mmm-dl-" + Guid.NewGuid().ToString("N"), "Mod.dll");
+        var expected = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(payload)).ToLowerInvariant();
+
+        try
+        {
+            await svc.DownloadModAsync(new CatalogMod { File = "mods/x/Mod.dll", Sha256 = expected }, dest);
+
+            File.ReadAllBytes(dest).Should().Equal(payload);
+        }
+        finally
+        {
+            try { Directory.Delete(Path.GetDirectoryName(dest)!, recursive: true); } catch { /* cleanup */ }
+        }
+    }
+
+    [Fact]
+    public async Task DownloadModAsync_refuses_mirror_file_without_catalog_sha256()
+    {
+        var handler = new ScriptedHttpHandler(_ => ScriptedHttpHandler.Bytes(HttpStatusCode.OK, "anything"u8.ToArray()));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http, "https://mirror.example/m");
+        var dest = Path.Combine(Path.GetTempPath(), "mmm-dl-" + Guid.NewGuid().ToString("N"), "Mod.dll");
+
+        var act = async () => await svc.DownloadModAsync(new CatalogMod { File = "mods/x/Mod.dll" }, dest);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        File.Exists(dest).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DownloadModAsync_allows_github_file_without_catalog_sha256()
+    {
+        var handler = new ScriptedHttpHandler(_ => ScriptedHttpHandler.Bytes(HttpStatusCode.OK, "legacy"u8.ToArray()));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http);
+        var dest = Path.Combine(Path.GetTempPath(), "mmm-dl-" + Guid.NewGuid().ToString("N"), "Mod.dll");
+
+        try
+        {
+            await svc.DownloadModAsync(new CatalogMod { File = "mods/x/Mod.dll" }, dest);
+
+            File.Exists(dest).Should().BeTrue();
+        }
+        finally
+        {
+            try { Directory.Delete(Path.GetDirectoryName(dest)!, recursive: true); } catch { /* cleanup */ }
+        }
+    }
+
+    [Fact]
     public void PreviewUrl_with_mirror_lists_mirror_first()
     {
         var cam = new CatalogMod { Preview = "mods/cam/preview.png" };
