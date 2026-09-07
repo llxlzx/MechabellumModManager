@@ -224,7 +224,16 @@ public sealed class MainViewModelFixture : IDisposable
         UpdateChecker? updateChecker = null,
         Func<ModPackageType?>? pickPackageType = null,
         Func<string?>? openDll = null,
-        Func<string?>? openZip = null)
+        Func<string?>? openZip = null,
+        Action<string>? copyText = null,
+        Func<MailProvider?>? promptMailProvider = null,
+        Func<DiagnosticsRedactionMode?>? promptExportDiagnostics = null,
+        Func<string, string?>? saveZipFile = null,
+        Action<string>? revealInExplorer = null,
+        Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
+        Func<bool>? promptSubmitGuide = null,
+        Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null,
+        MelonLoaderAssemblyGenerator? melonAssemblyGenerator = null)
     {
         var processStarter = starter ?? new RecordingProcessStarter();
         var launcher = new GameLauncher(processStarter, () => false);
@@ -249,6 +258,9 @@ public sealed class MainViewModelFixture : IDisposable
             openZip: openZip,
             promptText: promptText,
             pickPackageType: pickPackageType,
+            promptReport: promptReport,
+            promptSubmitGuide: promptSubmitGuide,
+            copyText: copyText,
             branchSwitch: _branchSwitch,
             processProbe: Probe,
             processStarter: processStarter,
@@ -261,7 +273,13 @@ public sealed class MainViewModelFixture : IDisposable
             setBusyMessage: setBusyMessage,
             endBusy: endBusy,
             criticalOp: criticalOp ?? Guard,
-            requestProcessExit: requestProcessExit);
+            requestProcessExit: requestProcessExit,
+            promptMailProvider: promptMailProvider,
+            promptConfirmOption: promptConfirmOption,
+            promptExportDiagnostics: promptExportDiagnostics,
+            saveZipFile: saveZipFile,
+            revealInExplorer: revealInExplorer,
+            melonAssemblyGenerator: melonAssemblyGenerator);
     }
 
     public void WriteBranchConfig(BranchSwitchConfig cfg) =>

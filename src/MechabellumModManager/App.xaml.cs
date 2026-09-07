@@ -229,6 +229,7 @@ public partial class App : Application
             confirmHighRisk: msg => Confirm(window, msg, LocalizationService.T("Confirm"), MessageBoxImage.Warning),
             confirm: msg => Confirm(window, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question),
             confirmChoice: (msg, defaultResult) => Confirm(window, msg, LocalizationService.T("Confirm"), MessageBoxImage.Question, defaultResult),
+            promptConfirmOption: (msg, option) => PromptConfirmOption(window, msg, option),
             notify: msg => Notify(window, msg),
             browseFolder: () => BrowseFolder(window),
             openDll: () => OpenFile(window, LocalizationService.T("FileFilterDll")),
@@ -247,6 +248,7 @@ public partial class App : Application
             processProbe: probe,
             processStarter: starter,
             promptExportDiagnostics: () => PromptExportDiagnostics(window),
+            promptMailProvider: () => MailProviderDialog.Prompt(window),
             saveZipFile: suggestedName => SaveZipFile(window, suggestedName),
             revealInExplorer: RevealInExplorer,
             beginBusy: (title, msg) => BeginBusy(window, title, msg),
@@ -293,6 +295,22 @@ public partial class App : Application
             Owner = owner
         };
         return dialog.ShowDialog() == true;
+    }
+
+    static (bool ok, bool option)? PromptConfirmOption(Window owner, string message, string? optionLabel)
+    {
+        var dialog = new ConfirmDialog(
+            message,
+            LocalizationService.T("Confirm"),
+            yesNo: true,
+            defaultYes: false,
+            optionLabel: optionLabel)
+        {
+            Owner = owner
+        };
+        if (dialog.ShowDialog() != true)
+            return null;
+        return (true, dialog.IsOptionChecked);
     }
 
     static void Notify(Window owner, string message)

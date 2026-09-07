@@ -476,6 +476,13 @@
                                     MinWidth="120"
                                     Margin="0,0,8,4"
                                     Padding="12,6" />
+                            <Button Content="{Binding WizardExitSteamConfirmButtonText}"
+                                    Command="{Binding ConfirmWizardExitSteamCommand}"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Visibility="{Binding ShowConfirmWizardExitSteam, Converter={StaticResource BoolToVis}}"
+                                    MinWidth="160"
+                                    Margin="0,0,8,4"
+                                    Padding="12,6" />
                             <Button Content="{Binding SettleConfirmButtonText}"
                                     Command="{Binding ConfirmManualBetaCommand}"
                                     Style="{StaticResource AccentButtonStyle}"
@@ -557,9 +564,16 @@
                     </DockPanel>
 
                     <StackPanel Grid.Row="5" Grid.ColumnSpan="3" Margin="0,14,0,0">
-                        <TextBlock Text="{Binding Ui.CreditsTitle}"
-                                   Style="{StaticResource SectionLabelStyle}"
-                                   Margin="0,0,0,6" />
+                        <DockPanel Margin="0,0,0,6">
+                            <Button Content="{Binding Ui.FeedbackButton}"
+                                    Command="{Binding SendFeedbackCommand}"
+                                    DockPanel.Dock="Right"
+                                    MinWidth="88"
+                                    Style="{StaticResource GhostButtonStyle}" />
+                            <TextBlock Text="{Binding Ui.CreditsTitle}"
+                                       Style="{StaticResource SectionLabelStyle}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
                         <TextBox Text="{Binding Ui.CreditsBody, Mode=OneWay}"
                                  Style="{StaticResource SelectableReadOnlyTextStyle}"
                                  FontSize="12"
@@ -621,21 +635,33 @@
                                      ToolTip="{Binding Ui.FilterSearch}"
                                      Text="{Binding CatalogSearchText, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
-                        <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
-                                  ToolTip="{Binding Ui.FilterCategory}"
-                                  ItemsSource="{Binding CatalogCategoryFilterOptions}"
-                                  SelectedItem="{Binding SelectedCatalogCategoryFilter}"
-                                  DisplayMemberPath="Label" />
-                        <ComboBox Width="120" MinHeight="32" Margin="0,0,8,0"
-                                  ToolTip="{Binding Ui.FilterTag}"
-                                  ItemsSource="{Binding CatalogAvailableTagOptions}"
-                                  SelectedItem="{Binding SelectedCatalogTagFilter}"
-                                  DisplayMemberPath="Label" />
-                        <ComboBox Width="140" MinHeight="32"
-                                  ToolTip="{Binding Ui.FilterSort}"
-                                  ItemsSource="{Binding SortModeOptions}"
-                                  SelectedItem="{Binding SelectedCatalogSortMode}"
-                                  DisplayMemberPath="Label" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Ui.FilterCategory}"
+                                       Style="{StaticResource FilterFieldLabelStyle}" />
+                            <ComboBox Width="140" MinHeight="32"
+                                      ToolTip="{Binding Ui.FilterCategory}"
+                                      ItemsSource="{Binding CatalogCategoryFilterOptions}"
+                                      SelectedItem="{Binding SelectedCatalogCategoryFilter}"
+                                      ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Ui.FilterTag}"
+                                       Style="{StaticResource FilterFieldLabelStyle}" />
+                            <ComboBox Width="120" MinHeight="32"
+                                      ToolTip="{Binding Ui.FilterTag}"
+                                      ItemsSource="{Binding CatalogAvailableTagOptions}"
+                                      SelectedItem="{Binding SelectedCatalogTagFilter}"
+                                      ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Ui.FilterSort}"
+                                       Style="{StaticResource FilterFieldLabelStyle}" />
+                            <ComboBox Width="140" MinHeight="32"
+                                      ToolTip="{Binding Ui.FilterSort}"
+                                      ItemsSource="{Binding SortModeOptions}"
+                                      SelectedItem="{Binding SelectedCatalogSortMode}"
+                                      ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                        </StackPanel>
                     </DockPanel>
 
                     <!-- Mod list fills remaining height -->
@@ -666,6 +692,9 @@
                                 <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding EffectiveCategoryDisplay}"
                                                     Width="100" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnTag, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding EffectiveTagsText}"
+                                                    Width="120" />
                                 <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding Author}"
                                                     Width="90" />
@@ -906,21 +935,33 @@
                                          ToolTip="{Binding Ui.FilterSearch}"
                                          Text="{Binding LibrarySearchText, UpdateSourceTrigger=PropertyChanged}" />
                             </DockPanel>
-                            <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
-                                      ToolTip="{Binding Ui.FilterCategory}"
-                                      ItemsSource="{Binding LibraryCategoryFilterOptions}"
-                                      SelectedItem="{Binding SelectedLibraryCategoryFilter}"
-                                      DisplayMemberPath="Label" />
-                            <ComboBox Width="120" MinHeight="32" Margin="0,0,8,0"
-                                      ToolTip="{Binding Ui.FilterTag}"
-                                      ItemsSource="{Binding LibraryAvailableTagOptions}"
-                                      SelectedItem="{Binding SelectedLibraryTagFilter}"
-                                      DisplayMemberPath="Label" />
-                            <ComboBox Width="140" MinHeight="32" Margin="0,0,8,0"
-                                      ToolTip="{Binding Ui.FilterSort}"
-                                      ItemsSource="{Binding SortModeOptions}"
-                                      SelectedItem="{Binding SelectedLibrarySortMode}"
-                                      DisplayMemberPath="Label" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Ui.FilterCategory}"
+                                           Style="{StaticResource FilterFieldLabelStyle}" />
+                                <ComboBox Width="140" MinHeight="32"
+                                          ToolTip="{Binding Ui.FilterCategory}"
+                                          ItemsSource="{Binding LibraryCategoryFilterOptions}"
+                                          SelectedItem="{Binding SelectedLibraryCategoryFilter}"
+                                          ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Ui.FilterTag}"
+                                           Style="{StaticResource FilterFieldLabelStyle}" />
+                                <ComboBox Width="120" MinHeight="32"
+                                          ToolTip="{Binding Ui.FilterTag}"
+                                          ItemsSource="{Binding LibraryAvailableTagOptions}"
+                                          SelectedItem="{Binding SelectedLibraryTagFilter}"
+                                          ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Ui.FilterSort}"
+                                           Style="{StaticResource FilterFieldLabelStyle}" />
+                                <ComboBox Width="140" MinHeight="32"
+                                          ToolTip="{Binding Ui.FilterSort}"
+                                          ItemsSource="{Binding SortModeOptions}"
+                                          SelectedItem="{Binding SelectedLibrarySortMode}"
+                                          ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                            </StackPanel>
                             <Button Content="{Binding Ui.EditModTaxonomy}"
                                     Command="{Binding EditLibraryModTaxonomyCommand}"
                                     MinHeight="32"
@@ -982,6 +1023,10 @@
                                                     Binding="{Binding EffectiveCategoryDisplay}"
                                                     IsReadOnly="True"
                                                     Width="100" />
+                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnTag, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Binding="{Binding EffectiveTagsText}"
+                                                    IsReadOnly="True"
+                                                    Width="120" />
                                 <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding Author}"
                                                     IsReadOnly="True"

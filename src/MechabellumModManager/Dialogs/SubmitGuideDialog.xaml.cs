@@ -18,13 +18,14 @@ public partial class SubmitGuideDialog : Window
         GuideButton.Content = LocalizationService.T("SubmitGuideOpen");
         OkButton.Content = LocalizationService.T("SubmitGuideOpenEmail");
 
-        // NavigateUri is required for Hyperlink styling; actual open is region webmail in handler.
+        // NavigateUri is required for Hyperlink styling; actual open goes through the mail chooser.
         InboxLink.NavigateUri = new Uri(GitHubCommunityLinks.DomesticWebMailUrl);
         InboxLinkText.Text = GitHubCommunityLinks.Inbox;
     }
 
     void InboxLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {
+        var picked = MailProviderDialog.Prompt(this);
         GitHubCommunityLinks.TryOpenInboxWebMail(text =>
         {
             try
@@ -35,7 +36,7 @@ public partial class SubmitGuideDialog : Window
             {
                 // Clipboard may be locked.
             }
-        });
+        }, picked);
         e.Handled = true;
     }
 

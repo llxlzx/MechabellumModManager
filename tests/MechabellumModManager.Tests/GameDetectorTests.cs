@@ -111,6 +111,56 @@ public class GameDetectorTests
     }
 
     [Fact]
+    public void Diagnostic_timeline_generation_log_before_last_launch_is_not_injected()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var applyStarted = new DateTimeOffset(2026, 9, 7, 18, 11, 36, TimeSpan.FromHours(8));
+            var lastLaunch = new DateTimeOffset(2026, 9, 7, 18, 12, 40, 556, TimeSpan.FromHours(8));
+            var logWrite = new DateTimeOffset(2026, 9, 7, 18, 12, 28, 290, TimeSpan.FromHours(8));
+            var now = new DateTimeOffset(2026, 9, 7, 18, 13, 1, TimeSpan.FromHours(8));
+            WriteLatestLog(root, "0.7.3", logWrite.LocalDateTime, "6 Mods loaded.\n");
+
+            var s = new GameDetector().Detect(
+                root,
+                lastLaunchRequestedAt: lastLaunch,
+                now: now,
+                applyStartedAt: applyStarted,
+                gameAlreadyRunning: true);
+
+            s.Kind.Should().Be(GameStatusKind.Ready);
+            s.LoaderInjected.Should().BeFalse();
+            s.Message.Should().Contain("未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void Already_running_generation_log_before_last_launch_is_not_injected()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var lastLaunch = new DateTimeOffset(2026, 9, 7, 18, 12, 40, 556, TimeSpan.FromHours(8));
+            var logWrite = new DateTimeOffset(2026, 9, 7, 18, 12, 28, 290, TimeSpan.FromHours(8));
+            var now = new DateTimeOffset(2026, 9, 7, 18, 13, 1, TimeSpan.FromHours(8));
+            WriteLatestLog(root, "0.7.3", logWrite.LocalDateTime, "6 Mods loaded.\n");
+
+            var s = new GameDetector().Detect(
+                root,
+                lastLaunchRequestedAt: lastLaunch,
+                now: now,
+                applyStartedAt: lastLaunch,
+                gameAlreadyRunning: true);
+
+            s.LoaderInjected.Should().BeFalse();
+            s.Message.Should().Contain("未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void Recent_launch_within_settle_does_not_mark_not_injected()
     {
         var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
@@ -125,10 +175,10 @@ public class GameDetectorTests
         finally { Directory.Delete(root, true); }
     }
 
-    static void WriteLatestLog(string root, string version, DateTime lastWriteLocal)
+    static void WriteLatestLog(string root, string version, DateTime lastWriteLocal, string extra = "")
     {
         var path = Path.Combine(root, "MelonLoader", "Latest.log");
-        File.WriteAllText(path, $"[14:17:52.025] MelonLoader v{version} Open-Beta\n");
+        File.WriteAllText(path, $"[14:17:52.025] MelonLoader v{version} Open-Beta\n{extra}");
         File.SetLastWriteTime(path, lastWriteLocal);
     }
 

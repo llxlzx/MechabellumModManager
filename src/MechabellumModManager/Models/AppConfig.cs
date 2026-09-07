@@ -17,6 +17,9 @@ public sealed class AppConfig
     /// <summary>When the manager last requested a game launch (for Melon injection checks).</summary>
     public DateTimeOffset? LastLaunchRequestedAt { get; set; }
 
+    /// <summary>Start of the last ApplyAndLaunch (Il2Cpp wait can write Latest.log before Launch stamps).</summary>
+    public DateTimeOffset? LastApplyStartedAt { get; set; }
+
     /// <summary>
     /// Optional first-party mirror root (no trailing slash). Empty skips the mirror and uses GitHub only.
     /// Expected layout: {mirror}/MechabellumModManager/latest.json and {mirror}/MechabellumMods/...

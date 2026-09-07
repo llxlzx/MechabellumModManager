@@ -5,13 +5,26 @@ namespace MechabellumModManager.Dialogs;
 
 public partial class ConfirmDialog : Window
 {
-    public ConfirmDialog(string message, string? title = null, bool yesNo = true, bool defaultYes = true)
+    public bool IsOptionChecked => OptionCheck.IsChecked == true;
+
+    public ConfirmDialog(
+        string message,
+        string? title = null,
+        bool yesNo = true,
+        bool defaultYes = true,
+        string? optionLabel = null)
     {
         InitializeComponent();
         Title = string.IsNullOrWhiteSpace(title)
             ? LocalizationService.T(yesNo ? "Confirm" : "Notice")
             : title;
         MessageText.Text = message ?? "";
+        if (!string.IsNullOrWhiteSpace(optionLabel))
+        {
+            OptionCheck.Content = optionLabel;
+            OptionCheck.IsChecked = false;
+            OptionCheck.Visibility = Visibility.Visible;
+        }
 
         var accent = (Style)FindResource("AccentButtonStyle");
         var ghost = (Style)FindResource("GhostButtonStyle");

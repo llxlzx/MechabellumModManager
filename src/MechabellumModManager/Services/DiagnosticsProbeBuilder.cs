@@ -183,6 +183,8 @@ public static class DiagnosticsProbeBuilder
             ["wizardStep"] = cfg?.WizardStep.ToString() ?? request.BranchWizardStep,
             ["activeBranch"] = cfg?.ActiveBranch.ToString() ?? request.ActiveGameBranch,
             ["steamLinkPath"] = link,
+            ["officialStorePath"] = official,
+            ["betaStorePath"] = beta,
             ["steamLinkIsJunction"] = isJunction,
             ["junctionTarget"] = target,
             ["linkLooksLikeGameRoot"] = LooksLikeGameRoot(link),
@@ -244,13 +246,21 @@ public static class DiagnosticsProbeBuilder
         {
             if (branch.TryGetValue("steamLinkIsJunction", out var j) && j is false)
                 findings.Add("junction_missing_while_branch_enabled");
-            if (branch.TryGetValue("linkLooksLikeGameRoot", out var linkOk) && linkOk is false
-                && ((branch.TryGetValue("officialLooksLikeGameRoot", out var o) && o is true)
-                    || (branch.TryGetValue("betaLooksLikeGameRoot", out var b) && b is true)))
+            var linkOk = branch.TryGetValue("linkLooksLikeGameRoot", out var linkOkObj) && linkOkObj is true;
+            var officialOk = branch.TryGetValue("officialLooksLikeGameRoot", out var o) && o is true;
+            var betaOk = branch.TryGetValue("betaLooksLikeGameRoot", out var b) && b is true;
+            if (!linkOk && (officialOk || betaOk))
             {
                 findings.Add("link_incomplete_but_store_valid");
                 findings.Add("active_store_incomplete");
             }
+
+            var isJunc = branch.TryGetValue("steamLinkIsJunction", out var juncObj) && juncObj is true;
+            var target = branch.TryGetValue("junctionTarget", out var tObj) ? tObj as string : null;
+            var officialPath = branch.TryGetValue("officialStorePath", out var op) ? op as string : null;
+            var betaPath = branch.TryGetValue("betaStorePath", out var bp) ? bp as string : null;
+            if (IsJunctionDesync(isJunc, target, officialPath, betaPath, linkOk, officialOk, betaOk))
+                findings.Add("junction_desync");
 
             if (branch.TryGetValue("acf", out var acfObj) && acfObj is Dictionary<string, object?> acf)
             {
@@ -288,6 +298,41 @@ public static class DiagnosticsProbeBuilder
         catch
         {
             return null;
+        }
+    }
+
+    public static bool IsJunctionDesync(
+        bool isJunction,
+        string? target,
+        string? official,
+        string? beta,
+        bool linkOk,
+        bool officialOk,
+        bool betaOk)
+    {
+        if (!isJunction || linkOk)
+            return false;
+        if (SamePath(target, official) && officialOk)
+            return true;
+        if (SamePath(target, beta) && betaOk)
+            return true;
+        return false;
+    }
+
+    static bool SamePath(string? a, string? b)
+    {
+        if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b))
+            return false;
+        try
+        {
+            return string.Equals(
+                Path.GetFullPath(a.Trim()),
+                Path.GetFullPath(b.Trim()),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
         }
     }
 

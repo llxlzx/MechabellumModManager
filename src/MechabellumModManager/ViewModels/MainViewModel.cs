@@ -56,6 +56,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Action? _unselectLibrary;
     readonly Action? _unselectCatalog;
     readonly Func<DiagnosticsRedactionMode?>? _promptExportDiagnostics;
+    readonly Func<MailProvider?>? _promptMailProvider;
+    readonly Func<string, string?, (bool ok, bool option)?>? _promptConfirmOption;
     readonly Func<string, string?>? _saveZipFile;
     readonly Action<string>? _revealInExplorer;
     readonly Action<string, string>? _beginBusy;
@@ -141,7 +143,9 @@ public sealed partial class MainViewModel : ObservableObject
         Action? endBusy = null,
         CriticalOpGuard? criticalOp = null,
         Action? requestProcessExit = null,
-        ISteamLifecycle? steamLifecycle = null)
+        ISteamLifecycle? steamLifecycle = null,
+        Func<MailProvider?>? promptMailProvider = null,
+        Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null)
     {
         _paths = paths;
         _store = store;
@@ -182,6 +186,8 @@ public sealed partial class MainViewModel : ObservableObject
         _unselectLibrary = unselectLibrary;
         _unselectCatalog = unselectCatalog;
         _promptExportDiagnostics = promptExportDiagnostics;
+        _promptMailProvider = promptMailProvider;
+        _promptConfirmOption = promptConfirmOption;
         _saveZipFile = saveZipFile;
         _revealInExplorer = revealInExplorer;
         _beginBusy = beginBusy;
@@ -739,13 +745,52 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
 
+    public bool CanConfirmManualBeta =>
+        ShowConfirmManualBeta && GameStatus?.Kind == GameStatusKind.Ready;
+
+    public bool ShowConfirmWizardExitSteam =>
+        IsEnableDualWaitingDownload && IsWizardDownloadDiskReadyNow();
+
+    public bool CanConfirmWizardExitSteam =>
+        ShowConfirmWizardExitSteam && !IsBranchSwitchBusy && !_wizardArchiveBRunning;
+
+    public string WizardExitSteamConfirmButtonText =>
+        LocalizationService.T("WizardExitSteamContinue");
+
     /// <summary>
     /// Switch: dual Ready, or settle hollow-escape while Enabled.
     /// </summary>
     public bool CanSwitchGameBranch =>
         BranchSwitchEnabled
         && !IsBranchSwitchBusy
-        && (BranchWizardStep == BranchWizardStep.Ready || IsAwaitingSteamSettle);
+        && !IsSteamWritingGame
+        && (BranchWizardStep == BranchWizardStep.Ready || IsAwaitingSteamSettle)
+        && !(IsAwaitingSteamSettle && GameStatus?.Kind == GameStatusKind.Ready);
+
+    public bool IsSteamWritingGame
+    {
+        get
+        {
+            try
+            {
+                var gamePath = string.IsNullOrWhiteSpace(GamePath)
+                    ? _branchSwitch.LoadConfig().SteamLinkPath
+                    : GamePath;
+                if (string.IsNullOrWhiteSpace(gamePath))
+                    return false;
+
+                var acf = SteamBetaKeyEditor.FindAppManifestPath(gamePath);
+                if (string.IsNullOrWhiteSpace(acf) || !File.Exists(acf))
+                    return false;
+
+                return SteamBetaKeyEditor.LooksSteamWritingGame(File.ReadAllText(acf));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
 
     public bool CanStartBranchWizard =>
         !BranchSwitchEnabled
@@ -796,6 +841,9 @@ public sealed partial class MainViewModel : ObservableObject
     {
         get
         {
+            if (ShowConfirmManualBeta && GameStatus?.Kind != GameStatusKind.Ready)
+                return LocalizationService.T("BranchSwitchConfirmSettleWaiting");
+
             if (DegradeToManualBeta)
             {
                 return ActiveGameBranch == GameBranch.Official
@@ -1073,6 +1121,9 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(StatusKindLabel));
         OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanConfirmManualBeta));
+        OnPropertyChanged(nameof(SettleConfirmButtonText));
+        ConfirmManualBetaCommand.NotifyCanExecuteChanged();
         NotifyBranchGates();
     }
 
@@ -1180,7 +1231,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     void RefreshStatusCore(bool offerAssemblyGeneratePrompt)
     {
-        GameStatus = _detector.Detect(GamePath, LoadConfig().LastLaunchRequestedAt);
+        var statusCfg = LoadConfig();
+        GameStatus = _detector.Detect(
+            GamePath,
+            statusCfg.LastLaunchRequestedAt,
+            applyStartedAt: statusCfg.LastApplyStartedAt,
+            gameAlreadyRunning: _processProbe.IsGameRunning());
         if (GameStatus.LoaderInjected == false)
             RecordLoaderNotInjectedOnce();
         UpdateLoaderVersionWarning();
@@ -1211,17 +1267,19 @@ public sealed partial class MainViewModel : ObservableObject
         if (!_criticalOp.TryLoadInterrupted(out marker) && _criticalOp.IsRunning)
             marker = new CriticalOpMarker { Kind = _criticalOp.RunningKind, Detail = "running" };
 
+        var diagCfg = LoadConfig();
         var snap = DiagnosisSnapshotBuilder.Capture(
             _paths,
             GamePath,
             GameStatus,
-            LoadConfig().LastLaunchRequestedAt,
+            diagCfg.LastLaunchRequestedAt,
             branch,
             isAwaitingSteamSettle: IsAwaitingSteamSettle,
             events: _events.ReadRecent(),
             deployBlockedOrFailed: ShowDeployBlockedReason && !string.IsNullOrWhiteSpace(DeployBlockedReason),
             deployFailure: DeployBlockedReason,
-            interruptedCriticalOp: marker);
+            interruptedCriticalOp: marker,
+            applyStartedAt: diagCfg.LastApplyStartedAt);
         CurrentDiagnosis = DiagnosisEngine.Evaluate(snap);
     }
 
@@ -1684,6 +1742,7 @@ public sealed partial class MainViewModel : ObservableObject
 
             RecomputeDirty();
             _notify(LocalizationService.T("NotifyApplySucceeded"));
+            WarnIfProfileHasNoEnabledMods();
             return true;
         }
         catch (Exception ex)
@@ -1706,15 +1765,40 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanDeployOrLaunch))]
     async Task ApplyAndLaunch()
     {
+        var opStartedAt = DateTimeOffset.Now;
+        var startedCfg = LoadConfig();
+        startedCfg.LastApplyStartedAt = opStartedAt;
+        SaveConfig(startedCfg);
+
+        var missingAssembliesBefore = !GameDetector.HasIl2CppAssemblies(GamePath);
         if (!await ApplyProfileAsync().ConfigureAwait(true)) return;
         if (GameStatus?.Kind != GameStatusKind.Ready) return;
 
         TryOptimizeMelonLoader(logAlways: true);
 
+        var generatedThisOp = missingAssembliesBefore && GameDetector.HasIl2CppAssemblies(GamePath);
         var config = LoadConfig();
         config.GamePath = GamePath;
         config.LaunchMode = LaunchMode;
-        var launch = _launcher.Launch(config);
+        config.LastApplyStartedAt = opStartedAt;
+        var launchConfig = config;
+        if (generatedThisOp && LaunchMode == LaunchMode.SteamThenExe)
+        {
+            launchConfig = new AppConfig
+            {
+                GamePath = config.GamePath,
+                LaunchMode = LaunchMode.ExeOnly,
+                ActiveProfileId = config.ActiveProfileId,
+                DataRoot = config.DataRoot,
+                UiLanguage = config.UiLanguage,
+                LastLaunchRequestedAt = config.LastLaunchRequestedAt,
+                LastApplyStartedAt = config.LastApplyStartedAt,
+                MirrorBaseUrl = config.MirrorBaseUrl
+            };
+            AppendLog(LocalizationService.T("LogLaunchExeAfterAssemblyGen"));
+        }
+
+        var launch = _launcher.Launch(launchConfig);
         if (!launch.Success)
             AppendLog(launch.Message);
         else
@@ -1726,26 +1810,125 @@ public sealed partial class MainViewModel : ObservableObject
                 ["mode"] = LaunchMode.ToString(),
                 ["at"] = config.LastLaunchRequestedAt.Value.ToString("o")
             });
-            AppendLog("已请求启动游戏。");
+            AppendLog(LocalizationService.T("LogLaunchRequestedVerifying"));
             AppendLog(LocalizationService.T("LogMelonConsoleHint"));
             AppendLog(LocalizationService.T("LogMelonLaunchVerifyHint"));
             if (_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
-                AppendLog("首次启动提示：若长时间黑屏/控制台滚动，是 MelonLoader 正在生成程序集，请耐心等待完成。");
-            _ = RecheckLoaderInjectionAfterLaunchAsync();
+            {
+                AppendLog(LocalizationService.T("LogFirstAssemblyLaunchHint"));
+                UpdateFirstAssemblyWarning();
+            }
+
+            await VerifyLaunchProcessThenInjectionAsync().ConfigureAwait(true);
         }
     }
 
-    async Task RecheckLoaderInjectionAfterLaunchAsync()
+    async Task VerifyLaunchProcessThenInjectionAsync()
+    {
+        var seen = false;
+        for (var i = 0; i < 15; i++)
+        {
+            if (_processProbe.IsGameRunning())
+            {
+                seen = true;
+                break;
+            }
+
+            await _delay(TimeSpan.FromSeconds(1)).ConfigureAwait(true);
+        }
+
+        if (!seen)
+            seen = _processProbe.IsGameRunning();
+
+        if (!seen)
+        {
+            var msg = LocalizationService.T("NotifyLaunchProcessNotSeen");
+            AppendLog(msg);
+            _notify(msg);
+            return;
+        }
+
+        AppendLog(LocalizationService.T("LogLaunchProcessSeen"));
+        WarnIfRunningGamePathMismatch();
+        await RecheckLoaderInjectionAfterLaunchAsync().ConfigureAwait(true);
+    }
+
+    void WarnIfRunningGamePathMismatch()
+    {
+        var running = _processProbe.TryGetRunningGameExePath();
+        if (ProcessProbe.IsManagedGameExe(GamePath, running))
+            return;
+
+        var msg = string.Format(LocalizationService.T("NotifyLaunchGamePathMismatch"), running);
+        AppendLog(msg);
+        _notify(msg);
+    }
+
+    internal async Task RecheckLoaderInjectionAfterLaunchAsync()
     {
         try
         {
             await _delay(GameDetector.LoaderInjectSettle).ConfigureAwait(true);
             RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+            if (GameStatus?.LoaderInjected != false)
+                return;
+
+            for (var i = 0; i < 12; i++)
+            {
+                await _delay(TimeSpan.FromSeconds(5)).ConfigureAwait(true);
+                RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+                if (GameStatus?.LoaderInjected != false)
+                    return;
+            }
+
+            NotifyLoaderNotInjectedUseExeOnly();
         }
         catch (Exception ex)
         {
             AppendLog($"检查 Melon 注入状态失败：{ex.Message}");
         }
+    }
+
+    void WarnIfProfileHasNoEnabledMods()
+    {
+        if (ProfileHasEnabledMods())
+            return;
+        var msg = LocalizationService.T("NotifyEmptyProfileNoMods");
+        AppendLog(msg);
+        _notify(msg);
+    }
+
+    bool ProfileHasEnabledMods()
+    {
+        if (Mods.Any(m => m.IsEnabled))
+            return true;
+        if (SelectedProfile is null)
+            return false;
+        return _profiles.Get(SelectedProfile.Id).EnabledPackageIds.Count > 0;
+    }
+
+    void NotifyLoaderNotInjectedUseExeOnly()
+    {
+        var msg = LocalizationService.T("NotifyLoaderNotInjectedUseExeOnly");
+        AppendLog(msg);
+        _notify(msg);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanConfirmWizardExitSteam))]
+    async Task ConfirmWizardExitSteam()
+    {
+        if (!IsEnableDualWaitingDownload)
+            return;
+
+        if (!IsWizardDownloadReadyNow())
+        {
+            var msg = LocalizationService.T("LogSteamOrGameStillRunning");
+            AppendLog(msg);
+            _notify(msg);
+            return;
+        }
+
+        await CompleteWizardAfterDownloadBAsync(ActiveGameBranch).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -1922,7 +2105,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanConfirmManualBeta))]
     async Task ConfirmManualBeta()
     {
         if (!IsAwaitingSteamSettle && !DegradeToManualBeta) return;
@@ -2109,21 +2292,7 @@ public sealed partial class MainViewModel : ObservableObject
                 request.Notes,
                 request.AppVersion);
 
-            var (ok, _, domestic) = GitHubCommunityLinks.TryOpenCompose(
-                compose.Subject,
-                compose.Body,
-                TryCopyText);
-
-            if (!ok)
-            {
-                AppendLog($"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
-                _notify(Ui.MailOpenFailed);
-                return Task.CompletedTask;
-            }
-
-            var msg = domestic ? Ui.ReportMailOpenedDomestic : Ui.ReportMailOpenedInternational;
-            AppendLog($"{msg}\n{GitHubCommunityLinks.Inbox}");
-            _notify(msg);
+            NotifyComposeResult(OpenCompose(compose.Subject, compose.Body));
         }
         catch (Exception ex)
         {
@@ -2152,20 +2321,40 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var compose = GitHubCommunityLinks.BuildSubmitCompose();
-        var (ok, _, domestic) = GitHubCommunityLinks.TryOpenCompose(
-            compose.Subject,
-            compose.Body,
-            TryCopyText);
+        NotifyComposeResult(OpenCompose(compose.Subject, compose.Body));
+    }
 
-        if (!ok)
-        {
-            AppendLog($"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
-            _notify(Ui.MailOpenFailed);
-            return;
-        }
+    [RelayCommand]
+    void SendFeedback()
+    {
+        var compose = GitHubCommunityLinks.BuildFeedbackCompose();
+        NotifyComposeResult(OpenCompose(compose.Subject, compose.Body));
+    }
 
-        var msg = domestic ? Ui.SubmitMailOpenedDomestic : Ui.SubmitMailOpenedInternational;
-        AppendLog(msg);
+    (bool opened, MailProvider? provider) OpenCompose(string subject, string body)
+    {
+        var picked = _promptMailProvider?.Invoke();
+        var (opened, _) = GitHubCommunityLinks.TryOpenCompose(subject, body, TryCopyText, picked);
+        return (opened, picked);
+    }
+
+    string DescribeCompose((bool opened, MailProvider? provider) result)
+    {
+        var (opened, provider) = result;
+        if (provider is null)
+            return Ui.MailCancelled;
+        if (!opened)
+            return $"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}";
+        return provider == MailProvider.Qq ? Ui.MailOpenedQq : Ui.MailOpenedGmail;
+    }
+
+    void NotifyComposeResult((bool opened, MailProvider? provider) result)
+    {
+        var msg = DescribeCompose(result);
+        if (result.provider is not null)
+            AppendLog($"{msg}\n{GitHubCommunityLinks.Inbox}");
+        else
+            AppendLog(msg);
         _notify(msg);
     }
 
@@ -2181,12 +2370,6 @@ public sealed partial class MainViewModel : ObservableObject
         if (TryNotifySteamWritingAndAbort())
             return;
 
-        if (!Confirm(LocalizationService.T("ConfirmPureGameCleanup"), MessageBoxResult.No))
-            return;
-
-        var deleteOther = BranchSwitchEnabled
-            && Confirm(LocalizationService.T("ConfirmPureGameCleanupDeleteOther"), MessageBoxResult.No);
-
         var cfg = LoadConfig();
         var branch = _branchSwitch.LoadConfig();
         var request = new PureGameCleanupRequest
@@ -2194,7 +2377,7 @@ public sealed partial class MainViewModel : ObservableObject
             ConfigGamePath = string.IsNullOrWhiteSpace(GamePath) ? cfg.GamePath : GamePath,
             Branch = branch,
             ManagerAppDataRoot = _paths.DataRoot,
-            ConfirmDeleteOtherStore = deleteOther
+            ConfirmDeleteOtherStore = false
         };
 
         var plan = PureGameCleanupPlanner.Build(request);
@@ -2206,8 +2389,43 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var summary = string.Join("\n", plan.Actions.Select(a => $"• {a.Kind}: {a.Path}"));
-        if (!Confirm(LocalizationService.T("ConfirmPureGameCleanup") + "\n\n" + summary, MessageBoxResult.No))
-            return;
+        var body = LocalizationService.T("ConfirmPureGameCleanup") + "\n\n" + summary;
+        var optionLabel = BranchSwitchEnabled
+            ? LocalizationService.T("ConfirmPureGameCleanupDeleteOtherOption")
+            : null;
+
+        bool deleteOther;
+        if (_promptConfirmOption is not null)
+        {
+            var picked = _promptConfirmOption(body, optionLabel);
+            if (picked is null || !picked.Value.ok)
+                return;
+            deleteOther = BranchSwitchEnabled && picked.Value.option;
+        }
+        else
+        {
+            if (!Confirm(body, MessageBoxResult.No))
+                return;
+            deleteOther = false;
+        }
+
+        if (deleteOther)
+        {
+            request = new PureGameCleanupRequest
+            {
+                ConfigGamePath = request.ConfigGamePath,
+                Branch = request.Branch,
+                ManagerAppDataRoot = request.ManagerAppDataRoot,
+                ConfirmDeleteOtherStore = true
+            };
+            plan = PureGameCleanupPlanner.Build(request);
+            if (plan.IsAborted)
+            {
+                AppendLog(plan.AbortReason!);
+                _notify(string.Format(LocalizationService.T("NotifyPureGameCleanupFailed"), plan.AbortReason));
+                return;
+            }
+        }
 
         try
         {
@@ -2285,28 +2503,14 @@ public sealed partial class MainViewModel : ObservableObject
 
             _revealInExplorer?.Invoke(result.ZipPath ?? zipPath);
 
-            var compose = GitHubCommunityLinks.BuildDiagnosticsCompose(AppVersion, mode.Value);
-            var (ok, _, domestic) = GitHubCommunityLinks.TryOpenCompose(
-                compose.Subject,
-                compose.Body,
-                TryCopyText);
-
             var saved = string.Format(Ui.ExportDiagnosticsSaved, result.ZipPath ?? zipPath);
             var summaryHint = LocalizationService.T("ExportDiagnosticsSummaryHint");
             AppendLog(saved);
             AppendLog(summaryHint);
 
-            if (!ok)
-            {
-                AppendLog($"{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
-                _notify($"{saved}\n{summaryHint}\n{Ui.MailOpenFailed}：{GitHubCommunityLinks.Inbox}");
-                return;
-            }
-
-            var mailMsg = domestic
-                ? Ui.ExportDiagnosticsMailOpenedDomestic
-                : Ui.ExportDiagnosticsMailOpenedInternational;
-            AppendLog($"{mailMsg}\n{GitHubCommunityLinks.Inbox}");
+            var compose = GitHubCommunityLinks.BuildDiagnosticsCompose(AppVersion, mode.Value);
+            var mailMsg = DescribeCompose(OpenCompose(compose.Subject, compose.Body));
+            AppendLog(mailMsg);
             _notify($"{saved}\n{summaryHint}\n{mailMsg}");
         }
         catch (Exception ex)
@@ -2376,7 +2580,7 @@ public sealed partial class MainViewModel : ObservableObject
                     ["fallback"] = "cache",
                     ["error"] = networkEx.Message
                 });
-                AppendLog($"拉取目录失败，已改用离线缓存：{networkEx.Message}");
+                AppendLog(CatalogNetworkHint.Format(networkEx.Message, _catalog.MirrorBaseUrl, usedCache: true));
                 RecalculateDiagnosis();
             }
 
@@ -2411,7 +2615,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            CatalogStatus = string.Format(LocalizationService.T("CatalogFetchFailed"), ex.Message);
+            CatalogStatus = CatalogNetworkHint.Format(ex.Message, _catalog.MirrorBaseUrl, usedCache: false);
             RecordEvent(ManagerEventLog.CatalogFetchFailed, new Dictionary<string, string?>
             {
                 ["source"] = _catalog.LastFetchSource ?? (_catalog.MirrorBaseUrl is null ? "github" : "mirror"),
@@ -4760,6 +4964,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(DeployBlockedReason));
         OnPropertyChanged(nameof(ShowDeployBlockedReason));
         OnPropertyChanged(nameof(CanSwitchGameBranch));
+        OnPropertyChanged(nameof(IsSteamWritingGame));
         OnPropertyChanged(nameof(CanStartBranchWizard));
         OnPropertyChanged(nameof(ShowEmergencyRecoverSingle));
         OnPropertyChanged(nameof(CanEmergencyRecoverSingle));
@@ -4774,6 +4979,13 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
         OnPropertyChanged(nameof(CanInstallMelonLoader));
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanConfirmManualBeta));
+        OnPropertyChanged(nameof(SettleConfirmButtonText));
+        ConfirmManualBetaCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(ShowConfirmWizardExitSteam));
+        OnPropertyChanged(nameof(CanConfirmWizardExitSteam));
+        OnPropertyChanged(nameof(WizardExitSteamConfirmButtonText));
+        ConfirmWizardExitSteamCommand.NotifyCanExecuteChanged();
     }
 
     string? TryDescribeSteamBetaKeyMismatch()
@@ -4934,9 +5146,10 @@ public sealed partial class MainViewModel : ObservableObject
     void ClearLastLaunchRequestedAt()
     {
         var config = LoadConfig();
-        if (config.LastLaunchRequestedAt is null)
+        if (config.LastLaunchRequestedAt is null && config.LastApplyStartedAt is null)
             return;
         config.LastLaunchRequestedAt = null;
+        config.LastApplyStartedAt = null;
         SaveConfig(config);
     }
 

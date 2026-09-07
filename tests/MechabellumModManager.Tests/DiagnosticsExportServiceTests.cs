@@ -34,6 +34,7 @@ public class DiagnosticsExportServiceTests
         archive.GetEntry("config.json").Should().NotBeNull();
         var env = new StreamReader(archive.GetEntry("environment.json")!.Open()).ReadToEnd();
         env.Should().Contain("\"redaction\": \"none\"");
+        result.Missing.Should().Contain("events.jsonl");
     }
 
     [Fact]

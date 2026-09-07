@@ -48,7 +48,11 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SubmitMailOpenedInternational => T("SubmitMailOpenedInternational");
     public string ReportMailOpenedDomestic => T("ReportMailOpenedDomestic");
     public string ReportMailOpenedInternational => T("ReportMailOpenedInternational");
+    public string MailOpenedQq => T("MailOpenedQq");
+    public string MailOpenedGmail => T("MailOpenedGmail");
+    public string MailCancelled => T("MailCancelled");
     public string MailOpenFailed => T("MailOpenFailed");
+    public string FeedbackButton => T("FeedbackButton");
     public string SubmitGuideTitle => T("SubmitGuideTitle");
     public string SubmitGuideIntro => T("SubmitGuideIntro");
     public string SubmitGuideBody => T("SubmitGuideBody");
@@ -72,6 +76,10 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string ExportDiagnosticsFailed => T("ExportDiagnosticsFailed");
     public string ExportDiagnosticsMailOpenedDomestic => T("ExportDiagnosticsMailOpenedDomestic");
     public string ExportDiagnosticsMailOpenedInternational => T("ExportDiagnosticsMailOpenedInternational");
+    public string MailProviderTitle => T("MailProviderTitle");
+    public string MailProviderHint => T("MailProviderHint");
+    public string MailProviderQq => T("MailProviderQq");
+    public string MailProviderGmail => T("MailProviderGmail");
     public string GamePath => T("GamePath");
     public string LaunchMode => T("LaunchMode");
     public string PortableDataRoot => T("PortableDataRoot");
@@ -93,6 +101,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SortByName => T("SortByName");
     public string SortByUpdatedAtDesc => T("SortByUpdatedAtDesc");
     public string ColumnCategory => T("ColumnCategory");
+    public string ColumnTag => T("ColumnTag");
     public string ColumnName => T("ColumnName");
     public string ColumnAuthor => T("ColumnAuthor");
     public string ColumnVersion => T("ColumnVersion");

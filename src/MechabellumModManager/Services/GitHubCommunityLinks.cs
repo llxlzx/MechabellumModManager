@@ -12,12 +12,18 @@ public enum MailComposeKind
     Feedback
 }
 
+public enum MailProvider
+{
+    Qq,
+    Gmail
+}
+
 public readonly record struct MailComposePayload(string Subject, string Body, string MailtoUrl);
 
 /// <summary>
 /// Community catalog GitHub coordinates + email compose helpers for submit / update / report / feedback.
 /// Authors do not need Fork/PR; maintainers review mail and publish to MechabellumMods.
-/// Primary path: region-aware webmail + clipboard (mailto is unreliable when no default mail app).
+/// Primary path: player-chosen webmail + clipboard (mailto is unreliable when no default mail app).
 /// </summary>
 public static class GitHubCommunityLinks
 {
@@ -74,15 +80,16 @@ public static class GitHubCommunityLinks
 
     /// <summary>
     /// 1) Copy clipboard package (always, via <paramref name="setClipboard"/>)
-    /// 2) Domestic: open QQ webmail home; International: open Gmail compose (pre-filled)
-    /// Does not rely on mailto as primary.
+    /// 2) Open QQ webmail home or Gmail compose when <paramref name="provider"/> is set.
+    /// Cancel (<c>provider == null</c>) copies only and does not open a browser.
     /// </summary>
-    public static (bool ok, string openedUrl, bool domestic) TryOpenCompose(
+    public static (bool opened, string openedUrl) TryOpenCompose(
         string subject,
         string body,
-        Action<string>? setClipboard)
+        Action<string>? setClipboard,
+        MailProvider? provider,
+        Func<string, bool>? tryOpen = null)
     {
-        var domestic = PreferDomesticWebMail();
         var package = BuildClipboardPackage(subject, body);
         try
         {
@@ -90,22 +97,19 @@ public static class GitHubCommunityLinks
         }
         catch
         {
-            // Clipboard may be locked; still attempt to open webmail.
+            // Clipboard may be locked; still attempt to open webmail when asked.
         }
 
-        var url = domestic
-            ? DomesticWebMailUrl
-            : BuildGmailComposeUrl(subject, body);
-
-        var ok = TryShellOpen(url);
-        return (ok, url, domestic);
+        return OpenProviderUrl(provider, subject, body, tryOpen);
     }
 
     /// <summary>
-    /// Open region webmail for the inbox address and copy the address to clipboard.
+    /// Copy the inbox address and open the chosen webmail. Cancel copies only.
     /// </summary>
-    public static (bool ok, string openedUrl, bool domestic) TryOpenInboxWebMail(
-        Action<string>? setClipboard = null)
+    public static (bool opened, string openedUrl) TryOpenInboxWebMail(
+        Action<string>? setClipboard,
+        MailProvider? provider,
+        Func<string, bool>? tryOpen = null)
     {
         try
         {
@@ -116,11 +120,7 @@ public static class GitHubCommunityLinks
             // ignore
         }
 
-        var domestic = PreferDomesticWebMail();
-        var url = domestic
-            ? DomesticWebMailUrl
-            : BuildGmailComposeUrl("", "");
-        return (TryShellOpen(url), url, domestic);
+        return OpenProviderUrl(provider, subject: "", body: "", tryOpen);
     }
 
     public static string BuildMailto(string subject, string body) =>
@@ -257,6 +257,25 @@ public static class GitHubCommunityLinks
             "【详细说明 / Details】\n" +
             "【管理器版本 / App】（可选）\n" +
             "【联系方式 / Contact】（可选）\n";
+    }
+
+    static (bool opened, string openedUrl) OpenProviderUrl(
+        MailProvider? provider,
+        string subject,
+        string body,
+        Func<string, bool>? tryOpen)
+    {
+        var url = provider switch
+        {
+            MailProvider.Qq => DomesticWebMailUrl,
+            MailProvider.Gmail => BuildGmailComposeUrl(subject, body),
+            _ => null
+        };
+        if (url is null)
+            return (false, "");
+
+        var opener = tryOpen ?? TryShellOpen;
+        return (opener(url), url);
     }
 
     static bool TryShellOpen(string url)

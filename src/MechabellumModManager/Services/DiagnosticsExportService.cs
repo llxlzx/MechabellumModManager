@@ -1,5 +1,6 @@
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -72,7 +73,6 @@ public sealed class DiagnosticsExportService
             TryCopyText(staging, "critical-op.json", request.Paths.CriticalOpMarkerPath, missing, redact, recordMissing: false);
 
             var eventLog = new ManagerEventLog(request.Paths.LogsDir);
-            TryCopyText(staging, "events.jsonl", eventLog.FilePath, missing, redact, recordMissing: false);
 
             foreach (var name in new[]
                      {
@@ -174,6 +174,15 @@ public sealed class DiagnosticsExportService
             WriteText(staging, "environment.json", redact ? RedactJsonDocument(envJson) : envJson, redact: false);
 
             var findings = DiagnosticsSummaryBuilder.ExtractFindings(env);
+            if (findings.Any(f => string.Equals(f, "junction_desync", StringComparison.OrdinalIgnoreCase)))
+            {
+                var last = eventLog.ReadRecent(1);
+                if (last.Count == 0 || last[0].Code != ManagerEventLog.JunctionDesync)
+                    eventLog.Write(ManagerEventLog.JunctionDesync);
+            }
+
+            TryCopyText(staging, "events.jsonl", eventLog.FilePath, missing, redact, recordMissing: true);
+
             var sessionText = request.SessionLogText ?? "";
             string? managerTail = null;
             try
@@ -260,6 +269,7 @@ public sealed class DiagnosticsExportService
     static Diagnosis EvaluateDiagnosis(DiagnosticsExportRequest request, ManagerEventLog eventLog)
     {
         DateTimeOffset? lastLaunch = null;
+        DateTimeOffset? applyStarted = null;
         try
         {
             if (File.Exists(request.Paths.ConfigPath))
@@ -268,13 +278,14 @@ public sealed class DiagnosticsExportService
                     File.ReadAllText(request.Paths.ConfigPath),
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 lastLaunch = cfg?.LastLaunchRequestedAt;
+                applyStarted = cfg?.LastApplyStartedAt;
             }
         }
         catch { /* ignore */ }
 
         var status = string.IsNullOrWhiteSpace(request.GamePath)
             ? null
-            : new GameDetector().Detect(request.GamePath, lastLaunch);
+            : new GameDetector().Detect(request.GamePath, lastLaunch, applyStartedAt: applyStarted);
 
         var snap = DiagnosisSnapshotBuilder.Capture(
             request.Paths,
@@ -283,7 +294,8 @@ public sealed class DiagnosticsExportService
             lastLaunch,
             branch: null,
             isAwaitingSteamSettle: request.IsAwaitingSteamSettle,
-            events: eventLog.ReadRecent());
+            events: eventLog.ReadRecent(),
+            applyStartedAt: applyStarted);
         return DiagnosisEngine.Evaluate(snap);
     }
 

@@ -64,7 +64,7 @@
     <value>Game or MelonLoader is not ready; deploy is unavailable.</value>
   </data>
   <data name="DeployBlockedAwaitingSteam" xml:space="preserve">
-    <value>Waiting for Steam settle / dual-branch confirmation; deploy is paused.</value>
+    <value>Use the gold Continue button to finish settle before deploying.</value>
   </data>
   <data name="DeployBlockedWizardIncomplete" xml:space="preserve">
     <value>Dual-branch wizard is incomplete. Continue or tear down dual-branch in Settings.</value>
@@ -156,6 +156,30 @@
   <data name="MailOpenFailed" xml:space="preserve">
     <value>Could not open webmail; subject &amp; body were copied. Please email llxmod@foxmail.com manually and paste.</value>
   </data>
+  <data name="MailOpenedQq" xml:space="preserve">
+    <value>Copied the mail draft and opened QQ Mail. Create a new message, paste, and send to llxmod@foxmail.com.</value>
+  </data>
+  <data name="MailOpenedGmail" xml:space="preserve">
+    <value>Copied the mail draft and opened Gmail compose. Review and send to llxmod@foxmail.com.</value>
+  </data>
+  <data name="MailCancelled" xml:space="preserve">
+    <value>Copied the mail draft; webmail was not opened. Email llxmod@foxmail.com manually when ready.</value>
+  </data>
+  <data name="MailProviderTitle" xml:space="preserve">
+    <value>Choose webmail</value>
+  </data>
+  <data name="MailProviderHint" xml:space="preserve">
+    <value>Subject and body are on the clipboard. Choose a webmail to open, or Cancel to keep the clipboard only.</value>
+  </data>
+  <data name="MailProviderQq" xml:space="preserve">
+    <value>QQ Mail</value>
+  </data>
+  <data name="MailProviderGmail" xml:space="preserve">
+    <value>Gmail</value>
+  </data>
+  <data name="FeedbackButton" xml:space="preserve">
+    <value>Feedback</value>
+  </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
     <value>Submit</value>
   </data>
@@ -172,7 +196,7 @@ One email = one request. Maintainers review and upload to the catalog — no For
 (Advanced users may still open a PR.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>After you choose “Open submit email”, the manager copies the subject and body and opens webmail by language: QQ Mail for Chinese UI, otherwise Gmail. Paste, attach .dll (optional preview.png), and send. For very large attachments (~over 40MB), put a cloud-drive link in the body. Do not send source code unless asked.</value>
+    <value>After you choose “Open submit email”, the manager copies the subject and body and asks whether to open QQ Mail or Gmail (Cancel keeps the clipboard only). Paste, attach .dll (optional preview.png), and send. For very large attachments (~over 40MB), put a cloud-drive link in the body. Do not send source code unless asked.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>Open full guide</value>
@@ -271,6 +295,7 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="SortByName" xml:space="preserve"><value>Name</value></data>
   <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>Updated (new→old)</value></data>
   <data name="ColumnCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="ColumnTag" xml:space="preserve"><value>Tags</value></data>
   <data name="TagsLabel" xml:space="preserve"><value>Tags</value></data>
   <data name="CategoryOverlayUI" xml:space="preserve"><value>Interface &amp; Overlay</value></data>
   <data name="CategoryQoL" xml:space="preserve"><value>Experience</value></data>
@@ -302,8 +327,8 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="BranchStatusWizardPaused" xml:space="preserve"><value>Enabling (no pause/resume — cancel rolls back or wait)</value></data>
   <data name="BranchStatusEnabling" xml:space="preserve"><value>Enabling</value></data>
   <data name="BranchStatusEnablingWaitDownload" xml:space="preserve"><value>Enabling (waiting for Steam download; close rolls back)</value></data>
-  <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>Enabling: waiting for Steam to download the other branch. Official is in a separate store — the game is not missing.</value></data>
-  <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>Enabling: the other branch finished downloading. Fully exit Steam (tray → Exit); the manager continues automatically.</value></data>
+  <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>Enabling: Steam is downloading the other branch (the game is not missing).</value></data>
+  <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>Other branch is downloaded: quit Steam from the tray, then archive continues.</value></data>
   <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>Needs emergency recover</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Waiting for Steam to finish</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Official</value></data>
@@ -350,10 +375,10 @@ Overwrite and take over these files?</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Cancelled overwriting unmanaged files.</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Official/Test dual folders are already enabled. To rebuild: use Emergency: single folder first, then Enable dual again. Continue?</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Remove Official/Test dual-folder setup? The manager will switch to Official first, then remove dual folders. Steam will use the Official folder again. Exit Steam and the game first.</value></data>
-  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Emergency-restore a single Mechabellum folder (materialize junction/hollow from a complete store when possible). The next dialog asks whether to delete leftover stores. Exit Steam and the game first. Continue?</value></data>
-  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>Emergency can only collapse the folder that still exists into a single Mechabellum. It cannot recreate Official. Official is missing or incomplete — wait for Steam to finish downloading Official. Do not switch stores or uninstall now. Continue only keeps the current folder. Continue?</value></data>
+  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>This restores a single folder (Steam will keep only one store). Emergency-restore a single Mechabellum folder (materialize junction/hollow from a complete store when possible). The next dialog asks whether to delete leftover stores. Exit Steam and the game first. Continue?</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>This restores a single folder (Steam will keep only one store). Emergency can only collapse the folder that still exists into a single Mechabellum. It cannot recreate Official. Official is missing or incomplete — wait for Steam to finish downloading Official. Do not switch stores or uninstall now. Continue only keeps the current folder. Continue?</value></data>
   <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam is writing the game folder. Wait until Start is available. Do not use Emergency, do not switch stores, and do not uninstall the manager until then.</value></data>
-  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Dual-branch is off, but a directory junction and/or leftover store folders remain. Restore a single Mechabellum folder (materialize if still a junction; if Mechabellum is hollow and another store is complete, move that store back and rename the hollow debris to Mechabellum_incomplete_*). The next dialog asks whether to delete the other store. Exit Steam and the game first. Continue?</value></data>
+  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>This restores a single folder (Steam will keep only one store). Dual-branch is off, but a directory junction and/or leftover store folders remain. Restore a single Mechabellum folder (materialize if still a junction; if Mechabellum is hollow and another store is complete, move that store back and rename the hollow debris to Mechabellum_incomplete_*). The next dialog asks whether to delete the other store. Exit Steam and the game first. Continue?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>Failed to restore single folder: {0}</value></data>
@@ -393,6 +418,11 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>Enable-dual rollback did not fully succeed: {0}. Use Emergency: single folder.</value></data>
   <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>Dual-folder is already enabled. To rebuild: Emergency recover to single folder, then Enable dual again.</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>For mods to load, MelonLoader should open a black Melon console (not PowerShell). If it does not, check version.dll / MelonLoader under the game folder and send MelonLoader\Latest.log.</value></data>
+  <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Launch requested; checking whether the game process starts…</value></data>
+  <data name="LogLaunchProcessSeen" xml:space="preserve"><value>Game process detected.</value></data>
+  <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>Game process was not detected. Try Apply and launch again, or check whether Steam showed an account picker or blocked the start.</value></data>
+  <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam opened a different game folder than the manager: {0}. Melon will not load in that window. Switch launch mode to Exe only, or set the manager path to the library Steam actually opened.</value></data>
+  <data name="LogFirstAssemblyLaunchHint" xml:space="preserve"><value>First Melon launch is generating assemblies. A black screen or scrolling console is normal — wait a minute or two.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Dual-folder setup removed. In Steam, confirm the current game branch is correct.</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Profile applied to the game folder</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Could not automatically align the Steam test branch. Select the branch manually in Steam first; do not start Steam until it is aligned.</value></data>
@@ -419,7 +449,7 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="LabelSummary" xml:space="preserve"><value>Summary</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>The game path must be under steamapps\common\Mechabellum.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>The current game path is invalid; cannot start the dual-folder wizard.</value></data>
-  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>The other branch’s separate folder already exists; cannot archive: {0}</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>The other branch’s separate folder already exists; cannot archive: {0}. Use Emergency to restore a single folder first, or check “also delete the other store” on a pure restore (cannot undo).</value></data>
   <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>The other branch folder exists but is incomplete (missing GameAssembly etc.): {0}. Exit Steam, delete that incomplete folder, then continue the wizard — do not keep clicking Continue.</value></data>
   <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>Other branch folder {0} is complete, but the Steam link path is still a real directory. The manager will not auto-delete game folders. Use Clear isolation in Settings, or exit Steam and resolve the leftover, then restart the wizard.</value></data>
   <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Steam link path is still occupied (real folder or wrong junction); cannot create the directory link. Clear isolation in Settings, or exit Steam and fix …\common\Mechabellum, then continue.</value></data>
@@ -448,6 +478,7 @@ Current single-folder play is fine. To run the dual-folder wizard again later, d
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Open Steam yourself to download the other branch; the manager will not auto-start Steam.</value></data>
   <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>Waiting for the other branch download: open Steam yourself and download. When finished, fully exit Steam (tray → Exit); the manager continues automatically. OK only closes this tip. Closing the manager or cancelling enable rolls back to a single folder (no pause/resume).</value></data>
   <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>Other branch download complete: fully exit Steam (tray → Exit); the wizard continues automatically after exit</value></data>
+  <data name="WizardExitSteamContinue" xml:space="preserve"><value>I quit Steam, continue</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>Other branch download looks complete and Steam is closed; continuing dual-folder wizard automatically.</value></data>
   <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. When the game is ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>Failed to switch folders.</value></data>
@@ -515,6 +546,7 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>Download the other branch in Steam; fully exit Steam when done — the wizard continues automatically</value></data>
   <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>Checking for updates</value></data>
 
+  <data name="BranchSwitchConfirmSettleWaiting" xml:space="preserve"><value>Wait until Steam finishes download/verify, then continue</value></data>
   <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam switched to Official — continue</value></data>
   <data name="BranchStatusWaitingSteamFmt" xml:space="preserve"><value>Waiting for Steam to finish switching to {0}</value></data>
   <data name="BranchSwitchConfirmManualOfficial" xml:space="preserve"><value>I selected Official in Steam — continue</value></data>
@@ -546,7 +578,12 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Leave empty to use GitHub only. Same layout as the repos, e.g. https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Loaded {0} entries (offline cache, catalog updated: {1})</value></data>
-  <data name="CatalogFetchFailed" xml:space="preserve"><value>Catalog fetch failed: {0}. Tried the domestic mirror and GitHub. Import a local Zip / group-file package; Clash needs system proxy (browser-only rules are not enough).</value></data>
+  <data name="CatalogFetchFailed" xml:space="preserve"><value>Catalog fetch failed: {0}.</value></data>
+  <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>Catalog fetch failed, using offline cache: {0}.</value></data>
+  <data name="CatalogFetchHintNoMirror" xml:space="preserve"><value>Set a mirror base in Settings, or enable a system proxy, then refresh.</value></data>
+  <data name="CatalogFetchHintMirrorFailed" xml:space="preserve"><value>The mirror also failed. Check the mirror URL or system proxy.</value></data>
+  <data name="EmergencyRecoverLead" xml:space="preserve"><value>This restores a single folder (Steam will keep only one store).</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOtherOption" xml:space="preserve"><value>Also delete the other store (cannot undo; off by default)</value></data>
   <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
 
 Tried the domestic mirror and GitHub. Yes copies the domestic download notes (group files; do not run Setup during dual-folder or Melon install). No lets you still open GitHub.</value></data>
@@ -562,8 +599,15 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>Could not set the other store’s Steam beta key; wizard aborted: {0}</value></data>
   <data name="DiagnosisTitle_critical_op_interrupted" xml:space="preserve"><value>A previous critical operation did not finish</value></data>
   <data name="DiagnosisAction_critical_op_interrupted" xml:space="preserve"><value>Finish or abandon the interrupted operation. Do not switch branches or run Setup at the same time.</value></data>
-  <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>Dual-folder wizard or Steam settle is not finished</value></data>
-  <data name="DiagnosisAction_wizard_or_settle_blocking" xml:space="preserve"><value>Wait until Steam can start the game, fully quit Steam, then continue settle in the manager.</value></data>
+  <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>The dual-folder wizard is not finished</value></data>
+  <data name="DiagnosisAction_wizard_or_settle_blocking" xml:space="preserve"><value>Follow the manager to continue the wizard (for example quit Steam after the other store finishes downloading). Do not keep clicking Enable.</value></data>
+  <data name="DiagnosisTitle_awaiting_steam_settle" xml:space="preserve"><value>On Settings, click the gold Continue to finish Steam settle</value></data>
+  <data name="DiagnosisAction_awaiting_steam_settle" xml:space="preserve"><value>Wait until Steam can start the game (Mechabellum.exe and GameAssembly.dll present), then click the gold Continue on Settings. You do not need to quit Steam for settle.</value></data>
+  <data name="DiagnosisTitle_settle_abandoned_unaligned" xml:space="preserve"><value>Settle is unaligned; fix the Steam manifest first</value></data>
+  <data name="DiagnosisAction_settle_abandoned_unaligned" xml:space="preserve"><value>Let Steam align the manifest until Play is available, then continue in the manager. Do not only tick a Steam beta.</value></data>
+  <data name="NotifyEmptyProfileNoMods" xml:space="preserve"><value>This profile has no mods enabled, so none will appear in the game.</value></data>
+  <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>Assemblies were just generated; launching the exe this time so Melon loads in the manager folder (launch mode setting unchanged).</value></data>
+  <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>Loader did not inject this launch. Switch launch mode to Exe only, then Apply and Launch, and confirm the Melon black console appears.</value></data>
   <data name="DiagnosisTitle_game_or_link_incomplete" xml:space="preserve"><value>Game path or folder link is incomplete</value></data>
   <data name="DiagnosisAction_game_or_link_incomplete" xml:space="preserve"><value>Do not keep clicking Continue. Wait for Steam to finish downloading, or verify game files.</value></data>
   <data name="DiagnosisTitle_steam_update_unhealthy" xml:space="preserve"><value>Steam update is stuck or unfinished</value></data>
