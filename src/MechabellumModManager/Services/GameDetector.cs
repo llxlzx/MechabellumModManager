@@ -10,7 +10,9 @@ public sealed class GameDetector
     public GameStatus Detect(
         string gamePath,
         DateTimeOffset? lastLaunchRequestedAt = null,
-        DateTimeOffset? now = null)
+        DateTimeOffset? now = null,
+        DateTimeOffset? applyStartedAt = null,
+        bool gameAlreadyRunning = false)
     {
         if (string.IsNullOrWhiteSpace(gamePath) ||
             !File.Exists(Path.Combine(gamePath, "Mechabellum.exe")) ||
@@ -57,7 +59,11 @@ public sealed class GameDetector
                 LatestLogAge = logAge
             };
 
-        var injected = EvaluateInjection(gamePath, lastLaunchRequestedAt, now ?? DateTimeOffset.Now, logAge);
+        var injected = EvaluateInjection(
+            gamePath,
+            lastLaunchRequestedAt,
+            now ?? DateTimeOffset.Now,
+            logAge);
         return new GameStatus
         {
             Kind = GameStatusKind.Ready,
@@ -94,6 +100,7 @@ public sealed class GameDetector
     {
         if (lastLaunchRequestedAt is null)
             return null;
+
         if (now - lastLaunchRequestedAt.Value < LoaderInjectSettle)
             return null;
 

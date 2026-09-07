@@ -17,6 +17,7 @@ public sealed class ManagerEventLog
     public const string BetaKeyWriteFailed = "betakey_write_failed";
     public const string LaunchRequested = "launch_requested";
     public const string LoaderNotInjected = "loader_not_injected";
+    public const string JunctionDesync = "junction_desync";
 
     static readonly JsonSerializerOptions JsonOptions = new()
     {

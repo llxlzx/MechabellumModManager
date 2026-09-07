@@ -55,4 +55,14 @@ public class EmergencyRecoverGuidanceTests
             try { Directory.Delete(official, true); } catch { /* ignore */ }
         }
     }
+
+    [Theory]
+    [InlineData("ConfirmEmergencyRecoverSingle")]
+    [InlineData("ConfirmEmergencyRecoverSingleOfficialMissing")]
+    [InlineData("ConfirmOrphanDualRepair")]
+    public void Emergency_confirms_share_single_folder_lead(string key)
+    {
+        LocalizationService.Apply("zh-CN");
+        LocalizationService.T(key).Should().StartWith(LocalizationService.T("EmergencyRecoverLead"));
+    }
 }

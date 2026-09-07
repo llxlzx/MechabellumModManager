@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 
 namespace MechabellumModManager.Services;
 
@@ -18,6 +19,9 @@ public interface IProcessProbe : ISteamRunningProbe
     /// Needed because steam://exit often ignores the multi-account “Who’s playing?” picker.
     /// </summary>
     void ForceCloseSteamClientAndGame();
+
+    /// <summary>Best-effort path of a running Mechabellum.exe; null if none or inaccessible.</summary>
+    string? TryGetRunningGameExePath();
 }
 
 public sealed class ProcessProbe : IProcessProbe
@@ -33,6 +37,64 @@ public sealed class ProcessProbe : IProcessProbe
     public bool IsGameRunning()
     {
         return HasProcess("Mechabellum");
+    }
+
+    public string? TryGetRunningGameExePath()
+    {
+        Process[] processes;
+        try
+        {
+            processes = Process.GetProcessesByName("Mechabellum");
+        }
+        catch
+        {
+            return null;
+        }
+
+        try
+        {
+            foreach (var process in processes)
+            {
+                try
+                {
+                    var path = process.MainModule?.FileName;
+                    if (!string.IsNullOrWhiteSpace(path))
+                        return path;
+                }
+                catch
+                {
+                    // Access denied / process exiting.
+                }
+            }
+
+            return null;
+        }
+        finally
+        {
+            foreach (var process in processes)
+                process.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// True when we cannot tell, or the running exe is the manager GamePath.
+    /// False when Steam (or another launcher) opened a different library.
+    /// </summary>
+    public static bool IsManagedGameExe(string gamePath, string? runningExe)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath) || string.IsNullOrWhiteSpace(runningExe))
+            return true;
+
+        try
+        {
+            var expected = Path.GetFullPath(Path.Combine(gamePath.Trim(), GameLauncher.GameExeName));
+            var actual = Path.GetFullPath(runningExe.Trim());
+            return string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     public bool IsSteamRunning()

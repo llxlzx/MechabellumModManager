@@ -23,6 +23,7 @@ public static class DiagnosticsSummaryBuilder
         ["orphan_dual_layout"] = "检测到孤儿双服布局",
         ["leftover_dual_store_folders"] = "仍有残留双服目录",
         ["junction_missing_while_branch_enabled"] = "双服已启用但缺少目录联接",
+        ["junction_desync"] = "联接读不到仓内文件，可完全退出 Steam 后重开管理器再结算",
         ["game_path_is_branch_store"] = "游戏路径落在 _official/_beta 仓目录"
     };
 
@@ -109,12 +110,20 @@ public static class DiagnosticsSummaryBuilder
         var tips = new List<string>();
         var set = new HashSet<string>(findings, StringComparer.OrdinalIgnoreCase);
 
-        if (set.Contains("acf_update_unhealthy") || set.Contains("acf_not_settled") || set.Contains("awaiting_steam_settle"))
+        if (set.Contains("awaiting_steam_settle"))
         {
-            tips.Add("先在 Steam 把游戏更新到可「开始游戏」状态（勿停在更新失败）；再完全退出 Steam，回到管理器点结算/继续。");
+            tips.Add("先在 Steam 等到可开始游戏（目录含 Mechabellum.exe 与 GameAssembly.dll），再回管理器点继续。结算不必先退出 Steam。");
+        }
+        else if (set.Contains("acf_update_unhealthy") || set.Contains("acf_not_settled"))
+        {
+            tips.Add("先在 Steam 把游戏更新到可「开始游戏」状态（勿停在更新失败）；切仓或写清单前再完全退出 Steam。");
         }
 
-        if (set.Contains("link_incomplete_but_store_valid") || set.Contains("active_store_incomplete") || set.Contains("game_missing"))
+        if (set.Contains("junction_desync"))
+        {
+            tips.Add("联接读不到仓内文件，可完全退出 Steam 后重开管理器再结算。");
+        }
+        else if (set.Contains("link_incomplete_but_store_valid") || set.Contains("active_store_incomplete") || set.Contains("game_missing"))
         {
             tips.Add("Steam 路径当前不完整：勿反复点继续；等 Steam 下载/校验完成，或验证游戏文件。");
         }

@@ -21,11 +21,14 @@ public static class DiagnosisSnapshotBuilder
         IReadOnlyList<DiagnosisEvent>? events = null,
         bool deployBlockedOrFailed = false,
         string? deployFailure = null,
-        CriticalOpMarker? interruptedCriticalOp = null)
+        CriticalOpMarker? interruptedCriticalOp = null,
+        DateTimeOffset? applyStartedAt = null)
     {
         events ??= Array.Empty<DiagnosisEvent>();
         branch ??= TryLoadBranch(paths.BranchSwitchConfigPath);
-        status ??= string.IsNullOrWhiteSpace(gamePath) ? null : new GameDetector().Detect(gamePath, lastLaunchRequestedAt);
+        status ??= string.IsNullOrWhiteSpace(gamePath)
+            ? null
+            : new GameDetector().Detect(gamePath, lastLaunchRequestedAt, applyStartedAt: applyStartedAt);
 
         var marker = interruptedCriticalOp ?? TryLoadCriticalOp(paths.CriticalOpMarkerPath);
         var enabled = branch?.Enabled == true;

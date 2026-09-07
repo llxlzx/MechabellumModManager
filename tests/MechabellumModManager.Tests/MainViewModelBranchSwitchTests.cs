@@ -176,6 +176,66 @@ public class MainViewModelBranchSwitchTests
         vm.DeployBlockedReason.Should().NotContain("未找到游戏");
         vm.IsWizardDownloadReadyNow().Should().BeFalse();
         vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        vm.ShowConfirmWizardExitSteam.Should().BeTrue();
+        vm.ConfirmWizardExitSteamCommand.CanExecute(null).Should().BeTrue();
+        vm.CancelBusyWork();
+    }
+
+    [Fact]
+    public async Task ConfirmWizardExitSteam_while_steam_running_notifies_and_does_not_archive()
+    {
+        using var fx = Fixture.CreateWizardStart();
+        WriteSettledAcf(fx, "publicbeta");
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.None,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            BetaBranchName = "publicbeta",
+            SessionOwnedOfficialStore = true
+        });
+        fx.Probe.SteamRunning = true;
+        string? notified = null;
+        var vm = fx.CreateVm(notify: m => notified = m);
+        vm.GamePath = fx.SteamLink;
+        vm.BranchWizardStep = BranchWizardStep.WaitingDownloadB;
+        vm.RefreshStatusCommand.Execute(null);
+
+        await vm.ConfirmWizardExitSteamCommand.ExecuteAsync(null);
+
+        notified.Should().Be(LocalizationService.T("LogSteamOrGameStillRunning"));
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        vm.BranchSwitchEnabled.Should().BeFalse();
+        Directory.Exists(fx.OfficialStore).Should().BeFalse();
+        vm.CancelBusyWork();
+    }
+
+    [Fact]
+    public void WaitingDownloadB_hollow_hides_wizard_exit_steam_button()
+    {
+        using var fx = Fixture.CreateReady();
+        var hollow = Path.Combine(Path.GetDirectoryName(fx.GameRoot)!, "hollow-mech-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(hollow);
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.None,
+            SteamLinkPath = hollow,
+            OfficialStorePath = fx.GameRoot + "_official",
+            ActiveBranch = GameBranch.Official,
+            SessionOwnedOfficialStore = true
+        });
+
+        var vm = fx.CreateVm();
+        vm.GamePath = hollow;
+        vm.BranchWizardStep = BranchWizardStep.WaitingDownloadB;
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.ShowConfirmWizardExitSteam.Should().BeFalse();
+        vm.ConfirmWizardExitSteamCommand.CanExecute(null).Should().BeFalse();
         vm.CancelBusyWork();
     }
 
@@ -389,6 +449,39 @@ public class MainViewModelBranchSwitchTests
         vm.IsAwaitingSteamSettle.Should().BeTrue();
         vm.BranchWizardStep.Should().Be(BranchWizardStep.AwaitingSteamSettle);
         File.Exists(fx.Paths.GetDeployManifestPath(GameBranch.Beta, enabled: true)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ConfirmManualBeta_disabled_when_game_missing_and_button_says_wait()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "public_test"
+        });
+
+        var vm = fx.CreateVm(confirm: _ => true);
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        await vm.SwitchToBetaCommand.ExecuteAsync(null);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
+        WriteSettledAcf(fx, betaKey: "public_test");
+        File.Delete(Path.Combine(fx.BetaStore, "Mechabellum.exe"));
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.GameStatus!.Kind.Should().Be(GameStatusKind.GameMissing);
+        vm.ConfirmManualBetaCommand.CanExecute(null).Should().BeFalse();
+        vm.SettleConfirmButtonText.Should().Be(LocalizationService.T("BranchSwitchConfirmSettleWaiting"));
+        vm.SettleConfirmButtonText.Should().NotContain("已切换");
     }
 
     [Fact]
@@ -986,6 +1079,8 @@ public class MainViewModelBranchSwitchTests
         mapped.Should().Contain("Mechabellum_beta");
         mapped.Should().NotContain("Store path already exists");
         mapped.Should().Contain("另一服");
+        mapped.Should().Contain("急救");
+        mapped.Should().Contain("删除另一仓");
     }
 
     [Fact]
@@ -1895,8 +1990,49 @@ public class MainViewModelBranchSwitchTests
 
         vm.IsAwaitingSteamSettle = true;
 
-        vm.CanSwitchGameBranch.Should().BeTrue("escape to complete other store must stay available");
+        vm.CanSwitchGameBranch.Should().BeFalse("settle period keeps only the gold continue button");
         vm.CanStartBranchWizard.Should().BeFalse();
+        vm.CanEmergencyRecoverSingle.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Steam_writing_acf_disables_switch_buttons()
+    {
+        using var fx = Fixture.CreateReadyDualFolder();
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = true,
+            WizardStep = BranchWizardStep.Ready,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            OfficialProfileId = "default",
+            BetaProfileId = "default",
+            BetaBranchName = "publicbeta"
+        });
+        var acf = SteamBetaKeyEditor.FindAppManifestPath(fx.SteamLink);
+        File.WriteAllText(acf!,
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"StateFlags"		"4"
+            	"buildid"		"100"
+            	"TargetBuildID"		"200"
+            	"UserConfig"
+            	{
+            		"language"		"english"
+            	}
+            }
+            """);
+
+        var vm = fx.CreateVm();
+        vm.GamePath = fx.SteamLink;
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.IsSteamWritingGame.Should().BeTrue();
+        vm.CanSwitchGameBranch.Should().BeFalse();
         vm.CanEmergencyRecoverSingle.Should().BeTrue();
     }
 

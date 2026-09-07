@@ -1,0 +1,44 @@
+<Window x:Class="MechabellumModManager.Dialogs.MailProviderDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        SizeToContent="Height"
+        Width="460"
+        MinWidth="360"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{StaticResource BgPanelBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource AppFontFamily}">
+    <Border Padding="20"
+            BorderBrush="{StaticResource SteelEdgeBrush}"
+            BorderThickness="1">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0,18,0,0">
+                <Button x:Name="QqButton"
+                        MinWidth="96"
+                        MinHeight="32"
+                        Margin="0,0,8,0"
+                        Click="Qq_Click" />
+                <Button x:Name="GmailButton"
+                        MinWidth="96"
+                        MinHeight="32"
+                        Margin="0,0,8,0"
+                        Click="Gmail_Click" />
+                <Button x:Name="CancelButton"
+                        MinWidth="96"
+                        MinHeight="32"
+                        IsCancel="True"
+                        Click="Cancel_Click" />
+            </StackPanel>
+            <TextBlock x:Name="HintText"
+                       TextWrapping="Wrap"
+                       FontSize="14"
+                       LineHeight="22"
+                       Foreground="{StaticResource TextPrimaryBrush}" />
+        </DockPanel>
+    </Border>
+</Window>

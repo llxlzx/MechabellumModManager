@@ -1,5 +1,3 @@
-﻿钢铁指挥官 Mod 管理器 v1.1.5 便携本体
-Mechabellum Mod Manager v1.1.5 portable
-需要 .NET 8 Desktop Runtime
-Requires .NET 8 Desktop Runtime
-build=v1.1.5-inject-fix
+﻿钢铁指挥官 Mod 管理器 便携版 v1.1.5
+build=v1.1.5-settle-exe
+需要本机已装 .NET 8 Desktop Runtime。完整功能请用 Setup。

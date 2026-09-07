@@ -64,7 +64,7 @@
     <value>游戏或 MelonLoader 未就绪，无法部署。</value>
   </data>
   <data name="DeployBlockedAwaitingSteam" xml:space="preserve">
-    <value>正在等待 Steam 结算 / 双服切换确认，暂不可部署。</value>
+    <value>请先点金色「继续」完成结算，再部署。</value>
   </data>
   <data name="DeployBlockedWizardIncomplete" xml:space="preserve">
     <value>双服向导未完成，暂不可部署。请在设置中继续或拆除双服配置。</value>
@@ -156,6 +156,30 @@
   <data name="MailOpenFailed" xml:space="preserve">
     <value>无法打开网页邮箱；主题与正文已复制到剪贴板。请手动发信至 llxmod@foxmail.com 并粘贴。</value>
   </data>
+  <data name="MailOpenedQq" xml:space="preserve">
+    <value>已复制邮件模板，并打开 QQ 邮箱网页。请新建邮件粘贴后发送至 llxmod@foxmail.com。</value>
+  </data>
+  <data name="MailOpenedGmail" xml:space="preserve">
+    <value>已复制邮件模板，并打开 Gmail 写信页。请核对后发送至 llxmod@foxmail.com。</value>
+  </data>
+  <data name="MailCancelled" xml:space="preserve">
+    <value>已复制邮件模板，未打开网页邮箱。需要时请手动发信至 llxmod@foxmail.com。</value>
+  </data>
+  <data name="MailProviderTitle" xml:space="preserve">
+    <value>选择网页邮箱</value>
+  </data>
+  <data name="MailProviderHint" xml:space="preserve">
+    <value>已复制主题与正文到剪贴板。请选择要打开的网页邮箱，或取消（仅保留剪贴板）。</value>
+  </data>
+  <data name="MailProviderQq" xml:space="preserve">
+    <value>QQ 邮箱</value>
+  </data>
+  <data name="MailProviderGmail" xml:space="preserve">
+    <value>Gmail</value>
+  </data>
+  <data name="FeedbackButton" xml:space="preserve">
+    <value>建议</value>
+  </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
     <value>投稿</value>
   </data>
@@ -172,7 +196,7 @@
 （高级用户仍可自行提 PR。）</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>点「打开发送投稿邮件」后，管理器会复制主题与正文，并按当前语言打开网页邮箱：中文打开 QQ 邮箱，其他语言打开 Gmail。请粘贴、附加 .dll（可选 preview.png）后发送。附件过大（约超过 40MB）请在正文写网盘链接。请勿主动发送源码。</value>
+    <value>点「打开发送投稿邮件」后，管理器会复制主题与正文，并询问打开 QQ 邮箱还是 Gmail（取消则只保留剪贴板）。请粘贴、附加 .dll（可选 preview.png）后发送。附件过大（约超过 40MB）请在正文写网盘链接。请勿主动发送源码。</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>打开完整教程</value>
@@ -272,6 +296,7 @@
   <data name="SortByName" xml:space="preserve"><value>名称</value></data>
   <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>更新（新→旧）</value></data>
   <data name="ColumnCategory" xml:space="preserve"><value>分类</value></data>
+  <data name="ColumnTag" xml:space="preserve"><value>标签</value></data>
   <data name="TagsLabel" xml:space="preserve"><value>标签</value></data>
   <data name="CategoryOverlayUI" xml:space="preserve"><value>界面与叠加层</value></data>
   <data name="CategoryQoL" xml:space="preserve"><value>体验优化</value></data>
@@ -304,8 +329,8 @@
   <data name="BranchStatusWizardPaused" xml:space="preserve"><value>启用中（不可暂停续跑，请取消回滚或等待完成）</value></data>
   <data name="BranchStatusEnabling" xml:space="preserve"><value>启用中</value></data>
   <data name="BranchStatusEnablingWaitDownload" xml:space="preserve"><value>启用中（等待 Steam 下载另一服；关闭将回滚）</value></data>
-  <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>启用中：正在等 Steam 下载另一服。正式服在独立仓里，不是游戏丢失。</value></data>
-  <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>启用中：另一服已下完。请完全退出 Steam（托盘→退出），管理器会自动继续。</value></data>
+  <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>启用中：Steam 正在下载另一服（不是游戏丢失）。</value></data>
+  <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>另一服已下完：请托盘退出 Steam，然后自动归档。</value></data>
   <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>需急救</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>等待 Steam 完成切换</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>正式服</value></data>
@@ -352,10 +377,10 @@
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>已取消覆盖非托管文件。</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>已启用正式服/测试服双目录。若要重建，请先点「急救恢复单目录」，再重新启用双服。是否继续？</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>确定解除正式服/测试服双目录？将先切换到正式服再解除；解除后 Steam 游戏路径会回到正式服那份目录。请先退出 Steam 与游戏。</value></data>
-  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>将急救恢复为单一 Mechabellum 目录（拆掉联接/空壳并尽量从完整仓挪回）。下一框会问是否删除旁边的独立仓。须先退出 Steam 与游戏。继续？</value></data>
-  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>急救只能把「现在还在的目录」收成单一 Mechabellum，不能变出正式服。正式仓缺失或不完整，回到正式服须等 Steam 下载完成。现在不要切仓、不要再卸载。继续只会保留当前目录。继续？</value></data>
+  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>将恢复为单目录（当前 Steam 联接只留一个仓）。将急救恢复为单一 Mechabellum 目录（拆掉联接/空壳并尽量从完整仓挪回）。下一框会问是否删除旁边的独立仓。须先退出 Steam 与游戏。继续？</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>将恢复为单目录（当前 Steam 联接只留一个仓）。急救只能把「现在还在的目录」收成单一 Mechabellum，不能变出正式服。正式仓缺失或不完整，回到正式服须等 Steam 下载完成。现在不要切仓、不要再卸载。继续只会保留当前目录。继续？</value></data>
   <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam 正在写入游戏目录。请等下载完成并显示可开始游戏后再操作。期间不要急救、不要切仓、不要卸载管理器。</value></data>
-  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>检测到双服已关闭，但磁盘上仍有目录联接或残留独立目录。将恢复为单一 Mechabellum 目录（若仍是联接则拆掉并移回；若 Mechabellum 是空壳而另一仓完整，会把完整仓挪回 Mechabellum，空壳另存为 Mechabellum_incomplete_*）。下一框会单独问你是否清掉旁边的独立仓。须先退出 Steam 与游戏。继续？</value></data>
+  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>将恢复为单目录（当前 Steam 联接只留一个仓）。检测到双服已关闭，但磁盘上仍有目录联接或残留独立目录。将恢复为单一 Mechabellum 目录（若仍是联接则拆掉并移回；若 Mechabellum 是空壳而另一仓完整，会把完整仓挪回 Mechabellum，空壳另存为 Mechabellum_incomplete_*）。下一框会单独问你是否清掉旁边的独立仓。须先退出 Steam 与游戏。继续？</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>已恢复为单目录 Mechabellum。</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>已恢复为单目录 Mechabellum。</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>恢复单目录失败：{0}</value></data>
@@ -395,6 +420,11 @@
   <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>启用双服回滚未完全成功：{0}。请使用「急救恢复单目录」。</value></data>
   <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>双服已启用。若要重建：先「急救恢复单目录」，再「启用双服」。</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>若 Mod 要生效，启动后应出现 MelonLoader 黑色控制台窗口（不是 PowerShell）。若没有该窗口，请检查游戏目录下是否有 version.dll / MelonLoader，并把 MelonLoader\Latest.log 发给维护者。</value></data>
+  <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>已请求启动，正在确认游戏是否起来…</value></data>
+  <data name="LogLaunchProcessSeen" xml:space="preserve"><value>已检测到游戏进程。</value></data>
+  <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>未检测到游戏进程。可再点「应用并启动」，或检查 Steam 是否弹出账户选择器/被拦。</value></data>
+  <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam 打开的不是管理器里的游戏目录：{0}。Melon 不会进这个窗口。请改「仅直启 exe」，或把管理器游戏路径改成 Steam 实际打开的库。</value></data>
+  <data name="LogFirstAssemblyLaunchHint" xml:space="preserve"><value>首次启动 Melon 正在生成程序集，黑屏或控制台滚动是正常的，请等一两分钟。</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>已解除双目录配置。请在 Steam 中确认当前游戏分支是否正确。</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>方案已应用到游戏目录</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>未能自动对齐 Steam 测试分支。请先在 Steam 中手动选好分支；对齐完成前请勿启动 Steam。</value></data>
@@ -421,7 +451,7 @@
   <data name="LabelSummary" xml:space="preserve"><value>功能</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>游戏路径须位于 steamapps\common\Mechabellum。</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>当前游戏路径无效，无法开始双目录向导。</value></data>
-  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>另一服的独立目录已存在，无法归档：{0}</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>另一服的独立目录已存在，无法归档：{0}。请先急救恢复单目录，或在纯净复原时勾选删除另一仓（不可恢复）。</value></data>
   <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>另一服目录已存在但是半成品（缺 GameAssembly 等）：{0}。请退出 Steam 后删除该半成品目录，再继续向导；不要反复点继续。</value></data>
   <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>另一服目录 {0} 已完整，但 Steam 路径仍有实目录残留。管理器不会自动删除游戏目录。请到设置「清除隔离配置」恢复单目录，或退出 Steam 后自行处理残留，再重开向导。</value></data>
   <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Steam 路径仍被占用（实目录或指向错误的联接），无法创建目录联接。请先「清除隔离配置」或退出 Steam 后处理 …\common\Mechabellum，再继续。</value></data>
@@ -450,6 +480,7 @@
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>请自行打开 Steam 下载另一服；管理器不会自动启动 Steam。</value></data>
   <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>正在等待另一服下载：请自行在 Steam 下载。下完后请完全退出 Steam（托盘→退出），管理器会自动继续。点「确定」只关闭本提示。若关闭管理器或取消启用，将回滚到单目录（不支持暂停后续）。</value></data>
   <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>另一服已下载完成：请完全退出 Steam（托盘→退出），退出后将自动继续</value></data>
+  <data name="WizardExitSteamContinue" xml:space="preserve"><value>我已退出 Steam，继续</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>已检测到另一服下载完成且 Steam 已退出，自动继续双目录向导。</value></data>
   <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>已恢复 Steam 清单快照，无需自动启动 Steam。游戏就绪后请在设置页点金色的「…继续」完成结算。</value></data>
   <data name="LogSwapFolderFailed" xml:space="preserve"><value>切换目录失败。</value></data>
@@ -517,6 +548,7 @@
   <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>请在 Steam 下载另一服；下完后完全退出 Steam，管理器将自动继续</value></data>
   <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>正在检查更新</value></data>
 
+  <data name="BranchSwitchConfirmSettleWaiting" xml:space="preserve"><value>等待 Steam 下载/校验完成后再继续</value></data>
   <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam 已切换到正式服，继续</value></data>
   <data name="BranchStatusWaitingSteamFmt" xml:space="preserve"><value>等待 Steam 完成切换到{0}</value></data>
   <data name="BranchSwitchConfirmManualOfficial" xml:space="preserve"><value>我已在 Steam 中选好正式服，继续</value></data>
@@ -549,7 +581,12 @@
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>留空则只访问 GitHub。需与仓库同构，例如 https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>源={0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>已加载 {0} 个条目（离线缓存，目录更新：{1}）</value></data>
-  <data name="CatalogFetchFailed" xml:space="preserve"><value>拉取目录失败：{0}。已尝试国内镜像与 GitHub。可导入本地 Zip / 群文件；Clash 需开启系统代理（仅浏览器规则无效）。</value></data>
+  <data name="CatalogFetchFailed" xml:space="preserve"><value>拉取目录失败：{0}。</value></data>
+  <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>拉取目录失败，已改用离线缓存：{0}。</value></data>
+  <data name="CatalogFetchHintNoMirror" xml:space="preserve"><value>请在设置填写镜像基址，或开启系统代理后再刷新。</value></data>
+  <data name="CatalogFetchHintMirrorFailed" xml:space="preserve"><value>镜像也失败了，请检查镜像地址或系统代理。</value></data>
+  <data name="EmergencyRecoverLead" xml:space="preserve"><value>将恢复为单目录（当前 Steam 联接只留一个仓）。</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOtherOption" xml:space="preserve"><value>同时删除另一仓（不可恢复，默认不选）</value></data>
   <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
 
 已尝试国内镜像与 GitHub。点「是」复制国内下载说明（群文件；双服或安装 Melon 进行中不要运行 Setup）。点「否」可再选择是否打开 GitHub。</value></data>
@@ -565,8 +602,15 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>未能设置另一服 Steam 测试分支，已中止向导：{0}</value></data>
   <data name="DiagnosisTitle_critical_op_interrupted" xml:space="preserve"><value>上次关键操作未完成</value></data>
   <data name="DiagnosisAction_critical_op_interrupted" xml:space="preserve"><value>按管理器提示完成或放弃未完成的关键操作，不要同时再切服或覆盖安装。</value></data>
-  <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>双服向导或 Steam 结算未完成</value></data>
-  <data name="DiagnosisAction_wizard_or_settle_blocking" xml:space="preserve"><value>先在 Steam 等到可开始游戏，完全退出 Steam 后再回管理器点结算/继续。</value></data>
+  <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>双服向导未完成</value></data>
+  <data name="DiagnosisAction_wizard_or_settle_blocking" xml:space="preserve"><value>请按管理器提示继续双服向导（如下载另一服后退出 Steam）。不要反复点启用。</value></data>
+  <data name="DiagnosisTitle_awaiting_steam_settle" xml:space="preserve"><value>请在设置页点金色继续，完成 Steam 结算</value></data>
+  <data name="DiagnosisAction_awaiting_steam_settle" xml:space="preserve"><value>先在 Steam 等到可开始游戏（目录含 Mechabellum.exe 与 GameAssembly.dll），再回设置页点金色继续。结算不必先退出 Steam。</value></data>
+  <data name="DiagnosisTitle_settle_abandoned_unaligned" xml:space="preserve"><value>结算未对齐，请先处理 Steam 清单</value></data>
+  <data name="DiagnosisAction_settle_abandoned_unaligned" xml:space="preserve"><value>请先在 Steam 把清单对齐到可开始游戏，再回管理器继续。不要只改 Steam 测试勾选。</value></data>
+  <data name="NotifyEmptyProfileNoMods" xml:space="preserve"><value>当前方案没有启用任何 Mod，游戏里不会出现 Mod。</value></data>
+  <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>本次刚生成程序集，改为直启 exe，Melon 才能进管理器这个目录（不改启动设置）。</value></data>
+  <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>Loader 未在本次启动注入。请把启动方式改成「仅直启 exe」后再「应用并启动」，确认出现 Melon 黑窗。</value></data>
   <data name="DiagnosisTitle_game_or_link_incomplete" xml:space="preserve"><value>游戏路径或目录联接不完整</value></data>
   <data name="DiagnosisAction_game_or_link_incomplete" xml:space="preserve"><value>勿反复点继续；等 Steam 下载完成，或验证游戏文件后再打开管理器。</value></data>
   <data name="DiagnosisTitle_steam_update_unhealthy" xml:space="preserve"><value>Steam 更新未完成或状态异常</value></data>

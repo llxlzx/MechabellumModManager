@@ -44,7 +44,7 @@ public static class DiagnosisEngine
 
     static Diagnosis Build(string code, DiagnosisSnapshot snap, IReadOnlyList<string> evidence)
     {
-        var (title, action) = Copy(code);
+        var (title, action) = Copy(code, snap);
         return new Diagnosis
         {
             Code = code,
@@ -173,8 +173,11 @@ public static class DiagnosisEngine
         return list;
     }
 
-    static (string Title, string Action) Copy(string code)
+    static (string Title, string Action) Copy(string code, DiagnosisSnapshot snap)
     {
+        if (code == DiagnosisCodes.WizardOrSettleBlocking)
+            return WizardSettleCopy(snap);
+
         var titleKey = "DiagnosisTitle_" + code;
         var actionKey = "DiagnosisAction_" + code;
         var title = LocalizationService.T(titleKey);
@@ -186,10 +189,54 @@ public static class DiagnosisEngine
         return (title, action);
     }
 
+    static (string Title, string Action) WizardSettleCopy(DiagnosisSnapshot snap)
+    {
+        if (snap.SettleAbandonedUnaligned)
+            return LocalizedOrFallback(
+                "DiagnosisTitle_settle_abandoned_unaligned",
+                "DiagnosisAction_settle_abandoned_unaligned",
+                "结算未对齐，请先处理 Steam 清单",
+                "请先在 Steam 把清单对齐到可开始游戏，再回管理器继续。不要只改 Steam 测试勾选。");
+
+        if (snap.IsAwaitingSteamSettle && !IsMidWizardStep(snap.BranchWizardStep))
+            return LocalizedOrFallback(
+                "DiagnosisTitle_awaiting_steam_settle",
+                "DiagnosisAction_awaiting_steam_settle",
+                "请在设置页点金色继续，完成 Steam 结算",
+                "先在 Steam 等到可开始游戏（目录含 Mechabellum.exe 与 GameAssembly.dll），再回设置页点金色继续。结算不必先退出 Steam。");
+
+        return LocalizedOrFallback(
+            "DiagnosisTitle_wizard_or_settle_blocking",
+            "DiagnosisAction_wizard_or_settle_blocking",
+            "双服向导未完成",
+            "请按管理器提示继续双服向导（如下载另一服后退出 Steam）。不要反复点启用。");
+    }
+
+    static bool IsMidWizardStep(string? step)
+    {
+        if (string.IsNullOrWhiteSpace(step))
+            return false;
+        return step is not nameof(BranchWizardStep.None)
+            and not nameof(BranchWizardStep.Ready)
+            and not nameof(BranchWizardStep.AwaitingSteamSettle);
+    }
+
+    static (string Title, string Action) LocalizedOrFallback(
+        string titleKey, string actionKey, string titleFb, string actionFb)
+    {
+        var title = LocalizationService.T(titleKey);
+        var action = LocalizationService.T(actionKey);
+        if (string.Equals(title, titleKey, StringComparison.Ordinal))
+            title = titleFb;
+        if (string.Equals(action, actionKey, StringComparison.Ordinal))
+            action = actionFb;
+        return (title, action);
+    }
+
     static string FallbackTitle(string code) => code switch
     {
         DiagnosisCodes.CriticalOpInterrupted => "上次关键操作未完成",
-        DiagnosisCodes.WizardOrSettleBlocking => "双服向导或 Steam 结算未完成",
+        DiagnosisCodes.WizardOrSettleBlocking => "双服向导未完成",
         DiagnosisCodes.GameOrLinkIncomplete => "游戏路径或目录联接不完整",
         DiagnosisCodes.SteamUpdateUnhealthy => "Steam 更新未完成或状态异常",
         DiagnosisCodes.MelonNeedsUpgrade => "MelonLoader 版本低于内置 0.7.3",
@@ -204,7 +251,7 @@ public static class DiagnosisEngine
     static string FallbackAction(string code) => code switch
     {
         DiagnosisCodes.CriticalOpInterrupted => "按管理器提示完成或放弃未完成的关键操作，不要同时再切服或覆盖安装。",
-        DiagnosisCodes.WizardOrSettleBlocking => "先在 Steam 等到可开始游戏，完全退出 Steam 后再回管理器点结算/继续。",
+        DiagnosisCodes.WizardOrSettleBlocking => "请按管理器提示继续双服向导（如下载另一服后退出 Steam）。不要反复点启用。",
         DiagnosisCodes.GameOrLinkIncomplete => "勿反复点继续；等 Steam 下载完成，或验证游戏文件后再打开管理器。",
         DiagnosisCodes.SteamUpdateUnhealthy => "在 Steam 把游戏更新到可开始游戏；勿停在更新失败。然后完全退出 Steam。",
         DiagnosisCodes.MelonNeedsUpgrade => "在管理器右上角点「安装 MelonLoader」升级到内置 0.7.3，再启动游戏。",

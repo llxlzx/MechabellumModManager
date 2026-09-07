@@ -28,11 +28,17 @@
                         MinHeight="32"
                         Click="No_Click" />
             </StackPanel>
-            <TextBlock x:Name="MessageText"
-                       TextWrapping="Wrap"
-                       FontSize="14"
-                       LineHeight="22"
-                       Foreground="{StaticResource TextPrimaryBrush}" />
+            <StackPanel>
+                <TextBlock x:Name="MessageText"
+                           TextWrapping="Wrap"
+                           FontSize="14"
+                           LineHeight="22"
+                           Foreground="{StaticResource TextPrimaryBrush}" />
+                <CheckBox x:Name="OptionCheck"
+                          Visibility="Collapsed"
+                          Margin="0,12,0,0"
+                          Foreground="{StaticResource TextPrimaryBrush}" />
+            </StackPanel>
         </DockPanel>
     </Border>
 </Window>

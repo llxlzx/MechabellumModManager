@@ -64,7 +64,7 @@
     <value>Игра или MelonLoader не готовы; развёртывание недоступно.</value>
   </data>
   <data name="DeployBlockedAwaitingSteam" xml:space="preserve">
-    <value>Ожидание подтверждения Steam / переключения веток; развёртывание приостановлено.</value>
+    <value>Сначала нажмите золотое «Продолжить» для расчёта, потом развёртывание.</value>
   </data>
   <data name="DeployBlockedWizardIncomplete" xml:space="preserve">
     <value>Мастер двойной ветки не завершён. Продолжите или удалите конфигурацию в настройках.</value>
@@ -156,6 +156,30 @@
   <data name="MailOpenFailed" xml:space="preserve">
     <value>Не удалось открыть веб-почту; тема и текст скопированы. Отправьте вручную на llxmod@foxmail.com и вставьте.</value>
   </data>
+  <data name="MailOpenedQq" xml:space="preserve">
+    <value>Черновик скопирован, открыт QQ Mail. Создайте письмо, вставьте и отправьте на llxmod@foxmail.com.</value>
+  </data>
+  <data name="MailOpenedGmail" xml:space="preserve">
+    <value>Черновик скопирован, открыт Gmail. Проверьте и отправьте на llxmod@foxmail.com.</value>
+  </data>
+  <data name="MailCancelled" xml:space="preserve">
+    <value>Черновик скопирован; веб-почта не открыта. При необходимости напишите на llxmod@foxmail.com вручную.</value>
+  </data>
+  <data name="MailProviderTitle" xml:space="preserve">
+    <value>Выберите веб-почту</value>
+  </data>
+  <data name="MailProviderHint" xml:space="preserve">
+    <value>Тема и текст в буфере обмена. Выберите веб-почту или отмените (оставить только буфер).</value>
+  </data>
+  <data name="MailProviderQq" xml:space="preserve">
+    <value>QQ Mail</value>
+  </data>
+  <data name="MailProviderGmail" xml:space="preserve">
+    <value>Gmail</value>
+  </data>
+  <data name="FeedbackButton" xml:space="preserve">
+    <value>Отзыв</value>
+  </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
     <value>Отправка</value>
   </data>
@@ -172,7 +196,7 @@
 (Продвинутые пользователи могут по-прежнему открывать PR.)</value>
   </data>
   <data name="SubmitGuideTip" xml:space="preserve">
-    <value>После «Открыть письмо для отправки» менеджер скопирует тему и текст и откроет веб-почту по языку: QQ Mail для китайского UI, иначе Gmail. Вставьте, приложите .dll (по желанию preview.png). При очень больших вложениях (~&gt;40 МБ) укажите ссылку на облако. Исходники не присылайте без запроса.</value>
+    <value>После «Открыть письмо для отправки» менеджер скопирует тему и текст и спросит QQ Mail или Gmail (отмена — только буфер). Вставьте, приложите .dll (по желанию preview.png). При очень больших вложениях (~&gt;40 МБ) укажите ссылку на облако. Исходники не присылайте без запроса.</value>
   </data>
   <data name="SubmitGuideOpen" xml:space="preserve">
     <value>Открыть полное руководство</value>
@@ -271,6 +295,7 @@
   <data name="SortByName" xml:space="preserve"><value>Имя</value></data>
   <data name="SortByUpdatedAtDesc" xml:space="preserve"><value>Обновление (новые→старые)</value></data>
   <data name="ColumnCategory" xml:space="preserve"><value>Категория</value></data>
+  <data name="ColumnTag" xml:space="preserve"><value>Теги</value></data>
   <data name="TagsLabel" xml:space="preserve"><value>Теги</value></data>
   <data name="CategoryOverlayUI" xml:space="preserve"><value>Интерфейс и оверлей</value></data>
   <data name="CategoryQoL" xml:space="preserve"><value>Удобство</value></data>
@@ -302,8 +327,8 @@
   <data name="BranchStatusWizardPaused" xml:space="preserve"><value>Включение (без паузы — отмена откатит или ждите)</value></data>
   <data name="BranchStatusEnabling" xml:space="preserve"><value>Включение</value></data>
   <data name="BranchStatusEnablingWaitDownload" xml:space="preserve"><value>Включение (ожидание загрузки Steam; закрытие откатит)</value></data>
-  <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>Включение: ждём загрузку другой ветки в Steam. Официальная в отдельном складе — игра не пропала.</value></data>
-  <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>Включение: другая ветка скачана. Полностью закройте Steam (трей → Выход); менеджер продолжит сам.</value></data>
+  <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>Включение: Steam качает другую ветку (игра не пропала).</value></data>
+  <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>Другая ветка скачана: закройте Steam из трея, затем архивация.</value></data>
   <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>Нужно срочное восстановление</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Ожидание завершения Steam</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>Официальная</value></data>
@@ -350,10 +375,10 @@
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>Перезапись неуправляемых файлов отменена.</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Двухкаталожная схема уже включена. Для пересборки сначала «Срочно: одна папка», затем снова включите дуал. Продолжить?</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Снять двухкаталожную настройку? Используемый каталог снова станет путём игры в Steam. Сначала закройте Steam и игру.</value></data>
-  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Срочно восстановить одну папку Mechabellum (по возможности материализовать junction/пустой каркас из полного склада). Следующий диалог спросит, удалять ли остатки. Сначала закройте Steam и игру. Продолжить?</value></data>
-  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>Срочное восстановление только сворачивает оставшуюся папку в один Mechabellum. Официальную ветку оно не создаст. Официальный склад отсутствует или неполон — дождитесь загрузки Steam. Сейчас не переключайте ветки и не удаляйте менеджер. Продолжение оставит только текущую папку. Продолжить?</value></data>
+  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад). Срочно восстановить одну папку Mechabellum (по возможности материализовать junction/пустой каркас из полного склада). Следующий диалог спросит, удалять ли остатки. Сначала закройте Steam и игру. Продолжить?</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад). Срочное восстановление только сворачивает оставшуюся папку в один Mechabellum. Официальную ветку оно не создаст. Официальный склад отсутствует или неполон — дождитесь загрузки Steam. Сейчас не переключайте ветки и не удаляйте менеджер. Продолжение оставит только текущую папку. Продолжить?</value></data>
   <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam пишет в папку игры. Дождитесь, пока будет доступен Запуск. До этого не используйте срочное восстановление, не переключайте склады и не удаляйте менеджер.</value></data>
-  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Двухветочье выключено, но junction и/или остатки складов ещё на диске. Восстановить одну папку Mechabellum (материализовать junction). Сохранение другого склада может снова блокировать мастер. Сначала закройте Steam и игру. Продолжить?</value></data>
+  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад). Двухветочье выключено, но junction и/или остатки складов ещё на диске. Восстановить одну папку Mechabellum (материализовать junction). Сохранение другого склада может снова блокировать мастер. Сначала закройте Steam и игру. Продолжить?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Восстановлена одна папка Mechabellum.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Восстановлена одна папка Mechabellum.</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>Не удалось восстановить одну папку: {0}</value></data>
@@ -390,6 +415,11 @@
   <data name="LogEnableDualRolledBack" xml:space="preserve"><value>Включение дуала отменено и откат к одной папке выполнен.</value></data>
   <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>Включение дуала не завершено, а Steam/игра ещё работают — откат диска пропущен, метки сессии сохранены. Закройте Steam и нажмите «Срочно: одна папка».</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>Чтобы моды загрузились, MelonLoader должен открыть чёрную консоль Melon (это не PowerShell). Если нет — проверьте version.dll / MelonLoader и пришлите MelonLoader\Latest.log.</value></data>
+  <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Запуск запрошен; проверяю, появился ли процесс игры…</value></data>
+  <data name="LogLaunchProcessSeen" xml:space="preserve"><value>Процесс игры обнаружен.</value></data>
+  <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>Процесс игры не обнаружен. Нажмите «Применить и запустить» ещё раз или проверьте, не показал ли Steam выбор аккаунта и не заблокировал ли запуск.</value></data>
+  <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam открыл другую папку игры, не ту, что в менеджере: {0}. Melon в это окно не попадёт. Выберите «только exe» или укажите в менеджере библиотеку, которую реально открывает Steam.</value></data>
+  <data name="LogFirstAssemblyLaunchHint" xml:space="preserve"><value>При первом запуске Melon генерирует сборки. Чёрный экран или прокрутка консоли — нормально, подождите 1–2 минуты.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка снята. В Steam проверьте, что текущая ветка игры верна.</value></data>
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Профиль применён к каталогу игры</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Не удалось автоматически выровнять тестовую ветку Steam. Сначала выберите ветку вручную; не запускайте Steam до выравнивания.</value></data>
@@ -416,7 +446,7 @@
   <data name="LabelSummary" xml:space="preserve"><value>Описание</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Путь к игре должен быть в steamapps\common\Mechabellum.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>Текущий путь к игре недействителен; мастер двух каталогов нельзя начать.</value></data>
-  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Отдельная папка другой ветки уже существует; архивирование невозможно: {0}</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Отдельная папка другой ветки уже существует; архивирование невозможно: {0}. Сначала аварийное восстановление в одну папку или при чистом восстановлении отметьте «удалить другой склад» (необратимо).</value></data>
   <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>The other branch folder exists but is incomplete (missing GameAssembly etc.): {0}. Exit Steam, delete that incomplete folder, then continue the wizard — do not keep clicking Continue.</value></data>
   <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>Other branch folder {0} is complete, but the Steam link path is still a real directory. The manager will not auto-delete game folders. Use Clear isolation in Settings, or exit Steam and resolve the leftover, then restart the wizard.</value></data>
   <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Steam link path is still occupied (real folder or wrong junction); cannot create the directory link. Clear isolation in Settings, or exit Steam and fix …\common\Mechabellum, then continue.</value></data>
@@ -492,6 +522,7 @@
   <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>Download the other branch in Steam; fully exit Steam when done — the wizard continues automatically</value></data>
   <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>Checking for updates</value></data>
 
+  <data name="BranchSwitchConfirmSettleWaiting" xml:space="preserve"><value>Wait until Steam finishes download/verify, then continue</value></data>
   <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam switched to Official — continue</value></data>
   <data name="BranchStatusWaitingSteamFmt" xml:space="preserve"><value>Waiting for Steam to finish switching to {0}</value></data>
   <data name="BranchSwitchConfirmManualOfficial" xml:space="preserve"><value>I selected Official in Steam — continue</value></data>
@@ -510,6 +541,7 @@
   <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>Waiting for the other branch download: open Steam yourself and download. When finished, fully exit Steam (tray → Exit); the manager continues automatically. OK only closes this tip and does not cancel waiting.</value></data>
   <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>Other branch download looks complete and Steam is closed; continuing dual-folder wizard automatically.</value></data>
   <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>Other branch download complete: fully exit Steam (tray → Exit); the wizard continues automatically after exit</value></data>
+  <data name="WizardExitSteamContinue" xml:space="preserve"><value>Steam закрыт, продолжить</value></data>
   <data name="LogSettleClearedSnapshotDeferred" xml:space="preserve"><value>Deploy succeeded but snapshot was skipped; settle cleared. Snapshot can be taken later.</value></data>
   <data name="CriticalOpBlockUpdate" xml:space="preserve"><value>A disk write or critical operation is in progress. Check for updates after it finishes.</value></data>
   <data name="CriticalOpBlockClose" xml:space="preserve"><value>A disk write or critical operation is in progress. Do not close the manager.</value></data>
@@ -526,7 +558,12 @@
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Пусто = только GitHub. Та же раскладка, например https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>источник={0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Загружено {0} записей (офлайн-кэш, каталог: {1})</value></data>
-  <data name="CatalogFetchFailed" xml:space="preserve"><value>Каталог недоступен: {0}. Зеркало и GitHub не ответили. Импортируйте Zip / файл из группы.</value></data>
+  <data name="CatalogFetchFailed" xml:space="preserve"><value>Каталог недоступен: {0}.</value></data>
+  <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>Каталог недоступен, офлайн-кэш: {0}.</value></data>
+  <data name="CatalogFetchHintNoMirror" xml:space="preserve"><value>Укажите зеркало в настройках или включите системный прокси и обновите.</value></data>
+  <data name="CatalogFetchHintMirrorFailed" xml:space="preserve"><value>Зеркало тоже не сработало. Проверьте адрес или системный прокси.</value></data>
+  <data name="EmergencyRecoverLead" xml:space="preserve"><value>Восстановление в одну папку (у Steam останется один склад).</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOtherOption" xml:space="preserve"><value>Также удалить другой склад (необратимо, по умолчанию выкл.)</value></data>
   <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
 
 Зеркало и GitHub не ответили. «Да» копирует инструкции внутренней загрузки.</value></data>
@@ -540,4 +577,13 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam BetaKey ({1}) не совпадает с текущим хранилищем ({0}). Не запускайте аварийное восстановление.</value></data>
   <data name="NotifyDeployFailed" xml:space="preserve"><value>Развёртывание не удалось: {0}</value></data>
   <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>Не удалось задать Steam beta для другого хранилища; мастер прерван: {0}</value></data>
+  <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>Мастер двух папок не завершён</value></data>
+  <data name="DiagnosisAction_wizard_or_settle_blocking" xml:space="preserve"><value>Продолжите мастер по подсказкам менеджера (например выйдите из Steam после загрузки другой папки). Не нажимайте «Включить» повторно.</value></data>
+  <data name="DiagnosisTitle_awaiting_steam_settle" xml:space="preserve"><value>На странице настроек нажмите золотое «Продолжить», чтобы завершить сверку Steam</value></data>
+  <data name="DiagnosisAction_awaiting_steam_settle" xml:space="preserve"><value>Дождитесь, пока Steam сможет запустить игру (Mechabellum.exe и GameAssembly.dll), затем нажмите золотое «Продолжить» в настройках. Для сверки Steam выходить не нужно.</value></data>
+  <data name="DiagnosisTitle_settle_abandoned_unaligned" xml:space="preserve"><value>Сверка не выровнена; сначала исправьте манифест Steam</value></data>
+  <data name="DiagnosisAction_settle_abandoned_unaligned" xml:space="preserve"><value>Выровняйте манифест в Steam до кнопки «Играть», затем вернитесь в менеджер. Не меняйте только галочку бета в Steam.</value></data>
+  <data name="NotifyEmptyProfileNoMods" xml:space="preserve"><value>В этом профиле не включён ни один мод, в игре модов не будет.</value></data>
+  <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>Сборки только что сгенерированы; в этот раз запускаем exe, чтобы Melon зашёл в папку менеджера (режим запуска не меняется).</value></data>
+  <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>Loader не внедрился при этом запуске. Переключите режим на «только exe», затем «Применить и запустить», и проверьте чёрную консоль Melon.</value></data>
 </root>

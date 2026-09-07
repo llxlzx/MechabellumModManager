@@ -74,6 +74,7 @@ public class DiagnosisEngineTests
     [Fact]
     public void Wizard_or_settle_beats_melon_upgrade()
     {
+        LocalizationService.Apply("zh-CN");
         var snap = new DiagnosisSnapshot
         {
             IsWizardOrSettleBlocking = true,
@@ -87,6 +88,59 @@ public class DiagnosisEngineTests
         var d = DiagnosisEngine.Evaluate(snap);
 
         d.Code.Should().Be(DiagnosisCodes.WizardOrSettleBlocking);
+        d.Title.Should().Contain("金色");
+        d.Title.Should().Contain("继续");
+        d.Action.Should().Contain("可开始游戏");
+        d.Action.Should().NotContain("完全退出 Steam");
+        d.Action.Should().Match(a =>
+            a.Contains("不必", StringComparison.Ordinal)
+            || a.Contains("无需", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Awaiting_settle_when_wizard_ready_asks_gold_continue()
+    {
+        LocalizationService.Apply("zh-CN");
+        var d = DiagnosisEngine.Evaluate(new DiagnosisSnapshot
+        {
+            IsAwaitingSteamSettle = true,
+            BranchWizardStep = nameof(BranchWizardStep.Ready)
+        });
+
+        d.Code.Should().Be(DiagnosisCodes.WizardOrSettleBlocking);
+        d.Title.Should().Contain("金色");
+        d.Title.Should().Contain("继续");
+        d.Title.Should().NotContain("向导未完成");
+    }
+
+    [Fact]
+    public void Mid_wizard_download_does_not_say_gold_continue()
+    {
+        LocalizationService.Apply("zh-CN");
+        var d = DiagnosisEngine.Evaluate(new DiagnosisSnapshot
+        {
+            IsWizardOrSettleBlocking = true,
+            BranchWizardStep = nameof(BranchWizardStep.WaitingDownloadB)
+        });
+
+        d.Code.Should().Be(DiagnosisCodes.WizardOrSettleBlocking);
+        d.Title.Should().Contain("向导");
+        d.Title.Should().NotContain("金色");
+    }
+
+    [Fact]
+    public void Settle_abandoned_unaligned_has_own_title()
+    {
+        LocalizationService.Apply("zh-CN");
+        var d = DiagnosisEngine.Evaluate(new DiagnosisSnapshot
+        {
+            SettleAbandonedUnaligned = true,
+            BranchWizardStep = nameof(BranchWizardStep.Ready)
+        });
+
+        d.Code.Should().Be(DiagnosisCodes.WizardOrSettleBlocking);
+        d.Title.Should().Contain("未对齐");
+        d.Title.Should().NotContain("金色");
     }
 
     [Fact]

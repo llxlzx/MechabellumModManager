@@ -6,11 +6,13 @@ public sealed class FakeProcessProbe : IProcessProbe
 {
     public bool GameRunning { get; set; }
     public bool SteamRunning { get; set; }
+    public string? RunningGameExePath { get; set; }
     public int ForceCloseCalls { get; private set; }
     /// <summary>When true, ForceClose clears running flags (simulates successful kill).</summary>
     public bool ForceCloseClearsRunning { get; set; }
 
     public bool IsGameRunning() => GameRunning;
+    public string? TryGetRunningGameExePath() => RunningGameExePath;
     public bool IsSteamRunning() => SteamRunning;
     public bool IsGameOrSteamRunning() => GameRunning || SteamRunning;
 

@@ -81,6 +81,189 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public async Task ApplyAndLaunch_reports_process_not_seen_when_probe_stays_false()
+    {
+        using var fx = Fixture.CreateReady();
+        string? notified = null;
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            starter: starter,
+            notify: m => notified = m);
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        starter.Starts.Should().NotBeEmpty();
+        vm.LogText.Should().Contain(LocalizationService.T("LogLaunchRequestedVerifying"));
+        notified.Should().Be(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+        vm.GameStatus!.Kind.Should().Be(GameStatusKind.Ready);
+    }
+
+    [Fact]
+    public async Task ApplyAndLaunch_stamps_apply_started_before_launch()
+    {
+        using var fx = Fixture.CreateReady();
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true, starter: starter);
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        var cfg = fx.Store.LoadOrDefault(fx.Paths.ConfigPath, () => new AppConfig());
+        cfg.LastApplyStartedAt.Should().NotBeNull();
+        cfg.LastLaunchRequestedAt.Should().NotBeNull();
+        cfg.LastApplyStartedAt!.Value.Should().BeOnOrBefore(cfg.LastLaunchRequestedAt!.Value);
+    }
+
+    [Fact]
+    public async Task ApplyAndLaunch_logs_process_seen_then_rechecks_injection()
+    {
+        using var fx = Fixture.CreateReady();
+        var delays = 0;
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            starter: starter,
+            delay: _ =>
+            {
+                delays++;
+                if (delays >= 2)
+                    fx.Probe.GameRunning = true;
+                return Task.CompletedTask;
+            });
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        starter.Starts.Should().NotBeEmpty();
+        vm.LogText.Should().Contain(LocalizationService.T("LogLaunchProcessSeen"));
+        vm.LogText.Should().NotContain(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+        vm.LogText.Should().NotContain(LocalizationService.T("NotifyLaunchGamePathMismatch").Split('{')[0]);
+    }
+
+    [Fact]
+    public async Task ApplyAndLaunch_notifies_when_running_exe_is_other_library()
+    {
+        using var fx = Fixture.CreateReady();
+        fx.Probe.RunningGameExePath = @"D:\steam\steamapps\common\Mechabellum\Mechabellum.exe";
+        string? notified = null;
+        var delays = 0;
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            starter: starter,
+            notify: m => notified = m,
+            delay: _ =>
+            {
+                delays++;
+                if (delays >= 2)
+                    fx.Probe.GameRunning = true;
+                return Task.CompletedTask;
+            });
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        vm.LogText.Should().Contain("D:\\steam\\steamapps\\common\\Mechabellum\\Mechabellum.exe");
+        notified.Should().Contain("仅直启");
+        notified.Should().Contain("D:\\steam\\steamapps\\common\\Mechabellum\\Mechabellum.exe");
+    }
+
+    [Fact]
+    public void ApplyProfile_empty_profile_notifies_no_enabled_mods()
+    {
+        using var fx = Fixture.CreateReady();
+        var notes = new List<string>();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true, notify: notes.Add);
+
+        vm.ApplyProfile();
+
+        vm.LogText.Should().Contain("没有启用任何 Mod");
+        notes.Should().Contain(n => n.Contains("没有启用任何 Mod", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ApplyAndLaunch_after_assembly_gen_uses_exe_without_changing_launch_mode()
+    {
+        using var fx = Fixture.CreateReady();
+        var asm = Path.Combine(fx.GameRoot, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll");
+        File.Delete(asm);
+        fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
+        {
+            GamePath = fx.GameRoot,
+            ActiveProfileId = "default",
+            LaunchMode = LaunchMode.SteamThenExe
+        });
+
+        var starter = new RecordingStarter();
+        var gen = new MelonLoaderAssemblyGenerator(
+            startProcess: exe =>
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(asm)!);
+                File.WriteAllText(asm, "asm");
+                return null;
+            },
+            delay: (_, _) => Task.CompletedTask);
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            starter: starter,
+            melonAssemblyGenerator: gen);
+        vm.LaunchMode = LaunchMode.SteamThenExe;
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        starter.Starts.Should().ContainSingle();
+        starter.Starts[0].Should().Be(Path.Combine(fx.GameRoot, "Mechabellum.exe"));
+        vm.LaunchMode.Should().Be(LaunchMode.SteamThenExe);
+        fx.Store.LoadOrDefault(fx.Paths.ConfigPath, () => new AppConfig())
+            .LaunchMode.Should().Be(LaunchMode.SteamThenExe);
+        vm.LogText.Should().Contain(LocalizationService.T("LogLaunchExeAfterAssemblyGen"));
+    }
+
+    [Fact]
+    public async Task Recheck_when_still_not_injected_hints_exe_only_without_second_start()
+    {
+        using var fx = Fixture.CreateReady();
+        var logPath = Path.Combine(fx.GameRoot, "MelonLoader", "Latest.log");
+        Directory.CreateDirectory(Path.Combine(fx.GameRoot, "MelonLoader"));
+        File.WriteAllText(logPath, "[14:17:52.025] MelonLoader v0.7.3 Open-Beta\n");
+        File.SetLastWriteTime(logPath, DateTime.Now.AddDays(-8));
+        fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
+        {
+            GamePath = fx.GameRoot,
+            ActiveProfileId = "default",
+            LaunchMode = LaunchMode.SteamThenExe,
+            LastLaunchRequestedAt = DateTimeOffset.Now.AddMinutes(-5)
+        });
+
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true, starter: starter);
+        vm.GameStatus!.LoaderInjected.Should().BeFalse();
+
+        await vm.RecheckLoaderInjectionAfterLaunchAsync();
+
+        vm.LogText.Should().Contain("仅直启");
+        starter.Starts.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void PureGameCleanup_asks_once_then_cancel_does_not_run()
+    {
+        using var fx = Fixture.CreateReady();
+        var calls = 0;
+        var vm = fx.CreateVm(
+            promptConfirmOption: (msg, opt) =>
+            {
+                calls++;
+                msg.Should().Contain("•");
+                opt.Should().BeNull();
+                return null;
+            });
+
+        vm.PureGameCleanupCommand.Execute(null);
+
+        calls.Should().Be(1);
+        vm.LogText.Should().NotContain(LocalizationService.T("NotifyPureGameCleanupDone"));
+    }
+
+    [Fact]
     public void After_launch_stale_latest_log_drops_ready_accent_but_keeps_deploy()
     {
         using var fx = Fixture.CreateReady();

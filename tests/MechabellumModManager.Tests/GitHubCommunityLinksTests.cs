@@ -169,41 +169,78 @@ public class GitHubCommunityLinksTests
     }
 
     [Fact]
-    public void TryOpenCompose_invokes_clipboard_and_returns_region_url()
+    public void TryOpenCompose_qq_copies_clipboard_and_opens_qq_url()
     {
         string? copied = null;
+        string? opened = null;
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
+            var (openedOk, url) = GitHubCommunityLinks.TryOpenCompose(
+                "S",
+                "B",
+                text => copied = text,
+                MailProvider.Qq,
+                tryOpen: u => { opened = u; return true; });
+
+            openedOk.Should().BeTrue();
+            url.Should().Be(GitHubCommunityLinks.DomesticWebMailUrl);
+            opened.Should().Be(GitHubCommunityLinks.DomesticWebMailUrl);
+            copied.Should().Contain("To: llxmod@foxmail.com");
+            copied.Should().Contain("Subject: S");
+            copied.Should().Contain("B");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    [Fact]
+    public void TryOpenCompose_gmail_copies_clipboard_and_opens_gmail_url()
+    {
+        string? copied = null;
+        string? opened = null;
         var previous = CultureInfo.CurrentUICulture;
         try
         {
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-CN");
-            var (ok, url, domestic) = GitHubCommunityLinks.TryOpenCompose(
+            var (openedOk, url) = GitHubCommunityLinks.TryOpenCompose(
                 "S",
                 "B",
-                text => copied = text);
+                text => copied = text,
+                MailProvider.Gmail,
+                tryOpen: u => { opened = u; return true; });
 
-            domestic.Should().BeTrue();
-            url.Should().Be(GitHubCommunityLinks.DomesticWebMailUrl);
-            copied.Should().Contain("To: llxmod@foxmail.com");
-            copied.Should().Contain("Subject: S");
-            copied.Should().Contain("B");
-            // ok depends on shell; we only assert clipboard + URL selection
-            _ = ok;
-        }
-        finally
-        {
-            CultureInfo.CurrentUICulture = previous;
-        }
-
-        try
-        {
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-            var (_, url, domestic) = GitHubCommunityLinks.TryOpenCompose("S", "B", null);
-            domestic.Should().BeFalse();
+            openedOk.Should().BeTrue();
             url.Should().StartWith("https://mail.google.com/mail/");
+            opened.Should().StartWith("https://mail.google.com/mail/");
+            copied.Should().Contain("To: llxmod@foxmail.com");
         }
         finally
         {
             CultureInfo.CurrentUICulture = previous;
         }
+    }
+
+    [Fact]
+    public void TryOpenCompose_cancel_copies_clipboard_and_does_not_open()
+    {
+        string? copied = null;
+        var openCalls = 0;
+        var (openedOk, url) = GitHubCommunityLinks.TryOpenCompose(
+            "S",
+            "B",
+            text => copied = text,
+            provider: null,
+            tryOpen: _ => { openCalls++; return true; });
+
+        openedOk.Should().BeFalse();
+        url.Should().BeEmpty();
+        openCalls.Should().Be(0);
+        copied.Should().Contain("To: llxmod@foxmail.com");
+        copied.Should().Contain("Subject: S");
+        copied.Should().Contain("B");
     }
 }
