@@ -20,6 +20,22 @@ public class DeployPlannerTests
     }
 
     [Fact]
+    public void Manifest_entry_escaping_the_game_folder_is_rejected()
+    {
+        var manifest = new DeployManifest
+        {
+            GamePath = @"G:\Game",
+            Files = { new ManifestFileEntry { RelativePath = @"..\..\Windows\System32\drivers\etc\hosts" } }
+        };
+        var profile = new Profile { Id = "p" };
+
+        var act = () => new DeployPlanner().Build(
+            @"G:\Game", profile, new Dictionary<string, ModPackage>(), manifest, false);
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
     public void Does_not_delete_unmanaged_files()
     {
         // manifest empty; game has Mods/Other.dll unmanaged — Deletes must not include Other.dll

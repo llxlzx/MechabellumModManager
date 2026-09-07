@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
@@ -936,6 +937,106 @@ public class BranchSwitchServiceTests
         Directory.Exists(h.BetaStore).Should().BeTrue();
         File.Exists(Path.Combine(h.SteamLink, "Mechabellum.exe")).Should().BeTrue();
         h.Svc.LoadConfig().WizardStep.Should().Be(BranchWizardStep.None);
+    }
+
+    [Fact]
+    public void RollbackEnableSession_restores_archived_original_over_wizard_download()
+    {
+        using var h = Harness.CreateWizardStart();
+        // The player's real install is archived into the Official store this session.
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        // Steam finished downloading the other branch into the Steam link before the crash.
+        SeedGameRoot(h.SteamLink, "downloaded-beta");
+
+        var result = h.Svc.TryRollbackEnableSession(h.SteamLink);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("current");
+        h.Svc.LoadConfig().WizardStep.Should().Be(BranchWizardStep.None);
+    }
+
+    [Fact]
+    public void RepairFromJournal_adopts_an_archive_move_that_completed_before_the_crash()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        // Config was lost after the move (crash before it hit disk), journal replayed by hand.
+        WriteArchivingJournal(h, GameBranch.Official, h.SteamLink, h.OfficialStore);
+        var cfg = h.Svc.LoadConfig();
+        cfg.WizardStep = BranchWizardStep.Declared;
+        cfg.OfficialStorePath = "";
+        h.Svc.SaveConfig(cfg);
+
+        var result = h.Svc.TryRepairFromJournal();
+
+        result.Success.Should().BeTrue(because: result.Message);
+        var repaired = h.Svc.LoadConfig();
+        repaired.OfficialStorePath.Should().Be(h.OfficialStore);
+        repaired.WizardStep.Should().Be(BranchWizardStep.ArchivedA);
+        File.Exists(h.Paths.BranchSwitchJournalPath).Should().BeFalse();
+    }
+
+    [Fact]
+    public void RepairFromJournal_leaves_the_install_alone_when_the_archive_never_started()
+    {
+        using var h = Harness.CreateWizardStart();
+        WriteArchivingJournal(h, GameBranch.Official, h.SteamLink, h.OfficialStore);
+
+        var result = h.Svc.TryRepairFromJournal();
+
+        result.Success.Should().BeTrue(because: result.Message);
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("current");
+        Directory.Exists(h.OfficialStore).Should().BeFalse();
+        File.Exists(h.Paths.BranchSwitchJournalPath).Should().BeFalse();
+    }
+
+    static void WriteArchivingJournal(Harness h, GameBranch branch, string link, string dest)
+    {
+        var json = JsonSerializer.Serialize(
+            new BranchSwitchJournal
+            {
+                Phase = "archiving",
+                PreviousBranch = branch,
+                TargetBranch = branch,
+                SteamLinkPath = link,
+                PreviousStorePath = link,
+                TargetStorePath = dest
+            },
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        File.WriteAllText(h.Paths.BranchSwitchJournalPath, json);
+    }
+
+    [Fact]
+    public void RollbackEnableSession_restores_original_even_when_link_points_at_the_download()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        SeedGameRoot(h.SteamLink, "downloaded-beta");
+        h.Svc.ArchiveDownloadedAs(GameBranch.Beta).Success.Should().BeTrue();
+        h.Svc.CreateLinkTo(GameBranch.Beta).Success.Should().BeTrue();
+
+        var result = h.Svc.TryRollbackEnableSession(h.SteamLink);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        h.Junctions.IsJunction(h.SteamLink).Should().BeFalse();
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("current");
+        Directory.Exists(h.BetaStore).Should().BeFalse();
+    }
+
+    [Fact]
+    public void RollbackEnableSession_deletes_store_downloaded_this_session()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Svc.ArchiveCurrentAs(GameBranch.Official).Success.Should().BeTrue();
+        // Steam downloaded the beta build into the Steam link; the wizard archived it as Beta.
+        SeedGameRoot(h.SteamLink, "downloaded-beta");
+        h.Svc.ArchiveDownloadedAs(GameBranch.Beta).Success.Should().BeTrue();
+
+        var result = h.Svc.TryRollbackEnableSession(h.SteamLink);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        Directory.Exists(h.BetaStore).Should().BeFalse();
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("current");
     }
 
     static void SeedGameRoot(string dir, string marker)

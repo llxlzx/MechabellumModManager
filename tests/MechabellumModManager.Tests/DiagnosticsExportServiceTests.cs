@@ -70,6 +70,32 @@ public class DiagnosticsExportServiceTests
     }
 
     [Fact]
+    public void Strong_redaction_masks_escaped_paths_inside_copied_json()
+    {
+        using var fx = new Fixture();
+        var userSeg = Path.Combine("Users", Environment.UserName);
+        // On disk a config path is JSON-escaped, so plain-text redaction never matches it.
+        File.WriteAllText(fx.Paths.ConfigPath,
+            $"{{\"gamePath\":\"C:\\\\{userSeg.Replace("\\", "\\\\")}\\\\Games\\\\Mechabellum\"}}");
+
+        var zip = Path.Combine(fx.Root, "redact-json.zip");
+        var result = new DiagnosticsExportService().ExportToFile(zip, new DiagnosticsExportRequest
+        {
+            Paths = fx.Paths,
+            GamePath = Path.Combine(fx.Root, "no-game"),
+            SessionLogText = "",
+            AppVersion = "1.1.7",
+            Redaction = DiagnosticsRedactionMode.Strong,
+            LogWriter = new ManagerLogWriter(fx.Paths.LogsDir)
+        });
+
+        result.Success.Should().BeTrue();
+        using var archive = ZipFile.OpenRead(zip);
+        var config = new StreamReader(archive.GetEntry("config.json")!.Open()).ReadToEnd();
+        config.Should().NotContain(Environment.UserName);
+    }
+
+    [Fact]
     public void Redact_helper_masks_Users_Name()
     {
         var raw = @"Access to C:\Users\Alice\steamapps\common\Mechabellum";

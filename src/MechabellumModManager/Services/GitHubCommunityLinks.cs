@@ -280,14 +280,14 @@ public static class GitHubCommunityLinks
 
     static bool TryShellOpen(string url)
     {
-        if (string.IsNullOrWhiteSpace(url))
+        if (!ExternalUrlPolicy.TryParse(url, out var safe) || safe is null)
             return false;
 
         try
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = url,
+                FileName = safe.AbsoluteUri,
                 UseShellExecute = true
             });
             return true;

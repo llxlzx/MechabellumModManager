@@ -557,6 +557,7 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Inländische Spiegelbasis</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Leer = nur GitHub. Gleiches Layout wie die Repos, z. B. https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>Quelle={0}</value></data>
+  <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Unsicherer Link blockiert (nur https): {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>{0} Einträge geladen (Offline-Cache, Katalog: {1})</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>Katalog fehlgeschlagen: {0}.</value></data>
   <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>Katalog fehlgeschlagen, Offline-Cache: {0}.</value></data>
@@ -586,4 +587,38 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NotifyEmptyProfileNoMods" xml:space="preserve"><value>In diesem Profil sind keine Mods aktiviert; im Spiel erscheinen keine Mods.</value></data>
   <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>Assemblies wurden gerade erzeugt; diesmal Direkstart der Exe, damit Melon den Manager-Ordner lädt (Startmodus unverändert).</value></data>
   <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>Loader hat diesmal nicht injiziert. Startmodus auf „Nur Exe“ stellen, dann Anwenden und starten, und die schwarze Melon-Konsole prüfen.</value></data>
+  <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>Das Zurücksetzen der Doppelordner-Aktivierung war nicht vollständig erfolgreich: {0}. Bitte „Offiziellen Ordner wiederherstellen“ verwenden.</value></data>
+  <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>Doppelordner ist bereits aktiv. Zum Neuaufbau zuerst „Offiziellen Ordner wiederherstellen“, dann erneut aktivieren.</value></data>
+  <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit blieb wirkungslos (häufig bei der Kontoauswahl); Steam-Prozesse werden beendet…</value></data>
+  <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Bitte Steam selbst öffnen, um den anderen Branch zu laden; der Manager startet Steam nicht automatisch.</value></data>
+  <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>Welcher Branch ist derzeit installiert? Offiziell oder Test wählen.</value></data>
+  <data name="PureGameCleanupButton" xml:space="preserve"><value>Gründliche Bereinigung (Spiel im Originalzustand)</value></data>
+  <data name="ConfirmPureGameCleanup" xml:space="preserve"><value>Melon-, Mods- und Managerdaten werden nach Whitelist entfernt; ist Doppelordner aktiv und der offizielle Stand vollständig, wird er aufgelöst. Spieldateien und .NET bleiben erhalten. Fortfahren?</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOther" xml:space="preserve"><value>Auch den Speicher des anderen Branch löschen (meist die Beta-Kopie – groß und unwiderruflich)? „Nein“ löst den Doppelordner auf, behält aber den Speicher.</value></data>
+  <data name="NotifyPureGameCleanupDone" xml:space="preserve"><value>Bereinigung abgeschlossen. Der Manager wird beendet; den Installationsordner über „Apps und Features“ entfernen.</value></data>
+  <data name="NotifyPureGameCleanupFailed" xml:space="preserve"><value>Bereinigung unvollständig: {0}</value></data>
+  <data name="BusySwitchingToOfficialForTeardown" xml:space="preserve"><value>Wechsle vor dem Auflösen des Doppelordners auf Offiziell – Manager nicht schließen…</value></data>
+  <data name="BusyTeardownDualFolder" xml:space="preserve"><value>Doppelordner-Aufbau wird entfernt – Manager nicht schließen…</value></data>
+  <data name="NotifyTeardownAbortedAwaitSettle" xml:space="preserve"><value>Auf Offiziell gewechselt, aber der Steam-Branch ist noch nicht bereit. Settle abschließen (oder warten, bis das Steam-Update durchläuft) und dann „Offiziellen Ordner wiederherstellen“ klicken.</value></data>
+  <data name="NotifySettleBlockedUpdateUnhealthy" xml:space="preserve"><value>Das Steam-Update wirkt hängend oder fehlgeschlagen. Dateien in Steam überprüfen oder warten, bis das Spiel startbar ist, dann fortfahren.</value></data>
+  <data name="ExportDiagnosticsSummaryHint" xml:space="preserve"><value>summary.md wurde erzeugt – bitte das gesamte ZIP an den Entwickler senden.</value></data>
+  <data name="DiagnosisTitle_critical_op_interrupted" xml:space="preserve"><value>Ein früherer kritischer Vorgang wurde nicht beendet</value></data>
+  <data name="DiagnosisAction_critical_op_interrupted" xml:space="preserve"><value>Den unterbrochenen Vorgang abschließen oder verwerfen. Nicht gleichzeitig Branch wechseln oder Setup ausführen.</value></data>
+  <data name="DiagnosisTitle_game_or_link_incomplete" xml:space="preserve"><value>Spielpfad oder Ordnerverknüpfung ist unvollständig</value></data>
+  <data name="DiagnosisAction_game_or_link_incomplete" xml:space="preserve"><value>Nicht wiederholt auf Weiter klicken. Steam-Download abwarten oder Spieldateien überprüfen.</value></data>
+  <data name="DiagnosisTitle_steam_update_unhealthy" xml:space="preserve"><value>Steam-Update hängt oder ist unvollständig</value></data>
+  <data name="DiagnosisAction_steam_update_unhealthy" xml:space="preserve"><value>Steam bis zur Schaltfläche „Spielen“ durchlaufen lassen und Steam danach vollständig beenden.</value></data>
+  <data name="DiagnosisTitle_melon_needs_upgrade" xml:space="preserve"><value>MelonLoader ist älter als das mitgelieferte 0.7.3</value></data>
+  <data name="DiagnosisAction_melon_needs_upgrade" xml:space="preserve"><value>Im Manager „MelonLoader installieren“ auf 0.7.3 aktualisieren und dann das Spiel starten.</value></data>
+  <data name="DiagnosisTitle_loader_not_injected" xml:space="preserve"><value>Loader hat bei diesem Start nicht injiziert</value></data>
+  <data name="DiagnosisAction_loader_not_injected" xml:space="preserve"><value>Spiel und Steam beenden, „Anwenden und starten“ nutzen und etwa 20 Sekunden warten. Bleibt es dabei, Diagnose exportieren.</value></data>
+  <data name="DiagnosisTitle_catalog_or_update_network" xml:space="preserve"><value>Katalog oder Update-Prüfung im Netzwerk fehlgeschlagen</value></data>
+  <data name="DiagnosisAction_catalog_or_update_network" xml:space="preserve"><value>System-Proxy oder Spiegel prüfen und danach Aktualisieren bzw. Update-Prüfung wiederholen.</value></data>
+  <data name="DiagnosisTitle_deploy_blocked_or_failed" xml:space="preserve"><value>Profil-Anwendung wurde blockiert oder ist fehlgeschlagen</value></data>
+  <data name="DiagnosisAction_deploy_blocked_or_failed" xml:space="preserve"><value>Fehlendes Paket oder Dateisperre aus dem Dialog beheben, das Spiel schließen und erneut anwenden.</value></data>
+  <data name="DiagnosisTitle_acf_beta_mismatch" xml:space="preserve"><value>Steam-Branch passt nicht zum Speicher des Managers</value></data>
+  <data name="DiagnosisAction_acf_beta_mismatch" xml:space="preserve"><value>Der Doppelordner ist nicht defekt. Branch im Manager wechseln, nicht nur über die Steam-Betas.</value></data>
+  <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>Kein blockierendes Problem gefunden</value></data>
+  <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Den Hinweisen im Manager folgen.</value></data>
+  <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Die Spiegel-Adresse muss https verwenden; Einstellung ignoriert: {0}</value></data>
 </root>

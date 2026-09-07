@@ -1175,6 +1175,15 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var stored = string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+
+        // The mirror serves the installer and mod binaries, so plain http would let anyone on
+        // the path swap them. Refuse rather than silently downgrade the whole update channel.
+        if (stored is not null && !ExternalUrlPolicy.IsHttpsUrl(stored))
+        {
+            AppendLog(string.Format(LocalizationService.T("LogMirrorMustBeHttps"), stored));
+            stored = null;
+        }
+
         _catalog.MirrorBaseUrl = stored;
         _catalog.DataRoot = _paths.DataRoot;
         _updateChecker.MirrorBaseUrl = stored;
@@ -2997,14 +3006,17 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    static bool TryOpenUrl(string url)
+    bool TryOpenUrl(string url)
     {
-        if (string.IsNullOrWhiteSpace(url))
+        if (!ExternalUrlPolicy.TryParse(url, out var safe) || safe is null)
+        {
+            AppendLog(string.Format(LocalizationService.T("LogBlockedUnsafeUrl"), url));
             return false;
+        }
 
         try
         {
-            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            Process.Start(new ProcessStartInfo { FileName = safe.AbsoluteUri, UseShellExecute = true });
             return true;
         }
         catch
@@ -4120,8 +4132,7 @@ public sealed partial class MainViewModel : ObservableObject
         cfg.BetaBranchName = betaName.Trim();
         cfg.Enabled = false;
         cfg.WizardStep = BranchWizardStep.Declared;
-        cfg.SessionOwnedOfficialStore = false;
-        cfg.SessionOwnedBetaStore = false;
+        cfg.ClearSessionStoreOwnership();
         _branchSwitch.SaveConfig(cfg);
 
         _suppressBranchSwitchSave = true;
@@ -4225,6 +4236,9 @@ public sealed partial class MainViewModel : ObservableObject
         StartWizardDownloadPoll(current);
     }
 
+    /// <summary>A branch download that has not finished after this long is stuck, not slow.</summary>
+    static readonly TimeSpan WizardDownloadPollMaxDuration = TimeSpan.FromHours(6);
+
     void StopWizardDownloadPoll()
     {
         try { _wizardDownloadPollCts?.Cancel(); }
@@ -4248,9 +4262,27 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshBranchStatusText();
     }
 
+    /// <summary>Steam cannot download into a library folder that no longer exists.</summary>
+    bool WizardPollTargetExists()
+    {
+        try
+        {
+            var link = _branchSwitch.LoadConfig().SteamLinkPath;
+            if (string.IsNullOrWhiteSpace(link))
+                return false;
+            var parent = Path.GetDirectoryName(Path.GetFullPath(link));
+            return !string.IsNullOrWhiteSpace(parent) && Directory.Exists(parent);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     async Task RunWizardDownloadPollAsync(GameBranch current, int generation, CancellationToken token)
     {
         var interval = TimeSpan.FromSeconds(2);
+        var giveUpAt = DateTimeOffset.Now + WizardDownloadPollMaxDuration;
         try
         {
             while (!token.IsCancellationRequested)
@@ -4259,6 +4291,11 @@ public sealed partial class MainViewModel : ObservableObject
                     return;
                 if (BranchWizardStep != BranchWizardStep.WaitingDownloadB)
                     return;
+                if (DateTimeOffset.Now >= giveUpAt || !WizardPollTargetExists())
+                {
+                    StopWizardDownloadPoll();
+                    return;
+                }
 
                 if (!_wizardArchiveBRunning && !IsBranchSwitchBusy && IsWizardDownloadReadyNow())
                 {
@@ -4543,8 +4580,7 @@ public sealed partial class MainViewModel : ObservableObject
             cfg.Enabled = true;
             cfg.ActiveBranch = current;
             cfg.WizardStep = BranchWizardStep.Linked;
-            cfg.SessionOwnedOfficialStore = false;
-            cfg.SessionOwnedBetaStore = false;
+            cfg.ClearSessionStoreOwnership();
         });
 
         RefreshStatus();
@@ -4921,8 +4957,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             cfg.WizardStep = BranchWizardStep.Ready;
             cfg.ActiveBranch = ActiveGameBranch;
-            cfg.SessionOwnedOfficialStore = false;
-            cfg.SessionOwnedBetaStore = false;
+            cfg.ClearSessionStoreOwnership();
         });
         NotifyBranchGates();
         RefreshBranchStatusText();

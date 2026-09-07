@@ -557,6 +557,7 @@
   <data name="MirrorBaseUrl" xml:space="preserve"><value>База внутреннего зеркала</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Пусто = только GitHub. Та же раскладка, например https://example.com/mirror</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>источник={0}</value></data>
+  <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Небезопасная ссылка заблокирована (только https): {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Загружено {0} записей (офлайн-кэш, каталог: {1})</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>Каталог недоступен: {0}.</value></data>
   <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>Каталог недоступен, офлайн-кэш: {0}.</value></data>
@@ -586,4 +587,38 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NotifyEmptyProfileNoMods" xml:space="preserve"><value>В этом профиле не включён ни один мод, в игре модов не будет.</value></data>
   <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>Сборки только что сгенерированы; в этот раз запускаем exe, чтобы Melon зашёл в папку менеджера (режим запуска не меняется).</value></data>
   <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>Loader не внедрился при этом запуске. Переключите режим на «только exe», затем «Применить и запустить», и проверьте чёрную консоль Melon.</value></data>
+  <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>Откат включения двух папок прошёл не полностью: {0}. Используйте «Восстановить официальную папку».</value></data>
+  <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>Режим двух папок уже включён. Чтобы пересоздать его, сначала выполните «Восстановить официальную папку», затем включите снова.</value></data>
+  <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit не сработал (обычно из-за окна выбора аккаунта); принудительно закрываем процессы Steam…</value></data>
+  <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Откройте Steam сами, чтобы скачать другую ветку: менеджер не запускает Steam автоматически.</value></data>
+  <data name="WizardPickCurrentBranchPrompt" xml:space="preserve"><value>Какая ветка установлена сейчас? Выберите официальную или тестовую.</value></data>
+  <data name="PureGameCleanupButton" xml:space="preserve"><value>Полная очистка (чистая игра)</value></data>
+  <data name="ConfirmPureGameCleanup" xml:space="preserve"><value>Будут удалены данные Melon, Mods и менеджера по белому списку; если режим двух папок включён и официальная сборка целая, он будет отключён. Файлы игры и .NET не удаляются. Продолжить?</value></data>
+  <data name="ConfirmPureGameCleanupDeleteOther" xml:space="preserve"><value>Удалить также хранилище другой ветки (обычно бета-копия — большая и без возможности восстановления)? «Нет» отключит режим двух папок, но сохранит хранилище.</value></data>
+  <data name="NotifyPureGameCleanupDone" xml:space="preserve"><value>Очистка завершена. Менеджер закроется; удалите папку установки через «Приложения и возможности».</value></data>
+  <data name="NotifyPureGameCleanupFailed" xml:space="preserve"><value>Очистка выполнена не полностью: {0}</value></data>
+  <data name="BusySwitchingToOfficialForTeardown" xml:space="preserve"><value>Переключаемся на официальную ветку перед отключением двух папок — не закрывайте менеджер…</value></data>
+  <data name="BusyTeardownDualFolder" xml:space="preserve"><value>Отключаем режим двух папок — не закрывайте менеджер…</value></data>
+  <data name="NotifyTeardownAbortedAwaitSettle" xml:space="preserve"><value>Переключились на официальную ветку, но ветка Steam ещё не готова. Завершите сверку (или дождитесь успешного обновления Steam), затем нажмите «Восстановить официальную папку».</value></data>
+  <data name="NotifySettleBlockedUpdateUnhealthy" xml:space="preserve"><value>Обновление Steam зависло или завершилось ошибкой. Проверьте целостность файлов в Steam или дождитесь, пока игру можно будет запустить, затем продолжите.</value></data>
+  <data name="ExportDiagnosticsSummaryHint" xml:space="preserve"><value>Файл summary.md создан — отправьте разработчику весь архив zip.</value></data>
+  <data name="DiagnosisTitle_critical_op_interrupted" xml:space="preserve"><value>Предыдущая критическая операция не завершилась</value></data>
+  <data name="DiagnosisAction_critical_op_interrupted" xml:space="preserve"><value>Завершите или отмените прерванную операцию. Не переключайте ветки и не запускайте установку одновременно.</value></data>
+  <data name="DiagnosisTitle_game_or_link_incomplete" xml:space="preserve"><value>Путь к игре или ссылка на папку неполные</value></data>
+  <data name="DiagnosisAction_game_or_link_incomplete" xml:space="preserve"><value>Не нажимайте «Продолжить» много раз. Дождитесь окончания загрузки Steam или проверьте целостность файлов.</value></data>
+  <data name="DiagnosisTitle_steam_update_unhealthy" xml:space="preserve"><value>Обновление Steam зависло или не завершено</value></data>
+  <data name="DiagnosisAction_steam_update_unhealthy" xml:space="preserve"><value>Дайте Steam завершить обновление до кнопки «Играть», затем полностью закройте Steam.</value></data>
+  <data name="DiagnosisTitle_melon_needs_upgrade" xml:space="preserve"><value>MelonLoader старее встроенной версии 0.7.3</value></data>
+  <data name="DiagnosisAction_melon_needs_upgrade" xml:space="preserve"><value>Нажмите «Установить MelonLoader» в менеджере, чтобы обновиться до 0.7.3, затем запустите игру.</value></data>
+  <data name="DiagnosisTitle_loader_not_injected" xml:space="preserve"><value>Loader не внедрился при этом запуске</value></data>
+  <data name="DiagnosisAction_loader_not_injected" xml:space="preserve"><value>Закройте игру и Steam, используйте «Применить и запустить» и подождите около 20 секунд. Если внедрения нет — выгрузите диагностику.</value></data>
+  <data name="DiagnosisTitle_catalog_or_update_network" xml:space="preserve"><value>Каталог или проверка обновлений не прошли по сети</value></data>
+  <data name="DiagnosisAction_catalog_or_update_network" xml:space="preserve"><value>Проверьте системный прокси или зеркало, затем повторите обновление каталога или проверку версий.</value></data>
+  <data name="DiagnosisTitle_deploy_blocked_or_failed" xml:space="preserve"><value>Применение профиля заблокировано или не удалось</value></data>
+  <data name="DiagnosisAction_deploy_blocked_or_failed" xml:space="preserve"><value>Устраните недостающий пакет или блокировку файла из диалога, закройте игру и примените профиль снова.</value></data>
+  <data name="DiagnosisTitle_acf_beta_mismatch" xml:space="preserve"><value>Ветка Steam не совпадает с хранилищем менеджера</value></data>
+  <data name="DiagnosisAction_acf_beta_mismatch" xml:space="preserve"><value>Это не поломка режима двух папок. Переключайте ветку в менеджере, а не только галочкой бета в Steam.</value></data>
+  <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>Блокирующих проблем не найдено</value></data>
+  <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Следуйте подсказкам менеджера.</value></data>
+  <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Адрес зеркала должен использовать https; настройка проигнорирована: {0}</value></data>
 </root>

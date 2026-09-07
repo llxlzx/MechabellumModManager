@@ -7,6 +7,10 @@ public sealed class GameDetector
 {
     public static readonly TimeSpan LoaderInjectSettle = TimeSpan.FromSeconds(20);
 
+    /// <param name="gameAlreadyRunning">
+    /// Deliberately not part of the injection verdict: a game that was already running proves
+    /// nothing about the launch this session requested. Kept so callers can pass what they know.
+    /// </param>
     public GameStatus Detect(
         string gamePath,
         DateTimeOffset? lastLaunchRequestedAt = null,
@@ -62,8 +66,8 @@ public sealed class GameDetector
         var injected = EvaluateInjection(
             gamePath,
             lastLaunchRequestedAt,
-            now ?? DateTimeOffset.Now,
-            logAge);
+            applyStartedAt,
+            now ?? DateTimeOffset.Now);
         return new GameStatus
         {
             Kind = GameStatusKind.Ready,
@@ -95,8 +99,8 @@ public sealed class GameDetector
     static bool? EvaluateInjection(
         string gamePath,
         DateTimeOffset? lastLaunchRequestedAt,
-        DateTimeOffset now,
-        TimeSpan? logAge)
+        DateTimeOffset? applyStartedAt,
+        DateTimeOffset now)
     {
         if (lastLaunchRequestedAt is null)
             return null;
@@ -104,18 +108,25 @@ public sealed class GameDetector
         if (now - lastLaunchRequestedAt.Value < LoaderInjectSettle)
             return null;
 
+        // Il2Cpp generation during Apply also writes Latest.log. When the launch stamp is older
+        // than this Apply, only a log written after the Apply started can prove an injection —
+        // and a launch stamp from a previous session must never be the one that proves it.
+        var since = lastLaunchRequestedAt.Value;
+        if (applyStartedAt is { } applyStart && applyStart > since)
+            return false;
+
         var logPath = Path.Combine(gamePath, "MelonLoader", "Latest.log");
         if (!File.Exists(logPath))
             return false;
 
         try
         {
-            var write = new DateTimeOffset(File.GetLastWriteTime(logPath));
-            return write >= lastLaunchRequestedAt.Value;
+            var write = new DateTimeOffset(File.GetLastWriteTimeUtc(logPath), TimeSpan.Zero);
+            return write >= since;
         }
         catch
         {
-            return logAge is { } age && age < (now - lastLaunchRequestedAt.Value);
+            return null;
         }
     }
 

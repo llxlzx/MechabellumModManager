@@ -15,12 +15,23 @@ For maintainers: how to build the Setup and publish a GitHub Release.
 
 ## 版本速记 / Release notes
 
+### v1.1.7
+
+- 修复启动自动回滚可能删除玩家原始安装；归档阶段补上 journal，中断后可判定并恢复。
+- Mod 下载校验 sha256（镜像源缺校验值直接拒绝）；外链只允许 https；部署路径必须落在游戏目录内。
+- 诊断包的 json/jsonl 走 JSON 脱敏，超大日志只留末尾 8 MB；配置改为原子写入并在损坏时备份。
+- 补齐 ja/de/ru 缺失的 33 条文案，并加键集与占位符一致性测试。
+- 维护者文档「当前最新」与发版示例对齐到 `release/v1.1.7/`。
+- Startup auto-rollback no longer deletes the player's original install; the archive step is journalled.
+- Mod downloads verify sha256 (mirror downloads without a hash are refused); external links are https-only; deploy paths must stay under the game root.
+- Diagnostics json/jsonl use JSON-aware redaction and oversized logs keep only the last 8 MB; config writes are atomic with a backup on corruption.
+- Adds the 33 missing ja/de/ru strings plus key-set and placeholder parity tests.
+- Maintainer docs now treat `release/v1.1.7/` as current latest.
+
 ### v1.1.6
 
 - 「急救恢复单目录」改为「还原官方目录」；确认框去掉急救/仓行话，正式服缺失时仍不能变出正式服。
-- 维护者文档「当前最新」与发版示例对齐到 `release/v1.1.6/`。
 - Button renamed to Restore Official folder; confirm copy drops emergency/store jargon.
-- Maintainer docs now treat `release/v1.1.6/` as current latest.
 
 ### v1.1.5
 
@@ -86,11 +97,11 @@ Use the links below to jump within this page (Chinese and English sections share
 在管理器仓库的 `release/v版本号/` 下：
 
 ```
-release/v1.1.6/
+release/v1.1.7/
   安装包/     → 给绝大多数用户（Setup.exe）
   本体/       → 便携运行（exe + Assets，无 Mod 数据）
   latest.json → 给「检查更新」用
-  MechabellumModManager_portable_v1.1.6.zip  → 把「本体」打成的 zip，上传 Release
+  MechabellumModManager_portable_v1.1.7.zip  → 把「本体」打成的 zip，上传 Release
 ```
 
 | | **安装包** | **本体（便携）** |
@@ -108,15 +119,15 @@ release/v1.1.6/
 
 ## 3. 发管理器新版本：标准步骤 (中文)
 
-以发布 **v1.1.6** 为例（以后把版本号换成新的即可）。
+以发布 **v1.1.7** 为例（以后把版本号换成新的即可）。
 
 ### 步骤 1 — 改版本号
 
 同时改这三处，数字必须一致：
 
-1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.1.6</Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.1.6"`
-3. 稍后的 `latest.json` → `"version": "1.1.6"`
+1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.1.7</Version>`
+2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.1.7"`
+3. 稍后的 `latest.json` → `"version": "1.1.7"`
 
 ### 步骤 2 — 准备 MelonLoader 离线包（必做）
 
@@ -160,18 +171,18 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 .\installer\build-installer.ps1
 ```
 
-得到：`dist\MechabellumModManager_Setup_v1.1.6.exe`  
+得到：`dist\MechabellumModManager_Setup_v1.1.7.exe`  
 （体积大约二十多 MB 才正常，因为内嵌了 Melon。）
 
-把产物整理进 `release/v1.1.6/安装包/` 与 `release/v1.1.6/本体/`，并写好 `latest.json`。
+把产物整理进 `release/v1.1.7/安装包/` 与 `release/v1.1.7/本体/`，并写好 `latest.json`。
 
 安装向导应依次出现：**选择目标位置**（管理器安装目录）→ **选择游戏目录**。若只看到游戏目录页，请确认已使用含 `DisableDirPage=no` 的 Setup。
 
 ### 步骤 5 — 打本体 zip
 
 ```powershell
-cd release\v1.1.6
-Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.1.6.zip" -Force
+cd release\v1.1.7
+Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.1.7.zip" -Force
 ```
 
 解压后应直接看到 exe 和 Assets，而不是多一层无关目录。
@@ -180,16 +191,16 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 1. 打开：https://github.com/llxlzx/MechabellumModManager/releases  
 2. **Draft a new release**  
-3. **Tag**：输入 `v1.1.6` → Create new tag；**Target** 选 `master`  
-4. **Title**：`v1.1.6`  
+3. **Tag**：输入 `v1.1.7` → Create new tag；**Target** 选 `master`  
+4. **Title**：`v1.1.7`  
 5. **说明**：写本版更新点（可与 latest.json 的 notes 相同；可中英双语）  
 6. **上传附件**（拖进虚线框）：
 
 | 必传 / 推荐 | 文件 |
 |-------------|------|
-| 必传 | `安装包\MechabellumModManager_Setup_v1.1.6.exe` |
+| 必传 | `安装包\MechabellumModManager_Setup_v1.1.7.exe` |
 | 必传 | `latest.json`（**文件名不能改**） |
-| 推荐 | `MechabellumModManager_portable_v1.1.6.zip` |
+| 推荐 | `MechabellumModManager_portable_v1.1.7.zip` |
 
 7. 勾选 **Set as the latest release**  
 8. **不要**勾选 Pre-release  
@@ -197,7 +208,7 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ### 步骤 7 — 自检
 
-- 打开：https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.1.6  
+- 打开：https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.1.7  
   确认三个资源都在  
 - 打开：  
   `https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json`  
@@ -210,9 +221,9 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 ```json
 {
-  "version": "1.1.6",
+  "version": "1.1.7",
   "notes": "本版更新说明，可多行。",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.6/MechabellumModManager_Setup_v1.1.6.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.7/MechabellumModManager_Setup_v1.1.7.exe",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
@@ -260,7 +271,7 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 
 | 项 | 位置 |
 |----|------|
-| 最新整理目录（当前最新） | `release/v1.1.6/`（相对本仓库根目录） |
+| 最新整理目录（当前最新） | `release/v1.1.7/`（相对本仓库根目录） |
 | 流程详版 | `docs/releasing.md` |
 | 本说明 | `docs/GitHub-Release更新说明.md`（本文件，英汉双语） |
 
@@ -296,11 +307,11 @@ A：检查 Mods 仓库是否公开、`catalog.json` 是否在 `master` 分支根
 Under `release/vVERSION/` in the manager repo:
 
 ```
-release/v1.1.6/
+release/v1.1.7/
   安装包/     → Setup for most users
   本体/       → portable (exe + Assets, no mod data)
   latest.json → used by in-app update check
-  MechabellumModManager_portable_v1.1.6.zip  → zip of 本体/, attach to Release
+  MechabellumModManager_portable_v1.1.7.zip  → zip of 本体/, attach to Release
 ```
 
 | | **Setup** | **Portable** |
@@ -317,13 +328,13 @@ Use `release/vX.Y.Z/本体\` or `publish\`.
 
 ## 3. Shipping a new manager version (English)
 
-Example: **v1.1.6** (replace the version everywhere for later releases).
+Example: **v1.1.7** (replace the version everywhere for later releases).
 
 ### Step 1 — Bump version (three places, same number)
 
-1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.1.6</Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.1.6"`
-3. `latest.json` → `"version": "1.1.6"`
+1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>1.1.7</Version>`
+2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "1.1.7"`
+3. `latest.json` → `"version": "1.1.7"`
 
 ### Step 2 — MelonLoader offline zip (required)
 
@@ -367,18 +378,18 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 .\installer\build-installer.ps1
 ```
 
-Output: `dist\MechabellumModManager_Setup_v1.1.6.exe`  
+Output: `dist\MechabellumModManager_Setup_v1.1.7.exe`  
 (~20+ MB is normal; Melon is embedded.)
 
-Copy into `release/v1.1.6/安装包/` and `release/v1.1.6/本体/`, and write `latest.json`.
+Copy into `release/v1.1.7/安装包/` and `release/v1.1.7/本体/`, and write `latest.json`.
 
 Wizard order should be: **Select destination** (manager install dir) → **Select game folder**. If the first page is missing, rebuild with `DisableDirPage=no`.
 
 ### Step 5 — Zip portable
 
 ```powershell
-cd release\v1.1.6
-Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.1.6.zip" -Force
+cd release\v1.1.7
+Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_v1.1.7.zip" -Force
 ```
 
 Extracted zip should show `exe` + `Assets` at the top level (no extra junk folder).
@@ -387,16 +398,16 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 
 1. Open https://github.com/llxlzx/MechabellumModManager/releases  
 2. **Draft a new release**  
-3. **Tag:** `v1.1.6` → create tag; **Target:** `master`  
-4. **Title:** `v1.1.6`  
+3. **Tag:** `v1.1.7` → create tag; **Target:** `master`  
+4. **Title:** `v1.1.7`  
 5. **Description:** release notes (can match `latest.json` notes; bilingual OK)  
 6. **Attach:**
 
 | Required / recommended | File |
 |------------------------|------|
-| Required | `安装包\MechabellumModManager_Setup_v1.1.6.exe` |
+| Required | `安装包\MechabellumModManager_Setup_v1.1.7.exe` |
 | Required | `latest.json` (**exact filename**) |
-| Recommended | `MechabellumModManager_portable_v1.1.6.zip` |
+| Recommended | `MechabellumModManager_portable_v1.1.7.zip` |
 
 7. Check **Set as the latest release**  
 8. Do **not** check Pre-release  
@@ -404,7 +415,7 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 
 ### Step 7 — Verify
 
-- https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.1.6 — all assets present  
+- https://github.com/llxlzx/MechabellumModManager/releases/tag/v1.1.7 — all assets present  
 - https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json — valid JSON  
 - Manager → **Settings → Check for updates** should offer the new version if the installed app is older
 
@@ -414,9 +425,9 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 
 ```json
 {
-  "version": "1.1.6",
+  "version": "1.1.7",
   "notes": "Release notes (can be multi-line).",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.6/MechabellumModManager_Setup_v1.1.6.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.7/MechabellumModManager_Setup_v1.1.7.exe",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
@@ -464,7 +475,7 @@ Author flow: bilingual beginner guide in the MechabellumMods `README.md`.
 
 | Item | Path |
 |------|------|
-| Packaged folder (current latest) | `release/v1.1.6/` (relative to this repo root) |
+| Packaged folder (current latest) | `release/v1.1.7/` (relative to this repo root) |
 | Longer tech notes | `docs/releasing.md` |
 | This guide | `docs/GitHub-Release更新说明.md` (bilingual) |
 
