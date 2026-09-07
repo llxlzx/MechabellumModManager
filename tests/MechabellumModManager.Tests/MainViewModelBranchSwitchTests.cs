@@ -1079,7 +1079,7 @@ public class MainViewModelBranchSwitchTests
         mapped.Should().Contain("Mechabellum_beta");
         mapped.Should().NotContain("Store path already exists");
         mapped.Should().Contain("另一服");
-        mapped.Should().Contain("急救");
+        mapped.Should().Contain("还原官方目录");
         mapped.Should().Contain("删除另一仓");
     }
 

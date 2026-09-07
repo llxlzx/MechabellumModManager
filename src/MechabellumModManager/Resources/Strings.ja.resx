@@ -316,7 +316,7 @@
   <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
   <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
-  <data name="BranchSwitchEmergencyRecover" xml:space="preserve"><value>緊急：単一フォルダ復元</value></data>
+  <data name="BranchSwitchEmergencyRecover" xml:space="preserve"><value>公式フォルダに戻す</value></data>
   <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
   <data name="BranchSwitchRepairOrphan" xml:space="preserve"><value>単一フォルダに復元</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Steam でテスト版を選択済み — 続行</value></data>
@@ -329,7 +329,7 @@
   <data name="BranchStatusEnablingWaitDownload" xml:space="preserve"><value>有効化中（Steam ダウンロード待ち；閉じるとロールバック）</value></data>
   <data name="StatusEnableDualWaitingDownload" xml:space="preserve"><value>有効化中：Steam が他方ブランチをダウンロード中（ゲームは消失していません）。</value></data>
   <data name="StatusEnableDualWaitingExitSteam" xml:space="preserve"><value>他方のダウンロード完了：トレイから Steam を終了すると自動でアーカイブします。</value></data>
-  <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>緊急復元が必要</value></data>
+  <data name="BranchStatusNeedsEmergency" xml:space="preserve"><value>公式フォルダの復元が必要</value></data>
   <data name="BranchStatusWaitingSteam" xml:space="preserve"><value>Steam の切替完了を待機</value></data>
   <data name="BranchStatusOfficial" xml:space="preserve"><value>正式版</value></data>
   <data name="BranchStatusBeta" xml:space="preserve"><value>テスト版</value></data>
@@ -373,12 +373,12 @@
   <data name="ConfirmOverwriteUnmanagedMore" xml:space="preserve"><value>
 …合計 {0} 件</value></data>
   <data name="LogCancelledOverwriteUnmanaged" xml:space="preserve"><value>管理対象外ファイルの上書きをキャンセルしました。</value></data>
-  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>正式/テストの二系統は既に有効です。再構築するには先に「緊急：単一フォルダ復元」してから再度有効化してください。続行しますか？</value></data>
+  <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>正式/テストの二系統は既に有効です。再構築するには先に「公式フォルダに戻す」してから再度有効化してください。続行しますか？</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>正式/テスト二系統を解除しますか？使用中のフォルダが再び Steam のゲームパスになります。先に Steam とゲームを終了してください。</value></data>
-  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>単一フォルダに戻します（Steam の接続は 1 つの倉庫だけ残します）。緊急復元で単一の Mechabellum フォルダに戻します（可能なら完全なストアからジャンクション/空シェルを実体化）。次の確認で残留ストアの削除を聞きます。先に Steam とゲームを終了してください。続行しますか？</value></data>
-  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>単一フォルダに戻します（Steam の接続は 1 つの倉庫だけ残します）。緊急復元は残っているフォルダを単一の Mechabellum にするだけです。正式版は作れません。正式ストアが無い／不完全です。Steam のダウンロード完了を待ってください。今は切替・アンインストールをしないでください。続行すると現在のフォルダだけ残ります。続行しますか？</value></data>
-  <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam がゲームフォルダに書き込み中です。「開始」可能になるまで待ってください。その間は緊急復元・切替・アンインストールをしないでください。</value></data>
-  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>単一フォルダに戻します（Steam の接続は 1 つの倉庫だけ残します）。二系統はオフですが、ジャンクションまたは残留ストアが残っています。単一の Mechabellum に復元します（ジャンクションなら実体化）。他方を残すとウィザードが再び失敗することがあります。先に Steam とゲームを終了してください。続行しますか？</value></data>
+  <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>公式のゲームフォルダに戻します（Steam は Mechabellum フォルダを 1 つだけ残します）。ジャンクション/空シェルを外し、可能なら完全なフォルダからファイルを戻します。次の確認で余分なゲームフォルダの削除を聞きます。先に Steam とゲームを終了してください。続行しますか？</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>公式のゲームフォルダに戻します（Steam は Mechabellum フォルダを 1 つだけ残します）。残っているフォルダを単一の Mechabellum にするだけです。正式版は作れません。正式フォルダが無い／不完全です。Steam のダウンロード完了を待ってください。今は切替・アンインストールをしないでください。続行すると現在のフォルダだけ残ります。続行しますか？</value></data>
+  <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam がゲームフォルダに書き込み中です。「開始」可能になるまで待ってください。その間は「公式フォルダに戻す」・切替・アンインストールをしないでください。</value></data>
+  <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>公式のゲームフォルダに戻します（Steam は Mechabellum フォルダを 1 つだけ残します）。二系統はオフですが、ジャンクションまたは残留フォルダが残っています。単一の Mechabellum に復元します（ジャンクションなら実体化）。他方を残すとウィザードが再び失敗することがあります。先に Steam とゲームを終了してください。続行しますか？</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>単一フォルダ Mechabellum に復元しました。</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>単一フォルダ Mechabellum に復元しました。</value></data>
   <data name="NotifyOrphanRepairFailed" xml:space="preserve"><value>単一フォルダ復元に失敗：{0}</value></data>
@@ -413,7 +413,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogBranchTeardownDone" xml:space="preserve"><value>正式/テスト二系統設定を解除しました。</value></data>
   <data name="LogWizardAbortedReset" xml:space="preserve"><value>デュアル構成ウィザードを中止し未設定に戻しました。ゲームフォルダを確認してから適用して起動してください。MelonLoader 有効時は黒い Melon コンソールが出ます（PowerShell ではありません）。</value></data>
   <data name="LogEnableDualRolledBack" xml:space="preserve"><value>デュアル有効化をキャンセルし、単一フォルダへロールバックしました。</value></data>
-  <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>デュアル有効化が未完了で Steam/ゲームが動作中のためディスクロールバックをスキップし、セッション印を保持しました。Steam 終了後に「緊急：単一フォルダ復元」を使ってください。</value></data>
+  <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>デュアル有効化が未完了で Steam/ゲームが動作中のためディスクロールバックをスキップし、セッション印を保持しました。Steam 終了後に「公式フォルダに戻す」を使ってください。</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>Mod を有効にするには MelonLoader の黒いコンソールが必要です（PowerShell ではありません）。出ない場合は version.dll / MelonLoader を確認し、MelonLoader\Latest.log を送ってください。</value></data>
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>起動を要求しました。ゲームプロセスの起動を確認しています…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>ゲームプロセスを検出しました。</value></data>
@@ -446,7 +446,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LabelSummary" xml:space="preserve"><value>機能</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>ゲームパスは steamapps\common\Mechabellum 配下である必要があります。</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>現在のゲームパスが無効なため、二系統ウィザードを開始できません。</value></data>
-  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>他方の独立フォルダが既に存在するためアーカイブできません：{0}。先に救急で単一フォルダへ戻すか、クリーン復元で「もう一方の倉庫も削除」（元に戻せません）を選んでください。</value></data>
+  <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>他方の独立フォルダが既に存在するためアーカイブできません：{0}。先に「公式フォルダに戻す」か、クリーン復元で「もう一方の倉庫も削除」（元に戻せません）を選んでください。</value></data>
   <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>The other branch folder exists but is incomplete (missing GameAssembly etc.): {0}. Exit Steam, delete that incomplete folder, then continue the wizard — do not keep clicking Continue.</value></data>
   <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>Other branch folder {0} is complete, but the Steam link path is still a real directory. The manager will not auto-delete game folders. Use Clear isolation in Settings, or exit Steam and resolve the leftover, then restart the wizard.</value></data>
   <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Steam link path is still occupied (real folder or wrong junction); cannot create the directory link. Clear isolation in Settings, or exit Steam and fix …\common\Mechabellum, then continue.</value></data>
@@ -454,7 +454,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogWizardNormalizedStorePath" xml:space="preserve"><value>ゲームパスをストア「{0}」から Steam リンク「{1}」へ正規化しました。</value></data>
   <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>二系統は解除済みですが残留ストアがあります（ウィザードを阻害）：{0}。不要なら削除するか、セットアップ再実行で Mechabellum へ正規化してください。</value></data>
   <data name="NotifyBranchTeardownLeftoverStoresResidual" xml:space="preserve"><value>二系統は解除済みですが、削除確認なしで残留ストアが残っています：{0}。不要なら削除するか、セットアップ再実行で Mechabellum へ正規化してください。</value></data>
-  <data name="FailOrphanSteamLinkNotGameRoot" xml:space="preserve"><value>Steam の Mechabellum が不完全で、残留ストアからの自動復旧にも失敗しました。Steam を終了し、Mechabellum_official / Mechabellum_beta を確認してから「緊急：単一フォルダ復元」するか、セットアップ／Steam 検証を使ってください。</value></data>
+  <data name="FailOrphanSteamLinkNotGameRoot" xml:space="preserve"><value>Steam の Mechabellum が不完全で、残留フォルダからの自動復旧にも失敗しました。Steam を終了し、Mechabellum_official / Mechabellum_beta を確認してから「公式フォルダに戻す」か、セットアップ／Steam 検証を使ってください。</value></data>
   <data name="FailOrphanSteamLinkHollowNoDonor" xml:space="preserve"><value>Mechabellum が空で、近くに完全な独立ストア（Mechabellum_official / Mechabellum_beta）がありません。Steam のファイル整合性確認または再インストールで修復してください。</value></data>
   <data name="FailWizardNoAppManifest" xml:space="preserve"><value>appmanifest_669330.acf が見つからず、Steam テストブランチを整合できません。</value></data>
   <data name="FailWizardCannotReadManifest" xml:space="preserve"><value>Steam マニフェストを読めません（権限昇格やライブラリ移動が必要な場合あり）：{0}</value></data>
@@ -471,8 +471,8 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="NotifyManagerAlreadyRunning" xml:space="preserve"><value>マネージャーは既に起動しています。開いているウィンドウを使ってください。</value></data>
   <data name="NotifyAlreadyOnGameBranch" xml:space="preserve"><value>すでにこのブランチです（フォルダと Steam ベータは整合済み）。切替不要。</value></data>
   <data name="NotifyAlignedButGameIncomplete" xml:space="preserve"><value>フォルダと Steam 分岐キーは一致していますが、ゲームパスが未準備です（実行ファイル不足または MelonLoader 未完了）。Steam のダウンロード/検証完了後に再試行してください。</value></data>
-  <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>他方ストアが完了している場合：Steam を完全終了してから他方へ切替、または「緊急：単一フォルダ復元」を使ってください。Steam は Mechabellum ジャンクション経由で現行ストアを書き換えます。ダウンロード中は強制操作しないでください。</value></data>
-  <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>現行ストアが不完全です（Steam ダウンロード/検証中で GameAssembly.dll 欠落など）。Steam 終了後、完了している他方へ切替、または「緊急：単一フォルダ復元」で完了ストアから戻すか、ダウンロード完了を待ってください。</value></data>
+  <data name="HintActiveStoreIncompleteSwitchOther" xml:space="preserve"><value>他方フォルダが完了している場合：Steam を完全終了してから他方へ切替、または「公式フォルダに戻す」を使ってください。Steam は Mechabellum ジャンクション経由で現行フォルダを書き換えます。ダウンロード中は強制操作しないでください。</value></data>
+  <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>現行フォルダが不完全です（Steam ダウンロード/検証中で GameAssembly.dll 欠落など）。Steam 終了後、完了している他方へ切替、または「公式フォルダに戻す」で完了フォルダから戻すか、ダウンロード完了を待ってください。</value></data>
   <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>ゲームパスが未準備のため決済デプロイできません。Steam 完了後に再度確認してください。</value></data>
   <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>決済時のデプロイに失敗しました。Steam 決済待ちのままです。修正後に再確認してください。</value></data>
   <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam manifest is not stable yet (verify/write). After the download shows complete, wait a moment and confirm again; if it still fails, fully exit Steam and retry.</value></data>
@@ -562,7 +562,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="CatalogFetchFailedUsedCache" xml:space="preserve"><value>カタログ取得失敗。オフラインキャッシュを使用: {0}。</value></data>
   <data name="CatalogFetchHintNoMirror" xml:space="preserve"><value>設定でミラー基址を入れるか、システムプロキシを有効にして再更新してください。</value></data>
   <data name="CatalogFetchHintMirrorFailed" xml:space="preserve"><value>ミラーも失敗しました。アドレスまたはシステムプロキシを確認してください。</value></data>
-  <data name="EmergencyRecoverLead" xml:space="preserve"><value>単一フォルダに戻します（Steam の接続は 1 つの倉庫だけ残します）。</value></data>
+  <data name="EmergencyRecoverLead" xml:space="preserve"><value>公式のゲームフォルダに戻します（Steam は Mechabellum フォルダを 1 つだけ残します）。</value></data>
   <data name="ConfirmPureGameCleanupDeleteOtherOption" xml:space="preserve"><value>もう一方の倉庫も削除する（元に戻せません。既定はオフ）</value></data>
   <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
 
@@ -574,7 +574,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
 Clash はシステムプロキシ/TUN が必要です。
 GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value></data>
   <data name="UpdateFailedCopiedHint" xml:space="preserve"><value>国内ダウンロード説明をコピーしました。</value></data>
-  <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam の BetaKey（{1}）が現在の倉庫（{0}）と一致しません。緊急復旧はしないでください。</value></data>
+  <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam の BetaKey（{1}）が現在のフォルダ（{0}）と一致しません。「公式フォルダに戻す」は使わないでください。</value></data>
   <data name="NotifyDeployFailed" xml:space="preserve"><value>配備に失敗: {0}</value></data>
   <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>もう一方の Steam ベータ設定に失敗したためウィザードを中止: {0}</value></data>
   <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>二系統ウィザードが未完了です</value></data>

@@ -1,0 +1,7 @@
+{
+  "version": "1.1.6",
+  "notes": "「急救恢复单目录」改为「还原官方目录」。确认框去掉急救/仓行话。\nRenames Emergency recover to Restore Official folder. Confirm copy drops emergency/store jargon.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.6/MechabellumModManager_Setup_v1.1.6.exe",
+  "publishedAt": "2026-09-07T12:30:00Z",
+  "build": "v1.1.6-restore-official"
+}
