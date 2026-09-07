@@ -46,9 +46,11 @@ function Test-ValidSnapshot([string] $Text, [string] $Branch, [string] $Expected
     }
 
     if ([string]::IsNullOrWhiteSpace($ExpectedBeta)) { return $false }
-    if (-not [string]::Equals(($userKey ?? ""), $ExpectedBeta, [StringComparison]::Ordinal)) { return $false }
+    $userCmp = if ($null -eq $userKey) { "" } else { $userKey }
+    if (-not [string]::Equals($userCmp, $ExpectedBeta, [StringComparison]::Ordinal)) { return $false }
     if (-not $hasMounted) { return $true }
-    return [string]::Equals(($mountedKey ?? ""), $ExpectedBeta, [StringComparison]::Ordinal)
+    $mountedCmp = if ($null -eq $mountedKey) { "" } else { $mountedKey }
+    return [string]::Equals($mountedCmp, $ExpectedBeta, [StringComparison]::Ordinal)
 }
 
 function Remove-IfInvalid([string] $Path, [string] $Branch, [string] $ExpectedBeta) {

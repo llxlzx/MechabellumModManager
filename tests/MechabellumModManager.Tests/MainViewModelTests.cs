@@ -81,6 +81,60 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public void After_launch_stale_latest_log_drops_ready_accent_but_keeps_deploy()
+    {
+        using var fx = Fixture.CreateReady();
+        var logPath = Path.Combine(fx.GameRoot, "MelonLoader", "Latest.log");
+        Directory.CreateDirectory(Path.Combine(fx.GameRoot, "MelonLoader"));
+        File.WriteAllText(logPath, "[14:17:52.025] MelonLoader v0.7.1 Open-Beta\n");
+        File.SetLastWriteTime(logPath, DateTime.Now.AddDays(-8));
+        fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
+        {
+            GamePath = fx.GameRoot,
+            ActiveProfileId = "default",
+            LaunchMode = LaunchMode.ExeOnly,
+            LastLaunchRequestedAt = DateTimeOffset.Now.AddMinutes(-5)
+        });
+
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+
+        vm.IsReady.Should().BeTrue();
+        vm.ShowReadyAccent.Should().BeFalse();
+        vm.StatusKindLabel.Should().Be("未注入");
+        vm.GameStatus!.Message.Should().Be("Loader 未在本次启动注入");
+        vm.CanDeployOrLaunch.Should().BeTrue();
+        vm.GameStatus.MelonLoaderVersion.Should().Be("0.7.1");
+    }
+
+    [Fact]
+    public void Detect_not_injected_records_loader_not_injected_once()
+    {
+        using var fx = Fixture.CreateReady();
+        var logPath = Path.Combine(fx.GameRoot, "MelonLoader", "Latest.log");
+        Directory.CreateDirectory(Path.Combine(fx.GameRoot, "MelonLoader"));
+        File.WriteAllText(logPath, "[14:17:52.025] MelonLoader v0.7.1 Open-Beta\n");
+        File.SetLastWriteTime(logPath, DateTime.Now.AddDays(-8));
+        fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
+        {
+            GamePath = fx.GameRoot,
+            ActiveProfileId = "default",
+            LaunchMode = LaunchMode.ExeOnly,
+            LastLaunchRequestedAt = DateTimeOffset.Now.AddMinutes(-5)
+        });
+
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+        vm.GameStatus!.LoaderInjected.Should().BeFalse();
+
+        var eventsPath = Path.Combine(fx.Paths.LogsDir, ManagerEventLog.FileName);
+        File.Exists(eventsPath).Should().BeTrue();
+        var first = File.ReadAllText(eventsPath);
+        first.Should().Contain("loader_not_injected");
+
+        vm.RefreshStatusCommand.Execute(null);
+        File.ReadAllText(eventsPath).Should().Be(first);
+    }
+
+    [Fact]
     public void HighRisk_enable_cancelled_when_confirm_returns_false()
     {
         using var fx = Fixture.CreateReady(highRisk: true);

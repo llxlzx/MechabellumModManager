@@ -28,12 +28,17 @@ public static class DiagnosticsTimelineBuilder
         ("未找到有效的 Mechabellum", "game_missing"),
         ("已导出诊断包", "diag_export"),
         ("切服失败", "branch_switch_fail"),
+        ("Loader 未在本次启动注入", "loader_not_injected"),
         ("游戏与 MelonLoader 已就绪", "game_ready")
     ];
 
-    public static string BuildJsonl(params string?[] logTexts)
+    public static string BuildJsonl(params string?[] logTexts) =>
+        MergeEventsAndLogs(eventsJsonl: null, logTexts);
+
+    public static string MergeEventsAndLogs(string? eventsJsonl, params string?[] logTexts)
     {
         var sb = new StringBuilder();
+        AppendStructuredEvents(sb, eventsJsonl);
         foreach (var text in logTexts)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -70,5 +75,23 @@ public static class DiagnosticsTimelineBuilder
         }
 
         return sb.ToString();
+    }
+
+    static void AppendStructuredEvents(StringBuilder sb, string? eventsJsonl)
+    {
+        if (string.IsNullOrWhiteSpace(eventsJsonl))
+            return;
+
+        foreach (var raw in eventsJsonl.Replace("\r\n", "\n").Split('\n'))
+        {
+            var line = raw.Trim();
+            if (line.Length == 0)
+                continue;
+            if (line[0] != '{')
+                continue;
+            sb.Append(line);
+            if (line[^1] != '\n')
+                sb.Append('\n');
+        }
     }
 }

@@ -90,8 +90,12 @@ public sealed class DeployService
         }
         catch (Exception ex)
         {
-            Rollback(prev, writtenThisAttempt, packages, gamePath, resolvedManifest);
-            return Fail($"部署失败并已回滚：{ex.Message}", plan);
+            var rolledBack = TryRollback(prev, writtenThisAttempt, packages, gamePath, resolvedManifest);
+            return Fail(
+                rolledBack
+                    ? $"部署失败并已回滚：{ex.Message}"
+                    : $"部署失败且回滚未完成：{ex.Message}",
+                plan);
         }
 
         var newManifest = new DeployManifest
@@ -115,7 +119,7 @@ public sealed class DeployService
         };
     }
 
-    private void Rollback(
+    private bool TryRollback(
         DeployManifest prev,
         List<string> writtenThisAttempt,
         IReadOnlyDictionary<string, ModPackage> packages,
@@ -171,10 +175,12 @@ public sealed class DeployService
 
                 _store.Save(manifestPath, new DeployManifest());
             }
+
+            return true;
         }
         catch
         {
-            // Spec §7.5.4: keep prev + logs; do not pretend success
+            return false;
         }
     }
 

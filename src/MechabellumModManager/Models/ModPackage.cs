@@ -9,6 +9,8 @@ public sealed class DeployableFile
 public sealed class ModPackage
 {
     public string Id { get; set; } = "";
+    /// <summary>Catalog entry id when this package was imported from the workshop catalog.</summary>
+    public string? CatalogId { get; set; }
     public string DisplayName { get; set; } = "";
     public string? Version { get; set; }
     public string? Author { get; set; }

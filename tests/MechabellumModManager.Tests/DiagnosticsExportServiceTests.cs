@@ -118,6 +118,9 @@ public class DiagnosticsExportServiceTests
         env.Should().Contain("melon_log_stale_or_incomplete");
         env.Should().Contain("\"staleOrIncomplete\": true");
         env.Should().Contain("\"launchMode\": \"SteamThenExe\"");
+        env.Should().Contain("\"melonLoaderVersion\"");
+        env.Should().Contain("0.7.1");
+        env.Should().Contain("\"latestLogAge\"");
         env.Should().Contain("\"hasPreferencesLoaded\": false");
         archive.GetEntry("summary.md").Should().NotBeNull();
         var summary = new StreamReader(archive.GetEntry("summary.md")!.Open()).ReadToEnd();
@@ -304,6 +307,76 @@ public class DiagnosticsExportServiceTests
         env.Should().Contain("leftover_dual_store_folders");
         env.Should().Contain("orphan_dual_layout");
         env.Should().NotContain("game_path_is_branch_store");
+    }
+
+    [Fact]
+    public void Export_writes_diagnosis_json_and_summary_titled_by_primary()
+    {
+        using var fx = new Fixture();
+        var game = Path.Combine(fx.Root, "game");
+        Directory.CreateDirectory(Path.Combine(game, "MelonLoader", "Il2CppAssemblies"));
+        File.WriteAllText(Path.Combine(game, "Mechabellum.exe"), "x");
+        File.WriteAllText(Path.Combine(game, "GameAssembly.dll"), "x");
+        File.WriteAllText(Path.Combine(game, "version.dll"), "x");
+        File.WriteAllText(Path.Combine(game, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "x");
+        File.WriteAllText(Path.Combine(game, "MelonLoader", "Latest.log"), "MelonLoader v0.7.1 Open-Beta\n");
+        File.SetLastWriteTime(Path.Combine(game, "MelonLoader", "Latest.log"), DateTime.Now.AddDays(-8));
+
+        var zip = Path.Combine(fx.Root, "diagnosis.zip");
+        var svc = new DiagnosticsExportService();
+        var result = svc.ExportToFile(zip, new DiagnosticsExportRequest
+        {
+            Paths = fx.Paths,
+            GamePath = game,
+            SessionLogText = "session",
+            AppVersion = "1.1.3",
+            GameStatusKind = "Ready",
+            Redaction = DiagnosticsRedactionMode.None,
+            LogWriter = new ManagerLogWriter(fx.Paths.LogsDir)
+        });
+
+        result.Success.Should().BeTrue();
+        using var archive = ZipFile.OpenRead(zip);
+        var diagnosisEntry = archive.GetEntry("diagnosis.json");
+        diagnosisEntry.Should().NotBeNull();
+        var diagnosis = new StreamReader(diagnosisEntry!.Open()).ReadToEnd();
+        diagnosis.Should().Contain("\"code\": \"melon_needs_upgrade\"");
+        diagnosis.Should().Contain("dual_folder_broken");
+
+        var summary = new StreamReader(archive.GetEntry("summary.md")!.Open()).ReadToEnd();
+        summary.Should().StartWith("# ");
+        summary.Should().Contain("MelonLoader");
+        summary.Should().Contain("## Findings");
+    }
+
+    [Fact]
+    public void Export_includes_events_jsonl_and_critical_op_when_present()
+    {
+        using var fx = new Fixture();
+        File.WriteAllText(fx.Paths.CriticalOpMarkerPath, """{"kind":"BranchDiskWrite","detail":"SwitchToBeta","pid":1}""");
+        var events = new ManagerEventLog(fx.Paths.LogsDir);
+        events.Write(ManagerEventLog.LaunchRequested, new Dictionary<string, string?> { ["mode"] = "SteamThenExe" });
+
+        var zip = Path.Combine(fx.Root, "events.zip");
+        var svc = new DiagnosticsExportService();
+        var result = svc.ExportToFile(zip, new DiagnosticsExportRequest
+        {
+            Paths = fx.Paths,
+            GamePath = Path.Combine(fx.Root, "no-game"),
+            SessionLogText = "[12:00:00] hello without needles",
+            AppVersion = "1.1.3",
+            Redaction = DiagnosticsRedactionMode.None,
+            LogWriter = new ManagerLogWriter(fx.Paths.LogsDir)
+        });
+
+        result.Success.Should().BeTrue();
+        using var archive = ZipFile.OpenRead(zip);
+        archive.GetEntry("critical-op.json").Should().NotBeNull();
+        archive.GetEntry("events.jsonl").Should().NotBeNull();
+        var timeline = new StreamReader(archive.GetEntry("timeline.jsonl")!.Open()).ReadToEnd();
+        timeline.Should().Contain("launch_requested");
+        var diagnosis = new StreamReader(archive.GetEntry("diagnosis.json")!.Open()).ReadToEnd();
+        diagnosis.Should().Contain("critical_op_interrupted");
     }
 
     sealed class Fixture : IDisposable

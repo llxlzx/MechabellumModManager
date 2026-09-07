@@ -445,6 +445,45 @@ public class SteamBetaKeyEditorTests
     }
 
     [Fact]
+    public void LooksSteamWritingGame_true_for_field_acf_target_mismatch_and_staging()
+    {
+        // Field 2026-09-06: beta files still mounted, Steam staging Official (TargetBuildID 24856572).
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"1030"
+            	"buildid"		"25139974"
+            	"TargetBuildID"		"24856572"
+            	"BytesToDownload"		"3231968864"
+            	"BytesDownloaded"		"1078612368"
+            	"BytesToStage"		"13745678169"
+            	"BytesStaged"		"11387137857"
+            }
+            """;
+        SteamBetaKeyEditor.LooksSteamWritingGame(acf).Should().BeTrue();
+    }
+
+    [Fact]
+    public void LooksSteamWritingGame_false_when_settled_same_build()
+    {
+        var acf =
+            """
+            "AppState"
+            {
+            	"StateFlags"		"4"
+            	"buildid"		"24856572"
+            	"TargetBuildID"		"24856572"
+            	"BytesToDownload"		"0"
+            	"BytesDownloaded"		"0"
+            	"BytesToStage"		"0"
+            	"BytesStaged"		"0"
+            }
+            """;
+        SteamBetaKeyEditor.LooksSteamWritingGame(acf).Should().BeFalse();
+    }
+
+    [Fact]
     public void ProcessProbe_can_be_injected()
     {
         var editor = new SteamBetaKeyEditor(new ProcessProbe());

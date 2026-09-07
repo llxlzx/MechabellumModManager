@@ -201,6 +201,54 @@ public sealed class SteamBetaKeyEditor
         return false;
     }
 
+    /// <summary>
+    /// Steam is writing the live install (download/stage/commit or TargetBuildID != buildid).
+    /// Do not emergency-recover, switch stores, or uninstall-cleanup while this is true.
+    /// </summary>
+    public static bool LooksSteamWritingGame(string acfText)
+    {
+        if (string.IsNullOrWhiteSpace(acfText))
+            return false;
+
+        var buildId = ReadQuotedValue(acfText, "buildid") ?? "";
+        var targetBuildId = ReadQuotedValue(acfText, "TargetBuildID") ?? "";
+        if (!string.IsNullOrWhiteSpace(targetBuildId)
+            && targetBuildId != "0"
+            && !string.Equals(targetBuildId, buildId, StringComparison.Ordinal))
+            return true;
+
+        var bytesToDownload = ReadQuotedValue(acfText, "BytesToDownload") ?? "0";
+        var bytesDownloaded = ReadQuotedValue(acfText, "BytesDownloaded") ?? "0";
+        if (!string.Equals(bytesToDownload, "0", StringComparison.Ordinal)
+            && !string.Equals(bytesToDownload, "", StringComparison.Ordinal)
+            && !string.Equals(bytesToDownload, bytesDownloaded, StringComparison.Ordinal))
+            return true;
+
+        var bytesToStage = ReadQuotedValue(acfText, "BytesToStage") ?? "0";
+        var bytesStaged = ReadQuotedValue(acfText, "BytesStaged") ?? "0";
+        if (!string.Equals(bytesToStage, "0", StringComparison.Ordinal)
+            && !string.Equals(bytesToStage, "", StringComparison.Ordinal)
+            && !string.Equals(bytesToStage, bytesStaged, StringComparison.Ordinal))
+            return true;
+
+        if (!TryParseStateFlags(acfText, out var flags))
+            return false;
+
+        const int updateRunning = 256;
+        const int updateStarted = 512;
+        const int validating = 8192;
+        const int addingFiles = 16384;
+        const int preallocating = 32768;
+        const int downloading = 65536;
+        const int staging = 131072;
+        const int committing = 262144;
+        const int writingBits =
+            updateRunning | updateStarted | validating | addingFiles
+            | preallocating | downloading | staging | committing;
+
+        return (flags & writingBits) != 0;
+    }
+
     public static string DecodeStateFlags(string? stateFlagsRaw)
     {
         if (!int.TryParse(stateFlagsRaw, out var flags) || flags == 0)

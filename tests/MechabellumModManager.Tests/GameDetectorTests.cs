@@ -60,6 +60,78 @@ public class GameDetectorTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact]
+    public void Ready_message_includes_below_bundled_version_from_latest_log()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            WriteLatestLog(root, "0.7.1", DateTime.Now.AddDays(-8));
+            var s = new GameDetector().Detect(root);
+            s.Kind.Should().Be(GameStatusKind.Ready);
+            s.MelonLoaderVersion.Should().Be("0.7.1");
+            s.LatestLogAge.Should().NotBeNull();
+            s.LatestLogAge!.Value.TotalHours.Should().BeGreaterThan(24);
+            s.Message.Should().Contain("Melon 0.7.1");
+            s.Message.Should().Contain("低于内置 0.7.3");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void After_launch_stale_latest_log_is_not_injected()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var launchedAt = DateTimeOffset.Now.AddMinutes(-5);
+            WriteLatestLog(root, "0.7.1", launchedAt.LocalDateTime.AddDays(-8));
+            var s = new GameDetector().Detect(root, lastLaunchRequestedAt: launchedAt);
+            s.Kind.Should().Be(GameStatusKind.Ready);
+            s.LoaderInjected.Should().BeFalse();
+            s.Message.Should().Be("Loader 未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void After_launch_fresh_latest_log_stays_ready()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var launchedAt = DateTimeOffset.Now.AddMinutes(-5);
+            WriteLatestLog(root, "0.7.3", launchedAt.LocalDateTime.AddSeconds(20));
+            var s = new GameDetector().Detect(root, lastLaunchRequestedAt: launchedAt);
+            s.Kind.Should().Be(GameStatusKind.Ready);
+            s.LoaderInjected.Should().NotBe(false);
+            s.Message.Should().NotContain("未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void Recent_launch_within_settle_does_not_mark_not_injected()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var launchedAt = DateTimeOffset.Now.AddSeconds(-5);
+            WriteLatestLog(root, "0.7.1", DateTime.Now.AddDays(-8));
+            var s = new GameDetector().Detect(root, lastLaunchRequestedAt: launchedAt);
+            s.LoaderInjected.Should().NotBe(false);
+            s.Message.Should().NotContain("未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    static void WriteLatestLog(string root, string version, DateTime lastWriteLocal)
+    {
+        var path = Path.Combine(root, "MelonLoader", "Latest.log");
+        File.WriteAllText(path, $"[14:17:52.025] MelonLoader v{version} Open-Beta\n");
+        File.SetLastWriteTime(path, lastWriteLocal);
+    }
+
     static string CreateTempGame(bool exe, bool ga, bool melonDir, bool proxy, bool assemblies = false)
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-game-" + Guid.NewGuid().ToString("N"));

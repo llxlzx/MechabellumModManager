@@ -38,6 +38,9 @@ public sealed class CatalogMod
     [JsonPropertyName("file")]
     public string File { get; set; } = "";
 
+    [JsonPropertyName("sha256")]
+    public string? Sha256 { get; set; }
+
     [JsonPropertyName("preview")]
     public string? Preview { get; set; }
 
@@ -78,9 +81,16 @@ public sealed class ModCatalogService
 
     readonly HttpClient _http;
 
-    public ModCatalogService(HttpClient? http = null)
+    public string? MirrorBaseUrl { get; set; }
+    public string? DataRoot { get; set; }
+    public string? LastFetchSource { get; private set; }
+    public string? LastDownloadSource { get; private set; }
+
+    public ModCatalogService(HttpClient? http = null, string? mirrorBaseUrl = null, string? dataRoot = null)
     {
         _http = http ?? CreateDefaultClient();
+        MirrorBaseUrl = string.IsNullOrWhiteSpace(mirrorBaseUrl) ? null : mirrorBaseUrl.Trim().TrimEnd('/');
+        DataRoot = dataRoot;
     }
 
     public const long MaxDownloadBytes = 80L * 1024 * 1024;
@@ -145,21 +155,70 @@ public sealed class ModCatalogService
         return new Uri(GetRawUrl(mod.File ?? ""));
     }
 
-    public static string? PreviewUrl(CatalogMod? mod)
+    public static string? PreviewUrl(CatalogMod? mod, string? mirrorBaseUrl = null)
+    {
+        var urls = GetPreviewCandidateUrls(mod, mirrorBaseUrl);
+        return urls.Count == 0 ? null : urls[0];
+    }
+
+    public static IReadOnlyList<string> GetPreviewCandidateUrls(CatalogMod? mod, string? mirrorBaseUrl = null)
     {
         if (mod is null || string.IsNullOrWhiteSpace(mod.Preview))
-            return null;
-        return TryGetRawUrl(mod.Preview);
+            return Array.Empty<string>();
+
+        try
+        {
+            var relative = NormalizeCatalogRelativePath(mod.Preview);
+            return RemoteFetch.BuildCandidates(
+                    mirrorBaseUrl,
+                    $"MechabellumMods/{relative}",
+                    new Uri(GetRawUrl(relative)))
+                .Select(u => u.ToString())
+                .ToList();
+        }
+        catch (ArgumentException)
+        {
+            return Array.Empty<string>();
+        }
+    }
+
+    public IReadOnlyList<Uri> BuildCatalogCandidates() =>
+        RemoteFetch.BuildCandidates(MirrorBaseUrl, "MechabellumMods/catalog.json", CatalogUrl);
+
+    public IReadOnlyList<Uri> BuildFileCandidates(string relativePath)
+    {
+        var relative = NormalizeCatalogRelativePath(relativePath);
+        return RemoteFetch.BuildCandidates(
+            MirrorBaseUrl,
+            $"MechabellumMods/{relative}",
+            new Uri(GetRawUrl(relative)));
     }
 
     public async Task<CatalogRoot> FetchCatalogAsync(CancellationToken ct = default)
     {
-        using var resp = await _http.GetAsync(CatalogUrl, ct).ConfigureAwait(false);
-        resp.EnsureSuccessStatusCode();
-        await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-        var root = await JsonSerializer.DeserializeAsync<CatalogRoot>(stream, JsonOptions, ct)
-            .ConfigureAwait(false);
-        return root ?? new CatalogRoot();
+        using var fetched = await RemoteFetch.GetAsync(_http, BuildCatalogCandidates(), ct).ConfigureAwait(false);
+        LastFetchSource = RemoteFetch.ClassifySource(fetched.Used);
+        var json = await fetched.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(DataRoot))
+            CatalogCache.Write(DataRoot, json);
+        return DeserializeCatalog(json);
+    }
+
+    public CatalogRoot? TryLoadCachedCatalog()
+    {
+        if (string.IsNullOrWhiteSpace(DataRoot))
+            return null;
+        if (!CatalogCache.TryRead(DataRoot, out var json))
+            return null;
+        try
+        {
+            LastFetchSource = "cache";
+            return DeserializeCatalog(json);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public static CatalogRoot DeserializeCatalog(string json)
@@ -174,10 +233,14 @@ public sealed class ModCatalogService
         if (string.IsNullOrWhiteSpace(destPath))
             throw new ArgumentException("Destination path is required.", nameof(destPath));
 
-        var url = BuildFileUrl(mod);
-        using var resp = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct)
+        using var fetched = await RemoteFetch.GetAsync(
+                _http,
+                BuildFileCandidates(mod.File ?? ""),
+                HttpCompletionOption.ResponseHeadersRead,
+                ct)
             .ConfigureAwait(false);
-        resp.EnsureSuccessStatusCode();
+        LastDownloadSource = RemoteFetch.ClassifySource(fetched.Used);
+        var resp = fetched.Response;
 
         if (resp.Content.Headers.ContentLength is long declared && declared > MaxDownloadBytes)
             throw new InvalidOperationException(
@@ -210,23 +273,49 @@ public sealed class ModCatalogService
     }
 
     /// <summary>
-    /// True when any local package contains a file whose name equals the catalog entry's file name.
+    /// True when a library package matches the catalog entry by catalog id or file hash.
+    /// Filename-only matches are ignored so two mods shipping <c>Mod.dll</c> do not collide.
     /// </summary>
+    public static bool IsInLibrary(IEnumerable<ModPackage> packages, CatalogMod mod)
+    {
+        ArgumentNullException.ThrowIfNull(packages);
+        ArgumentNullException.ThrowIfNull(mod);
+
+        var catalogId = (mod.Id ?? "").Trim();
+        foreach (var pkg in packages)
+        {
+            if (!string.IsNullOrWhiteSpace(catalogId))
+            {
+                if (string.Equals(pkg.CatalogId, catalogId, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (string.Equals(pkg.Id, catalogId, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            if (HasMatchingFileHash(pkg, mod))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>Obsolete filename matcher kept for existing call-site migration.</summary>
     public static bool IsInLibraryByFileName(IEnumerable<ModPackage> packages, string? catalogFile)
     {
         ArgumentNullException.ThrowIfNull(packages);
-        var fileName = Path.GetFileName((catalogFile ?? "").Replace('\\', '/'));
-        if (string.IsNullOrWhiteSpace(fileName))
+        return false;
+    }
+
+    static bool HasMatchingFileHash(ModPackage pkg, CatalogMod mod)
+    {
+        var expected = (mod.Sha256 ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(expected))
             return false;
 
-        foreach (var pkg in packages)
+        foreach (var file in pkg.Files)
         {
-            foreach (var file in pkg.Files)
-            {
-                var localName = Path.GetFileName((file.RelativePathInPackage ?? "").Replace('\\', '/'));
-                if (string.Equals(localName, fileName, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
+            if (string.Equals(file.Sha256, expected, StringComparison.OrdinalIgnoreCase))
+                return true;
         }
 
         return false;

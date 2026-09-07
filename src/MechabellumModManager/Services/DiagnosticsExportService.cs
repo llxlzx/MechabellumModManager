@@ -22,6 +22,7 @@ public sealed class DiagnosticsExportRequest
     public bool? GameRunning { get; init; }
     public bool? SteamRunning { get; init; }
     public bool IsAwaitingSteamSettle { get; init; }
+    public Diagnosis? Diagnosis { get; init; }
     public DiagnosticsRedactionMode Redaction { get; init; }
     public ManagerLogWriter? LogWriter { get; init; }
 }
@@ -68,6 +69,10 @@ public sealed class DiagnosticsExportService
             TryCopyText(staging, "config.json", request.Paths.ConfigPath, missing, redact);
             TryCopyText(staging, "branch-switch.json", request.Paths.BranchSwitchConfigPath, missing, redact);
             TryCopyText(staging, "branch-switch-journal.json", request.Paths.BranchSwitchJournalPath, missing, redact);
+            TryCopyText(staging, "critical-op.json", request.Paths.CriticalOpMarkerPath, missing, redact, recordMissing: false);
+
+            var eventLog = new ManagerEventLog(request.Paths.LogsDir);
+            TryCopyText(staging, "events.jsonl", eventLog.FilePath, missing, redact, recordMissing: false);
 
             foreach (var name in new[]
                      {
@@ -149,6 +154,15 @@ public sealed class DiagnosticsExportService
                 {
                     env["gameStatusKind"] = probeKindStr;
                 }
+
+                if (!string.IsNullOrWhiteSpace(request.GamePath))
+                {
+                    var detect = new GameDetector().Detect(request.GamePath);
+                    env["melonLoaderVersion"] = detect.MelonLoaderVersion;
+                    env["latestLogAge"] = detect.LatestLogAge is { } age
+                        ? Math.Round(age.TotalSeconds, 1)
+                        : null;
+                }
             }
             catch
             {
@@ -164,11 +178,31 @@ public sealed class DiagnosticsExportService
             string? managerTail = null;
             try
             {
-                var today = Path.Combine(request.Paths.LogsDir, $"manager-{DateTime.Now:yyyyMMdd}.log");
+                var today = Path.Combine(request.Paths.LogsDir, $"manager-{DateTime.Now:yyyy-MM-dd}.log");
                 if (File.Exists(today))
                     managerTail = File.ReadAllText(today);
             }
             catch { /* ignore */ }
+
+            string? eventsText = null;
+            try
+            {
+                if (File.Exists(eventLog.FilePath))
+                    eventsText = File.ReadAllText(eventLog.FilePath);
+            }
+            catch { /* ignore */ }
+
+            var diagnosis = request.Diagnosis ?? EvaluateDiagnosis(request, eventLog);
+            var diagnosisJson = JsonSerializer.Serialize(new
+            {
+                diagnosis.Code,
+                diagnosis.Title,
+                diagnosis.Evidence,
+                diagnosis.RuledOut,
+                diagnosis.Also,
+                diagnosis.Action
+            }, JsonOptions);
+            WriteText(staging, "diagnosis.json", redact ? RedactJsonDocument(diagnosisJson) : diagnosisJson, redact: false);
 
             var summaryStatusKind = env.TryGetValue("gameStatusKind", out var gsk) ? gsk?.ToString() : request.GameStatusKind;
             var summary = DiagnosticsSummaryBuilder.Build(
@@ -176,10 +210,11 @@ public sealed class DiagnosticsExportService
                 findings,
                 sessionText,
                 managerTail,
-                authoritativeGameStatusKind: summaryStatusKind);
+                authoritativeGameStatusKind: summaryStatusKind,
+                diagnosis: diagnosis);
             WriteText(staging, "summary.md", redact ? Redact(summary) : summary, redact: false);
 
-            var timeline = DiagnosticsTimelineBuilder.BuildJsonl(sessionText, managerTail);
+            var timeline = DiagnosticsTimelineBuilder.MergeEventsAndLogs(eventsText, sessionText, managerTail);
             if (!string.IsNullOrWhiteSpace(timeline))
                 WriteText(staging, "timeline.jsonl", redact ? Redact(timeline) : timeline, redact: false);
 
@@ -220,6 +255,36 @@ public sealed class DiagnosticsExportService
             }
             catch { /* ignore */ }
         }
+    }
+
+    static Diagnosis EvaluateDiagnosis(DiagnosticsExportRequest request, ManagerEventLog eventLog)
+    {
+        DateTimeOffset? lastLaunch = null;
+        try
+        {
+            if (File.Exists(request.Paths.ConfigPath))
+            {
+                var cfg = JsonSerializer.Deserialize<AppConfig>(
+                    File.ReadAllText(request.Paths.ConfigPath),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                lastLaunch = cfg?.LastLaunchRequestedAt;
+            }
+        }
+        catch { /* ignore */ }
+
+        var status = string.IsNullOrWhiteSpace(request.GamePath)
+            ? null
+            : new GameDetector().Detect(request.GamePath, lastLaunch);
+
+        var snap = DiagnosisSnapshotBuilder.Capture(
+            request.Paths,
+            request.GamePath,
+            status,
+            lastLaunch,
+            branch: null,
+            isAwaitingSteamSettle: request.IsAwaitingSteamSettle,
+            events: eventLog.ReadRecent());
+        return DiagnosisEngine.Evaluate(snap);
     }
 
     static DiagnosticsExportResult Fail(string message) =>

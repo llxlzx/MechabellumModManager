@@ -1,6 +1,9 @@
+using System.Net;
+using System.Net.Http;
 using FluentAssertions;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
+using MechabellumModManager.Tests.Support;
 
 public class ModCatalogServiceTests
 {
@@ -94,25 +97,45 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
-    public void IsInLibraryByFileName_matches_case_insensitive_filename()
+    public void IsInLibrary_matches_catalog_id_not_filename()
     {
         var packages = new[]
         {
             new ModPackage
             {
                 Id = "cam-aaaaaaaa",
+                CatalogId = "cam",
                 DisplayName = "Cam",
                 Files =
                 {
-                    new DeployableFile { RelativePathInPackage = "Cam.dll", Sha256 = "abc" }
+                    new DeployableFile { RelativePathInPackage = "Mod.dll", Sha256 = "abc" }
                 }
             }
         };
 
-        ModCatalogService.IsInLibraryByFileName(packages, "mods/cam/Cam.dll").Should().BeTrue();
-        ModCatalogService.IsInLibraryByFileName(packages, "mods/cam/cam.dll").Should().BeTrue();
-        ModCatalogService.IsInLibraryByFileName(packages, "mods/other/Other.dll").Should().BeFalse();
-        ModCatalogService.IsInLibraryByFileName(packages, "").Should().BeFalse();
+        ModCatalogService.IsInLibrary(packages, new CatalogMod { Id = "cam", File = "mods/cam/Mod.dll" })
+            .Should().BeTrue();
+        ModCatalogService.IsInLibrary(packages, new CatalogMod { Id = "other", File = "mods/other/Mod.dll" })
+            .Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsInLibrary_matches_file_hash()
+    {
+        var packages = new[]
+        {
+            new ModPackage
+            {
+                Id = "imported-1",
+                DisplayName = "X",
+                Files = { new DeployableFile { RelativePathInPackage = "Mod.dll", Sha256 = "deadbeef" } }
+            }
+        };
+
+        ModCatalogService.IsInLibrary(packages, new CatalogMod { Id = "other", File = "Mod.dll", Sha256 = "deadbeef" })
+            .Should().BeTrue();
+        ModCatalogService.IsInLibrary(packages, new CatalogMod { Id = "other", File = "Mod.dll", Sha256 = "ffff" })
+            .Should().BeFalse();
     }
 
     [Fact]
@@ -173,5 +196,83 @@ public class ModCatalogServiceTests
         mod.Locales["de"].Summary.Should().BeNull();
         CatalogLocaleResolver.ResolveName(mod, "en").Should().Be("Feature Test Mod");
         CatalogLocaleResolver.ResolveSummary(mod, "de").Should().Be("中文简介");
+    }
+
+    [Fact]
+    public async Task FetchCatalogAsync_prefers_mirror_then_writes_cache()
+    {
+        var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-cat-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dataRoot);
+        try
+        {
+            var handler = new ScriptedHttpHandler(req =>
+            {
+                if (req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                    return ScriptedHttpHandler.Json(HttpStatusCode.OK, SampleCatalogJson);
+                return ScriptedHttpHandler.Json(HttpStatusCode.ServiceUnavailable, "no");
+            });
+            using var http = new HttpClient(handler);
+            var svc = new ModCatalogService(http, "https://mirror.example/m", dataRoot);
+
+            var root = await svc.FetchCatalogAsync();
+
+            root.Mods.Should().HaveCount(2);
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
+            File.Exists(CatalogCache.GetPath(dataRoot)).Should().BeTrue();
+            handler.Requests.Should().ContainSingle();
+        }
+        finally
+        {
+            try { Directory.Delete(dataRoot, recursive: true); } catch { /* cleanup */ }
+        }
+    }
+
+    [Fact]
+    public async Task FetchCatalogAsync_falls_back_to_github_when_mirror_fails()
+    {
+        var handler = new ScriptedHttpHandler(req =>
+        {
+            if (req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                return ScriptedHttpHandler.Json(HttpStatusCode.NotFound, "no");
+            return ScriptedHttpHandler.Json(HttpStatusCode.OK, SampleCatalogJson);
+        });
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http, "https://mirror.example/m");
+
+        var root = await svc.FetchCatalogAsync();
+
+        root.Mods.Should().HaveCount(2);
+        svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+        handler.Requests.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void TryLoadCachedCatalog_reads_written_cache()
+    {
+        var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-cache-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dataRoot);
+        try
+        {
+            CatalogCache.Write(dataRoot, SampleCatalogJson);
+            var svc = new ModCatalogService(dataRoot: dataRoot);
+            var root = svc.TryLoadCachedCatalog();
+            root.Should().NotBeNull();
+            root!.Mods.Should().HaveCount(2);
+            svc.LastFetchSource.Should().Be("cache");
+        }
+        finally
+        {
+            try { Directory.Delete(dataRoot, recursive: true); } catch { /* cleanup */ }
+        }
+    }
+
+    [Fact]
+    public void PreviewUrl_with_mirror_lists_mirror_first()
+    {
+        var cam = new CatalogMod { Preview = "mods/cam/preview.png" };
+        var urls = ModCatalogService.GetPreviewCandidateUrls(cam, "https://mirror.example/m");
+        urls[0].Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.png");
+        urls[1].Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
+        ModCatalogService.PreviewUrl(cam, "https://mirror.example/m").Should().Be(urls[0]);
     }
 }

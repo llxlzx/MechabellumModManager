@@ -38,6 +38,15 @@ public static class SanitizeAcfSnapshotsCli
     {
         try
         {
+            var dir = string.IsNullOrWhiteSpace(snapshotsDir)
+                ? InstallerAcfSanitizeGate.DefaultSnapshotsDir
+                : snapshotsDir;
+            if (!InstallerAcfSanitizeGate.HasSnapshotsToSanitize(dir))
+            {
+                Log("skip: no official.acf/beta.acf under " + dir);
+                return 0;
+            }
+
             SteamAcfSnapshotSanitizeResult result;
             if (!string.IsNullOrWhiteSpace(snapshotsDir))
             {

@@ -30,6 +30,8 @@ public sealed class MelonLoaderDualStoreSync
     readonly GameDetector _detector;
     readonly MelonLoaderConfigOptimizer _optimizer;
 
+    public ManagerEventLog? Events { get; set; }
+
     public MelonLoaderDualStoreSync(
         GameDetector? detector = null,
         MelonLoaderConfigOptimizer? optimizer = null)
@@ -48,7 +50,7 @@ public sealed class MelonLoaderDualStoreSync
         {
             var zipReady = ResolveLocalZip(localZipPath);
             if (!string.IsNullOrWhiteSpace(zipReady)
-                && MelonLoaderVersionGate.ShouldUpgradeInstalled(status.MelonLoaderVersion))
+                && MelonLoaderVersionGate.ShouldForceUpgradeStore(gamePath, status.MelonLoaderVersion))
             {
                 var upgraded = InstallFromZip(gamePath, zipReady);
                 if (upgraded.Success)
@@ -69,6 +71,15 @@ public sealed class MelonLoaderDualStoreSync
             var optimizeReady = seedReady.Success && seedReady.Version != null
                 ? _optimizer.ApplyRecommendedSettings(gamePath, seedReady.Version)
                 : _optimizer.ApplyRecommendedSettings(gamePath);
+            var skipReason = string.IsNullOrWhiteSpace(zipReady) ? "no_local_zip" : "already_current";
+            if (skipReason != "already_current")
+            {
+                Events?.Write(ManagerEventLog.UpgradeSkipped, new Dictionary<string, string?>
+                {
+                    ["version"] = status.MelonLoaderVersion,
+                    ["reason"] = skipReason
+                });
+            }
             return new MelonLoaderInstallResult
             {
                 Success = true,

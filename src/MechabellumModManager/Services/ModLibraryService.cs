@@ -373,7 +373,8 @@ public sealed class ModLibraryService
         string? version,
         string? summary,
         string? catalogUpdatedAt,
-        string? preview)
+        string? preview,
+        string? catalogId = null)
     {
         if (string.IsNullOrWhiteSpace(packageId))
             throw new ArgumentException("Package id is required.", nameof(packageId));
@@ -386,6 +387,8 @@ public sealed class ModLibraryService
         pkg.Summary = summary;
         pkg.CatalogUpdatedAt = catalogUpdatedAt;
         pkg.Preview = preview;
+        if (!string.IsNullOrWhiteSpace(catalogId))
+            pkg.CatalogId = catalogId.Trim();
 
         WritePackageJson(pkg);
         return pkg;
@@ -532,6 +535,7 @@ public sealed class ModLibraryService
             Summary = pkg.Summary,
             CatalogUpdatedAt = pkg.CatalogUpdatedAt,
             Preview = pkg.Preview,
+            CatalogId = pkg.CatalogId,
             CategoryOverride = pkg.CategoryOverride,
             ExtraTags = pkg.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(pkg.ExtraTags).ToList(),
             Files = pkg.Files
@@ -565,6 +569,7 @@ public sealed class ModLibraryService
                 Summary = meta.Summary,
                 CatalogUpdatedAt = meta.CatalogUpdatedAt,
                 Preview = meta.Preview,
+                CatalogId = meta.CatalogId,
                 CategoryOverride = meta.CategoryOverride,
                 ExtraTags = meta.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(meta.ExtraTags).ToList(),
                 Files = meta.Files ?? new List<DeployableFile>(),
@@ -833,6 +838,7 @@ public sealed class ModLibraryService
         public string? Summary { get; set; }
         public string? CatalogUpdatedAt { get; set; }
         public string? Preview { get; set; }
+        public string? CatalogId { get; set; }
         public string? CategoryOverride { get; set; }
         public List<string>? ExtraTags { get; set; }
         public List<DeployableFile>? Files { get; set; }

@@ -159,6 +159,97 @@ public class MelonLoaderDualStoreSyncTests
     }
 
     [Fact]
+    public void EnsureOnStore_upgrades_from_zip_when_latest_log_is_below_bundled()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-upg-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "game");
+        var melonZipDir = Path.Combine(root, "melonloader");
+        try
+        {
+            SeedGame(game);
+            SeedLoader(game);
+            Directory.CreateDirectory(Path.Combine(game, "MelonLoader", "Il2CppAssemblies"));
+            File.WriteAllText(Path.Combine(game, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "gen");
+            File.WriteAllText(
+                Path.Combine(game, "MelonLoader", "Latest.log"),
+                "[14:17:52.025] MelonLoader v0.7.1 Open-Beta\n");
+            var zipPath = CreateFakeMelonZip(melonZipDir);
+            File.WriteAllText(Path.Combine(game, "MelonLoader", "old-marker.txt"), "keep-until-upgrade");
+
+            var result = new MelonLoaderDualStoreSync().EnsureOnStore(game, localZipPath: zipPath);
+
+            result.Success.Should().BeTrue(result.Message);
+            result.Message.Should().Contain("升级");
+            File.Exists(Path.Combine(game, "MelonLoader", "placeholder.txt")).Should().BeTrue();
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
+    public void EnsureOnStore_skips_upgrade_when_latest_log_meets_bundled()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-noup-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "game");
+        var melonZipDir = Path.Combine(root, "melonloader");
+        try
+        {
+            SeedGame(game);
+            SeedLoader(game);
+            Directory.CreateDirectory(Path.Combine(game, "MelonLoader", "Il2CppAssemblies"));
+            File.WriteAllText(Path.Combine(game, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "gen");
+            File.WriteAllText(
+                Path.Combine(game, "MelonLoader", "Latest.log"),
+                "[14:17:52.025] MelonLoader v0.7.3 Open-Beta\n");
+            var zipPath = CreateFakeMelonZip(melonZipDir);
+
+            var result = new MelonLoaderDualStoreSync().EnsureOnStore(game, localZipPath: zipPath);
+
+            result.Success.Should().BeTrue(result.Message);
+            result.Message.Should().Contain("已就绪");
+            result.Message.Should().NotContain("升级");
+            File.Exists(Path.Combine(game, "MelonLoader", "placeholder.txt")).Should().BeFalse();
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
+    public void EnsureOnStore_already_current_does_not_write_upgrade_skipped()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-ml-quiet-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "game");
+        var melonZipDir = Path.Combine(root, "melonloader");
+        var eventsDir = Path.Combine(root, "events");
+        try
+        {
+            SeedGame(game);
+            SeedLoader(game);
+            Directory.CreateDirectory(Path.Combine(game, "MelonLoader", "Il2CppAssemblies"));
+            File.WriteAllText(Path.Combine(game, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"), "gen");
+            File.WriteAllText(
+                Path.Combine(game, "MelonLoader", "Latest.log"),
+                "[14:17:52.025] MelonLoader v0.7.3 Open-Beta\n");
+            var zipPath = CreateFakeMelonZip(melonZipDir);
+            var events = new ManagerEventLog(eventsDir);
+            var sync = new MelonLoaderDualStoreSync { Events = events };
+
+            var result = sync.EnsureOnStore(game, localZipPath: zipPath);
+
+            result.Success.Should().BeTrue(result.Message);
+            File.Exists(events.FilePath).Should().BeFalse();
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
     public void EnsureOnBothStores_fills_missing_side()
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-ml-both-" + Guid.NewGuid().ToString("N"));
