@@ -15,9 +15,18 @@ For maintainers: how to build the Setup and publish a GitHub Release.
 
 ## 版本速记 / Release notes
 
+### v1.1.5
+
+- 切服清空上次启动时间，避免新仓假报「未注入」；未注入写入 `loader_not_injected` 事件与时间线；已是当前 Melon 不再刷 `upgrade_skipped`。
+- 状态栏与诊断包给出唯一主因；国内镜像轮询 + 目录缓存。
+- After branch switch, last-launch time is cleared so the other store is not falsely “not injected”; missing injection is recorded as `loader_not_injected`; `already_current` no longer spams `upgrade_skipped`.
+- Status bar and diagnostics zip name one primary cause; first-party mirror then GitHub; catalog cache.
+
 ### v1.1.4
 
+- 状态栏与诊断包给出唯一主因（已排除 + 证据）；Steam 分支不一致不会盖过 Melon 升级/未注入。
 - 启用双服收尾恢复正式服 Steam 清单快照，避免 Steam 经联接重写下穿 `_official`；结算失败不再怂恿急救/切仓；双仓结构完成后清除 SessionOwned。
+- Status bar and diagnostics zip name one primary cause; Steam branch mismatch does not override Melon upgrade / not-injected.
 - Enable-dual restores the Official ACF snapshot so Steam does not rewrite `_official`; settle copy no longer suggests Emergency/switch; session-owned flags clear once both stores are linked.
 
 ### v1.0.9

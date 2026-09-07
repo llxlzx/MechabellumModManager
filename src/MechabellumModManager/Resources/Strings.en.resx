@@ -25,7 +25,7 @@
     <value>Manage mods already on this PC (enable / apply profiles)</value>
   </data>
 <data name="CatalogEmptyHint" xml:space="preserve">
-    <value>Workshop is empty. Click Refresh to fetch community mods.</value>
+    <value>Workshop is empty. Import a DLL/Zip or a group-file package first. You can also Refresh the catalog (needs the mirror or a system proxy).</value>
   </data>
   <data name="LibraryEmptyHint" xml:space="preserve">
     <value>No installed mods yet. Add from Workshop, or import a DLL / Zip.</value>
@@ -351,6 +351,8 @@ Overwrite and take over these files?</value></data>
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Official/Test dual folders are already enabled. To rebuild: use Emergency: single folder first, then Enable dual again. Continue?</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Remove Official/Test dual-folder setup? The manager will switch to Official first, then remove dual folders. Steam will use the Official folder again. Exit Steam and the game first.</value></data>
   <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Emergency-restore a single Mechabellum folder (materialize junction/hollow from a complete store when possible). The next dialog asks whether to delete leftover stores. Exit Steam and the game first. Continue?</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>Emergency can only collapse the folder that still exists into a single Mechabellum. It cannot recreate Official. Official is missing or incomplete — wait for Steam to finish downloading Official. Do not switch stores or uninstall now. Continue only keeps the current folder. Continue?</value></data>
+  <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam is writing the game folder. Wait until Start is available. Do not use Emergency, do not switch stores, and do not uninstall the manager until then.</value></data>
   <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Dual-branch is off, but a directory junction and/or leftover store folders remain. Restore a single Mechabellum folder (materialize if still a junction; if Mechabellum is hollow and another store is complete, move that store back and rename the hollow debris to Mechabellum_incomplete_*). The next dialog asks whether to delete the other store. Exit Steam and the game first. Continue?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Restored single Mechabellum folder.</value></data>
@@ -539,4 +541,43 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>Run repair / safe cleanup</value></data>
   <data name="CriticalOpRecoveryAbandon" xml:space="preserve"><value>Abandon and clear</value></data>
   <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data>
-  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data></root>
+  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
+  <data name="MirrorBaseUrl" xml:space="preserve"><value>Domestic mirror base</value></data>
+  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Leave empty to use GitHub only. Same layout as the repos, e.g. https://example.com/mirror</value></data>
+  <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
+  <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Loaded {0} entries (offline cache, catalog updated: {1})</value></data>
+  <data name="CatalogFetchFailed" xml:space="preserve"><value>Catalog fetch failed: {0}. Tried the domestic mirror and GitHub. Import a local Zip / group-file package; Clash needs system proxy (browser-only rules are not enough).</value></data>
+  <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
+
+Tried the domestic mirror and GitHub. Yes copies the domestic download notes (group files; do not run Setup during dual-folder or Melon install). No lets you still open GitHub.</value></data>
+  <data name="ConfirmStillOpenGitHubReleases" xml:space="preserve"><value>Still open the GitHub Releases page? This may fail again without a VPN.</value></data>
+  <data name="UpdateFailedDomesticHint" xml:space="preserve"><value>Domestic download: use the manager Setup from the group files.
+Check for updates does not auto-install.
+If dual-folder or MelonLoader install is in progress, finish or cancel it before running Setup.
+Clash and similar tools need system proxy or TUN; browser-only rules do not help the manager.
+GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest</value></data>
+  <data name="UpdateFailedCopiedHint" xml:space="preserve"><value>Domestic download notes copied to the clipboard.</value></data>
+  <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam BetaKey ({1}) does not match the current store ({0}). Do not run emergency recover; wait for Steam to settle or check manually.</value></data>
+  <data name="NotifyDeployFailed" xml:space="preserve"><value>Deploy failed: {0}</value></data>
+  <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>Could not set the other store’s Steam beta key; wizard aborted: {0}</value></data>
+  <data name="DiagnosisTitle_critical_op_interrupted" xml:space="preserve"><value>A previous critical operation did not finish</value></data>
+  <data name="DiagnosisAction_critical_op_interrupted" xml:space="preserve"><value>Finish or abandon the interrupted operation. Do not switch branches or run Setup at the same time.</value></data>
+  <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>Dual-folder wizard or Steam settle is not finished</value></data>
+  <data name="DiagnosisAction_wizard_or_settle_blocking" xml:space="preserve"><value>Wait until Steam can start the game, fully quit Steam, then continue settle in the manager.</value></data>
+  <data name="DiagnosisTitle_game_or_link_incomplete" xml:space="preserve"><value>Game path or folder link is incomplete</value></data>
+  <data name="DiagnosisAction_game_or_link_incomplete" xml:space="preserve"><value>Do not keep clicking Continue. Wait for Steam to finish downloading, or verify game files.</value></data>
+  <data name="DiagnosisTitle_steam_update_unhealthy" xml:space="preserve"><value>Steam update is stuck or unfinished</value></data>
+  <data name="DiagnosisAction_steam_update_unhealthy" xml:space="preserve"><value>Let Steam finish until Play is available. Then fully quit Steam.</value></data>
+  <data name="DiagnosisTitle_melon_needs_upgrade" xml:space="preserve"><value>MelonLoader is older than bundled 0.7.3</value></data>
+  <data name="DiagnosisAction_melon_needs_upgrade" xml:space="preserve"><value>Click Install MelonLoader in the manager to upgrade to 0.7.3, then launch the game.</value></data>
+  <data name="DiagnosisTitle_loader_not_injected" xml:space="preserve"><value>Loader did not inject on this launch</value></data>
+  <data name="DiagnosisAction_loader_not_injected" xml:space="preserve"><value>Quit the game and Steam, use Apply and Launch, wait about 20 seconds. If still not injected, export diagnostics.</value></data>
+  <data name="DiagnosisTitle_catalog_or_update_network" xml:space="preserve"><value>Catalog or update check failed on the network</value></data>
+  <data name="DiagnosisAction_catalog_or_update_network" xml:space="preserve"><value>Check the system proxy or first-party mirror, then retry refresh / check for updates.</value></data>
+  <data name="DiagnosisTitle_deploy_blocked_or_failed" xml:space="preserve"><value>Profile deploy was blocked or failed</value></data>
+  <data name="DiagnosisAction_deploy_blocked_or_failed" xml:space="preserve"><value>Handle the missing package or file lock in the dialog. Close the game, then apply again.</value></data>
+  <data name="DiagnosisTitle_acf_beta_mismatch" xml:space="preserve"><value>Steam branch does not match the manager store</value></data>
+  <data name="DiagnosisAction_acf_beta_mismatch" xml:space="preserve"><value>This is not a broken dual-folder. Switch branches in the manager, not only in Steam betas.</value></data>
+  <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>No blocking issue found</value></data>
+  <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Follow the manager prompts.</value></data>
+</root>

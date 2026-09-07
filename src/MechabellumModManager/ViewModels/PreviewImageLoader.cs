@@ -40,21 +40,28 @@ internal static class PreviewImageLoader
         }
     }
 
-    public static async Task<BitmapImage?> TryLoadAsync(string? url, CancellationToken ct = default)
+    public static Task<BitmapImage?> TryLoadAsync(string? url, CancellationToken ct = default) =>
+        TryLoadCandidatesAsync(string.IsNullOrWhiteSpace(url) ? Array.Empty<string>() : new[] { url! }, ct);
+
+    public static async Task<BitmapImage?> TryLoadCandidatesAsync(IReadOnlyList<string> urls, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(url))
+        if (urls is null || urls.Count == 0)
+            return null;
+
+        var first = urls.FirstOrDefault(u => !string.IsNullOrWhiteSpace(u));
+        if (string.IsNullOrWhiteSpace(first))
             return null;
 
         try
         {
-            if (url.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            if (first.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
             {
                 return await Task.Run(() =>
                 {
                     ct.ThrowIfCancellationRequested();
                     var bmp = new BitmapImage();
                     bmp.BeginInit();
-                    bmp.UriSource = new Uri(url, UriKind.Absolute);
+                    bmp.UriSource = new Uri(first, UriKind.Absolute);
                     bmp.CacheOption = BitmapCacheOption.OnLoad;
                     bmp.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
                     bmp.EndInit();
@@ -64,7 +71,21 @@ internal static class PreviewImageLoader
                 }, ct).ConfigureAwait(false);
             }
 
-            var bytes = await Http.GetByteArrayAsync(url, ct).ConfigureAwait(false);
+            var candidates = new List<Uri>(urls.Count);
+            foreach (var item in urls)
+            {
+                if (string.IsNullOrWhiteSpace(item))
+                    continue;
+                if (Uri.TryCreate(item, UriKind.Absolute, out var uri)
+                    && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp))
+                    candidates.Add(uri);
+            }
+
+            if (candidates.Count == 0)
+                return null;
+
+            using var fetched = await RemoteFetch.GetAsync(Http, candidates, ct).ConfigureAwait(false);
+            var bytes = await fetched.Response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
             ct.ThrowIfCancellationRequested();
             return await Task.Run(() =>
             {

@@ -25,7 +25,7 @@
     <value>管理本机已安装的 Mod 与配置方案（启用/应用）</value>
   </data>
 <data name="CatalogEmptyHint" xml:space="preserve">
-    <value>工坊还是空的。点「刷新」拉取社区 Mod。</value>
+    <value>工坊为空。请先导入 DLL / Zip 或使用群文件；也可点「刷新」拉取目录（需镜像或系统代理）。</value>
   </data>
   <data name="LibraryEmptyHint" xml:space="preserve">
     <value>还没有已装 Mod。从「Mod 工坊」加入，或导入 DLL / Zip。</value>
@@ -353,6 +353,8 @@
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>已启用正式服/测试服双目录。若要重建，请先点「急救恢复单目录」，再重新启用双服。是否继续？</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>确定解除正式服/测试服双目录？将先切换到正式服再解除；解除后 Steam 游戏路径会回到正式服那份目录。请先退出 Steam 与游戏。</value></data>
   <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>将急救恢复为单一 Mechabellum 目录（拆掉联接/空壳并尽量从完整仓挪回）。下一框会问是否删除旁边的独立仓。须先退出 Steam 与游戏。继续？</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>急救只能把「现在还在的目录」收成单一 Mechabellum，不能变出正式服。正式仓缺失或不完整，回到正式服须等 Steam 下载完成。现在不要切仓、不要再卸载。继续只会保留当前目录。继续？</value></data>
+  <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam 正在写入游戏目录。请等下载完成并显示可开始游戏后再操作。期间不要急救、不要切仓、不要卸载管理器。</value></data>
   <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>检测到双服已关闭，但磁盘上仍有目录联接或残留独立目录。将恢复为单一 Mechabellum 目录（若仍是联接则拆掉并移回；若 Mechabellum 是空壳而另一仓完整，会把完整仓挪回 Mechabellum，空壳另存为 Mechabellum_incomplete_*）。下一框会单独问你是否清掉旁边的独立仓。须先退出 Steam 与游戏。继续？</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>已恢复为单目录 Mechabellum。</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>已恢复为单目录 Mechabellum。</value></data>
@@ -542,4 +544,43 @@
   <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>运行修复 / 安全清理</value></data>
   <data name="CriticalOpRecoveryAbandon" xml:space="preserve"><value>放弃并清理</value></data>
   <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>打开诊断（不解除限制）</value></data>
-  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>已放弃未完成操作并清理状态。请确认游戏路径后继续使用。</value></data></root>
+  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>已放弃未完成操作并清理状态。请确认游戏路径后继续使用。</value></data>
+  <data name="MirrorBaseUrl" xml:space="preserve"><value>国内镜像基址</value></data>
+  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>留空则只访问 GitHub。需与仓库同构，例如 https://example.com/mirror</value></data>
+  <data name="RemoteSourceLog" xml:space="preserve"><value>源={0}</value></data>
+  <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>已加载 {0} 个条目（离线缓存，目录更新：{1}）</value></data>
+  <data name="CatalogFetchFailed" xml:space="preserve"><value>拉取目录失败：{0}。已尝试国内镜像与 GitHub。可导入本地 Zip / 群文件；Clash 需开启系统代理（仅浏览器规则无效）。</value></data>
+  <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
+
+已尝试国内镜像与 GitHub。点「是」复制国内下载说明（群文件；双服或安装 Melon 进行中不要运行 Setup）。点「否」可再选择是否打开 GitHub。</value></data>
+  <data name="ConfirmStillOpenGitHubReleases" xml:space="preserve"><value>仍打开 GitHub Releases 页面？无梯子时可能再次失败。</value></data>
+  <data name="UpdateFailedDomesticHint" xml:space="preserve"><value>国内下载：请使用群文件中的管理器 Setup。
+检查更新不会自动安装。
+若正在启用双服或安装 MelonLoader，请先完成或取消后再运行 Setup。
+Clash 等工具需开启「系统代理」或 TUN；仅浏览器规则无法让管理器联网。
+GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest</value></data>
+  <data name="UpdateFailedCopiedHint" xml:space="preserve"><value>已复制国内下载说明到剪贴板。</value></data>
+  <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam 清单 BetaKey（{1}）与当前仓（{0}）不一致，请勿急救；等 Steam 结算或手动核对</value></data>
+  <data name="NotifyDeployFailed" xml:space="preserve"><value>部署失败：{0}</value></data>
+  <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>未能设置另一服 Steam 测试分支，已中止向导：{0}</value></data>
+  <data name="DiagnosisTitle_critical_op_interrupted" xml:space="preserve"><value>上次关键操作未完成</value></data>
+  <data name="DiagnosisAction_critical_op_interrupted" xml:space="preserve"><value>按管理器提示完成或放弃未完成的关键操作，不要同时再切服或覆盖安装。</value></data>
+  <data name="DiagnosisTitle_wizard_or_settle_blocking" xml:space="preserve"><value>双服向导或 Steam 结算未完成</value></data>
+  <data name="DiagnosisAction_wizard_or_settle_blocking" xml:space="preserve"><value>先在 Steam 等到可开始游戏，完全退出 Steam 后再回管理器点结算/继续。</value></data>
+  <data name="DiagnosisTitle_game_or_link_incomplete" xml:space="preserve"><value>游戏路径或目录联接不完整</value></data>
+  <data name="DiagnosisAction_game_or_link_incomplete" xml:space="preserve"><value>勿反复点继续；等 Steam 下载完成，或验证游戏文件后再打开管理器。</value></data>
+  <data name="DiagnosisTitle_steam_update_unhealthy" xml:space="preserve"><value>Steam 更新未完成或状态异常</value></data>
+  <data name="DiagnosisAction_steam_update_unhealthy" xml:space="preserve"><value>在 Steam 把游戏更新到可开始游戏；勿停在更新失败。然后完全退出 Steam。</value></data>
+  <data name="DiagnosisTitle_melon_needs_upgrade" xml:space="preserve"><value>MelonLoader 版本低于内置 0.7.3</value></data>
+  <data name="DiagnosisAction_melon_needs_upgrade" xml:space="preserve"><value>在管理器右上角点「安装 MelonLoader」升级到内置 0.7.3，再启动游戏。</value></data>
+  <data name="DiagnosisTitle_loader_not_injected" xml:space="preserve"><value>Loader 未在本次启动注入</value></data>
+  <data name="DiagnosisAction_loader_not_injected" xml:space="preserve"><value>完全退出游戏与 Steam 后，用管理器「应用并启动」再等约 20 秒；若仍未注入，导出诊断包。</value></data>
+  <data name="DiagnosisTitle_catalog_or_update_network" xml:space="preserve"><value>目录或检查更新网络失败</value></data>
+  <data name="DiagnosisAction_catalog_or_update_network" xml:space="preserve"><value>检查系统代理或自建镜像基址后重试刷新/检查更新。</value></data>
+  <data name="DiagnosisTitle_deploy_blocked_or_failed" xml:space="preserve"><value>方案部署被阻止或失败</value></data>
+  <data name="DiagnosisAction_deploy_blocked_or_failed" xml:space="preserve"><value>按弹窗处理缺包或占用；关闭游戏后再应用方案。</value></data>
+  <data name="DiagnosisTitle_acf_beta_mismatch" xml:space="preserve"><value>Steam 分支与管理器当前仓不一致</value></data>
+  <data name="DiagnosisAction_acf_beta_mismatch" xml:space="preserve"><value>这不是双服损坏。切服请走管理器，不要只在 Steam 勾选测试分支。</value></data>
+  <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>未发现阻断问题</value></data>
+  <data name="DiagnosisAction_healthy" xml:space="preserve"><value>按管理器提示操作即可。</value></data>
+</root>

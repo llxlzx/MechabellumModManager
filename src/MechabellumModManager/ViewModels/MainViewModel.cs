@@ -37,6 +37,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly ModCatalogService _catalog;
     readonly AssemblyInspector _assemblyInspector;
     readonly ManagerLogWriter _managerLog;
+    readonly ManagerEventLog _events;
     readonly Func<string, bool> _confirmHighRisk;
     readonly Func<string, bool> _confirm;
     readonly Func<string, MessageBoxResult, bool>? _confirmChoice;
@@ -160,6 +161,8 @@ public sealed partial class MainViewModel : ObservableObject
         _catalog = catalog ?? new ModCatalogService();
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
         _managerLog = managerLog ?? new ManagerLogWriter(paths.LogsDir);
+        _events = new ManagerEventLog(paths.LogsDir);
+        _melonDualSync.Events ??= _events;
         // Default deny: UI must wire confirmation dialogs.
         _confirmHighRisk = confirmHighRisk ?? (_ => false);
         _confirm = confirm ?? (_ => false);
@@ -241,6 +244,7 @@ public sealed partial class MainViewModel : ObservableObject
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
+        ApplyMirrorBaseUrl(config.MirrorBaseUrl, save: false);
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
 
         try
@@ -339,13 +343,17 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
+    /// <summary>Teal/green status accent. False after a launch whose Latest.log never updated.</summary>
+    public bool ShowReadyAccent =>
+        IsReady && GameStatus?.LoaderInjected != false;
+
     public bool NeedsMelonLoaderInstall =>
         !IsEnableDualWaitingDownload
         && (GameStatus?.Kind is GameStatusKind.GameOkLoaderMissing
             or GameStatusKind.LoaderPartial
             or GameStatusKind.LoaderPresentAssembliesMissing
         || (GameStatus?.Kind == GameStatusKind.Ready
-            && MelonLoaderVersionGate.ShouldUpgradeInstalled(GameStatus.MelonLoaderVersion)));
+            && MelonLoaderVersionGate.ShouldForceUpgradeStore(GamePath, GameStatus.MelonLoaderVersion)));
 
     /// <summary>Mid enable-dual: Steam link is hollow or a fresh other-branch download — not a lost install.</summary>
     bool IsEnableDualWaitingDownload =>
@@ -584,19 +592,25 @@ public sealed partial class MainViewModel : ObservableObject
         if (BranchSwitchEnabled
             && (IsAwaitingSteamSettle || BranchWizardStep == BranchWizardStep.AwaitingSteamSettle))
         {
+            // Closing the window must not promote a fake Ready. Keep settle until ACF is confirmed.
             _suppressBranchSwitchSave = true;
             try
             {
-                IsAwaitingSteamSettle = false;
                 DegradeToManualBeta = false;
-                BranchWizardStep = BranchWizardStep.Ready;
+                IsAwaitingSteamSettle = true;
+                BranchWizardStep = BranchWizardStep.AwaitingSteamSettle;
             }
             finally
             {
                 _suppressBranchSwitchSave = false;
             }
 
-            TryUpdateBranchConfig(cfg => cfg.WizardStep = BranchWizardStep.Ready);
+            TryUpdateBranchConfig(cfg => cfg.WizardStep = BranchWizardStep.AwaitingSteamSettle);
+            RecordEvent(ManagerEventLog.SettleAbandoned, new Dictionary<string, string?>
+            {
+                ["wizardStep"] = BranchWizardStep.ToString(),
+                ["awaitingSteamSettle"] = "true"
+            });
             SyncStickyBranchTaskStrip();
             NotifyTaskProgress();
             NotifyBranchGates();
@@ -853,7 +867,9 @@ public sealed partial class MainViewModel : ObservableObject
     public string StatusKindLabel =>
         IsEnableDualWaitingDownload
             ? LocalizationService.T("BranchStatusEnabling")
-            : GameStatus?.Kind switch
+            : GameStatus?.LoaderInjected == false
+                ? "未注入"
+                : GameStatus?.Kind switch
             {
                 GameStatusKind.Ready => "就绪",
                 GameStatusKind.LoaderPresentAssembliesMissing => "待生成程序集",
@@ -865,6 +881,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     public string DirtyHint => IsDirty ? "方案已改，游戏目录未同步 — 请点击「应用方案」" : "已与游戏目录同步";
 
+    public string DiagnosisTitle => CurrentDiagnosis?.Title ?? "";
+
+    public string DiagnosisTooltip
+    {
+        get
+        {
+            var d = CurrentDiagnosis;
+            if (d is null)
+                return "";
+            var lines = new List<string>();
+            if (d.Evidence.Count > 0)
+                lines.Add(string.Join(Environment.NewLine, d.Evidence));
+            if (!string.IsNullOrWhiteSpace(d.Action))
+                lines.Add(d.Action);
+            return string.Join(Environment.NewLine + Environment.NewLine, lines);
+        }
+    }
+
+    [ObservableProperty] private Diagnosis? _currentDiagnosis;
     [ObservableProperty] private GameStatus? _gameStatus;
     [ObservableProperty] private ProfileItemViewModel? _selectedProfile;
     [ObservableProperty] private string _logText = "";
@@ -895,6 +930,8 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private ModItemViewModel? _selectedLibraryMod;
     [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
     [ObservableProperty] private string _updateStatus = "";
+    [ObservableProperty] private string _mirrorBaseUrl = "";
+    bool _suppressMirrorSave;
     [ObservableProperty] private string _selectedUiLanguageCode = "system";
     [ObservableProperty] private string _catalogSearchText = "";
     [ObservableProperty] private CategoryFilterOption? _selectedCatalogCategoryFilter;
@@ -1023,9 +1060,16 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    partial void OnCurrentDiagnosisChanged(Diagnosis? value)
+    {
+        OnPropertyChanged(nameof(DiagnosisTitle));
+        OnPropertyChanged(nameof(DiagnosisTooltip));
+    }
+
     partial void OnGameStatusChanged(GameStatus? value)
     {
         OnPropertyChanged(nameof(IsReady));
+        OnPropertyChanged(nameof(ShowReadyAccent));
         OnPropertyChanged(nameof(StatusKindLabel));
         OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
@@ -1055,6 +1099,40 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var config = LoadConfig();
         config.LaunchMode = value;
+        SaveConfig(config);
+    }
+
+    partial void OnMirrorBaseUrlChanged(string value)
+    {
+        if (_suppressMirrorSave)
+            return;
+        ApplyMirrorBaseUrl(value, save: true);
+    }
+
+    void ApplyMirrorBaseUrl(string? value, bool save)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value) ? "" : value.Trim().TrimEnd('/');
+        _suppressMirrorSave = true;
+        try
+        {
+            if (!string.Equals(MirrorBaseUrl, normalized, StringComparison.Ordinal))
+                MirrorBaseUrl = normalized;
+        }
+        finally
+        {
+            _suppressMirrorSave = false;
+        }
+
+        var stored = string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+        _catalog.MirrorBaseUrl = stored;
+        _catalog.DataRoot = _paths.DataRoot;
+        _updateChecker.MirrorBaseUrl = stored;
+
+        if (!save)
+            return;
+
+        var config = LoadConfig();
+        config.MirrorBaseUrl = stored;
         SaveConfig(config);
     }
 
@@ -1102,7 +1180,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     void RefreshStatusCore(bool offerAssemblyGeneratePrompt)
     {
-        GameStatus = _detector.Detect(GamePath);
+        GameStatus = _detector.Detect(GamePath, LoadConfig().LastLaunchRequestedAt);
+        if (GameStatus.LoaderInjected == false)
+            RecordLoaderNotInjectedOnce();
         UpdateLoaderVersionWarning();
         UpdateFirstAssemblyWarning();
         var suppressWaitNoise = IsEnableDualWaitingDownload
@@ -1117,6 +1197,32 @@ public sealed partial class MainViewModel : ObservableObject
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
         TryDegradeHollowReadyStore();
         EnsureWizardDownloadPollRunning();
+        RefreshBranchStatusText();
+        RecalculateDiagnosis();
+    }
+
+    void RecalculateDiagnosis()
+    {
+        BranchSwitchConfig? branch = null;
+        try { branch = _branchSwitch.LoadConfig(); }
+        catch { /* ignore */ }
+
+        CriticalOpMarker? marker = null;
+        if (!_criticalOp.TryLoadInterrupted(out marker) && _criticalOp.IsRunning)
+            marker = new CriticalOpMarker { Kind = _criticalOp.RunningKind, Detail = "running" };
+
+        var snap = DiagnosisSnapshotBuilder.Capture(
+            _paths,
+            GamePath,
+            GameStatus,
+            LoadConfig().LastLaunchRequestedAt,
+            branch,
+            isAwaitingSteamSettle: IsAwaitingSteamSettle,
+            events: _events.ReadRecent(),
+            deployBlockedOrFailed: ShowDeployBlockedReason && !string.IsNullOrWhiteSpace(DeployBlockedReason),
+            deployFailure: DeployBlockedReason,
+            interruptedCriticalOp: marker);
+        CurrentDiagnosis = DiagnosisEngine.Evaluate(snap);
     }
 
     void EnsureWizardDownloadPollRunning()
@@ -1570,7 +1676,11 @@ public sealed partial class MainViewModel : ObservableObject
             }
 
             AppendLog(result.Message);
-            if (!result.Success) return false;
+            if (!result.Success)
+            {
+                _notify(string.Format(LocalizationService.T("NotifyDeployFailed"), result.Message));
+                return false;
+            }
 
             RecomputeDirty();
             _notify(LocalizationService.T("NotifyApplySucceeded"));
@@ -1579,6 +1689,7 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppendLog($"部署失败：{ex.Message}");
+            _notify(string.Format(LocalizationService.T("NotifyDeployFailed"), ex.Message));
             return false;
         }
         finally
@@ -1608,11 +1719,32 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog(launch.Message);
         else
         {
+            config.LastLaunchRequestedAt = DateTimeOffset.Now;
+            SaveConfig(config);
+            RecordEvent(ManagerEventLog.LaunchRequested, new Dictionary<string, string?>
+            {
+                ["mode"] = LaunchMode.ToString(),
+                ["at"] = config.LastLaunchRequestedAt.Value.ToString("o")
+            });
             AppendLog("已请求启动游戏。");
             AppendLog(LocalizationService.T("LogMelonConsoleHint"));
             AppendLog(LocalizationService.T("LogMelonLaunchVerifyHint"));
             if (_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
                 AppendLog("首次启动提示：若长时间黑屏/控制台滚动，是 MelonLoader 正在生成程序集，请耐心等待完成。");
+            _ = RecheckLoaderInjectionAfterLaunchAsync();
+        }
+    }
+
+    async Task RecheckLoaderInjectionAfterLaunchAsync()
+    {
+        try
+        {
+            await _delay(GameDetector.LoaderInjectSettle).ConfigureAwait(true);
+            RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"检查 Melon 注入状态失败：{ex.Message}");
         }
     }
 
@@ -1663,13 +1795,22 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!CanEmergencyRecoverSingle) return;
 
-        if (!Confirm(LocalizationService.T("ConfirmEmergencyRecoverSingle")))
+        if (TryNotifySteamWritingAndAbort())
             return;
 
-        var deleteOther = Confirm(
-            LocalizationService.T("ConfirmBranchDeleteOtherStore"),
-            MessageBoxResult.No);
-        var askedAboutOther = true;
+        var prompt = EmergencyRecoverGuidance.Build(_branchSwitch.LoadConfig(), GamePath);
+        if (!Confirm(LocalizationService.T(prompt.ConfirmKey)))
+            return;
+
+        var deleteOther = false;
+        var askedAboutOther = false;
+        if (!prompt.SkipDeleteOtherStore)
+        {
+            deleteOther = Confirm(
+                LocalizationService.T("ConfirmBranchDeleteOtherStore"),
+                MessageBoxResult.No);
+            askedAboutOther = true;
+        }
 
         if (!await WaitForSteamAndGameExitAsync().ConfigureAwait(true))
         {
@@ -1753,6 +1894,34 @@ public sealed partial class MainViewModel : ObservableObject
     bool Confirm(string message, MessageBoxResult defaultResult = MessageBoxResult.Yes) =>
         _confirmChoice?.Invoke(message, defaultResult) ?? _confirm(message);
 
+    bool TryNotifySteamWritingAndAbort()
+    {
+        try
+        {
+            var gamePath = string.IsNullOrWhiteSpace(GamePath)
+                ? _branchSwitch.LoadConfig().SteamLinkPath
+                : GamePath;
+            if (string.IsNullOrWhiteSpace(gamePath))
+                return false;
+
+            var acf = SteamBetaKeyEditor.FindAppManifestPath(gamePath);
+            if (string.IsNullOrWhiteSpace(acf) || !File.Exists(acf))
+                return false;
+
+            if (!SteamBetaKeyEditor.LooksSteamWritingGame(File.ReadAllText(acf)))
+                return false;
+
+            var msg = LocalizationService.T("NotifySteamWritingDoNotTouchStores");
+            AppendLog(msg);
+            _notify(msg);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     [RelayCommand]
     async Task ConfirmManualBeta()
     {
@@ -1802,7 +1971,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         if (!Confirm(LocalizationService.T(
-                MelonLoaderVersionGate.ShouldUpgradeInstalled(GameStatus?.MelonLoaderVersion)
+                MelonLoaderVersionGate.ShouldForceUpgradeStore(GamePath, GameStatus?.MelonLoaderVersion)
                     ? "ConfirmUpgradeMelonLoader"
                     : "ConfirmInstallMelonLoader")))
             return;
@@ -2009,6 +2178,9 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        if (TryNotifySteamWritingAndAbort())
+            return;
+
         if (!Confirm(LocalizationService.T("ConfirmPureGameCleanup"), MessageBoxResult.No))
             return;
 
@@ -2096,6 +2268,7 @@ public sealed partial class MainViewModel : ObservableObject
                 GameRunning = _processProbe.IsGameRunning(),
                 SteamRunning = _processProbe.IsSteamRunning(),
                 IsAwaitingSteamSettle = IsAwaitingSteamSettle,
+                Diagnosis = CurrentDiagnosis,
                 Redaction = mode.Value,
                 LogWriter = _managerLog
             });
@@ -2184,15 +2357,37 @@ public sealed partial class MainViewModel : ObservableObject
         NotifyTaskProgress();
         try
         {
-            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            CatalogRoot root;
+            var fromCache = false;
+            try
+            {
+                root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            }
+            catch (Exception networkEx)
+            {
+                var cached = _catalog.TryLoadCachedCatalog();
+                if (cached is null)
+                    throw new InvalidOperationException(networkEx.Message, networkEx);
+                root = cached;
+                fromCache = true;
+                RecordEvent(ManagerEventLog.CatalogFetchFailed, new Dictionary<string, string?>
+                {
+                    ["source"] = _catalog.LastFetchSource ?? "github",
+                    ["fallback"] = "cache",
+                    ["error"] = networkEx.Message
+                });
+                AppendLog($"拉取目录失败，已改用离线缓存：{networkEx.Message}");
+                RecalculateDiagnosis();
+            }
+
             var packages = _library.List();
 
             CatalogMods.Clear();
             foreach (var mod in root.Mods)
             {
                 LogInvalidCatalogCategory(mod);
-                var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
-                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
+                var inLib = ModCatalogService.IsInLibrary(packages, mod);
+                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib, _catalog.MirrorBaseUrl));
             }
 
             SelectedCatalogMod = null;
@@ -2207,14 +2402,23 @@ public sealed partial class MainViewModel : ObservableObject
             RefreshLibraryView();
 
             var updated = string.IsNullOrWhiteSpace(root.UpdatedAt) ? "未知" : root.UpdatedAt;
-            CatalogStatus = $"已加载 {CatalogMods.Count} 个条目（目录更新：{updated}）";
+            var source = fromCache ? "cache" : (_catalog.LastFetchSource ?? "github");
+            CatalogStatus = fromCache
+                ? string.Format(LocalizationService.T("CatalogStatusOfflineCache"), CatalogMods.Count, updated)
+                : $"已加载 {CatalogMods.Count} 个条目（目录更新：{updated}）";
             AppendLog(CatalogStatus);
+            AppendLog(string.Format(LocalizationService.T("RemoteSourceLog"), source));
         }
         catch (Exception ex)
         {
-            CatalogStatus =
-                $"拉取目录失败：{ex.Message}。请确认可访问 GitHub（raw.githubusercontent.com），必要时配置代理。";
+            CatalogStatus = string.Format(LocalizationService.T("CatalogFetchFailed"), ex.Message);
+            RecordEvent(ManagerEventLog.CatalogFetchFailed, new Dictionary<string, string?>
+            {
+                ["source"] = _catalog.LastFetchSource ?? (_catalog.MirrorBaseUrl is null ? "github" : "mirror"),
+                ["error"] = ex.Message
+            });
             AppendLog(CatalogStatus);
+            RecalculateDiagnosis();
         }
         finally
         {
@@ -2307,6 +2511,8 @@ public sealed partial class MainViewModel : ObservableObject
             CatalogStatus = $"正在下载 {item.Name}…";
             AppendLog(CatalogStatus);
             await _catalog.DownloadModAsync(item.Mod, tempPath).ConfigureAwait(true);
+            if (!string.IsNullOrWhiteSpace(_catalog.LastDownloadSource))
+                AppendLog(string.Format(LocalizationService.T("RemoteSourceLog"), _catalog.LastDownloadSource));
 
             try
             {
@@ -2320,7 +2526,8 @@ public sealed partial class MainViewModel : ObservableObject
                         version: item.Version,
                         summary: item.Mod.Summary,
                         catalogUpdatedAt: item.UpdatedAt,
-                        preview: item.Mod.Preview);
+                        preview: item.Mod.Preview,
+                        catalogId: item.Id);
                 }
                 catch (Exception metaEx)
                 {
@@ -2436,8 +2643,8 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var mod in root.Mods)
             {
                 LogInvalidCatalogCategory(mod);
-                var inLib = ModCatalogService.IsInLibraryByFileName(packages, mod.File);
-                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib));
+                var inLib = ModCatalogService.IsInLibrary(packages, mod);
+                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib, _catalog.MirrorBaseUrl));
             }
 
             EnrichModsFromCatalog();
@@ -2491,7 +2698,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var packages = _library.List();
         foreach (var item in CatalogMods)
-            item.IsInLibrary = ModCatalogService.IsInLibraryByFileName(packages, item.File);
+            item.IsInLibrary = ModCatalogService.IsInLibrary(packages, item.Mod);
     }
 
     [RelayCommand]
@@ -2529,6 +2736,8 @@ public sealed partial class MainViewModel : ObservableObject
             var result = await _updateChecker.CheckAsync().ConfigureAwait(true);
             UpdateStatus = result.Message;
             AppendLog(result.Message);
+            if (!string.IsNullOrWhiteSpace(result.Source))
+                AppendLog(string.Format(LocalizationService.T("RemoteSourceLog"), result.Source));
 
             if (result.Kind == UpdateCheckKind.UpdateAvailable && !string.IsNullOrWhiteSpace(result.SetupUrl))
             {
@@ -2542,15 +2751,35 @@ public sealed partial class MainViewModel : ObservableObject
             }
             else if (result.Kind == UpdateCheckKind.Failed)
             {
-                var fallback = $"https://github.com/{UpdateChecker.Owner}/{UpdateChecker.Repo}/releases/latest";
-                if (Confirm(string.Format(LocalizationService.T("ConfirmOpenGitHubReleases"), result.Message)))
-                    TryOpenUrl(fallback);
+                RecordEvent(ManagerEventLog.UpdateCheckFailed, new Dictionary<string, string?>
+                {
+                    ["source"] = result.Source ?? "github",
+                    ["error"] = result.Message
+                });
+                RecalculateDiagnosis();
+                var hint = LocalizationService.T("UpdateFailedDomesticHint");
+                var prompt = string.Format(LocalizationService.T("ConfirmUpdateFailedDomestic"), result.Message);
+                if (Confirm(prompt))
+                {
+                    TryCopyText(hint);
+                    AppendLog(hint);
+                    UpdateStatus = LocalizationService.T("UpdateFailedCopiedHint");
+                }
+                else if (Confirm(LocalizationService.T("ConfirmStillOpenGitHubReleases")))
+                {
+                    TryOpenUrl($"https://github.com/{UpdateChecker.Owner}/{UpdateChecker.Repo}/releases/latest");
+                }
             }
         }
         catch (Exception ex)
         {
             UpdateStatus = $"检查更新失败：{ex.Message}";
+            RecordEvent(ManagerEventLog.UpdateCheckFailed, new Dictionary<string, string?>
+            {
+                ["error"] = ex.Message
+            });
             AppendLog(UpdateStatus);
+            RecalculateDiagnosis();
         }
         finally
         {
@@ -3468,6 +3697,9 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!BranchSwitchEnabled || IsBranchSwitchBusy) return;
 
+        if (TryNotifySteamWritingAndAbort())
+            return;
+
         try
         {
             var cfg = _branchSwitch.LoadConfig();
@@ -3548,6 +3780,7 @@ public sealed partial class MainViewModel : ObservableObject
                         _suppressBranchSwitchSave = false;
                     }
 
+                    ClearLastLaunchAfterStoreChange();
                     SelectBoundProfile(target);
 
                     silentResult = _branchSwitch.TryPrepareSteamBranchMetadata(target);
@@ -3693,6 +3926,7 @@ public sealed partial class MainViewModel : ObservableObject
             BetaBranchName = cfg.BetaBranchName;
             ActiveGameBranch = current;
             BranchWizardStep = BranchWizardStep.Declared;
+            ClearLastLaunchRequestedAt();
         }
         finally
         {
@@ -3767,9 +4001,16 @@ public sealed partial class MainViewModel : ObservableObject
         var silentOther = _branchSwitch.TrySilentSetBeta(other);
         if (!silentOther.Success)
         {
-            _notify(string.IsNullOrWhiteSpace(silentOther.Message)
+            RecordEvent(ManagerEventLog.BetaKeyWriteFailed, new Dictionary<string, string?>
+            {
+                ["target"] = other.ToString(),
+                ["error"] = silentOther.Message
+            });
+            var fail = string.IsNullOrWhiteSpace(silentOther.Message)
                 ? LocalizationService.T("NotifySilentBetaFailedOther")
-                : silentOther.Message);
+                : silentOther.Message;
+            AbortWizardAfterFailure(string.Format(LocalizationService.T("NotifySilentBetaFailedAbort"), fail));
+            return;
         }
 
         if (_steamRestartCooldown > TimeSpan.Zero)
@@ -3969,12 +4210,43 @@ public sealed partial class MainViewModel : ObservableObject
                 return;
             }
 
+            try
+            {
+                await RunBusyAsync(
+                    LocalizationService.T("BusyGeneratingMelonAssemblies"),
+                    () => EnsureMelonLoaderForDualStoresAsync(preferTarget: current)).ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+                AppendLog("双仓已联接；Melon 同步被取消，继续结算。");
+            }
+            catch (Exception melonEx)
+            {
+                AppendLog($"双仓已联接；Melon 同步未完成：{melonEx.Message}");
+            }
+
             var silent = _branchSwitch.TryPrepareSteamBranchMetadata(current);
             await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
-            AbortWizardAfterFailure(string.Format(LocalizationService.T("NotifyBranchWizardFailed"), ex.Message));
+            if (linked)
+            {
+                AppendLog(string.Format(LocalizationService.T("NotifyBranchWizardFailed"), ex.Message));
+                try
+                {
+                    var silent = _branchSwitch.TryPrepareSteamBranchMetadata(current);
+                    await SettleAfterSilentBetaAsync(silent, LocalizationService.T("NotifyWizardDoneWaitingSteam")).ConfigureAwait(true);
+                }
+                catch (Exception settleEx)
+                {
+                    AppendLog($"联接后结算失败：{settleEx.Message}");
+                }
+            }
+            else
+            {
+                AbortWizardAfterFailure(string.Format(LocalizationService.T("NotifyBranchWizardFailed"), ex.Message));
+            }
         }
         finally
         {
@@ -4026,9 +4298,20 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (linked)
         {
-            await RunBusyAsync(
-                LocalizationService.T("BusyGeneratingMelonAssemblies"),
-                () => EnsureMelonLoaderForDualStoresAsync(preferTarget: current)).ConfigureAwait(true);
+            try
+            {
+                await RunBusyAsync(
+                    LocalizationService.T("BusyGeneratingMelonAssemblies"),
+                    () => EnsureMelonLoaderForDualStoresAsync(preferTarget: current)).ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+                AppendLog("双仓已联接；Melon 同步被取消，继续结算。");
+            }
+            catch (Exception melonEx)
+            {
+                AppendLog($"双仓已联接；Melon 同步未完成：{melonEx.Message}");
+            }
         }
 
         return linked;
@@ -4044,6 +4327,7 @@ public sealed partial class MainViewModel : ObservableObject
             BranchSwitchEnabled = true;
             ActiveGameBranch = current;
             BranchWizardStep = BranchWizardStep.Linked;
+            ClearLastLaunchRequestedAt();
         }
         finally
         {
@@ -4295,6 +4579,11 @@ public sealed partial class MainViewModel : ObservableObject
         EnterSteamSettle();
         if (!silent.Success || silent.DegradeToManualBeta)
         {
+            RecordEvent(ManagerEventLog.BetaKeyWriteFailed, new Dictionary<string, string?>
+            {
+                ["error"] = silent.Message,
+                ["degradeToManual"] = silent.DegradeToManualBeta ? "true" : "false"
+            });
             DegradeToManualBeta = true;
             if (!string.IsNullOrWhiteSpace(silent.Message))
                 AppendLog(silent.Message);
@@ -4487,6 +4776,48 @@ public sealed partial class MainViewModel : ObservableObject
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
     }
 
+    string? TryDescribeSteamBetaKeyMismatch()
+    {
+        try
+        {
+            if (!BranchSwitchEnabled)
+                return null;
+            if (IsAwaitingSteamSettle || IsBranchWizardInProgress)
+                return null;
+
+            var cfg = _branchSwitch.LoadConfig();
+            if (string.IsNullOrWhiteSpace(cfg.SteamLinkPath))
+                return null;
+
+            var acf = SteamBetaKeyEditor.FindAppManifestPath(cfg.SteamLinkPath);
+            if (string.IsNullOrWhiteSpace(acf) || !File.Exists(acf))
+                return null;
+
+            var actual = (new SteamBetaKeyEditor(_processProbe).ReadBetaKey(acf) ?? "").Trim();
+            if (ActiveGameBranch == GameBranch.Official)
+            {
+                if (string.IsNullOrEmpty(actual))
+                    return null;
+            }
+            else
+            {
+                var expected = (cfg.BetaBranchName ?? "").Trim();
+                if (string.IsNullOrEmpty(expected)
+                    || string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+                    return null;
+            }
+
+            return string.Format(
+                LocalizationService.T("NotifySteamBetaKeyMismatch"),
+                ActiveBranchDisplayName,
+                string.IsNullOrEmpty(actual) ? "(none)" : actual);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     void RefreshBranchStatusText()
     {
         if (BranchWizardStep == BranchWizardStep.WaitingDownloadB)
@@ -4522,6 +4853,9 @@ public sealed partial class MainViewModel : ObservableObject
             BranchStatusText = ActiveGameBranch == GameBranch.Official
                 ? LocalizationService.T("BranchStatusOfficial")
                 : LocalizationService.T("BranchStatusBeta");
+
+        if (TryDescribeSteamBetaKeyMismatch() is { } mismatch)
+            BranchStatusText = BranchStatusText + " · " + mismatch;
 
         SyncStickyBranchTaskStrip();
     }
@@ -4593,6 +4927,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     void SaveConfig(AppConfig config) => _store.Save(_paths.ConfigPath, config);
 
+    /// <summary>
+    /// Last launch is per current store. After a junction/branch change, the old timestamp
+    /// must not judge the new store's Latest.log (false "not injected").
+    /// </summary>
+    void ClearLastLaunchRequestedAt()
+    {
+        var config = LoadConfig();
+        if (config.LastLaunchRequestedAt is null)
+            return;
+        config.LastLaunchRequestedAt = null;
+        SaveConfig(config);
+    }
+
+    void ClearLastLaunchAfterStoreChange()
+    {
+        ClearLastLaunchRequestedAt();
+        RefreshStatusCore(offerAssemblyGeneratePrompt: false);
+    }
+
     void AppendLog(string message)
     {
         if (string.IsNullOrWhiteSpace(message)) return;
@@ -4600,6 +4953,17 @@ public sealed partial class MainViewModel : ObservableObject
         _managerLog.Append(line);
         LatestLogLine = line;
         LogText = string.IsNullOrEmpty(LogText) ? line : LogText + Environment.NewLine + line;
+    }
+
+    void RecordEvent(string code, IReadOnlyDictionary<string, string?>? data = null) =>
+        _events.Write(code, data);
+
+    void RecordLoaderNotInjectedOnce()
+    {
+        var last = _events.ReadRecent(1);
+        if (last.Count > 0 && last[0].Code == ManagerEventLog.LoaderNotInjected)
+            return;
+        RecordEvent(ManagerEventLog.LoaderNotInjected);
     }
 
     internal void LogTaxonomyWarning(string message) => AppendLog(message);

@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
 
@@ -30,11 +31,28 @@ public static class DiagnosticsSummaryBuilder
         IReadOnlyList<string> findings,
         string? sessionTail,
         string? managerTail,
-        string? authoritativeGameStatusKind = null)
+        string? authoritativeGameStatusKind = null,
+        Diagnosis? diagnosis = null)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("# Mechabellum Mod Manager — 诊断摘要");
+        if (diagnosis is not null)
+            sb.AppendLine($"# {diagnosis.Title}");
+        else
+            sb.AppendLine("# Mechabellum Mod Manager — 诊断摘要");
         sb.AppendLine();
+        if (diagnosis is not null)
+        {
+            sb.AppendLine($"- 判定：`{diagnosis.Code}`");
+            if (diagnosis.Evidence.Count > 0)
+                sb.AppendLine("- 证据：" + string.Join("；", diagnosis.Evidence));
+            if (diagnosis.RuledOut.Count > 0)
+                sb.AppendLine("- 已排除：" + string.Join("、", diagnosis.RuledOut));
+            if (diagnosis.Also.Count > 0)
+                sb.AppendLine("- 附注：" + string.Join("、", diagnosis.Also));
+            if (!string.IsNullOrWhiteSpace(diagnosis.Action))
+                sb.AppendLine($"- 建议：{diagnosis.Action}");
+            sb.AppendLine();
+        }
         sb.AppendLine($"- 应用版本：{request.AppVersion}");
         sb.AppendLine($"- 导出时间：{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
         sb.AppendLine($"- 向导步骤：{request.BranchWizardStep ?? "(无)"}");

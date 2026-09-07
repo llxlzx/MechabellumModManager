@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "1.1.4"
+#define MyAppVersion "1.1.5"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -40,6 +40,10 @@ english.SetupAppRunningError=Setup has detected that %1 is currently running.%n%
 english.ApplicationsFound=The following applications are using files that need to be updated by Setup.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.%n%nIf the manager is not busy, you may allow Setup to automatically close these applications.
 english.ApplicationsFound2=The following applications are using files that need to be updated by Setup.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.%n%nIf the manager is not busy, you may allow Setup to automatically close these applications; after installation, Setup will attempt to restart them. Alternatively, close the applications yourself and click Retry.
 english.ErrorCloseApplications=Setup was unable to automatically close all applications. It is recommended that you close all applications using files that need to be updated by Setup before continuing.%n%nIf Mechabellum Mod Manager is switching between live and test branches or installing MelonLoader, finish or cancel that task in the manager and exit normally before continuing setup. Force-ending the process is not recommended.
+chinesesimplified.SetupAppRunningError=安装程序检测到 %1 正在运行。%n%n请先关闭所有实例，然后单击“确定”继续，或单击“取消”退出。%n%n若管理器正在切换正式服/测试服，或正在安装 MelonLoader，请先在管理器内完成或取消该任务并正常退出，再继续安装。覆盖更新时不要强行结束进程，以免双服联接或写入中途中断。
+chinesesimplified.ApplicationsFound=下列应用程序正在使用需要由安装程序更新的文件。%n%n若管理器正在切换正式服/测试服，或正在安装 MelonLoader，请先在管理器内完成或取消该任务并正常退出，再继续安装。覆盖更新时不要强行结束进程。%n%n若管理器并未忙碌，可以允许安装程序自动关闭这些应用程序。
+chinesesimplified.ApplicationsFound2=下列应用程序正在使用需要由安装程序更新的文件。%n%n若管理器正在切换正式服/测试服，或正在安装 MelonLoader，请先在管理器内完成或取消该任务并正常退出，再继续安装。覆盖更新时不要强行结束进程。%n%n若管理器并未忙碌，可以允许安装程序自动关闭这些应用程序；安装完成后将尝试重新启动它们。也可以自行关闭后单击“重试”。
+chinesesimplified.ErrorCloseApplications=安装程序无法自动关闭所有应用程序。建议先关闭占用待更新文件的程序再继续。%n%n若管理器正在切换正式服/测试服，或正在安装 MelonLoader，请先在管理器内完成或取消该任务并正常退出，再继续安装。覆盖更新时不要强行结束进程。
 
 [Languages]
 Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"; LicenseFile: "EULA.zh-CN.txt"
@@ -86,6 +90,7 @@ chinesesimplified.StatusMelonAlready=检测到 MelonLoader ≥0.7.3 已就绪，
 chinesesimplified.ErrMelonVerify=MelonLoader 未能正确写入游戏目录。%n%n请关闭游戏后：打开管理器点「安装 MelonLoader」，或重新运行本安装包并勾选 MelonLoader。%n若杀软拦截 version.dll，请允许后再试。
 chinesesimplified.WarnNoPsMelon=无法启动 PowerShell，已改用管理器内嵌方式安装 MelonLoader；若仍失败请打开管理器点「安装 MelonLoader」。
 chinesesimplified.StatusPostDone=后置步骤已处理，即将进入完成页…
+chinesesimplified.AskPureGameCleanup=是否同时彻底清理游戏内 Melon/Mods，并删除管理器数据和另一侧游戏仓？%n%n选「否」（推荐）：只卸载管理器，保留双服记录和游戏目录。%n选「是」：与管理器内「彻底清理」相同，不可恢复。
 
 english.AppDisplayName=Mechabellum Mod Manager
 english.TaskDesktop=Create a desktop shortcut
@@ -124,6 +129,7 @@ english.StatusMelonDone=MelonLoader finished (or skipped).
 english.StatusMelonAlready=MelonLoader ≥0.7.3 already present; skipping install.
 english.ErrMelonVerify=MelonLoader was not written correctly into the game folder.%n%nClose the game, then open the manager and click Install MelonLoader — or re-run this Setup with MelonLoader checked.%nIf antivirus quarantined version.dll, allow it and retry.
 english.StatusPostDone=Post-install steps done; opening the Completed page…
+english.AskPureGameCleanup=Also wipe Melon/Mods, manager data, and the other game store?%n%nNo (recommended): uninstall the manager only; keep dual-folder records and game folders.%nYes: same as in-app Pure game cleanup; cannot be undone.
 
 russian.AppDisplayName=Mechabellum Mod Manager
 russian.TaskDesktop=Создать ярлык на рабочем столе
@@ -162,6 +168,7 @@ russian.StatusMelonDone=MelonLoader завершён (или пропущен).
 russian.StatusMelonAlready=MelonLoader ≥0.7.3 уже установлен; установка пропущена.
 russian.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 russian.StatusPostDone=Постустановочные шаги выполнены; переход к странице завершения…
+russian.AskPureGameCleanup=Также очистить Melon/Mods, данные менеджера и другой склад игры?%n%nНет (рекомендуется): удалить только менеджер; сохранить записи двух веток и папки игры.%nДа: как «полная очистка» в приложении; необратимо.
 
 japanese.AppDisplayName=Mechabellum Mod Manager
 japanese.TaskDesktop=デスクトップにショートカットを作成
@@ -200,6 +207,7 @@ japanese.StatusMelonDone=MelonLoader が完了しました（またはスキッ�
 japanese.StatusMelonAlready=MelonLoader ≥0.7.3 が既にあります。インストールをスキップします。
 japanese.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 japanese.StatusPostDone=インストール後処理が終わりました。完了ページへ進みます…
+japanese.AskPureGameCleanup=Melon/Mods・マネージャーデータ・もう一方のゲームフォルダも削除しますか？%n%nいいえ（推奨）：マネージャーだけ削除し、二系統の記録とゲームフォルダは残します。%nはい：アプリ内の「徹底クリーン」と同じで、元に戻せません。
 
 german.AppDisplayName=Mechabellum Mod Manager
 german.TaskDesktop=Desktop-Verknüpfung erstellen
@@ -238,6 +246,7 @@ german.StatusMelonDone=MelonLoader abgeschlossen (oder übersprungen).
 german.StatusMelonAlready=MelonLoader ≥0.7.3 bereits vorhanden; Installation übersprungen.
 german.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
 german.StatusPostDone=Nachinstallation erledigt; Abschlussseite folgt…
+german.AskPureGameCleanup=Auch Melon/Mods, Manager-Daten und den anderen Spieleordner löschen?%n%nNein (empfohlen): nur den Manager entfernen; Dual-Ordner-Daten und Spielordner behalten.%nJa: wie „Sauberes Spiel“ in der App; nicht rückgängig.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:TaskDesktop}"; GroupDescription: "{cm:TaskDesktopGroup}"
@@ -274,15 +283,19 @@ var
   RiskLabel: TNewStaticText;
   G_PostGamePath: string;
   G_PostUiLang: string;
+  G_SanitizePsFailed: Boolean;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   ResultCode: Integer;
   ExePath: string;
 begin
-  { Run BEFORE files are deleted. [UninstallRun] defaults to after delete and would skip.}
+  { Default: remove the manager only. Full wipe is opt-in (No is default). }
   if CurUninstallStep = usUninstall then
   begin
+    if MsgBox(CustomMessage('AskPureGameCleanup'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2) <> IDYES then
+      exit;
+
     ExePath := ExpandConstant('{app}\{#MyAppExeName}');
     if FileExists(ExePath) then
     begin
@@ -292,7 +305,7 @@ begin
           MsgBox(
             '游戏内 Melon/Mods 清理未完全成功（退出码 ' + IntToStr(ResultCode) + '）。' + #13#10 +
             '管理器安装目录仍会删除。请查看日志：' + #13#10 +
-            '%AppData%\MechabellumModManager\pure-game-cleanup.log' + #13#10 +
+            '%LocalAppData%\MechabellumModManager\pure-game-cleanup.log' + #13#10 +
             '若 Steam 在运行，双服可能未解除；Mods 一般仍会尽量清理。',
             mbInformation, MB_OK);
       end
@@ -402,17 +415,52 @@ begin
     MelonDllVersionAtLeast073(Root + 'MelonLoader\MelonLoader.dll');
 end;
 
-function SanitizeAcfViaApp: Integer;
+function HasAcfSnapshotsToSanitize: Boolean;
 var
-  ResultCode: Integer;
+  Dir: string;
 begin
-  if not Exec(ExpandConstant('{app}\{#MyAppExeName}'), '--sanitize-acf-snapshots', '',
-              SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
+  { Mirrors InstallerAcfSanitizeGate: AppData snapshots only. WeGame/Steam game path is ignored. }
+  Dir := ExpandConstant('{userappdata}\MechabellumModManager\steam-acf-snapshots');
+  Result := FileExists(AddBackslash(Dir) + 'official.acf') or
+            FileExists(AddBackslash(Dir) + 'beta.acf');
+end;
+
+function SanitizeAcfViaAppTimed: Integer;
+var
+  Exe, Args: string;
+begin
+  { Never use unbounded Exec on the WPF exe (missing .NET host dialog can freeze Setup). }
+  Exe := ExpandConstant('{app}\{#MyAppExeName}');
+  if not FileExists(Exe) then
   begin
     Result := -1;
     exit;
   end;
-  Result := ResultCode;
+  Args := '-ExePath "' + Exe + '" -TimeoutSec 30';
+  Result := PsFromSrc('Run-SanitizeAcfCli.ps1', Args);
+end;
+
+procedure SanitizeAcfSnapshotsEarly;
+var
+  Code: Integer;
+begin
+  G_SanitizePsFailed := False;
+  if not HasAcfSnapshotsToSanitize then
+    exit;
+  SetStatus(CustomMessage('StatusSanitizeAcf'));
+  Code := PsFromSrc('Sanitize-AcfSnapshots.ps1', '');
+  if Code <> 0 then
+    G_SanitizePsFailed := True;
+end;
+
+procedure SanitizeAcfSnapshotsAfterRuntime;
+begin
+  if not G_SanitizePsFailed then
+    exit;
+  if not HasAcfSnapshotsToSanitize then
+    exit;
+  SetStatus(CustomMessage('StatusSanitizeAcf'));
+  SanitizeAcfViaAppTimed;
 end;
 
 function InstallMelonViaApp(const GamePath, Redist: string): Integer;
@@ -867,11 +915,8 @@ begin
   if Code <> 0 then
     SetStatus(CustomMessage('StatusRestoreOptional'));
 
-  { Delete dirty AppData ACF snapshots that would poison one-click branch switch. }
-  SetStatus(CustomMessage('StatusSanitizeAcf'));
-  Code := SanitizeAcfViaApp();
-  if Code <> 0 then
-    PsFromSrc('Sanitize-AcfSnapshots.ps1', '');
+  { Dirty AppData ACF snapshots only. Skip (no exe) when folder is empty — first install / WeGame. }
+  SanitizeAcfSnapshotsEarly;
 
   { Skip Melon only when THIS game is mid-download — not merely because Steam is open. }
   SteamBusy := QueryGameDownloading(GamePath);
@@ -901,6 +946,9 @@ begin
     else
       SetStatus(CustomMessage('StatusDotNet6Done'));
   end;
+
+  { PS already tried; timed WPF CLI only if snapshots remain and runtime is more likely present. }
+  SanitizeAcfSnapshotsAfterRuntime;
 
   if WizardIsComponentSelected('melon') then
   begin

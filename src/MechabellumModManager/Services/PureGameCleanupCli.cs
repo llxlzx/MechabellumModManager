@@ -84,40 +84,42 @@ public static class PureGameCleanupCli
                     new SteamBetaKeyEditor(probe));
             }
 
+            var logWriter = new PureGameCleanupLogWriter(
+                PureGameCleanupLogWriter.DefaultDurablePath,
+                PureGameCleanupLogWriter.DefaultRoamingPath);
+            var lines = new List<string>();
+
             var executor = new PureGameCleanupExecutor(
                 new ProcessProbe(),
                 branchSvc,
-                msg => Log(msg));
+                msg =>
+                {
+                    lines.Add(msg);
+                    logWriter.Append(msg);
+                    try { Console.Error.WriteLine(msg); } catch { /* ignore */ }
+                });
 
             var result = executor.Execute(request, dryRun);
-            Log($"exit={result.ExitCode} success={result.Success} {result.Message}");
+            var summary = $"exit={result.ExitCode} success={result.Success} {result.Message}";
+            lines.Add(summary);
+            logWriter.Append(summary);
+            logWriter.WriteAll(lines.Concat(result.Log).Distinct());
+            try { Console.Error.WriteLine(summary); } catch { /* ignore */ }
             return result.ExitCode;
         }
         catch (Exception ex)
         {
-            Log(ex.ToString());
+            try
+            {
+                var writer = new PureGameCleanupLogWriter(
+                    PureGameCleanupLogWriter.DefaultDurablePath,
+                    PureGameCleanupLogWriter.DefaultRoamingPath);
+                writer.Append(ex.ToString());
+            }
+            catch { /* ignore */ }
+
+            try { Console.Error.WriteLine(ex); } catch { /* ignore */ }
             return 1;
         }
-    }
-
-    static void Log(string message)
-    {
-        try
-        {
-            var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                PathsService.AppFolderName);
-            Directory.CreateDirectory(dir);
-            File.AppendAllText(
-                Path.Combine(dir, "pure-game-cleanup.log"),
-                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\n");
-        }
-        catch
-        {
-            // ignore
-        }
-
-        try { Console.Error.WriteLine(message); }
-        catch { /* ignore */ }
     }
 }

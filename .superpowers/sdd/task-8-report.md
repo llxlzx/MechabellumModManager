@@ -1,103 +1,81 @@
-﻿# Task 8 Report: MainViewModel wiring
+﻿# Task 8 Report — Verification + release notes
 
-**Status:** DONE  
-**Branch:** `feature/mod-manager`  
-**Baseline:** `4feb684`  
-**Commit:** `f7933a0` 鈥?`feat: main ViewModel for library, profiles, apply flow`  
-**Author (commit-local):** MechabellumModManager `<dev@local>`  
-**Date:** 2026-09-02
+Date: 2026-09-05  
+Base commit: `4379bf9` (installer: prefer graceful close over force-kill on files-in-use)  
+Tasks 1–7: committed through 4379bf9.
 
----
+## Automated verification
 
-## Summary
-
-Constructor-injectable `MainViewModel` (+ `ModItemViewModel`, `ProfileItemViewModel`) wires library/profiles/deploy/launch/risk with CommunityToolkit.Mvvm commands and settings-bound `GamePath` / `LaunchMode` / `UsePortableDataRoot`. Smoke test: enable marks dirty; successful deploy clears dirty.
-
----
-
-## Deliverables
-
-| Path | Notes |
+| Step | Result |
 |------|--------|
-| `src/.../ViewModels/MainViewModel.cs` | Commands + properties per brief; RiskGate on enable; dirty vs manifest |
-| `src/.../ViewModels/ModItemViewModel.cs` | Checkbox 鈫?`OnModEnabledChanged` |
-| `src/.../ViewModels/ProfileItemViewModel.cs` | Profile list item |
-| `tests/.../MainViewModelTests.cs` | Temp `PathsService` + Ready game stub |
+| `dotnet test tests/MechabellumModManager.Tests/MechabellumModManager.Tests.csproj -c Release` | **PASS** — 429 passed, 0 failed, 0 skipped (~4s) |
+| Stash required? | **No** — dirty WIP in working tree did not break build or tests |
 
----
+### Critical-op test coverage (automated)
 
-## TDD Evidence
+| Suite | Tests |
+|-------|-------|
+| `CriticalOpGuardTests` | 5 |
+| `CriticalOpGateTests` | 11 |
+| `MainViewModelCriticalOpTests` | 2 |
+| **Subtotal** | **17** |
 
-### RED
+Related installer/i18n coverage from Tasks 1–7 is included in the 429 total.
 
-Wrote `MainViewModelTests.cs` only.
+## Manual checklist
 
-**Result:** FAIL (compile) 鈥?`ViewModels` namespace missing.
+| # | Scenario | Status | Notes |
+|---|----------|--------|-------|
+| 1 | Start switch → Busy/write → 检查更新 → blocked notify | **needs human** | Hard gate: no URL, localized notify |
+| 2 | Settle wait → 检查更新 → confirm cancel/accept | **needs human** | Soft gate: confirm before opening Setup URL |
+| 3 | Settle wait → close → confirm | **needs human** | Soft gate on window close |
+| 4 | Leftover `critical-op.json` in AppData → startup modal | **needs human** | Simulate kill mid disk write |
+| 5 | Repair/continue clears marker | **needs human** | Verify `Complete()` after success path |
+| 6 | Setup while manager open → close-apps guidance | **needs human** | Task 7 copy in Inno Files-in-Use |
 
-### GREEN
+## Release notes
 
-Implemented three ViewModels.
+Updated `release/v1.1.2/RELEASE_NOTES.md` — new section **关键操作保护** (4 bullets).
 
-**Command:**
-```powershell
-dotnet test tests\MechabellumModManager.Tests\MechabellumModManager.Tests.csproj --filter "FullyQualifiedName~MainViewModelTests"
-```
+## Pack / upload
 
-**Result:** PASS 鈥?1/1
-
-Full suite: 38/38 passed.
-
----
-
-## Behavior (as implemented)
-
-1. **Enable checkbox:** `RiskGate.CanEnable` then `ProfileService.SetEnabled`; `IsDirty = true`.
-2. **ApplyProfile:** `DeployService.Apply`; `IsDirty` recomputed from manifest `profileId`+files vs desired enabled packages.
-3. **ApplyAndLaunch:** Apply then `GameLauncher.Launch` if not dirty.
-4. **LoaderVersionWarning:** non-empty when any mod `RequiredMelonLoaderVersion` mismatches detected loader version.
-5. **RiskBanner:** `RiskGate.BannerText`.
-6. **UsePortableDataRoot:** persists `config.DataRoot = Path.Combine(AppContext.BaseDirectory, "data")` (restart to remount `PathsService`).
-7. Dialogs (`BrowseGamePath` / import / create name) injected as optional `Func`s for testability.
-
----
-
-## Concerns
-
-- Portable data root change is persisted only; live `PathsService` root does not swap mid-session.
-- Dirty comparison duplicates DeployPlanner path mapping (keep in sync if mapping changes).
-
----
+Skipped per brief (only on user request).
 
 ## Commit
 
+- `release/v1.1.2/RELEASE_NOTES.md` only (this report under `.superpowers/sdd/` is not committed).
+
+---
+
+## Final fix — ApplyRecoveryRepair gate clear (2026-09-05)
+
+### Problem
+
+`ApplyRecoveryRepair` left `IsRecoveryGateActive` true when `IsAwaitingSteamSettle || IsBranchWizardInProgress`, causing **HardBlock** on update/close for the entire Steam wait. `ApplyRecoveryContinue` already cleared via `ClearRecoveryGate()` in that case.
+
+### Change
+
+- **MainViewModel.ApplyRecoveryRepair**: after reload/navigate and optional orphan repair, clear gate when `IsAwaitingSteamSettle || IsBranchWizardInProgress || IsStaleReadyRecovery()` (matches Continue semantics; orphan repair attempt unchanged).
+- **MainViewModelCriticalOpTests**: added `ApplyRecoveryRepair_clears_gate_when_settle_or_wizard` (mirrors `ApplyRecoveryContinue_clears_gate_routes_settle_ui`).
+- **DeployBlockedReason**: already uses `CriticalOpRecoveryBody` when `IsRecoveryGateActive` — no change needed.
+
+### Verification
+
 ```
-feat: main ViewModel for library, profiles, apply flow
-```
-
-## Review fix (Important findings)
-
-**Date:** 2026-09-02  
-**Commit:** `11a5ec6`
-
-### Changes
-
-1. **ApplyAndLaunch gate:** `ApplyProfile()` now returns `bool`; launch only when apply succeeded **and** `GameStatus.Kind == Ready`. No longer uses `!IsDirty` as launch permission. (`ApplyProfileCommand` is a manual `RelayCommand` wrapper because MVVM Toolkit cannot generate commands from bool-returning methods.)
-2. **Shared path mapping:** Removed duplicated `MapRelativeGamePath` from MainViewModel; dirty desired-files use `DeployPlanner.MapRelativeGamePath` (includes UserData `Loader.cfg` reject 鈥?skipped in desired set).
-3. **confirmHighRisk default deny:** `confirmHighRisk ?? (_ => false)` so UI must wire a dialog; accidental omit no longer auto-approves high-risk.
-
-### Tests added/adjusted
-
-| Test | Asserts |
-|------|---------|
-| `ApplyAndLaunch_does_not_launch_when_Apply_fails` | unmanaged collision 鈫?no `IProcessStarter` start |
-| `ApplyAndLaunch_does_not_launch_when_game_not_Ready` | bad GamePath 鈫?no launch |
-| `HighRisk_enable_cancelled_when_confirm_returns_false` | RiskGate cancel path |
-| `Default_confirmHighRisk_denies_high_risk_enable` | null confirm 鈫?deny |
-
-**Command:**
-```powershell
-dotnet test tests\MechabellumModManager.Tests\MechabellumModManager.Tests.csproj
+dotnet test --filter FullyQualifiedName~CriticalOp
 ```
 
-**Result:** PASS 鈥?42/42 (MainViewModelTests 5/5)
+| Result | Count |
+|--------|-------|
+| Passed | 24 |
+| Failed | 0 |
+| Skipped | 0 |
 
+### Commit
+
+- SHA: `c05ab796ca532e7cd519d24ade60a6736ff65a92`
+- Files: `MainViewModel.cs`, `MainViewModelCriticalOpTests.cs` only (other WIP not staged)
+
+### Status
+
+**Ready for merge** — recovery repair no longer hard-blocks update/close during Steam settle; settle/wizard still session-locks deploy via `IsAwaitingSteamSettle` / `IsBranchWizardInProgress` with **SoftConfirm** close/update gates.

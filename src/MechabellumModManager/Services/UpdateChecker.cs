@@ -32,7 +32,8 @@ public sealed record UpdateCheckResult(
     string? RemoteVersion,
     string? Notes,
     string? SetupUrl,
-    string Message);
+    string Message,
+    string? Source = null);
 
 /// <summary>
 /// Checks GitHub Releases for a newer Setup via latest.json (with API fallback).
@@ -57,10 +58,13 @@ public sealed class UpdateChecker
     readonly HttpClient _http;
     readonly Func<string> _localVersionProvider;
 
-    public UpdateChecker(HttpClient? http = null, Func<string>? localVersionProvider = null)
+    public string? MirrorBaseUrl { get; set; }
+
+    public UpdateChecker(HttpClient? http = null, Func<string>? localVersionProvider = null, string? mirrorBaseUrl = null)
     {
         _http = http ?? CreateDefaultClient();
         _localVersionProvider = localVersionProvider ?? ReadLocalVersion;
+        MirrorBaseUrl = string.IsNullOrWhiteSpace(mirrorBaseUrl) ? null : mirrorBaseUrl.Trim().TrimEnd('/');
     }
 
     public static HttpClient CreateDefaultClient()
@@ -90,16 +94,25 @@ public sealed class UpdateChecker
     public async Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default)
     {
         var local = NormalizeVersion(_localVersionProvider()) ?? "0.0.0";
+        string? source = null;
         try
         {
-            var manifest = await TryFetchLatestJsonAsync(ct).ConfigureAwait(false)
-                           ?? await TryFetchFromApiAsync(ct).ConfigureAwait(false);
+            var fetched = await TryFetchLatestJsonAsync(ct).ConfigureAwait(false);
+            var manifest = fetched.Manifest;
+            source = fetched.Source;
+            if (manifest is null)
+            {
+                manifest = await TryFetchFromApiAsync(ct).ConfigureAwait(false);
+                if (manifest is not null)
+                    source = RemoteFetch.GithubSource;
+            }
 
             if (manifest is null || string.IsNullOrWhiteSpace(manifest.Version))
             {
                 return new UpdateCheckResult(
                     UpdateCheckKind.Failed, local, null, null, null,
-                    "无法获取更新信息。请检查网络，或稍后打开 GitHub Releases 页面。");
+                    "无法获取更新信息。已尝试国内镜像与 GitHub。",
+                    source);
             }
 
             var remote = NormalizeVersion(manifest.Version) ?? manifest.Version.Trim();
@@ -111,12 +124,14 @@ public sealed class UpdateChecker
                 var notes = string.IsNullOrWhiteSpace(manifest.Notes) ? "（无更新说明）" : manifest.Notes.Trim();
                 return new UpdateCheckResult(
                     UpdateCheckKind.UpdateAvailable, local, remote, notes, setup,
-                    $"发现新版本 {remote}（当前 {local}）。");
+                    $"发现新版本 {remote}（当前 {local}）。",
+                    source);
             }
 
             return new UpdateCheckResult(
                 UpdateCheckKind.UpToDate, local, remote, manifest.Notes, manifest.SetupUrl,
-                $"已是最新版本（{local}）。");
+                $"已是最新版本（{local}）。",
+                source);
         }
         catch (Exception ex)
         {
@@ -126,12 +141,28 @@ public sealed class UpdateChecker
         }
     }
 
-    async Task<UpdateManifest?> TryFetchLatestJsonAsync(CancellationToken ct)
+    public IReadOnlyList<Uri> BuildLatestJsonCandidates() =>
+        RemoteFetch.BuildCandidates(MirrorBaseUrl, "MechabellumModManager/latest.json", LatestJsonUri);
+
+    async Task<(UpdateManifest? Manifest, string? Source)> TryFetchLatestJsonAsync(CancellationToken ct)
     {
-        using var resp = await _http.GetAsync(LatestJsonUri, ct).ConfigureAwait(false);
-        if (!resp.IsSuccessStatusCode) return null;
-        await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-        return await JsonSerializer.DeserializeAsync<UpdateManifest>(stream, JsonOptions, ct).ConfigureAwait(false);
+        try
+        {
+            using var fetched = await RemoteFetch.GetAsync(_http, BuildLatestJsonCandidates(), ct)
+                .ConfigureAwait(false);
+            await using var stream = await fetched.Response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            var manifest = await JsonSerializer.DeserializeAsync<UpdateManifest>(stream, JsonOptions, ct)
+                .ConfigureAwait(false);
+            return (manifest, RemoteFetch.ClassifySource(fetched.Used));
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return (null, null);
+        }
     }
 
     async Task<UpdateManifest?> TryFetchFromApiAsync(CancellationToken ct)

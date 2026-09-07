@@ -12,11 +12,12 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 
     public CatalogMod Mod { get; }
 
-    public CatalogModItemViewModel(CatalogMod mod, bool isInLibrary)
+    public CatalogModItemViewModel(CatalogMod mod, bool isInLibrary, string? mirrorBaseUrl = null)
     {
         Mod = mod ?? throw new ArgumentNullException(nameof(mod));
         _isInLibrary = isInLibrary;
-        PreviewUrl = ModCatalogService.PreviewUrl(mod);
+        PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(mod, mirrorBaseUrl);
+        PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
     }
 
     public string Id => Mod.Id;
@@ -49,6 +50,7 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public string EffectiveTagsText => ModTaxonomy.FormatTagsDisplay(EffectiveTags);
 
     public string? PreviewUrl { get; }
+    public IReadOnlyList<string> PreviewCandidateUrls { get; }
 
     [ObservableProperty]
     private BitmapImage? _previewImage;
@@ -72,20 +74,21 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 
     public async Task LoadPreviewImageAsync()
     {
-        var url = PreviewUrl;
+        var urls = PreviewCandidateUrls;
+        var url = urls.Count == 0 ? PreviewUrl : string.Join('\n', urls);
         _previewCts?.Cancel();
         _previewCts?.Dispose();
         _previewCts = new CancellationTokenSource();
         var ct = _previewCts.Token;
         _previewLoadUrl = url;
 
-        if (string.IsNullOrWhiteSpace(url))
+        if (urls.Count == 0)
         {
             PreviewImage = null;
             return;
         }
 
-        var bmp = await PreviewImageLoader.TryLoadAsync(url, ct).ConfigureAwait(true);
+        var bmp = await PreviewImageLoader.TryLoadCandidatesAsync(urls, ct).ConfigureAwait(true);
         if (ct.IsCancellationRequested)
             return;
         if (!string.Equals(_previewLoadUrl, url, StringComparison.Ordinal))

@@ -25,7 +25,7 @@
     <value>Управление уже установленными модами и профилями</value>
   </data>
 <data name="CatalogEmptyHint" xml:space="preserve">
-    <value>Мастерская пуста. Нажмите «Обновить», чтобы загрузить моды.</value>
+    <value>Мастерская пуста. Сначала импортируйте DLL/Zip или файл из группы. Обновление каталога требует зеркало или системный прокси.</value>
   </data>
   <data name="LibraryEmptyHint" xml:space="preserve">
     <value>Нет установленных модов. Добавьте из мастерской или импортируйте DLL/Zip.</value>
@@ -351,6 +351,8 @@
   <data name="ConfirmBranchRebuildWizard" xml:space="preserve"><value>Двухкаталожная схема уже включена. Для пересборки сначала «Срочно: одна папка», затем снова включите дуал. Продолжить?</value></data>
   <data name="ConfirmBranchTeardown" xml:space="preserve"><value>Снять двухкаталожную настройку? Используемый каталог снова станет путём игры в Steam. Сначала закройте Steam и игру.</value></data>
   <data name="ConfirmEmergencyRecoverSingle" xml:space="preserve"><value>Срочно восстановить одну папку Mechabellum (по возможности материализовать junction/пустой каркас из полного склада). Следующий диалог спросит, удалять ли остатки. Сначала закройте Steam и игру. Продолжить?</value></data>
+  <data name="ConfirmEmergencyRecoverSingleOfficialMissing" xml:space="preserve"><value>Срочное восстановление только сворачивает оставшуюся папку в один Mechabellum. Официальную ветку оно не создаст. Официальный склад отсутствует или неполон — дождитесь загрузки Steam. Сейчас не переключайте ветки и не удаляйте менеджер. Продолжение оставит только текущую папку. Продолжить?</value></data>
+  <data name="NotifySteamWritingDoNotTouchStores" xml:space="preserve"><value>Steam пишет в папку игры. Дождитесь, пока будет доступен Запуск. До этого не используйте срочное восстановление, не переключайте склады и не удаляйте менеджер.</value></data>
   <data name="ConfirmOrphanDualRepair" xml:space="preserve"><value>Двухветочье выключено, но junction и/или остатки складов ещё на диске. Восстановить одну папку Mechabellum (материализовать junction). Сохранение другого склада может снова блокировать мастер. Сначала закройте Steam и игру. Продолжить?</value></data>
   <data name="LogOrphanRepairDone" xml:space="preserve"><value>Восстановлена одна папка Mechabellum.</value></data>
   <data name="NotifyOrphanRepairDone" xml:space="preserve"><value>Восстановлена одна папка Mechabellum.</value></data>
@@ -519,4 +521,23 @@
   <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>Run repair / safe cleanup</value></data>
   <data name="CriticalOpRecoveryAbandon" xml:space="preserve"><value>Abandon and clear</value></data>
   <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data>
-  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data></root>
+  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
+  <data name="MirrorBaseUrl" xml:space="preserve"><value>База внутреннего зеркала</value></data>
+  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Пусто = только GitHub. Та же раскладка, например https://example.com/mirror</value></data>
+  <data name="RemoteSourceLog" xml:space="preserve"><value>источник={0}</value></data>
+  <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Загружено {0} записей (офлайн-кэш, каталог: {1})</value></data>
+  <data name="CatalogFetchFailed" xml:space="preserve"><value>Каталог недоступен: {0}. Зеркало и GitHub не ответили. Импортируйте Zip / файл из группы.</value></data>
+  <data name="ConfirmUpdateFailedDomestic" xml:space="preserve"><value>{0}
+
+Зеркало и GitHub не ответили. «Да» копирует инструкции внутренней загрузки.</value></data>
+  <data name="ConfirmStillOpenGitHubReleases" xml:space="preserve"><value>Всё равно открыть GitHub Releases?</value></data>
+  <data name="UpdateFailedDomesticHint" xml:space="preserve"><value>Внутренняя загрузка: используйте Setup из групповых файлов.
+Проверка обновлений не ставит Setup сама.
+Не запускайте Setup во время двойных папок или установки MelonLoader.
+Clash нужен системный прокси/TUN.
+GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value></data>
+  <data name="UpdateFailedCopiedHint" xml:space="preserve"><value>Инструкции скопированы в буфер.</value></data>
+  <data name="NotifySteamBetaKeyMismatch" xml:space="preserve"><value>Steam BetaKey ({1}) не совпадает с текущим хранилищем ({0}). Не запускайте аварийное восстановление.</value></data>
+  <data name="NotifyDeployFailed" xml:space="preserve"><value>Развёртывание не удалось: {0}</value></data>
+  <data name="NotifySilentBetaFailedAbort" xml:space="preserve"><value>Не удалось задать Steam beta для другого хранилища; мастер прерван: {0}</value></data>
+</root>

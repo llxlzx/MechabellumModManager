@@ -95,10 +95,10 @@
                                 <Style TargetType="Border">
                                     <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsReady}" Value="False">
+                                        <DataTrigger Binding="{Binding ShowReadyAccent}" Value="False">
                                             <Setter Property="BorderBrush" Value="{StaticResource WarnBrush}" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsReady}" Value="True">
+                                        <DataTrigger Binding="{Binding ShowReadyAccent}" Value="True">
                                             <Setter Property="BorderBrush" Value="{StaticResource AccentTealBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -119,7 +119,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsReady}" Value="True">
+                                                <DataTrigger Binding="{Binding ShowReadyAccent}" Value="True">
                                                     <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -143,6 +143,14 @@
                                         Visibility="{Binding NeedsMelonLoaderInstall, Converter={StaticResource BoolToVis}}"
                                         ToolTip="{Binding Ui.InstallMelonLoaderTip}" />
                             </Grid>
+                            <TextBlock Text="{Binding DiagnosisTitle}"
+                                       ToolTip="{Binding DiagnosisTooltip}"
+                                       Foreground="{StaticResource WarnBrush}"
+                                       TextTrimming="CharacterEllipsis"
+                                       TextWrapping="NoWrap"
+                                       Margin="0,4,0,0"
+                                       FontSize="11"
+                                       Visibility="{Binding DiagnosisTitle, Converter={StaticResource NonEmptyVis}}" />
                             <TextBlock Text="{Binding DeployBlockedReason}"
                                        Visibility="{Binding ShowDeployBlockedReason, Converter={StaticResource BoolToVis}}"
                                        Foreground="{StaticResource WarnBrush}"
@@ -336,6 +344,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.ColumnSpan="3"
@@ -477,7 +486,25 @@
                         </WrapPanel>
                     </StackPanel>
 
-                    <DockPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10,0,0">
+                    <DockPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,12,0,0">
+                        <TextBlock Text="{Binding Ui.MirrorBaseUrl}"
+                                   Width="120"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   DockPanel.Dock="Left"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding Ui.MirrorBaseUrlHint}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   DockPanel.Dock="Bottom"
+                                   Margin="0,4,0,0" />
+                        <TextBox Text="{Binding MirrorBaseUrl, UpdateSourceTrigger=LostFocus}"
+                                 VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <DockPanel Grid.Row="4" Grid.ColumnSpan="3" Margin="0,10,0,0">
                         <TextBlock VerticalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    DockPanel.Dock="Left"
@@ -529,7 +556,7 @@
                                    Foreground="{StaticResource TextMutedBrush}" />
                     </DockPanel>
 
-                    <StackPanel Grid.Row="4" Grid.ColumnSpan="3" Margin="0,14,0,0">
+                    <StackPanel Grid.Row="5" Grid.ColumnSpan="3" Margin="0,14,0,0">
                         <TextBlock Text="{Binding Ui.CreditsTitle}"
                                    Style="{StaticResource SectionLabelStyle}"
                                    Margin="0,0,0,6" />

@@ -369,10 +369,10 @@ public class MainViewModelCriticalOpTests
         cancel.Should().BeFalse();
         exit.Should().Be(1);
         vm.BranchSwitchEnabled.Should().BeTrue();
-        vm.BranchWizardStep.Should().Be(BranchWizardStep.Ready);
-        vm.IsAwaitingSteamSettle.Should().BeFalse();
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.AwaitingSteamSettle);
+        vm.IsAwaitingSteamSettle.Should().BeTrue();
         fx.LoadBranchConfig().Enabled.Should().BeTrue();
-        fx.LoadBranchConfig().WizardStep.Should().Be(BranchWizardStep.Ready);
+        fx.LoadBranchConfig().WizardStep.Should().Be(BranchWizardStep.AwaitingSteamSettle);
         Directory.Exists(fx.OfficialStore).Should().BeTrue();
         Directory.Exists(fx.BetaStore).Should().BeTrue();
     }

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using MechabellumModManager.Models;
 
@@ -6,7 +5,12 @@ namespace MechabellumModManager.Services;
 
 public sealed class GameDetector
 {
-    public GameStatus Detect(string gamePath)
+    public static readonly TimeSpan LoaderInjectSettle = TimeSpan.FromSeconds(20);
+
+    public GameStatus Detect(
+        string gamePath,
+        DateTimeOffset? lastLaunchRequestedAt = null,
+        DateTimeOffset? now = null)
     {
         if (string.IsNullOrWhiteSpace(gamePath) ||
             !File.Exists(Path.Combine(gamePath, "Mechabellum.exe")) ||
@@ -40,44 +44,88 @@ public sealed class GameDetector
                 Message = "MelonLoader 安装不完整（需要 MelonLoader 目录以及 version.dll 或 winhttp.dll）。可点「安装 MelonLoader」补全，或重新运行安装包。"
             };
 
+        var version = MelonLoaderVersionGate.TryReadDisplayVersion(gamePath);
+        var logAge = TryReadLatestLogAge(gamePath, now ?? DateTimeOffset.Now);
+
         if (!HasIl2CppAssemblies(gamePath))
             return new GameStatus
             {
                 Kind = GameStatusKind.LoaderPresentAssembliesMissing,
                 GamePath = gamePath,
                 Message = "MelonLoader 框架已安装，但尚未生成 Il2Cpp 程序集（可立即生成，或稍后在应用方案时生成；首次约一两分钟）。",
-                MelonLoaderVersion = TryReadMelonVersion(gamePath)
+                MelonLoaderVersion = version,
+                LatestLogAge = logAge
             };
 
+        var injected = EvaluateInjection(gamePath, lastLaunchRequestedAt, now ?? DateTimeOffset.Now, logAge);
         return new GameStatus
         {
             Kind = GameStatusKind.Ready,
             GamePath = gamePath,
-            Message = "游戏与 MelonLoader 已就绪。",
-            MelonLoaderVersion = TryReadMelonVersion(gamePath)
+            Message = FormatReadyMessage(version, injected),
+            MelonLoaderVersion = version,
+            LatestLogAge = logAge,
+            LoaderInjected = injected
         };
     }
 
     public static bool HasIl2CppAssemblies(string gamePath) =>
         File.Exists(Path.Combine(gamePath, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"));
 
-    static string? TryReadMelonVersion(string gamePath)
+    static string FormatReadyMessage(string? version, bool? injected)
     {
-        var melonRoot = Path.Combine(gamePath, "MelonLoader");
-        // Prefer known runtime folders — avoid scanning Il2CppAssemblies / Dependencies.
-        foreach (var candidate in new[]
-                 {
-                     Path.Combine(melonRoot, "net6", "MelonLoader.dll"),
-                     Path.Combine(melonRoot, "net472", "MelonLoader.dll"),
-                     Path.Combine(melonRoot, "net35", "MelonLoader.dll"),
-                     Path.Combine(melonRoot, "MelonLoader.dll")
-                 })
-        {
-            if (!File.Exists(candidate)) continue;
-            try { return FileVersionInfo.GetVersionInfo(candidate).FileVersion; }
-            catch { /* try next */ }
-        }
+        if (injected == false)
+            return "Loader 未在本次启动注入";
 
-        return null;
+        if (string.IsNullOrWhiteSpace(version))
+            return "游戏与 MelonLoader 已就绪。";
+
+        if (MelonLoaderVersionGate.ShouldUpgradeInstalled(version))
+            return $"Melon {version}（低于内置 {MelonLoaderVersionGate.FormatBundledMinimum()}）";
+
+        return $"游戏与 MelonLoader 已就绪。Melon {version}";
+    }
+
+    static bool? EvaluateInjection(
+        string gamePath,
+        DateTimeOffset? lastLaunchRequestedAt,
+        DateTimeOffset now,
+        TimeSpan? logAge)
+    {
+        if (lastLaunchRequestedAt is null)
+            return null;
+        if (now - lastLaunchRequestedAt.Value < LoaderInjectSettle)
+            return null;
+
+        var logPath = Path.Combine(gamePath, "MelonLoader", "Latest.log");
+        if (!File.Exists(logPath))
+            return false;
+
+        try
+        {
+            var write = new DateTimeOffset(File.GetLastWriteTime(logPath));
+            return write >= lastLaunchRequestedAt.Value;
+        }
+        catch
+        {
+            return logAge is { } age && age < (now - lastLaunchRequestedAt.Value);
+        }
+    }
+
+    static TimeSpan? TryReadLatestLogAge(string gamePath, DateTimeOffset now)
+    {
+        var logPath = Path.Combine(gamePath, "MelonLoader", "Latest.log");
+        if (!File.Exists(logPath))
+            return null;
+        try
+        {
+            var write = File.GetLastWriteTime(logPath);
+            var age = now - new DateTimeOffset(write);
+            return age < TimeSpan.Zero ? TimeSpan.Zero : age;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
