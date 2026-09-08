@@ -68,6 +68,23 @@ function Get-AssetName {
     return ($Relative -replace '\\', '/') -replace '/', '__'
 }
 
+# "no such release" is the expected first-run answer, not a failure. gh reports it on
+# stderr, which $ErrorActionPreference = 'Stop' would otherwise promote to a terminating
+# error -- so the very first publish could never get past this check.
+function Test-ReleaseExists {
+    param([string]$Tag, [string]$Repo)
+
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & gh release view $Tag --repo $Repo *> $null
+        return $LASTEXITCODE -eq 0
+    }
+    finally {
+        $ErrorActionPreference = $previous
+    }
+}
+
 Assert-Tool -Name gh -Hint "Install the GitHub CLI and run 'gh auth login'."
 Assert-Tool -Name python -Hint "Needed to re-stamp catalog.json."
 
@@ -87,9 +104,7 @@ if ($unstamped.Count -gt 0) {
 }
 
 Write-Output "== release $Tag on $Repo =="
-$releaseExists = $false
-& gh release view $Tag --repo $Repo 2>&1 | Out-Null
-if ($LASTEXITCODE -eq 0) { $releaseExists = $true }
+$releaseExists = Test-ReleaseExists -Tag $Tag -Repo $Repo
 
 if (-not $releaseExists) {
     if ($PSCmdlet.ShouldProcess("$Repo $Tag", "gh release create")) {
@@ -120,6 +135,9 @@ if ($releaseExists) {
 Write-Output "== assets =="
 $uploaded = 0
 $skipped = 0
+$stageDir = Join-Path ([IO.Path]::GetTempPath()) ("mmm-release-stage-" + [Guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
+try {
 foreach ($mod in $catalog.mods) {
     $relative = ($mod.file -replace '\\', '/')
     $localPath = Join-Path $ModsRepo $relative
@@ -142,15 +160,29 @@ foreach ($mod in $catalog.mods) {
     }
 
     if ($PSCmdlet.ShouldProcess($name, "gh release upload")) {
-        # gh takes 'localpath#displayname' to name the asset independently of the file.
-        & gh release upload $Tag "$($file.FullName)#$name" --repo $Repo --clobber
-        if ($LASTEXITCODE -ne 0) { throw "gh release upload failed ($LASTEXITCODE): $name" }
+        # An asset's name is always the uploaded file's own name -- gh's 'path#text' suffix
+        # sets the display label, not the name. So the flattened name has to be a real
+        # filename, which means staging a copy under it. Uploading the original would
+        # publish it as 'Mod.dll' and the next mod shipping that filename would collide.
+        $staged = Join-Path $stageDir $name
+        Copy-Item -LiteralPath $file.FullName -Destination $staged -Force
+        try {
+            & gh release upload $Tag $staged --repo $Repo --clobber
+            if ($LASTEXITCODE -ne 0) { throw "gh release upload failed ($LASTEXITCODE): $name" }
+        }
+        finally {
+            Remove-Item -LiteralPath $staged -Force -ErrorAction SilentlyContinue
+        }
         Write-Output "  upload  $name ($($file.Length) bytes)"
         $uploaded++
     }
     else {
         Write-Output "  would upload $name ($($file.Length) bytes)"
     }
+}
+}
+finally {
+    Remove-Item -LiteralPath $stageDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 Write-Output "  $uploaded uploaded, $skipped unchanged"
