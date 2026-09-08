@@ -141,6 +141,41 @@ catch {
     Report $false "MechabellumMods/catalog.json" "($($_.Exception.Message))"
 }
 
+Write-Output "== redist =="
+$redistManifest = $null
+try {
+    $redistManifest = ConvertFrom-JsonBytes (Get-Bytes "$BaseUrl/MechabellumRedist/manifest.json")
+    Report ($redistManifest.artifacts.Count -gt 0) "MechabellumRedist/manifest.json ($($redistManifest.artifacts.Count) artifacts)"
+}
+catch {
+    Report $false "MechabellumRedist/manifest.json" "($($_.Exception.Message))"
+}
+
+if ($redistManifest) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        foreach ($art in $redistManifest.artifacts) {
+            $rel = ($art.path -replace '\\', '/')
+            $declared = "$($art.sha256)".ToLowerInvariant()
+            if ($declared -notmatch '^[0-9a-f]{64}$') {
+                Report $false "redist $($art.id) declares sha256" "(thin Setup refuses bad hashes)"
+                continue
+            }
+            try {
+                $bytes = Get-Bytes "$BaseUrl/MechabellumRedist/$rel"
+                $actual = ($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
+                Report ($actual -eq $declared) "redist $($art.id) -> $rel" "(manifest $declared, served $actual)"
+            }
+            catch {
+                Report $false "redist $($art.id) -> $rel" "($($_.Exception.Message))"
+            }
+        }
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
 try {
     $latest = ConvertFrom-JsonBytes (Get-Bytes "$BaseUrl/MechabellumModManager/latest.json")
     Report $true "MechabellumModManager/latest.json (version $($latest.version))"

@@ -28,7 +28,7 @@ Copy-Item "src\MechabellumModManager\Assets\*" $assetsOut -Force
   "installer\redist\cpp2il"
 ) | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ | Out-Null }
 
-Write-Host "[2/3] Checking offline redist (MelonLoader, UnityDependencies, Cpp2IL, .NET 8)..."
+Write-Host "[2/3] Checking offline redist staging (used by sync-mirror; NOT embedded in thin Setup)..."
 $melonZip = Join-Path (Get-Location) "installer\redist\melonloader\MelonLoader.x64.zip"
 $unityDepsDir = Join-Path (Get-Location) "installer\redist\unity-deps"
 $dotnet8Dir = Join-Path (Get-Location) "installer\redist\dotnet8"
@@ -37,74 +37,51 @@ function Test-NonEmptyFile([string] $Path) {
     return (Test-Path -LiteralPath $Path) -and ((Get-Item -LiteralPath $Path).Length -gt 0)
 }
 
-if (-not $SkipMelonRedistCheck) {
-    if (-not (Test-NonEmptyFile $melonZip)) {
-        Write-Error @"
-Missing MelonLoader offline package (required for release builds).
-Place the official file here:
-  installer\redist\melonloader\MelonLoader.x64.zip
-Download: https://github.com/LavaGang/MelonLoader/releases
-(Use MelonLoader.x64.zip)
-
-Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
-"@
-        exit 3
-    }
-    Write-Host "Found MelonLoader redist: $melonZip ($([math]::Round((Get-Item $melonZip).Length / 1MB, 1)) MB)"
-
-    $unityDepsZip = Get-ChildItem -Path $unityDepsDir -Filter "UnityDependencies_*.zip" -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.Length -gt 0 } |
-        Select-Object -First 1
-    if (-not $unityDepsZip) {
-        Write-Error @"
-Missing UnityDependencies offline package (required for release builds).
-Place at least one non-empty zip here:
-  installer\redist\unity-deps\UnityDependencies_{major.minor.patch}.zip
-Download: https://github.com/LavaGang/Unity-Runtime-Libraries
-Rename upstream files (e.g. 2022.3.62.zip) to UnityDependencies_2022.3.62.zip before placing.
-
-Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
-"@
-        exit 3
-    }
-    Write-Host "Found UnityDependencies redist: $($unityDepsZip.FullName) ($([math]::Round($unityDepsZip.Length / 1MB, 1)) MB)"
-
-    $cpp2IlDir = Join-Path (Get-Location) "installer\redist\cpp2il"
-    $cpp2IlExe = Join-Path $cpp2IlDir "Cpp2IL.exe"
-    $cpp2IlPlugin = Join-Path $cpp2IlDir "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
-    if (-not (Test-NonEmptyFile $cpp2IlExe) -or -not (Test-NonEmptyFile $cpp2IlPlugin)) {
-        Write-Error @"
-Missing Cpp2IL offline package (required for release builds).
-Place Melon 0.7.3 matching files here:
-  installer\redist\cpp2il\Cpp2IL.exe
-  installer\redist\cpp2il\Cpp2IL.Plugin.StrippedCodeRegSupport.dll
-From: https://github.com/SamboyCoding/Cpp2IL/releases/tag/2022.1.0-pre-release.21
-(Windows asset: Cpp2IL-*-Windows.exe → rename to Cpp2IL.exe)
-
-Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
-"@
-        exit 3
-    }
-    Write-Host ("Found Cpp2IL redist: {0} ({1} MB)" -f $cpp2IlExe, [math]::Round((Get-Item $cpp2IlExe).Length / 1MB, 1))
-
-    $dotnet8Exe = Get-ChildItem -Path $dotnet8Dir -Filter "windowsdesktop-runtime-8.*-win-x64.exe" -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.Length -gt 0 } |
-        Select-Object -First 1
-    if (-not $dotnet8Exe) {
-        Write-Error @"
-Missing .NET 8 Desktop Runtime offline installer (required for release builds).
-Place at least one non-empty file here:
-  installer\redist\dotnet8\windowsdesktop-runtime-8.*-win-x64.exe
-Download: https://dotnet.microsoft.com/download/dotnet/8.0
-
-Local debug only: re-run with -SkipMelonRedistCheck (do NOT use for release).
-"@
-        exit 3
-    }
-    Write-Host "Found .NET 8 redist: $($dotnet8Exe.FullName) ($([math]::Round($dotnet8Exe.Length / 1MB, 1)) MB)"
+$stagingOk = $true
+if (-not (Test-NonEmptyFile $melonZip)) {
+    Write-Warning "Staging missing MelonLoader.x64.zip (mirror sync will need it). Path: installer\redist\melonloader\"
+    $stagingOk = $false
 } else {
-    Write-Warning "SkipMelonRedistCheck set — Setup may lack MelonLoader, UnityDependencies, Cpp2IL, or .NET 8 redist. Do not use for release."
+    Write-Host "Found MelonLoader staging: $melonZip ($([math]::Round((Get-Item $melonZip).Length / 1MB, 1)) MB)"
 }
+
+$unityDepsZip = Get-ChildItem -Path $unityDepsDir -Filter "UnityDependencies_*.zip" -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Length -gt 0 } |
+    Select-Object -First 1
+if (-not $unityDepsZip) {
+    Write-Warning "Staging missing UnityDependencies_*.zip (mirror sync will need it)."
+    $stagingOk = $false
+} else {
+    Write-Host "Found UnityDependencies staging: $($unityDepsZip.FullName) ($([math]::Round($unityDepsZip.Length / 1MB, 1)) MB)"
+}
+
+$cpp2IlDir = Join-Path (Get-Location) "installer\redist\cpp2il"
+$cpp2IlExe = Join-Path $cpp2IlDir "Cpp2IL.exe"
+$cpp2IlPlugin = Join-Path $cpp2IlDir "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
+if (-not (Test-NonEmptyFile $cpp2IlExe) -or -not (Test-NonEmptyFile $cpp2IlPlugin)) {
+    Write-Warning "Staging missing Cpp2IL files (mirror sync will need them)."
+    $stagingOk = $false
+} else {
+    Write-Host ("Found Cpp2IL staging: {0} ({1} MB)" -f $cpp2IlExe, [math]::Round((Get-Item $cpp2IlExe).Length / 1MB, 1))
+}
+
+$dotnet8Exe = Get-ChildItem -Path $dotnet8Dir -Filter "windowsdesktop-runtime-8.*-win-x64.exe" -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Length -gt 0 } |
+    Select-Object -First 1
+if (-not $dotnet8Exe) {
+    Write-Warning "Staging missing .NET 8 Desktop Runtime offline installer (mirror sync will need it)."
+    $stagingOk = $false
+} else {
+    Write-Host "Found .NET 8 staging: $($dotnet8Exe.FullName) ($([math]::Round($dotnet8Exe.Length / 1MB, 1)) MB)"
+}
+
+if (-not $SkipMelonRedistCheck -and -not $stagingOk) {
+    Write-Warning "Thin Setup does not embed these files. Re-run sync-mirror after staging is complete. Continuing Setup build."
+}
+if ($SkipMelonRedistCheck) {
+    Write-Warning "SkipMelonRedistCheck set — staging warnings suppressed."
+}
+
 
 
 # UTF-8 BOM check for Inno script (prevents Chinese CustomMessages mojibake)
@@ -141,3 +118,4 @@ Write-Host "Using $iscc"
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
 
 Get-ChildItem "dist\*Setup*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "OK $($_.FullName)" }
+

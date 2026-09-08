@@ -349,6 +349,7 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="CatalogStatusInLibrary" xml:space="preserve"><value>In library</value></data>
   <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>Not installed</value></data>
   <data name="CatalogStatusUpdateAvailable" xml:space="preserve"><value>Update available</value></data>
+  <data name="LibraryStatusUpToDate" xml:space="preserve"><value>Up to date</value></data>
   <data name="NotifyModUpdateCloseGame" xml:space="preserve"><value>Close the game before updating a mod.</value></data>
   <data name="NotifyModUpdateBusy" xml:space="preserve"><value>A critical operation is running; mod updates are unavailable right now.</value></data>
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>{0} installed mod(s) can be updated: {1}. Update them under Browse Mods.</value></data>

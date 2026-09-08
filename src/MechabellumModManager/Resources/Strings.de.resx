@@ -349,6 +349,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="CatalogStatusInLibrary" xml:space="preserve"><value>In Bibliothek</value></data>
   <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>Nicht installiert</value></data>
   <data name="CatalogStatusUpdateAvailable" xml:space="preserve"><value>Update verfügbar</value></data>
+  <data name="LibraryStatusUpToDate" xml:space="preserve"><value>Aktuell</value></data>
   <data name="NotifyModUpdateCloseGame" xml:space="preserve"><value>Beenden Sie das Spiel, bevor Sie ein Mod aktualisieren.</value></data>
   <data name="NotifyModUpdateBusy" xml:space="preserve"><value>Ein kritischer Vorgang läuft; Mod-Updates sind derzeit nicht möglich.</value></data>
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>{0} installierte Mod(s) können aktualisiert werden: {1}. Aktualisieren Sie sie unter Mods durchsuchen.</value></data>

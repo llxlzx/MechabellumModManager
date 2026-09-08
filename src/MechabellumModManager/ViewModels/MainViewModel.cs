@@ -2311,7 +2311,29 @@ public sealed partial class MainViewModel : ObservableObject
             await RunWithCriticalOpAsync(CriticalOpKind.MelonInstall, "MelonInstall", async () =>
             {
                 MelonLoaderInstallResult result;
-                var zip = MelonLoaderDualStoreSync.ResolveLocalZip();
+                var redistDir = Path.Combine(AppContext.BaseDirectory, "installer-redist");
+                Directory.CreateDirectory(redistDir);
+                // MirrorBaseUrl "" = opt-out (origin only). Null should not happen after factory fill.
+                var mirror = MirrorBaseUrl;
+                AppendLog("正在准备 Melon 运行时离线包（镜像优先）…");
+                var ensure = await new RedistEnsureService()
+                    .EnsureAsync(
+                        redistDir,
+                        mirror,
+                        ids:
+                        [
+                            "melonloader-x64",
+                            "unity-deps-2022.3.62",
+                            "cpp2il-exe",
+                            "cpp2il-plugin"
+                        ])
+                    .ConfigureAwait(true);
+                AppendLog(ensure.Message);
+                foreach (var (id, source) in ensure.SourceById)
+                    AppendLog($"  redist {id}: {source}");
+
+                var zip = MelonLoaderDualStoreSync.ResolveLocalZip(
+                    Path.Combine(redistDir, "melonloader", "MelonLoader.x64.zip"));
                 if (zip is not null)
                 {
                     AppendLog(string.Format(LocalizationService.T("LogMelonInstallLocalZip"), zip));
@@ -2800,7 +2822,8 @@ public sealed partial class MainViewModel : ObservableObject
         }).ConfigureAwait(true);
     }
 
-    bool CanUpdateMod(ModItemViewModel? _) => !_addingCatalogMod;
+    bool CanUpdateMod(ModItemViewModel? item) =>
+        item is { IsMissing: false, HasUpdate: true } && !_addingCatalogMod;
 
     async Task RunCatalogDownloadAsync(Func<Task> work)
     {
@@ -3201,9 +3224,10 @@ public sealed partial class MainViewModel : ObservableObject
         {
             foreach (var mod in Mods)
             {
-                if (!mod.HasUpdate && mod.LatestVersion is null) continue;
+                if (!mod.HasUpdate && mod.LatestVersion is null && !mod.CatalogMatched) continue;
                 mod.HasUpdate = false;
                 mod.LatestVersion = null;
+                mod.CatalogMatched = false;
             }
         }
         else
@@ -3218,6 +3242,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         OutdatedCount = Mods.Count(m => !m.IsMissing && m.HasUpdate);
+        UpdateModCommand.NotifyCanExecuteChanged();
     }
 
     void RefreshCatalogInLibraryFlags()

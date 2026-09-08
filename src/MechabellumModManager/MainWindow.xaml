@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:conv="clr-namespace:MechabellumModManager.Converters"
+        xmlns:helpers="clr-namespace:MechabellumModManager.Helpers"
         mc:Ignorable="d"
         Title="钢铁指挥官 Mod 管理器"
         Height="740"
@@ -16,6 +17,7 @@
         Foreground="{StaticResource TextPrimaryBrush}"
         FontFamily="{StaticResource AppFontFamily}">
     <Window.Resources>
+        <helpers:BindingProxy x:Key="Proxy" Data="{Binding}" />
         <conv:NonEmptyStringToVisibilityConverter x:Key="NonEmptyVis" />
         <conv:NullToVisibilityConverter x:Key="NullToVis" />
     </Window.Resources>
@@ -707,26 +709,26 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnName, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnName, Source={StaticResource Proxy}}"
                                                     Binding="{Binding Name}"
                                                     Width="*"
                                                     MinWidth="120" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnCategory, Source={StaticResource Proxy}}"
                                                     Binding="{Binding EffectiveCategoryDisplay}"
                                                     Width="100" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnTag, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnTag, Source={StaticResource Proxy}}"
                                                     Binding="{Binding EffectiveTagsText}"
                                                     Width="120" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnAuthor, Source={StaticResource Proxy}}"
                                                     Binding="{Binding Author}"
                                                     Width="90" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnVersion, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnVersion, Source={StaticResource Proxy}}"
                                                     Binding="{Binding Version}"
                                                     Width="70" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnUpdated, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnUpdated, Source={StaticResource Proxy}}"
                                                     Binding="{Binding UpdatedAt}"
                                                     Width="100" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnStatus, Source={StaticResource Proxy}}"
                                                     Binding="{Binding StatusText}"
                                                     Width="110" />
                             </DataGrid.Columns>
@@ -1037,7 +1039,7 @@
                                   IsReadOnly="False"
                                   HeadersVisibility="Column">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnEnabled, RelativeSource={RelativeSource AncestorType=Window}}" Width="56">
+                                <DataGridTemplateColumn Header="{Binding Data.Ui.ColumnEnabled, Source={StaticResource Proxy}}" Width="56">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
@@ -1046,38 +1048,48 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnName, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnName, Source={StaticResource Proxy}}"
                                                     Binding="{Binding DisplayName}"
                                                     IsReadOnly="True"
                                                     Width="*"
                                                     MinWidth="140" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnCategory, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnCategory, Source={StaticResource Proxy}}"
                                                     Binding="{Binding EffectiveCategoryDisplay}"
                                                     IsReadOnly="True"
                                                     Width="100" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnTag, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnTag, Source={StaticResource Proxy}}"
                                                     Binding="{Binding EffectiveTagsText}"
                                                     IsReadOnly="True"
                                                     Width="120" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnAuthor, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnAuthor, Source={StaticResource Proxy}}"
                                                     Binding="{Binding Author}"
                                                     IsReadOnly="True"
                                                     Width="110"
                                                     MinWidth="80" />
-                                  <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnType, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  <DataGridTextColumn Header="{Binding Data.Ui.ColumnType, Source={StaticResource Proxy}}"
                                                     Binding="{Binding TypeLabel}"
                                                     IsReadOnly="True"
                                                     Width="90" />
-                                <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnVersion, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnVersion, Source={StaticResource Proxy}}"
                                                     Binding="{Binding Version}"
                                                     IsReadOnly="True"
                                                     Width="80" />
-                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}" Width="130">
+                                <DataGridTemplateColumn Header="{Binding Data.Ui.ColumnStatus, Source={StaticResource Proxy}}" Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding UpdateStatusText}"
-                                                       Foreground="{StaticResource WarnBrush}"
-                                                       VerticalAlignment="Center" />
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasUpdate}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -1087,14 +1099,14 @@
                                             <Button Content="{Binding DataContext.Ui.ActionUpdate, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Command="{Binding DataContext.UpdateModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
+                                                    IsEnabled="{Binding HasUpdate}"
                                                     Padding="10,6"
                                                     MinHeight="30"
-                                                    FontSize="12"
-                                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVis}}" />
+                                                    FontSize="12" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnRisk, RelativeSource={RelativeSource AncestorType=Window}}" Width="88">
+                                <DataGridTemplateColumn Header="{Binding Data.Ui.ColumnRisk, Source={StaticResource Proxy}}" Width="88">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="{Binding HighRiskLabel}"
@@ -1107,7 +1119,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnLoader, RelativeSource={RelativeSource AncestorType=Window}}" Width="100">
+                                <DataGridTemplateColumn Header="{Binding Data.Ui.ColumnLoader, Source={StaticResource Proxy}}" Width="100">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding RequiredMelonLoaderVersion}"

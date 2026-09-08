@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "1.1.8"
+#define MyAppVersion "1.2.0"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -59,7 +59,7 @@ chinesesimplified.TaskDesktopGroup=附加选项:
 chinesesimplified.CompMain=管理器本体（必选）
 chinesesimplified.CompDotNet8=.NET 8 Desktop Runtime x64（管理器需要；已安装则跳过；下载约 55-60 MB，安装后约 150-200 MB）
 chinesesimplified.CompDotNet6=.NET 6 Desktop Runtime x64（MelonLoader 需要；已安装则跳过；下载约 50-55 MB，安装后约 140-180 MB）
-chinesesimplified.CompMelon=MelonLoader（安装包已内嵌离线包；低于 0.7.3 会升级；一般无需访问 GitHub；默认建议安装到游戏目录）
+chinesesimplified.CompMelon=MelonLoader（安装时从国内镜像/GitHub 下载离线包；低于 0.7.3 会升级；默认建议安装到游戏目录；需联网）
 chinesesimplified.RunNow=立即启动 %1
 chinesesimplified.RiskWelcome=请仔细阅读下一页用户协议；同意后方可继续安装。
 chinesesimplified.GamePathTitle=选择游戏目录
@@ -72,6 +72,10 @@ chinesesimplified.StatusSeedUserConfig=正在写入当前用户配置（无界�
 chinesesimplified.ErrWriteConfig=写入管理器配置失败。可稍后在管理器「设置」中手动指定游戏路径。
 chinesesimplified.StatusRestoreOptional=可选恢复脚本未运行（不影响安装；配置已用内置方式写入）。
 chinesesimplified.StatusSanitizeAcf=正在清理无效的 Steam 分支快照（不修改 Steam 本体）…
+chinesesimplified.StatusEnsureRedist=正在从国内镜像（失败则官方源）下载运行时离线包（Melon/.NET 等，可能较大，请稍候）…
+chinesesimplified.StatusEnsureRedistDone=运行时离线包已就绪。
+chinesesimplified.StatusEnsureRedistFail=无法启动管理器下载离线包；将尝试继续（可能失败）。
+chinesesimplified.ErrEnsureRedist=下载运行时离线包失败（exit %1）。请检查网络后重试，或稍后再装 MelonLoader / .NET。
 chinesesimplified.StatusDotNet8=正在静默安装 .NET 8 Desktop Runtime（下载约 55-60 MB；进度条可能短暂不动，请稍候；已安装则跳过）…
 chinesesimplified.ErrDotNet8=.NET 8 Desktop Runtime 安装未成功（exit %1）。请稍后从 https://dotnet.microsoft.com/download/dotnet/8.0 手动安装。
 chinesesimplified.StatusNoPsDotNet8=无法启动 PowerShell，已跳过 .NET 8 自动安装（可稍后手动安装）。
@@ -82,7 +86,7 @@ chinesesimplified.StatusNoPsDotNet6=无法启动 PowerShell，已跳过 .NET 6 �
 chinesesimplified.StatusDotNet6Done=.NET 6 Desktop Runtime 已完成（或已跳过）。
 chinesesimplified.StatusSteamBusyMelon=检测到 Steam 正在下载本游戏，已跳过写入 MelonLoader（避免打断下载）。请等下载完成后再运行安装包并勾选 MelonLoader，或自行安装。
 chinesesimplified.WarnSteamBusyMelon=检测到 Steam 正在下载本游戏，安装程序已跳过 MelonLoader。%n%n请等下载完成后再运行本安装包（勾选 MelonLoader），否则管理器会提示「缺少 Loader」，且「应用并启动」不可用。
-chinesesimplified.StatusMelon=正在检测/安装 MelonLoader（≥0.7.3 则跳过；优先内嵌离线包）…
+chinesesimplified.StatusMelon=正在检测/安装 MelonLoader（≥0.7.3 则跳过；优先使用已下载的离线包）…
 chinesesimplified.StatusNoPsMelon=无法启动 PowerShell；将改用管理器内嵌方式安装 MelonLoader。
 chinesesimplified.ErrMelon=MelonLoader 安装未成功（exit %1）。%n%nexit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整；exit 5：游戏正在运行。%n%n也可打开管理器点击「安装 MelonLoader」，或手动安装：%nhttps://github.com/LavaGang/MelonLoader/releases%n（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）
 chinesesimplified.StatusMelonDone=MelonLoader 已完成（或已跳过）。
@@ -98,7 +102,7 @@ english.TaskDesktopGroup=Additional tasks:
 english.CompMain=Manager app (required)
 english.CompDotNet8=.NET 8 Desktop Runtime x64 (required by the manager; skipped if already installed; ~55-60 MB download, ~150-200 MB installed)
 english.CompDotNet6=.NET 6 Desktop Runtime x64 (required by MelonLoader; skipped if already installed; ~50-55 MB download, ~140-180 MB installed)
-english.CompMelon=MelonLoader (offline package embedded; upgrades if below 0.7.3; usually no GitHub access needed; recommended for the game folder)
+english.CompMelon=MelonLoader (downloads offline package from domestic mirror/GitHub during Setup; upgrades if below 0.7.3; recommended; needs network)
 english.RunNow=Launch %1 now
 english.RiskWelcome=Please read the license agreement on the next page carefully. You must agree before continuing.
 english.GamePathTitle=Select game folder
@@ -111,6 +115,10 @@ english.StatusSeedUserConfig=Writing per-user config (no UI; please wait)…
 english.ErrWriteConfig=Failed to write manager config. You can set the game path later in Settings.
 english.StatusRestoreOptional=Optional restore script did not run (install continues; config was written natively).
 english.StatusSanitizeAcf=Removing invalid Steam branch snapshots (Steam itself is not modified)…
+english.StatusEnsureRedist=Downloading runtime packages from the domestic mirror (official sources on failure; may be large)…
+english.StatusEnsureRedistDone=Runtime packages ready.
+english.StatusEnsureRedistFail=Could not start the manager to download packages; continuing (may fail).
+english.ErrEnsureRedist=Failed to download runtime packages (exit %1). Check the network and retry, or install MelonLoader / .NET later.
 english.StatusDotNet8=Quietly installing .NET 8 Desktop Runtime (~55-60 MB download; progress may pause briefly; skipped if present)…
 english.ErrDotNet8=.NET 8 Desktop Runtime install failed (exit %1). Install manually from https://dotnet.microsoft.com/download/dotnet/8.0
 english.StatusNoPsDotNet8=Could not start PowerShell; skipped automatic .NET 8 install (you can install it later).
@@ -121,7 +129,7 @@ english.StatusNoPsDotNet6=Could not start PowerShell; skipped automatic .NET 6 i
 english.StatusDotNet6Done=.NET 6 Desktop Runtime finished (or skipped).
 english.StatusSteamBusyMelon=Steam is downloading this game; MelonLoader write was skipped. After the download finishes, re-run Setup with MelonLoader checked, or install MelonLoader manually.
 english.WarnSteamBusyMelon=Steam is downloading this game, so Setup skipped MelonLoader.%n%nAfter the download finishes, re-run this Setup (keep MelonLoader checked). Otherwise the manager will show “Missing Loader” and Apply and Launch will stay disabled.
-english.StatusMelon=Checking/installing MelonLoader (skip if ≥0.7.3; prefer embedded offline package)…
+english.StatusMelon=Checking/installing MelonLoader (skip if ≥0.7.3; prefer downloaded offline package)…
 english.StatusNoPsMelon=Could not start PowerShell; falling back to the manager’s built-in MelonLoader installer.
 english.WarnNoPsMelon=Could not start PowerShell; already using the manager's built-in MelonLoader installer. If it still fails, open the manager and click Install MelonLoader.
 english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: often GitHub download failure; exit 3: incomplete install; exit 5: game running.%n%nOr open the manager and click Install MelonLoader, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
@@ -149,7 +157,11 @@ russian.StatusWriteConfig=Запись конфигурации менеджер
 russian.StatusSeedUserConfig=Запись пользовательской конфигурации (без окна; подождите)…
 russian.ErrWriteConfig=Не удалось записать конфигурацию. Путь к игре можно указать позже в настройках.
 russian.StatusRestoreOptional=Дополнительный скрипт восстановления не выполнен (установка продолжается; конфиг записан встроенным способом).
-russian.StatusSanitizeAcf=Удаление недействительных снимков ветки Steam (сам Steam не изменяется)…
+russian.StatusSanitizeAcf=Удаление недействительных снимков ветки Steam (сам Steam не изменяется)…
+russian.StatusEnsureRedist=Загрузка пакетов runtime с зеркала (при сбое — официальные источники)…
+russian.StatusEnsureRedistDone=Пакеты runtime готовы.
+russian.StatusEnsureRedistFail=Не удалось запустить менеджер для загрузки; продолжаем (возможны ошибки).
+russian.ErrEnsureRedist=Не удалось скачать пакеты runtime (код %1). Проверьте сеть и повторите.
 russian.StatusDotNet8=Тихая установка .NET 8 Desktop Runtime (~55–60 МБ; прогресс может замирать; пропуск, если есть)…
 russian.ErrDotNet8=Установка .NET 8 Desktop Runtime не удалась (код %1). Установите вручную: https://dotnet.microsoft.com/download/dotnet/8.0
 russian.StatusNoPsDotNet8=Не удалось запустить PowerShell; автоматическая установка .NET 8 пропущена (можно установить позже).
@@ -189,6 +201,10 @@ japanese.StatusSeedUserConfig=ユーザー設定を書き込み中（画面な�
 japanese.ErrWriteConfig=マネージャー設定の書き込みに失敗しました。後で設定からゲームパスを指定できます。
 japanese.StatusRestoreOptional=オプションの復元スクリプトは実行されませんでした（インストールは続行；設定は組み込み方式で書き込み済み）。
 japanese.StatusSanitizeAcf=無効な Steam ブランチスナップショットを削除中（Steam 本体は変更しません）…
+japanese.StatusEnsureRedist=国内ミラー（失敗時は公式）からランタイムをダウンロード中…
+japanese.StatusEnsureRedistDone=ランタイム準備完了。
+japanese.StatusEnsureRedistFail=マネージャーを起動できずダウンロードできません；続行します。
+japanese.ErrEnsureRedist=ランタイムのダウンロードに失敗（exit %1）。ネットワークを確認してください。
 japanese.StatusDotNet8=.NET 8 Desktop Runtime をサイレントインストール中（約55–60 MB；進捗が一時停止することがあります；存在すればスキップ）…
 japanese.ErrDotNet8=.NET 8 Desktop Runtime のインストールに失敗しました（終了コード %1）。https://dotnet.microsoft.com/download/dotnet/8.0 から手動インストールしてください。
 japanese.StatusNoPsDotNet8=PowerShell を起動できませんでした；.NET 8 の自動インストールをスキップしました（後でインストール可能）。
@@ -227,7 +243,11 @@ german.StatusWriteConfig=Manager-Konfiguration wird geschrieben (Dual-Ordner-Ein
 german.StatusSeedUserConfig=Benutzerkonfiguration wird geschrieben (ohne UI; bitte warten)…
 german.ErrWriteConfig=Manager-Konfiguration konnte nicht geschrieben werden. Spielpfad später in den Einstellungen setzen.
 german.StatusRestoreOptional=Optionales Wiederherstellungsskript nicht ausgeführt (Installation läuft weiter; Konfiguration nativ geschrieben).
-german.StatusSanitizeAcf=Ungültige Steam-Branch-Snapshots werden entfernt (Steam selbst wird nicht geändert)…
+german.StatusSanitizeAcf=Ungültige Steam-Branch-Snapshots werden entfernt (Steam selbst wird nicht geändert)…
+german.StatusEnsureRedist=Runtime-Pakete vom Spiegel werden geladen (bei Fehler offizielle Quellen)…
+german.StatusEnsureRedistDone=Runtime-Pakete bereit.
+german.StatusEnsureRedistFail=Manager konnte nicht starten; Download übersprungen (kann scheitern).
+german.ErrEnsureRedist=Runtime-Download fehlgeschlagen (Exit %1). Netzwerk prüfen und erneut versuchen.
 german.StatusDotNet8=.NET 8 Desktop Runtime wird still installiert (~55–60 MB; Fortschritt kann kurz stehen; übersprungen wenn vorhanden)…
 german.ErrDotNet8=.NET 8 Desktop Runtime Installation fehlgeschlagen (Exit %1). Manuell installieren: https://dotnet.microsoft.com/download/dotnet/8.0
 german.StatusNoPsDotNet8=PowerShell konnte nicht gestartet werden; automatische .NET 8-Installation übersprungen (später möglich).
@@ -263,7 +283,8 @@ Source: "..\publish\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion; Co
 Source: "..\publish\Assets\*"; DestDir: "{app}\Assets"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
 ; Helper scripts shipped with the app for repair / documentation
 Source: "scripts\*"; DestDir: "{app}\installer-scripts"; Flags: ignoreversion; Components: main
-Source: "redist\*"; DestDir: "{app}\installer-redist"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
+; Thin Setup: runtime packages downloaded at post-install (--ensure-redist), not embedded.
+Source: "redist\README.md"; DestDir: "{app}\installer-redist"; Flags: ignoreversion; Components: main
 ; Used during wizard before files are copied to {app}
 Source: "scripts\Detect-GamePath.ps1"; Flags: dontcopy
 
@@ -478,6 +499,21 @@ begin
   Result := ResultCode;
 end;
 
+
+function EnsureRedistViaApp(const Redist: string): Integer;
+var
+  Params: string;
+  ResultCode: Integer;
+begin
+  { Thin Setup: pull Melon/Unity/Cpp2IL/.NET into installer-redist (COS then origin). }
+  Params := '--ensure-redist --redist-dir "' + Redist + '" --mirror-base-url "https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com"';
+  if not Exec(ExpandConstant('{app}\{#MyAppExeName}'), Params, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    Result := -1;
+    exit;
+  end;
+  Result := ResultCode;
+end;
 function LooksLikeGame(const Path: string): Boolean;
 begin
   Result := FileExists(AddBackslash(Path) + 'Mechabellum.exe') and
@@ -921,6 +957,18 @@ begin
   { Skip Melon only when THIS game is mid-download — not merely because Steam is open. }
   SteamBusy := QueryGameDownloading(GamePath);
 
+  { Download runtime packages into installer-redist before .NET / Melon steps. }
+  if WizardIsComponentSelected('dotnet8') or WizardIsComponentSelected('dotnet6') or WizardIsComponentSelected('melon') then
+  begin
+    SetStatus(CustomMessage('StatusEnsureRedist'));
+    Code := EnsureRedistViaApp(Redist);
+    if (Code <> 0) and (Code <> -1) then
+      MsgBox(FmtMessage(CustomMessage('ErrEnsureRedist'), [IntToStr(Code)]), mbError, MB_OK)
+    else if Code = -1 then
+      SetStatus(CustomMessage('StatusEnsureRedistFail'))
+    else
+      SetStatus(CustomMessage('StatusEnsureRedistDone'));
+  end;
   if WizardIsComponentSelected('dotnet8') then
   begin
     SetStatus(CustomMessage('StatusDotNet8'));

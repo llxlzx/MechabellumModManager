@@ -73,6 +73,14 @@ public sealed partial class ModItemViewModel : ObservableObject
     private bool _hasUpdate;
 
     /// <summary>
+    /// True after <see cref="ApplyCatalogEnrichment"/> successfully matched this row to a catalog entry.
+    /// Distinguishes "up to date" from "never compared" so the status column does not lie.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
+    private bool _catalogMatched;
+
+    /// <summary>
     /// The version the catalog currently serves, which <see cref="Version"/> deliberately is not:
     /// that one describes the bytes on disk. Null when the catalog names no version, which is
     /// common for entries whose staleness was decided by hash rather than by version.
@@ -85,8 +93,11 @@ public sealed partial class ModItemViewModel : ObservableObject
     {
         get
         {
-            if (!HasUpdate)
+            if (IsMissing || !CatalogMatched)
                 return "";
+
+            if (!HasUpdate)
+                return LocalizationService.T("LibraryStatusUpToDate");
 
             // "1.0.0 -> 1.2.0" answers "how far behind am I", which a bare "update available"
             // does not. Both halves have to be there for the arrow to mean anything.
@@ -141,6 +152,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(HighRiskLabel));
         OnPropertyChanged(nameof(VersionWarningHint));
         OnPropertyChanged(nameof(LatestVersion));
+        OnPropertyChanged(nameof(CatalogMatched));
         OnPropertyChanged(nameof(UpdateStatusText));
     }
 
@@ -178,6 +190,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         }
         LatestVersion = string.IsNullOrWhiteSpace(catalog.Version) ? null : catalog.Version;
         HasUpdate = ModCatalogService.GetEntryState([Package], catalog) == CatalogEntryState.UpdateAvailable;
+        CatalogMatched = true;
         RefreshCatalogFieldsFromPackage();
     }
 
