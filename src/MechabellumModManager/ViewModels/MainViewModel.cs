@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MechabellumModManager.Models;
@@ -78,6 +79,15 @@ public sealed partial class MainViewModel : ObservableObject
     bool _checkingUpdates;
     bool _checkingCatalog;
     bool _addingCatalogMod;
+    /// <summary>
+    /// Dispatcher that owns <see cref="LibraryModsView"/> / <see cref="CatalogModsView"/>.
+    /// Captured at construction so post-download continuations (thread-pool after
+    /// <c>ConfigureAwait(false)</c> in the catalog service) can marshal collection mutations
+    /// even when <see cref="Application.Current"/> is null (unit tests).
+    /// </summary>
+    readonly Dispatcher _uiDispatcher;
+    readonly object _modsSync = new();
+    readonly object _catalogModsSync = new();
     readonly List<CatalogModItemViewModel> _catalogSelection = new();
     bool _autoImportedFromGame;
     readonly HashSet<string> _assemblyGeneratePrompted = new(StringComparer.OrdinalIgnoreCase);
@@ -220,6 +230,14 @@ public sealed partial class MainViewModel : ObservableObject
         Profiles = new ObservableCollection<ProfileItemViewModel>();
         Mods = new ObservableCollection<ModItemViewModel>();
         CatalogMods = new ObservableCollection<CatalogModItemViewModel>();
+        // Always the creating thread's dispatcher — collections/views are affiliated with it.
+        // Preferring Application.Current.Dispatcher broke parallel/STA tests that share a leaked
+        // Application: RunOnUiThread Invoked onto the wrong or shut-down dispatcher.
+        _uiDispatcher = Dispatcher.CurrentDispatcher;
+        // Must be enabled before associating CollectionViews so background reloads after
+        // catalog download (thread-pool) do not throw NotSupportedException / deadlock Invoke.
+        BindingOperations.EnableCollectionSynchronization(Mods, _modsSync);
+        BindingOperations.EnableCollectionSynchronization(CatalogMods, _catalogModsSync);
         CatalogModsView = CollectionViewSource.GetDefaultView(CatalogMods);
         CatalogModsView.Filter = FilterCatalogItem;
         LibraryModsView = CollectionViewSource.GetDefaultView(Mods);
@@ -250,7 +268,11 @@ public sealed partial class MainViewModel : ObservableObject
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
-        ApplyMirrorBaseUrl(config.MirrorBaseUrl, save: false);
+        // null = never configured → factory COS default. "" = player opted out (do not refill).
+        if (config.MirrorBaseUrl is null)
+            ApplyMirrorBaseUrl(DomesticMirrorDefaults.BaseUrl, save: true);
+        else
+            ApplyMirrorBaseUrl(config.MirrorBaseUrl, save: false);
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
 
         try
@@ -742,6 +764,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty] private int _librarySelectionCount;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasOutdatedMods))]
+    private int _outdatedCount;
+
+    public bool HasOutdatedMods => OutdatedCount > 0;
+
     public int CatalogSelectionCount { get; private set; }
 
     public bool ShowConfirmManualBeta => IsAwaitingSteamSettle || DegradeToManualBeta;
@@ -1172,6 +1200,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     void ApplyMirrorBaseUrl(string? value, bool save)
     {
+        // Persist "" for cleared/opt-out so the next launch does not treat it as null (factory default).
         var normalized = string.IsNullOrWhiteSpace(value) ? "" : value.Trim().TrimEnd('/');
         _suppressMirrorSave = true;
         try
@@ -1184,25 +1213,31 @@ public sealed partial class MainViewModel : ObservableObject
             _suppressMirrorSave = false;
         }
 
-        var stored = string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+        string? active = string.IsNullOrEmpty(normalized) ? null : normalized;
 
         // The mirror serves the installer and mod binaries, so plain http would let anyone on
         // the path swap them. Refuse rather than silently downgrade the whole update channel.
-        if (stored is not null && !ExternalUrlPolicy.IsHttpsUrl(stored))
+        // Persist "" (not null) so a refused URL is not mistaken for "never configured".
+        var persisted = normalized;
+        if (active is not null && !ExternalUrlPolicy.IsHttpsUrl(active))
         {
-            AppendLog(string.Format(LocalizationService.T("LogMirrorMustBeHttps"), stored));
-            stored = null;
+            AppendLog(string.Format(LocalizationService.T("LogMirrorMustBeHttps"), active));
+            active = null;
+            persisted = "";
+            _suppressMirrorSave = true;
+            try { MirrorBaseUrl = ""; }
+            finally { _suppressMirrorSave = false; }
         }
 
-        _catalog.MirrorBaseUrl = stored;
+        _catalog.MirrorBaseUrl = active;
         _catalog.DataRoot = _paths.DataRoot;
-        _updateChecker.MirrorBaseUrl = stored;
+        _updateChecker.MirrorBaseUrl = active;
 
         if (!save)
             return;
 
         var config = LoadConfig();
-        config.MirrorBaseUrl = stored;
+        config.MirrorBaseUrl = persisted;
         SaveConfig(config);
     }
 
@@ -1225,6 +1260,12 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+
+            // Populating the list is what makes the check visible: it enriches the installed
+            // rows, so the status column and the per-row update button are live from launch
+            // rather than waiting for the player to open the catalog panel.
+            ApplyCatalogRoot(root);
+
             var packages = _library.List();
             var stale = root.Mods
                 .Where(mod => ModCatalogService.GetEntryState(packages, mod) == CatalogEntryState.UpdateAvailable)
@@ -2647,26 +2688,14 @@ public sealed partial class MainViewModel : ObservableObject
                 RecalculateDiagnosis();
             }
 
-            var packages = _library.List();
-
-            CatalogMods.Clear();
-            foreach (var mod in root.Mods)
-            {
-                LogInvalidCatalogCategory(mod);
-                var state = ModCatalogService.GetEntryState(packages, mod);
-                CatalogMods.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
-            }
+            ApplyCatalogRoot(root);
 
             SelectedCatalogMod = null;
             SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
             _unselectCatalog?.Invoke();
 
-            EnrichModsFromCatalog();
             if (SelectedLibraryMod is not null)
                 UpdateLibraryModDetail();
-
-            RefreshCatalogView();
-            RefreshLibraryView();
 
             var updated = string.IsNullOrWhiteSpace(root.UpdatedAt) ? "未知" : root.UpdatedAt;
             var source = fromCache ? "cache" : (_catalog.LastFetchSource ?? "github");
@@ -2710,8 +2739,44 @@ public sealed partial class MainViewModel : ObservableObject
         if (skippedInLibrary > 0)
             AppendLog($"已跳过 {skippedInLibrary} 个已是最新版本的目录项。");
 
+        await RunCatalogDownloadAsync(async () =>
+        {
+            foreach (var item in targets)
+                await AddOneCatalogModAsync(item).ConfigureAwait(true);
+        }).ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Per-row update from the installed list. Maps back to the catalog entry and reuses the same
+    /// swap transaction as the catalog panel — including the game-running gate inside
+    /// <see cref="AddOneCatalogModAsync"/>.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanUpdateMod))]
+    async Task UpdateModAsync(ModItemViewModel? item)
+    {
+        if (item is null || item.IsMissing || !item.HasUpdate || _addingCatalogMod)
+            return;
+
+        var match = FindCatalogMatch(item);
+        if (match is null || !match.HasUpdate)
+        {
+            AppendLog($"「{item.DisplayName}」在目录里找不到可更新的对应项。");
+            return;
+        }
+
+        await RunCatalogDownloadAsync(async () =>
+        {
+            await AddOneCatalogModAsync(match).ConfigureAwait(true);
+        }).ConfigureAwait(true);
+    }
+
+    bool CanUpdateMod(ModItemViewModel? _) => !_addingCatalogMod;
+
+    async Task RunCatalogDownloadAsync(Func<Task> work)
+    {
         _addingCatalogMod = true;
         AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+        UpdateModCommand.NotifyCanExecuteChanged();
         _taskProgress.Begin(
             ManagerTaskKind.CatalogDownload,
             LocalizationService.T("TaskTitleCatalogDownload"),
@@ -2720,13 +2785,13 @@ public sealed partial class MainViewModel : ObservableObject
         NotifyTaskProgress();
         try
         {
-            foreach (var item in targets)
-                await AddOneCatalogModAsync(item).ConfigureAwait(true);
+            await work().ConfigureAwait(true);
         }
         finally
         {
             _addingCatalogMod = false;
             AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
+            UpdateModCommand.NotifyCanExecuteChanged();
             if (_taskProgress.Kind == ManagerTaskKind.CatalogDownload)
             {
                 _taskProgress.Clear();
@@ -2847,12 +2912,15 @@ public sealed partial class MainViewModel : ObservableObject
 
                 ReloadMods();
                 RefreshCatalogInLibraryFlags();
+                EnrichModsFromCatalog();
                 UpdateLoaderVersionWarning();
                 UpdateFirstAssemblyWarning();
                 RecomputeDirty();
                 SelectedLibraryMod = Mods.FirstOrDefault(m =>
                     string.Equals(m.Package.Id, pkg.Id, StringComparison.OrdinalIgnoreCase));
                 UpdateLibraryModDetail();
+                // UpdateLibraryModDetail may flip HasUpdate via enrichment; keep the badge honest.
+                OutdatedCount = Mods.Count(m => !m.IsMissing && m.HasUpdate);
             }
             finally
             {
@@ -3003,20 +3071,9 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
-            var packages = _library.List();
-            CatalogMods.Clear();
-            foreach (var mod in root.Mods)
-            {
-                LogInvalidCatalogCategory(mod);
-                var state = ModCatalogService.GetEntryState(packages, mod);
-                CatalogMods.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
-            }
-
-            EnrichModsFromCatalog();
+            ApplyCatalogRoot(root);
             if (SelectedLibraryMod is not null)
                 UpdateLibraryModDetail();
-            RefreshCatalogView();
-            RefreshLibraryView();
         }
         catch
         {
@@ -3028,20 +3085,79 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Rebuilds the catalog list from a freshly fetched root and pushes what it says back onto
+    /// the installed rows. Enrichment is the only thing that lights up the library's status
+    /// column, so any path that fetches a catalog has to come through here or the fetch is
+    /// invisible to the player.
+    /// </summary>
+    void ApplyCatalogRoot(CatalogRoot root)
+    {
+        RunOnUiThread(() => ApplyCatalogRootCore(root));
+    }
+
+    void ApplyCatalogRootCore(CatalogRoot root)
+    {
+        var packages = _library.List();
+        CatalogMods.Clear();
+        foreach (var mod in root.Mods)
+        {
+            LogInvalidCatalogCategory(mod);
+            var state = ModCatalogService.GetEntryState(packages, mod);
+            CatalogMods.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
+        }
+
+        EnrichModsFromCatalog();
+        RefreshCatalogView();
+        RefreshLibraryView();
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> on the dispatcher that owns the catalog/library views when
+    /// a WPF application is pumping messages. Headless (unit-test) callers run inline — collection
+    /// synchronization is enabled at construction so CollectionView accepts the mutation.
+    /// </summary>
+    void RunOnUiThread(Action action)
+    {
+        if (_uiDispatcher.CheckAccess())
+        {
+            action();
+            return;
+        }
+
+        // Real app: views live on the UI dispatcher (same as CurrentDispatcher at VM ctor).
+        // Headless / wrong-affinity: run inline — EnableCollectionSynchronization covers Clear/Add.
+        var appDispatcher = Application.Current?.Dispatcher;
+        if (appDispatcher is not null &&
+            ReferenceEquals(appDispatcher, _uiDispatcher) &&
+            !appDispatcher.HasShutdownStarted &&
+            !appDispatcher.HasShutdownFinished)
+        {
+            try
+            {
+                appDispatcher.Invoke(action);
+                return;
+            }
+            catch (TaskCanceledException)
+            {
+                // Dispatcher aborted mid-shutdown — fall through to inline.
+            }
+        }
+
+        action();
+    }
+
     CatalogModItemViewModel? FindCatalogMatch(ModItemViewModel item)
     {
+        if (item.IsMissing)
+            return null;
+
+        // Must be the same judgement GetEntryState uses. When these two disagreed, the row could
+        // be enriched from -- and updated to -- an entry the state column was not talking about.
         foreach (var catalog in CatalogMods)
         {
-            var catalogFile = Path.GetFileName((catalog.File ?? "").Replace('\\', '/'));
-            if (string.IsNullOrWhiteSpace(catalogFile))
-                continue;
-
-            foreach (var file in item.Package.Files)
-            {
-                var localName = Path.GetFileName((file.RelativePathInPackage ?? "").Replace('\\', '/'));
-                if (string.Equals(localName, catalogFile, StringComparison.OrdinalIgnoreCase))
-                    return catalog;
-            }
+            if (ModCatalogService.Matches(item.Package, catalog.Mod))
+                return catalog;
         }
 
         return null;
@@ -3049,14 +3165,29 @@ public sealed partial class MainViewModel : ObservableObject
 
     void EnrichModsFromCatalog()
     {
-        if (CatalogMods.Count == 0) return;
-        foreach (var mod in Mods)
+        // OutdatedCount must be recomputed even when the catalog is empty: ReloadMods otherwise
+        // leaves a stale badge after the player clears or fails to load the catalog.
+        if (CatalogMods.Count == 0)
         {
-            if (mod.IsMissing) continue;
-            var match = FindCatalogMatch(mod);
-            if (match is null) continue;
-            mod.ApplyCatalogEnrichment(match.Mod);
+            foreach (var mod in Mods)
+            {
+                if (!mod.HasUpdate && mod.LatestVersion is null) continue;
+                mod.HasUpdate = false;
+                mod.LatestVersion = null;
+            }
         }
+        else
+        {
+            foreach (var mod in Mods)
+            {
+                if (mod.IsMissing) continue;
+                var match = FindCatalogMatch(mod);
+                if (match is null) continue;
+                mod.ApplyCatalogEnrichment(match.Mod);
+            }
+        }
+
+        OutdatedCount = Mods.Count(m => !m.IsMissing && m.HasUpdate);
     }
 
     void RefreshCatalogInLibraryFlags()
@@ -3392,6 +3523,15 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     void ReloadMods()
+    {
+        // CollectionView rejects SourceCollection changes off the creating dispatcher unless
+        // collection synchronization is enabled. Catalog download resumes on the thread pool
+        // (service ConfigureAwait(false)); ConfigureAwait(true) alone is not enough without a
+        // SynchronizationContext. Prefer UI Invoke in the real app; run inline when headless.
+        RunOnUiThread(ReloadModsCore);
+    }
+
+    void ReloadModsCore()
     {
         var enabled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         if (SelectedProfile is not null)

@@ -52,7 +52,9 @@ public sealed class MainViewModelFixture : IDisposable
         {
             GamePath = gameRoot,
             ActiveProfileId = "default",
-            LaunchMode = LaunchMode.ExeOnly
+            LaunchMode = LaunchMode.ExeOnly,
+            // Opt out of factory COS default so unit tests stay offline unless they set a mirror.
+            MirrorBaseUrl = ""
         });
         return fx;
     }
@@ -103,7 +105,8 @@ public sealed class MainViewModelFixture : IDisposable
         {
             GamePath = steamLink,
             ActiveProfileId = "default",
-            LaunchMode = LaunchMode.ExeOnly
+            LaunchMode = LaunchMode.ExeOnly,
+            MirrorBaseUrl = ""
         });
         return fx;
     }
@@ -144,7 +147,8 @@ public sealed class MainViewModelFixture : IDisposable
         {
             GamePath = steamLink,
             ActiveProfileId = "default",
-            LaunchMode = LaunchMode.ExeOnly
+            LaunchMode = LaunchMode.ExeOnly,
+            MirrorBaseUrl = ""
         });
         return fx;
     }
@@ -161,7 +165,8 @@ public sealed class MainViewModelFixture : IDisposable
         {
             GamePath = gameRoot,
             ActiveProfileId = "default",
-            LaunchMode = LaunchMode.ExeOnly
+            LaunchMode = LaunchMode.ExeOnly,
+            MirrorBaseUrl = ""
         });
         return fx;
     }
@@ -177,7 +182,8 @@ public sealed class MainViewModelFixture : IDisposable
         {
             GamePath = gameRoot,
             ActiveProfileId = "default",
-            LaunchMode = LaunchMode.ExeOnly
+            LaunchMode = LaunchMode.ExeOnly,
+            MirrorBaseUrl = ""
         });
         return fx;
     }
