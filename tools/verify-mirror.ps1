@@ -35,7 +35,7 @@
   full mirror really is complete.
 
 .EXAMPLE
-  .\tools\verify-mirror.ps1 -BaseUrl https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com -ExpectVersion 1.1.7
+  .\tools\verify-mirror.ps1 -BaseUrl https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com -ExpectVersion 1.1.8
 #>
 [CmdletBinding()]
 param(

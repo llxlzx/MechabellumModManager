@@ -1,0 +1,7 @@
+{
+  "version": "1.1.8",
+  "notes": "Mod 更新检测；大文件断点续传与进度；全来源 sha256；镜像→originUrl→raw；catalog gzip 与增量镜像工具。\nMod update detection; resumable large downloads with progress; sha256 on all sources; mirror→originUrl→raw; gzip catalogs and incremental mirror tooling.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.8/MechabellumModManager_Setup_v1.1.8.exe",
+  "publishedAt": "2026-09-08T07:45:20Z",
+  "build": "v1.1.8-mod-download-scale"
+}
