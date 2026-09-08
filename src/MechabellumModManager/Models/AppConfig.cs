@@ -25,4 +25,10 @@ public sealed class AppConfig
     /// Expected layout: {mirror}/MechabellumModManager/latest.json and {mirror}/MechabellumMods/...
     /// </summary>
     public string? MirrorBaseUrl { get; set; }
+
+    /// <summary>
+    /// Fetch the catalog on launch and say which installed mods are outdated. Never installs
+    /// anything — swapping an injected DLL behind the player's back is not worth the convenience.
+    /// </summary>
+    public bool CheckModUpdatesOnStartup { get; set; }
 }

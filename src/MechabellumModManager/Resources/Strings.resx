@@ -350,6 +350,13 @@
   <data name="Tag_undo" xml:space="preserve"><value>撤销</value></data>
   <data name="CatalogStatusInLibrary" xml:space="preserve"><value>已在库</value></data>
   <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>未安装</value></data>
+  <data name="CatalogStatusUpdateAvailable" xml:space="preserve"><value>有新版本</value></data>
+  <data name="NotifyModUpdateCloseGame" xml:space="preserve"><value>请先退出游戏再更新 Mod。</value></data>
+  <data name="NotifyModUpdateBusy" xml:space="preserve"><value>有关键操作正在进行，暂时无法更新 Mod。</value></data>
+  <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>有 {0} 个已安装的 Mod 可以更新：{1}。请到「Mod 浏览」里更新。</value></data>
+  <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>启动检查：已安装的 Mod 均为最新版本。</value></data>
+  <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>启动检查 Mod 更新失败：{0}</value></data>
+  <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>启动时检查 Mod 更新</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>缺失</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>（缺失）{0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>模组</value></data>

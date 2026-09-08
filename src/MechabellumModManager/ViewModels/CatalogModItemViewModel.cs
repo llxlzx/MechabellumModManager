@@ -12,10 +12,10 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 
     public CatalogMod Mod { get; }
 
-    public CatalogModItemViewModel(CatalogMod mod, bool isInLibrary, string? mirrorBaseUrl = null)
+    public CatalogModItemViewModel(CatalogMod mod, CatalogEntryState state, string? mirrorBaseUrl = null)
     {
         Mod = mod ?? throw new ArgumentNullException(nameof(mod));
-        _isInLibrary = isInLibrary;
+        _state = state;
         PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(mod, mirrorBaseUrl);
         PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
     }
@@ -57,11 +57,21 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
-    private bool _isInLibrary;
+    [NotifyPropertyChangedFor(nameof(IsInLibrary))]
+    [NotifyPropertyChangedFor(nameof(HasUpdate))]
+    private CatalogEntryState _state;
 
-    public string StatusText => IsInLibrary
-        ? LocalizationService.T("CatalogStatusInLibrary")
-        : LocalizationService.T("CatalogStatusNotInstalled");
+    public bool IsInLibrary => State != CatalogEntryState.NotInstalled;
+
+    /// <summary>Installed, but the catalog now serves a different copy.</summary>
+    public bool HasUpdate => State == CatalogEntryState.UpdateAvailable;
+
+    public string StatusText => State switch
+    {
+        CatalogEntryState.UpdateAvailable => LocalizationService.T("CatalogStatusUpdateAvailable"),
+        CatalogEntryState.UpToDate => LocalizationService.T("CatalogStatusInLibrary"),
+        _ => LocalizationService.T("CatalogStatusNotInstalled")
+    };
 
     public void NotifyDisplayChanged()
     {

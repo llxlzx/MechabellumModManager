@@ -348,6 +348,13 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="Tag_undo" xml:space="preserve"><value>Rückgängig</value></data>
   <data name="CatalogStatusInLibrary" xml:space="preserve"><value>In Bibliothek</value></data>
   <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>Nicht installiert</value></data>
+  <data name="CatalogStatusUpdateAvailable" xml:space="preserve"><value>Update verfügbar</value></data>
+  <data name="NotifyModUpdateCloseGame" xml:space="preserve"><value>Beenden Sie das Spiel, bevor Sie ein Mod aktualisieren.</value></data>
+  <data name="NotifyModUpdateBusy" xml:space="preserve"><value>Ein kritischer Vorgang läuft; Mod-Updates sind derzeit nicht möglich.</value></data>
+  <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>{0} installierte Mod(s) können aktualisiert werden: {1}. Aktualisieren Sie sie unter Mods durchsuchen.</value></data>
+  <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>Start-Prüfung: Alle installierten Mods sind aktuell.</value></data>
+  <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>Mod-Update-Prüfung beim Start fehlgeschlagen: {0}</value></data>
+  <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>Beim Start nach Mod-Updates suchen</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>Fehlt</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>(Fehlt) {0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>Erweiterung</value></data>

@@ -381,6 +381,9 @@
                     <StackPanel Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">
                         <CheckBox Content="{Binding Ui.PortableDataRoot}"
                                   IsChecked="{Binding UsePortableDataRoot}" />
+                        <CheckBox Content="{Binding Ui.CheckModUpdatesOnStartup}"
+                                  IsChecked="{Binding CheckModUpdatesOnStartup}"
+                                  Margin="0,6,0,0" />
                     </StackPanel>
 
                     
@@ -706,7 +709,7 @@
                                                     Width="100" />
                                 <DataGridTextColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Binding="{Binding StatusText}"
-                                                    Width="72" />
+                                                    Width="110" />
                             </DataGrid.Columns>
                         </DataGrid>
                         <TextBlock Text="{Binding Ui.CatalogEmptyHint}"
@@ -1040,6 +1043,15 @@
                                                     Binding="{Binding Version}"
                                                     IsReadOnly="True"
                                                     Width="80" />
+                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding UpdateStatusText}"
+                                                       Foreground="{StaticResource WarnBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnRisk, RelativeSource={RelativeSource AncestorType=Window}}" Width="88">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>

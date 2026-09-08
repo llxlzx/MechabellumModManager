@@ -423,7 +423,7 @@ public class MainViewModelTests
         using var fx = Fixture.CreateReady();
         var vm = fx.CreateVm(confirmHighRisk: _ => true);
         var mod = new CatalogMod { Id = "test-mod", Name = "Test", File = "mods/test/Test.dll" };
-        var item = new CatalogModItemViewModel(mod, isInLibrary: false);
+        var item = new CatalogModItemViewModel(mod, CatalogEntryState.NotInstalled);
 
         vm.SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
         vm.CatalogSelectionCount.Should().Be(0);
@@ -439,7 +439,7 @@ public class MainViewModelTests
         var vm = fx.CreateVm(confirmHighRisk: _ => true);
         var inLib = new CatalogModItemViewModel(
             new CatalogMod { Id = "cam", Name = "Cam", File = "mods/cam/Cam.dll" },
-            isInLibrary: true);
+            CatalogEntryState.UpToDate);
 
         vm.SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
         vm.AddCatalogModToLibraryCommand.CanExecute(null).Should().BeFalse();
@@ -455,10 +455,10 @@ public class MainViewModelTests
         var vm = fx.CreateVm(confirmHighRisk: _ => true);
         var inLib = new CatalogModItemViewModel(
             new CatalogMod { Id = "cam", Name = "Cam", File = "mods/cam/Cam.dll" },
-            isInLibrary: true);
+            CatalogEntryState.UpToDate);
         var fresh = new CatalogModItemViewModel(
             new CatalogMod { Id = "new-mod", Name = "New", File = "mods/new/New.dll" },
-            isInLibrary: false);
+            CatalogEntryState.NotInstalled);
 
         vm.SetCatalogSelection(new[] { inLib, fresh });
         vm.AddCatalogModToLibraryCommand.CanExecute(null).Should().BeTrue();
@@ -471,7 +471,7 @@ public class MainViewModelTests
         var vm = fx.CreateVm(confirmHighRisk: _ => true);
         var item = new CatalogModItemViewModel(
             new CatalogMod { Id = "new-mod", Name = "New", File = "mods/new/New.dll" },
-            isInLibrary: false);
+            CatalogEntryState.NotInstalled);
 
         vm.SetCatalogSelection(new[] { item });
         vm.SelectedCatalogMod = item;
