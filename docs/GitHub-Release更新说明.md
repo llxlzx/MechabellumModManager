@@ -227,6 +227,8 @@ Release 发完之后跑：
 .\tools\verify-mirror.ps1 -BaseUrl https://<桶域名> -ExpectVersion 1.1.7
 ```
 
+镜像也托管安装包时，追加 `-IncludeSetup -MirrorBaseUrl https://<桶域名>`：客户端把 `setupUrl` 原样交给浏览器，脚本会把镜像那份 `latest.json` 的 `setupUrl` 指向镜像上的 exe，本地文件不动。
+
 漏掉这一步的后果：配了镜像的玩家优先读镜像，他们的「检查更新」会一直停在旧版本。
 
 搭建步骤与成本护栏见 `docs/国内镜像搭建.md`。
@@ -456,6 +458,10 @@ After publishing the Release:
 
 .\tools\verify-mirror.ps1 -BaseUrl https://<bucket-domain> -ExpectVersion 1.1.7
 ```
+
+If the mirror also hosts the installer, add `-IncludeSetup -MirrorBaseUrl https://<bucket-domain>`.
+The client opens `setupUrl` in the browser rather than downloading it, so the script repoints
+`setupUrl` in the mirror's copy of `latest.json`; the local file is left alone.
 
 Skip it and players who configured the mirror keep seeing the old version, because the
 mirror is tried before GitHub.

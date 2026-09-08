@@ -82,6 +82,25 @@ try {
     if ($ExpectVersion) {
         Report ($latest.version -eq $ExpectVersion) "latest.json advertises $ExpectVersion" "(got $($latest.version))"
     }
+
+    # setupUrl is opened in the player's browser as-is, so a mirrored installer only
+    # gets used if this points at the mirror, and only works if the object is there.
+    $setupUrl = "$($latest.setupUrl)".Trim()
+    if ($setupUrl) {
+        $setupHost = ([Uri]$setupUrl).Host
+        if ($setupHost -eq $uri.Host) {
+            try {
+                Invoke-WebRequest -Uri $setupUrl -Method Head -UseBasicParsing -TimeoutSec 30 | Out-Null
+                Report $true "setupUrl points at this mirror and resolves"
+            }
+            catch {
+                Report $false "setupUrl points at this mirror but 404s" "($setupUrl)"
+            }
+        }
+        else {
+            Write-Output "  note  setupUrl points at $setupHost, not this mirror (fine unless you meant to mirror the installer)"
+        }
+    }
 }
 catch {
     Report $false "MechabellumModManager/latest.json" "($($_.Exception.Message))"
