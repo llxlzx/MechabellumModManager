@@ -267,12 +267,7 @@ public sealed class MelonLoaderInstaller
         });
     }
 
-    static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024) return $"{bytes} B";
-        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:0.#} KB";
-        return $"{bytes / (1024.0 * 1024.0):0.00} MB";
-    }
+    static string FormatBytes(long bytes) => ByteSize.Format(bytes);
 
     /// <summary>Used by <see cref="MelonLoaderDualStoreSync"/> to install from a local zip.</summary>
     public static void CopyExtractedPayloadForSync(string extractDir, string gamePath, List<string> written)

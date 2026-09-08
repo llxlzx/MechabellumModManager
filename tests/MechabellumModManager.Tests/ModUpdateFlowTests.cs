@@ -49,6 +49,46 @@ public class ModUpdateFlowTests
     }
 
     [Fact]
+    public async Task Downloading_a_catalog_mod_drives_the_progress_bar_and_puts_it_away_afterwards()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var vm = fx.CreateVm(catalog: CatalogServing(version: "1.2.0"));
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+
+        var item = vm.CatalogMods.Should().ContainSingle().Subject;
+        vm.SetCatalogSelection([item]);
+
+        var percents = new List<double>();
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(vm.CatalogDownloadPercent))
+                lock (percents) percents.Add(vm.CatalogDownloadPercent);
+        };
+
+        await vm.AddCatalogModToLibraryCommand.ExecuteAsync(null);
+
+        vm.IsCatalogDownloading.Should().BeFalse("the bar must not linger once the download ends");
+
+        // Progress<T> hands the callback off to the scheduler, so the tail can still be in flight.
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (DateTime.UtcNow < deadline)
+        {
+            lock (percents)
+            {
+                if (percents.Contains(100))
+                    break;
+            }
+            await Task.Delay(20);
+        }
+
+        lock (percents)
+        {
+            percents.Should().Contain(100,
+                "the catalog declares a size, so the bar has to reach a real 100% rather than stay indeterminate");
+        }
+    }
+
+    [Fact]
     public async Task An_up_to_date_mod_is_not_offered_for_update()
     {
         using var fx = MainViewModelFixture.CreateReady();
@@ -172,6 +212,7 @@ public class ModUpdateFlowTests
                   "summary": "格线",
                   "file": "mods/show-grid/ShowGrid.dll",
                   "sha256": "{{Hex(NewBytes)}}",
+                  "size": {{NewBytes.Length}},
                   "type": "melon_mod"
                 }
               ]

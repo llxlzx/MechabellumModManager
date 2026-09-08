@@ -1,0 +1,30 @@
+# Mods to cache on the domestic COS mirror, one id per line. '#' starts a comment.
+#
+# Why a subset is possible at all: every mod is already served for free from GitHub
+# Releases, and the client falls back there by itself when the mirror answers 404. So a
+# mod missing from this list is not broken, only slower from inside mainland China.
+# Mirroring the whole catalog would tie the COS bill to the catalog's total size, which
+# is the one thing this architecture exists to avoid.
+#
+# Right now every mod is listed, because the whole catalog is well under a megabyte and
+# there is nothing to save by leaving anything out. Start pruning when the catalog reaches
+# tens of gigabytes: keep what players actually download, drop the long tail.
+#
+# Cost rule of thumb (Shanghai, standard storage): ~0.099 CNY/GB/month to store, plus
+# ~0.5 CNY/GB of egress. Egress dominates once a mod is popular, which is also the reason
+# a popular mod earns its place here.
+#
+# tools/sync-mirror.ps1 reads this file by default and fails on an id that is not in
+# catalog.json, so a typo cannot quietly leave a mod unmirrored.
+#
+# Previews are mirrored for every entry regardless of this list: they are tiny and the
+# browse UI shows them for the whole catalog.
+
+show-grid
+quick-item
+quick-camera
+undo-plus
+auto-speed
+damage-rank
+sales-calculation
+replay-tool

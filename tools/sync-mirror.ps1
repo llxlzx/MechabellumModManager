@@ -14,14 +14,32 @@
   last: a player refreshing mid-sync then reads an old manifest pointing at files that
   are already there, instead of a new manifest pointing at files that are not.
 
+  The mirror is a cache, not the archive. GitHub Releases hold every mod at no cost
+  (see tools/publish-mods-release.ps1), so mirroring the whole catalog would tie the
+  COS bill to the catalog's total size for no benefit. -HotList narrows the upload to
+  the mods worth accelerating; the client falls back to the origin for the rest, which
+  is why a cold mod missing from the bucket is correct rather than broken.
+
+  Uploads are incremental. Each object carries its sha256 as user metadata, and an
+  object already holding the right hash is skipped, so a rerun costs one HEAD per mod
+  instead of re-uploading gigabytes.
+
   Requires coscli (https://cloud.tencent.com/document/product/436/63143) configured with
   a CAM sub-user that can only write this one bucket.
 
 .PARAMETER Bucket
-  coscli bucket alias, or the full name-appid form, e.g. mmm-mirror-1300000000.
+  coscli bucket alias, or the full name-appid form, e.g. mmm-mirror-1312774738.
 
 .PARAMETER ModsRepo
   Local clone of MechabellumMods. Its root becomes {mirror}/MechabellumMods/.
+
+.PARAMETER HotList
+  Text file of mod ids to mirror, one per line; '#' starts a comment. Omit to mirror
+  every entry in the catalog. Defaults to mirror-hot.txt beside this script when that
+  file exists.
+
+.PARAMETER Force
+  Upload every selected file even when the mirror already holds the right bytes.
 
 .PARAMETER ReleaseDir
   Release folder holding latest.json, e.g. release\v1.1.7. Omit to skip the manager tree.
@@ -35,14 +53,14 @@
   paid for and never served.
 
 .PARAMETER MirrorBaseUrl
-  Public mirror root, e.g. https://mmm-mirror-1300000000.cos.ap-shanghai.myqcloud.com
+  Public mirror root, e.g. https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com
   Only used to build setupUrl. The GitHub copy of latest.json keeps its own setupUrl.
 
 .PARAMETER WhatIf
   Print the coscli calls without running them.
 
 .EXAMPLE
-  .\tools\sync-mirror.ps1 -Bucket mmm-mirror-1300000000 `
+  .\tools\sync-mirror.ps1 -Bucket mmm-mirror-1312774738 `
       -ModsRepo D:\gongzuo\独立工作区\MechabellumMods `
       -ReleaseDir .\release\v1.1.7
 #>
@@ -52,10 +70,23 @@ param(
     [Parameter(Mandatory = $true)][string]$ModsRepo,
     [string]$ReleaseDir,
     [switch]$IncludeSetup,
-    [string]$MirrorBaseUrl
+    [string]$MirrorBaseUrl,
+    [string]$HotList,
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
+
+# Key under which each object records the sha256 of its own bytes, so a later run can tell
+# "already mirrored" from "changed since" without downloading anything.
+$HashMetaKey = "mmm-sha256"
+
+# Above this, catalog.json is uploaded gzip-encoded. JSON this size compresses about tenfold,
+# and it is the single most-requested object in the bucket.
+$GzipCatalogThresholdBytes = 1MB
+
+$script:Uploaded = 0
+$script:Skipped = 0
 
 function Assert-Coscli {
     if (-not (Get-Command coscli -ErrorAction SilentlyContinue)) {
@@ -75,13 +106,67 @@ function Invoke-Coscli {
     }
 }
 
+function Get-FileHashHex {
+    param([string]$Path)
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+# Reads back the sha256 this script stamped on the object last time. Any failure (absent
+# object, no metadata, an older coscli) reports "unknown", which re-uploads: wasting an
+# upload is recoverable, skipping a needed one silently serves stale bytes.
+function Get-RemoteHash {
+    param([string]$RemoteKey)
+
+    $output = & coscli head "cos://$Bucket/$RemoteKey" 2>&1
+    if ($LASTEXITCODE -ne 0) { return $null }
+
+    foreach ($line in @($output)) {
+        if ("$line" -match "(?i)$HashMetaKey\s*[:=]\s*([0-9a-fA-F]{64})") {
+            return $Matches[1].ToLowerInvariant()
+        }
+    }
+    return $null
+}
+
 function Push-File {
-    param([string]$LocalPath, [string]$RemoteKey)
+    param(
+        [string]$LocalPath,
+        [string]$RemoteKey,
+        [switch]$NoSkip,
+        [string]$ExtraMeta
+    )
 
     if (-not (Test-Path -LiteralPath $LocalPath -PathType Leaf)) {
         throw "missing local file: $LocalPath"
     }
-    Invoke-Coscli -CoscliArgs @("cp", $LocalPath, "cos://$Bucket/$RemoteKey") -What $RemoteKey
+
+    $localHash = Get-FileHashHex -Path $LocalPath
+
+    if (-not $Force -and -not $NoSkip) {
+        if ((Get-RemoteHash -RemoteKey $RemoteKey) -eq $localHash) {
+            Write-Output "  skip    $RemoteKey"
+            $script:Skipped++
+            return
+        }
+    }
+
+    $meta = "x-cos-meta-$HashMetaKey`:$localHash"
+    if ($ExtraMeta) { $meta = "$meta;$ExtraMeta" }
+
+    Invoke-Coscli -CoscliArgs @("cp", $LocalPath, "cos://$Bucket/$RemoteKey", "--meta", $meta) -What $RemoteKey
+    Write-Output "  upload  $RemoteKey"
+    $script:Uploaded++
+}
+
+function Read-HotList {
+    param([string]$Path)
+
+    $ids = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($line in [System.IO.File]::ReadAllLines($Path, [System.Text.Encoding]::UTF8)) {
+        $trimmed = "$line".Split('#')[0].Trim()
+        if ($trimmed) { [void]$ids.Add($trimmed) }
+    }
+    return $ids
 }
 
 # Rewrites just the setupUrl value in place. A ConvertFrom-Json/ConvertTo-Json round
@@ -140,10 +225,37 @@ if ($unstamped.Count -gt 0) {
     throw "these catalog entries have no sha256, the client would refuse them from a mirror: $($unstamped.id -join ', '). Run scripts/stamp_hashes.py in MechabellumMods first."
 }
 
+if (-not $HotList) {
+    $defaultHotList = Join-Path $PSScriptRoot "mirror-hot.txt"
+    if (Test-Path -LiteralPath $defaultHotList -PathType Leaf) { $HotList = $defaultHotList }
+}
+
+$hotIds = $null
+if ($HotList) {
+    if (-not (Test-Path -LiteralPath $HotList -PathType Leaf)) {
+        throw "hot list not found: $HotList"
+    }
+    $hotIds = Read-HotList -Path (Resolve-Path -LiteralPath $HotList).Path
+
+    $unknown = @($hotIds | Where-Object { $id = $_; -not ($catalog.mods | Where-Object { $_.id -eq $id }) })
+    if ($unknown.Count -gt 0) {
+        throw "hot list names ids that are not in catalog.json: $($unknown -join ', '). Fix the typo, or the mod you meant to accelerate is silently not mirrored."
+    }
+
+    Write-Output "hot list: $HotList ($($hotIds.Count) of $($catalog.mods.Count) mods)"
+}
+
+# Previews are small and drive the browse UI for every entry, so they are mirrored for the
+# whole catalog even when the binaries are not.
 Write-Output "== mod files =="
 foreach ($mod in $catalog.mods) {
-    $relative = ($mod.file -replace '\\', '/')
-    Push-File -LocalPath (Join-Path $ModsRepo $relative) -RemoteKey "MechabellumMods/$relative"
+    if ($hotIds -and -not $hotIds.Contains("$($mod.id)")) {
+        Write-Output "  cold    $($mod.id) (served from the origin)"
+    }
+    else {
+        $relative = ($mod.file -replace '\\', '/')
+        Push-File -LocalPath (Join-Path $ModsRepo $relative) -RemoteKey "MechabellumMods/$relative"
+    }
 
     if ($mod.preview) {
         $previewRelative = ($mod.preview -replace '\\', '/')
@@ -164,7 +276,38 @@ if ($ReleaseDir) {
 }
 
 Write-Output "== manifests (last) =="
-Push-File -LocalPath $catalogPath -RemoteKey "MechabellumMods/catalog.json"
+
+# catalog.json is the one object that grows with the whole catalog, and it is JSON, so it
+# compresses roughly tenfold. Below the threshold the saving is not worth the extra moving
+# part; above it, egress on the most-requested object in the bucket starts to matter.
+# The client enables automatic decompression, so a gzip body is transparent to it.
+$catalogSize = (Get-Item -LiteralPath $catalogPath).Length
+if ($catalogSize -gt $GzipCatalogThresholdBytes) {
+    Write-Output "  catalog is $([math]::Round($catalogSize / 1MB, 2)) MB, uploading gzip-encoded"
+    $gz = Join-Path ([System.IO.Path]::GetTempPath()) "catalog-$([Guid]::NewGuid()).json.gz"
+    try {
+        $input = [System.IO.File]::OpenRead($catalogPath)
+        try {
+            $output = [System.IO.File]::Create($gz)
+            try {
+                $gzip = New-Object System.IO.Compression.GZipStream($output, [System.IO.Compression.CompressionLevel]::Optimal)
+                try { $input.CopyTo($gzip) } finally { $gzip.Dispose() }
+            }
+            finally { $output.Dispose() }
+        }
+        finally { $input.Dispose() }
+
+        # The object keeps its .json key: the client requests catalog.json and the header tells
+        # it how the body is encoded. Renaming it to .json.gz would just 404.
+        Push-File -LocalPath $gz -RemoteKey "MechabellumMods/catalog.json" -ExtraMeta "Content-Encoding:gzip"
+    }
+    finally {
+        Remove-Item -LiteralPath $gz -Force -ErrorAction SilentlyContinue -WhatIf:$false
+    }
+}
+else {
+    Push-File -LocalPath $catalogPath -RemoteKey "MechabellumMods/catalog.json"
+}
 
 if ($ReleaseDir) {
     $latest = Join-Path $ReleaseDir "latest.json"
@@ -196,4 +339,7 @@ if ($ReleaseDir) {
 }
 
 Write-Output ""
-Write-Output "Done. Verify with tools\verify-mirror.ps1 -BaseUrl https://<your-bucket-domain>"
+Write-Output "$script:Uploaded uploaded, $script:Skipped already current."
+$verifyHint = "Verify with tools\verify-mirror.ps1 -BaseUrl https://<your-bucket-domain>"
+if ($HotList) { $verifyHint += " -HotList '$HotList'" }
+Write-Output $verifyHint

@@ -976,6 +976,14 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSettingsPage));
     }
     [ObservableProperty] private string _catalogStatus = "";
+
+    [ObservableProperty] private double _catalogDownloadPercent;
+    [ObservableProperty] private bool _isCatalogDownloading;
+
+    /// <summary>True when the catalog declares no size and the server sent no Content-Length,
+    /// so the bar must animate rather than sit misleadingly at zero.</summary>
+    [ObservableProperty] private bool _isCatalogDownloadIndeterminate;
+
     [ObservableProperty] private CatalogModItemViewModel? _selectedCatalogMod;
     [ObservableProperty] private ModItemViewModel? _selectedLibraryMod;
     [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
@@ -2771,12 +2779,34 @@ public sealed partial class MainViewModel : ObservableObject
                 fileName = item.Id + ".dll";
 
             var tempPath = Path.Combine(Path.GetTempPath(), "mmm-catalog-" + Guid.NewGuid().ToString("N"), fileName);
-            CatalogStatus = isUpdate ? $"正在更新 {item.Name}…" : $"正在下载 {item.Name}…";
+            var verb = isUpdate ? "正在更新" : "正在下载";
+            CatalogStatus = $"{verb} {item.Name}…";
             AppendLog(CatalogStatus);
             var supersededPackages = isUpdate
                 ? ModCatalogService.FindInstalled(_library.List(), item.Mod)
                 : Array.Empty<ModPackage>();
-            await _catalog.DownloadModAsync(item.Mod, tempPath).ConfigureAwait(true);
+
+            IsCatalogDownloading = true;
+            CatalogDownloadPercent = 0;
+            IsCatalogDownloadIndeterminate = true;
+            var reporter = new Progress<DownloadProgress>(p =>
+            {
+                IsCatalogDownloadIndeterminate = p.Fraction is null;
+                CatalogDownloadPercent = (p.Fraction ?? 0) * 100;
+                CatalogStatus = p.TotalBytes > 0
+                    ? $"{verb} {item.Name}… {ByteSize.Format(p.BytesDownloaded)} / {ByteSize.Format(p.TotalBytes)}"
+                    : $"{verb} {item.Name}… {ByteSize.Format(p.BytesDownloaded)}";
+            });
+
+            try
+            {
+                await _catalog.DownloadModAsync(item.Mod, tempPath, reporter).ConfigureAwait(true);
+            }
+            finally
+            {
+                IsCatalogDownloading = false;
+            }
+
             if (!string.IsNullOrWhiteSpace(_catalog.LastDownloadSource))
                 AppendLog(string.Format(LocalizationService.T("RemoteSourceLog"), _catalog.LastDownloadSource));
 

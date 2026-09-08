@@ -1,12 +1,24 @@
 using System.Globalization;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
+
+/// <summary>
+/// Bytes fetched so far against the catalog-declared total. <see cref="TotalBytes"/> is 0 when
+/// the catalog predates the "size" field and the server sent no Content-Length.
+/// </summary>
+public readonly record struct DownloadProgress(long BytesDownloaded, long TotalBytes)
+{
+    public double? Fraction =>
+        TotalBytes > 0 ? Math.Clamp((double)BytesDownloaded / TotalBytes, 0, 1) : null;
+}
 
 /// <summary>Whether a catalog entry is missing locally, current, or superseded by a newer catalog copy.</summary>
 public enum CatalogEntryState
@@ -50,6 +62,22 @@ public sealed class CatalogMod
 
     [JsonPropertyName("sha256")]
     public string? Sha256 { get; set; }
+
+    /// <summary>
+    /// Byte size of <see cref="File"/>. Drives the progress total and lets the downloader
+    /// reject an over-long response early, since a resumed or mirror-served response is not
+    /// guaranteed to carry Content-Length. 0 means the catalog predates the field.
+    /// </summary>
+    [JsonPropertyName("size")]
+    public long Size { get; set; }
+
+    /// <summary>
+    /// Absolute https URL of the full-size copy, used when the binary is too large to live in
+    /// the git repo (GitHub rejects pushes over 100 MB per file). Falls back to the
+    /// raw.githubusercontent.com path built from <see cref="File"/> when absent.
+    /// </summary>
+    [JsonPropertyName("originUrl")]
+    public string? OriginUrl { get; set; }
 
     [JsonPropertyName("preview")]
     public string? Preview { get; set; }
@@ -103,11 +131,37 @@ public sealed class ModCatalogService
         DataRoot = dataRoot;
     }
 
-    public const long MaxDownloadBytes = 80L * 1024 * 1024;
+    /// <summary>
+    /// Backstop for catalog entries written before "size" existed. A sized entry is bounded by
+    /// its own declared size instead, so this never applies to a current catalog.
+    /// </summary>
+    public const long AbsoluteMaxDownloadBytes = 8L * 1024 * 1024 * 1024;
+
+    /// <summary>
+    /// Longest gap tolerated between two received chunks, and the only liveness guard the
+    /// download body has. A total-duration timeout cannot serve that role: it cannot tell
+    /// "the link is dead" from "the file is simply large".
+    /// </summary>
+    public TimeSpan IdleTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+    const int AttemptsPerCandidate = 3;
 
     public static HttpClient CreateDefaultClient()
     {
-        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        // Transparent gzip matters for catalog.json, which is one object that grows with the
+        // whole catalog and compresses roughly tenfold. It is safe for mod downloads too: when
+        // the handler decompresses, it drops Content-Length, and the size checks below already
+        // treat an absent length as "unknown" and fall back to counting the bytes written.
+        var handler = new HttpClientHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        };
+
+        // HttpClient.Timeout stops applying once the response headers arrive, so it never bounded
+        // the mod download body (which reads headers-first) but does bound a buffered catalog
+        // read. A finite value there would cap catalog size for no good reason, and leaving the
+        // body unguarded is not the alternative: IdleTimeout covers it, per-read.
+        var client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
         client.DefaultRequestHeaders.UserAgent.ParseAdd("MechabellumModManager-Catalog/1.0");
         return client;
     }
@@ -204,6 +258,53 @@ public sealed class ModCatalogService
             new Uri(GetRawUrl(relative)));
     }
 
+    /// <summary>
+    /// Mirror first, then the authoritative copy, then the repo tree. The middle one is
+    /// <c>originUrl</c> when the catalog gives one, because a mod over GitHub's 100 MB per-file
+    /// push limit cannot live in the repo tree and has to come from a Release asset instead.
+    ///
+    /// The repo path stays on the list behind it so that a mis-stamped or half-published
+    /// <c>originUrl</c> degrades to a wasted request rather than making the mod uninstallable.
+    /// For a mod genuinely too large for the repo that last candidate simply 404s.
+    /// </summary>
+    public IReadOnlyList<Uri> BuildFileCandidates(CatalogMod mod)
+    {
+        ArgumentNullException.ThrowIfNull(mod);
+        var relative = NormalizeCatalogRelativePath(mod.File ?? "");
+        var rawUrl = new Uri(GetRawUrl(relative));
+        var origin = TryParseOriginUrl(mod.OriginUrl);
+
+        var candidates = RemoteFetch
+            .BuildCandidates(MirrorBaseUrl, $"MechabellumMods/{relative}", origin ?? rawUrl)
+            .ToList();
+
+        if (origin is not null && origin != rawUrl)
+            candidates.Add(rawUrl);
+
+        return candidates;
+    }
+
+    /// <summary>
+    /// Accepts https anywhere, and http only on loopback. Loopback http exists so the download
+    /// path can be exercised end to end against a local server; it is not a network exposure.
+    /// Integrity never rests on the transport regardless, because sha256 is mandatory.
+    /// </summary>
+    static Uri? TryParseOriginUrl(string? originUrl)
+    {
+        if (string.IsNullOrWhiteSpace(originUrl))
+            return null;
+        if (!Uri.TryCreate(originUrl.Trim(), UriKind.Absolute, out var uri))
+            return null;
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+            return null;
+
+        if (uri.Scheme == Uri.UriSchemeHttps)
+            return uri;
+        if (uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback)
+            return uri;
+        return null;
+    }
+
     public async Task<CatalogRoot> FetchCatalogAsync(CancellationToken ct = default)
     {
         using var fetched = await RemoteFetch.GetAsync(_http, BuildCatalogCandidates(), ct).ConfigureAwait(false);
@@ -237,76 +338,316 @@ public sealed class ModCatalogService
         return JsonSerializer.Deserialize<CatalogRoot>(json, JsonOptions) ?? new CatalogRoot();
     }
 
-    public async Task DownloadModAsync(CatalogMod mod, string destPath, CancellationToken ct = default)
+    /// <summary>
+    /// Downloads a catalog mod to <paramref name="destPath"/>, resuming across attempts and
+    /// falling back from the mirror to the authoritative copy. The destination only appears once
+    /// the bytes match the catalog's sha256; until then the transfer lives in a sibling
+    /// <c>.part</c> file.
+    /// </summary>
+    public async Task DownloadModAsync(
+        CatalogMod mod,
+        string destPath,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(mod);
         if (string.IsNullOrWhiteSpace(destPath))
             throw new ArgumentException("Destination path is required.", nameof(destPath));
 
-        using var fetched = await RemoteFetch.GetAsync(
-                _http,
-                BuildFileCandidates(mod.File ?? ""),
-                HttpCompletionOption.ResponseHeadersRead,
-                ct)
-            .ConfigureAwait(false);
-        LastDownloadSource = RemoteFetch.ClassifySource(fetched.Used);
-        var resp = fetched.Response;
+        // A mod is a .NET assembly MelonLoader loads into the game. Once mods are large enough to
+        // live outside the repo tree, "it came from a github.com host" stops being a meaningful
+        // trust signal, so the hash is required from every source without exception.
+        var expectedHash = NormalizeHash(mod.Sha256)
+            ?? throw new InvalidOperationException(MissingHashMessage);
 
-        // A downloaded mod is a .NET assembly MelonLoader loads into the game, so anything that
-        // did not come straight from the signed-TLS GitHub repo must carry a catalog hash.
-        var expectedHash = NormalizeHash(mod.Sha256);
-        if (expectedHash is null && LastDownloadSource != RemoteFetch.GithubSource)
-            throw new InvalidOperationException(MissingHashMessage);
-
-        if (resp.Content.Headers.ContentLength is long declared && declared > MaxDownloadBytes)
-            throw new InvalidOperationException(
-                $"Catalog download exceeds size limit ({MaxDownloadBytes} bytes).");
+        var expectedSize = mod.Size > 0 ? mod.Size : 0;
+        var ceiling = expectedSize > 0 ? expectedSize : AbsoluteMaxDownloadBytes;
 
         var dir = Path.GetDirectoryName(destPath);
         if (!string.IsNullOrWhiteSpace(dir))
             Directory.CreateDirectory(dir);
 
-        using var hasher = SHA256.Create();
-        await using (var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false))
-        await using (var file = File.Create(destPath))
-        {
-            var buffer = new byte[81920];
-            long total = 0;
-            while (true)
-            {
-                var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
-                if (read <= 0)
-                    break;
-                total += read;
-                if (total > MaxDownloadBytes)
-                {
-                    await file.DisposeAsync().ConfigureAwait(false);
-                    TryDeleteFile(destPath);
-                    throw new InvalidOperationException(
-                        $"Catalog download exceeds size limit ({MaxDownloadBytes} bytes).");
-                }
+        var partPath = destPath + ".part";
+        var failures = new List<string>();
+        string? contentFailure = null;
+        Uri? used = null;
 
-                hasher.TransformBlock(buffer, 0, read, null, 0);
-                await file.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+        foreach (var uri in BuildFileCandidates(mod))
+        {
+            var moveOn = false;
+            for (var attempt = 1; attempt <= AttemptsPerCandidate && used is null && !moveOn; attempt++)
+            {
+                if (attempt > 1)
+                    await Task.Delay(RetryBackoff(attempt), ct).ConfigureAwait(false);
+
+                try
+                {
+                    await FetchIntoPartAsync(uri, partPath, expectedSize, ceiling, progress, ct)
+                        .ConfigureAwait(false);
+                    used = uri;
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (ContentContractException ex)
+                {
+                    // This source disagrees with the catalog about the file itself. Retrying it is
+                    // pointless, but another source may well be serving the right bytes, and the
+                    // partial written so far is untrustworthy.
+                    TryDeleteFile(partPath);
+                    contentFailure ??= ex.Message;
+                    failures.Add($"{uri.Host}: {ex.Message}");
+                    moveOn = true;
+                }
+                catch (PermanentFetchException ex)
+                {
+                    // A mirror 404 is the expected answer for a mod outside the hot subset, so the
+                    // partial stays put for the next candidate to resume.
+                    failures.Add($"{uri.Host}: {ex.Message}");
+                    moveOn = true;
+                }
+                catch (Exception ex)
+                {
+                    failures.Add($"{uri.Host}: attempt {attempt}: {ex.Message}");
+                }
             }
 
-            hasher.TransformFinalBlock([], 0, 0);
+            if (used is not null)
+                break;
         }
 
-        if (expectedHash is null)
-            return;
+        if (used is null)
+        {
+            TryDeleteFile(partPath);
+            var detail = string.Join("; ", failures);
+            throw contentFailure is null
+                ? new HttpRequestException("All remote fetch candidates failed: " + detail)
+                : new InvalidOperationException(
+                    $"下载内容与目录声明不符，已全部拒绝：{detail}。请联系目录维护者核对。");
+        }
 
-        var actualHash = Convert.ToHexString(hasher.Hash ?? []).ToLowerInvariant();
+        LastDownloadSource = RemoteFetch.ClassifySource(used);
+
+        // Resuming rules out a streaming hash: TransformBlock state cannot survive a restart,
+        // so the completed file is hashed in one pass instead.
+        var actualHash = await ComputeFileHashAsync(partPath, ct).ConfigureAwait(false);
         if (!string.Equals(actualHash, expectedHash, StringComparison.Ordinal))
         {
-            TryDeleteFile(destPath);
+            TryDeleteFile(partPath);
             throw new InvalidOperationException(
                 $"下载文件校验失败（目录声明 {expectedHash[..Math.Min(12, expectedHash.Length)]}…，实际 {actualHash[..12]}…）。文件已丢弃，请稍后重试或改用 GitHub 源。");
         }
+
+        File.Move(partPath, destPath, overwrite: true);
+    }
+
+    /// <summary>
+    /// Pulls one candidate into the <c>.part</c> file, resuming from whatever is already there.
+    /// Returns only when the part file holds the complete resource.
+    /// </summary>
+    async Task FetchIntoPartAsync(
+        Uri uri,
+        string partPath,
+        long expectedSize,
+        long ceiling,
+        IProgress<DownloadProgress>? progress,
+        CancellationToken ct)
+    {
+        var existing = 0L;
+        var partInfo = new FileInfo(partPath);
+        if (partInfo.Exists)
+        {
+            existing = partInfo.Length;
+            if (expectedSize > 0 && existing >= expectedSize)
+            {
+                // Either already complete or overlong from an earlier bad source. Both are settled
+                // by the hash check, and an overlong leftover must not be appended to.
+                if (existing > expectedSize)
+                {
+                    TryDeleteFile(partPath);
+                    existing = 0;
+                }
+                else
+                {
+                    progress?.Report(new DownloadProgress(existing, expectedSize));
+                    return;
+                }
+            }
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        if (existing > 0)
+            request.Headers.Range = new RangeHeaderValue(existing, null);
+
+        // One token governs headers and body, with its deadline pushed forward after every chunk.
+        // That is an idle timeout: it fires on a stalled link but never on a merely slow one.
+        using var idle = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        idle.CancelAfter(IdleTimeout);
+
+        using var response = await SendAsync(request, idle.Token, ct).ConfigureAwait(false);
+
+        if (response.StatusCode is HttpStatusCode.NotFound
+            or HttpStatusCode.Forbidden
+            or HttpStatusCode.Gone)
+            throw new PermanentFetchException($"HTTP {(int)response.StatusCode}");
+
+        if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
+        {
+            TryDeleteFile(partPath);
+            throw new TransientFetchException("range rejected; discarded the partial file");
+        }
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"HTTP {(int)response.StatusCode}");
+
+        // A server free to ignore Range answers 200 with the whole body; the part file then has
+        // to be rewritten from zero rather than appended to.
+        var resumed = existing > 0 && response.StatusCode == HttpStatusCode.PartialContent;
+        if (!resumed)
+            existing = 0;
+
+        var declaredLength = response.Content.Headers.ContentLength;
+        var total = declaredLength is long length ? existing + length : expectedSize;
+        if (declaredLength is long l)
+        {
+            var announced = existing + l;
+            if (expectedSize > 0 && announced != expectedSize)
+                throw new ContentContractException(
+                    $"declared {announced} bytes but the catalog says {expectedSize}");
+            if (announced > ceiling)
+                throw new ContentContractException(
+                    $"declared {announced} bytes, over the {ceiling} byte limit");
+        }
+
+        await using var stream = await response.Content.ReadAsStreamAsync(idle.Token).ConfigureAwait(false);
+        await using var file = new FileStream(
+            partPath,
+            resumed ? FileMode.Append : FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize: 81920,
+            useAsync: true);
+
+        var written = existing;
+        var reporter = new ProgressThrottle(progress, total);
+        reporter.Report(written, force: true);
+
+        var buffer = new byte[81920];
+        while (true)
+        {
+            idle.CancelAfter(IdleTimeout);
+
+            int read;
+            try
+            {
+                read = await stream.ReadAsync(buffer, idle.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                throw new TransientFetchException(
+                    $"no data for {IdleTimeout.TotalSeconds:0} s");
+            }
+
+            if (read <= 0)
+                break;
+
+            written += read;
+            if (written > ceiling)
+                throw new ContentContractException(
+                    $"body exceeded the {ceiling} byte limit");
+
+            await file.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+            reporter.Report(written);
+        }
+
+        await file.FlushAsync(ct).ConfigureAwait(false);
+
+        if (expectedSize > 0 && written != expectedSize)
+            throw new TransientFetchException(
+                $"connection ended at {written} of {expectedSize} bytes");
+
+        reporter.Report(written, force: true);
+    }
+
+    async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken idleToken,
+        CancellationToken ct)
+    {
+        try
+        {
+            return await _http
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, idleToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new TransientFetchException(
+                $"no response headers within {IdleTimeout.TotalSeconds:0} s");
+        }
+    }
+
+    static TimeSpan RetryBackoff(int attempt) =>
+        TimeSpan.FromMilliseconds(250 * Math.Pow(2, attempt - 2));
+
+    static async Task<string> ComputeFileHashAsync(string path, CancellationToken ct)
+    {
+        await using var stream = new FileStream(
+            path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
+        var hash = await SHA256.HashDataAsync(stream, ct).ConfigureAwait(false);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    /// <summary>Keeps a multi-gigabyte transfer from flooding the UI thread with updates.</summary>
+    sealed class ProgressThrottle
+    {
+        static readonly TimeSpan Interval = TimeSpan.FromMilliseconds(100);
+
+        readonly IProgress<DownloadProgress>? _sink;
+        readonly long _total;
+        DateTime _lastUtc = DateTime.MinValue;
+
+        public ProgressThrottle(IProgress<DownloadProgress>? sink, long total)
+        {
+            _sink = sink;
+            _total = total;
+        }
+
+        public void Report(long done, bool force = false)
+        {
+            if (_sink is null)
+                return;
+
+            var now = DateTime.UtcNow;
+            if (!force && now - _lastUtc < Interval)
+                return;
+
+            _lastUtc = now;
+            _sink.Report(new DownloadProgress(done, _total));
+        }
+    }
+
+    /// <summary>The source served something the catalog does not describe; other sources may not.</summary>
+    sealed class ContentContractException : Exception
+    {
+        public ContentContractException(string message) : base(message) { }
+    }
+
+    /// <summary>This source will not serve the file at all; move on without retrying it.</summary>
+    sealed class PermanentFetchException : Exception
+    {
+        public PermanentFetchException(string message) : base(message) { }
+    }
+
+    /// <summary>The transfer broke in a way a retry may well survive.</summary>
+    sealed class TransientFetchException : Exception
+    {
+        public TransientFetchException(string message) : base(message) { }
     }
 
     internal const string MissingHashMessage =
-        "该目录条目缺少 sha256 校验值，无法确认镜像下载的文件是否被篡改，已拒绝下载。请联系目录维护者补充校验值。";
+        "该目录条目缺少 sha256 校验值，无法确认下载的文件是否被篡改，已拒绝下载。请联系目录维护者补充校验值。";
 
     /// <summary>Lower-case hex digest, or null when the catalog does not declare one.</summary>
     static string? NormalizeHash(string? sha256)
