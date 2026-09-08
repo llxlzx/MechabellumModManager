@@ -1,7 +1,7 @@
 {
   "version": "1.1.8",
-  "notes": "Mod 更新检测；大文件断点续传与进度；全来源 sha256；镜像→originUrl→raw；catalog gzip 与增量镜像工具。\nMod update detection; resumable large downloads with progress; sha256 on all sources; mirror→originUrl→raw; gzip catalogs and incremental mirror tooling.",
+  "notes": "Mod update detection (library badge / status / Update button / startup check); factory domestic COS mirror; branch-switch harden (Steam-busy rollback keeps SessionOwned, archive preflight, partial-move residue); resumable downloads; sha256 on all sources; mirror→originUrl→raw.\nMod 更新检测（库页角标/状态列/更新按钮/启动检查）；出厂默认国内 COS 镜像；一键切服加固（Steam 忙回滚保留会话归属、Archive 预检、部分移动残留）；大文件断点续传；全来源 sha256。",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.8/MechabellumModManager_Setup_v1.1.8.exe",
-  "publishedAt": "2026-09-08T07:45:20Z",
-  "build": "v1.1.8-mod-download-scale"
+  "publishedAt": "2026-09-08T11:01:56Z",
+  "build": "v1.1.8-mirror-default-branch-harden"
 }
