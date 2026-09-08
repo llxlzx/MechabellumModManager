@@ -196,16 +196,18 @@ public class ModUpdateDetectionTests
 
         item.ApplyCatalogEnrichment(Catalog("show-grid", version: "1.2.0"));
         item.HasUpdate.Should().BeTrue();
+        item.CatalogMatched.Should().BeTrue();
         item.LatestVersion.Should().Be("1.2.0");
         item.UpdateStatusText.Should().Be("1.0.0 → 1.2.0");
 
         item.ApplyCatalogEnrichment(Catalog("show-grid", version: "1.0.0"));
         item.HasUpdate.Should().BeFalse();
-        item.UpdateStatusText.Should().BeEmpty();
+        item.CatalogMatched.Should().BeTrue();
+        item.UpdateStatusText.Should().Be(LocalizationService.T("LibraryStatusUpToDate"));
     }
 
     [Fact]
-    public void Update_status_text_covers_the_three_display_states()
+    public void Update_status_text_covers_the_four_display_states()
     {
         using var harness = new EnrichmentHarness();
 
@@ -219,9 +221,11 @@ public class ModUpdateDetectionTests
         };
         var item = new ModItemViewModel(harness.Owner, pkg, isEnabled: false);
 
+        item.CatalogMatched.Should().BeFalse();
         item.UpdateStatusText.Should().BeEmpty();
 
         item.ApplyCatalogEnrichment(Catalog("show-grid", version: "1.2.0"));
+        item.CatalogMatched.Should().BeTrue();
         item.UpdateStatusText.Should().Be("1.0.0 → 1.2.0");
 
         // Staleness decided by hash alone leaves LatestVersion empty; fall back to the bare label.
@@ -236,8 +240,14 @@ public class ModUpdateDetectionTests
             Sha256 = "bb"
         });
         item.HasUpdate.Should().BeTrue();
+        item.CatalogMatched.Should().BeTrue();
         item.LatestVersion.Should().BeNull();
         item.UpdateStatusText.Should().Be(LocalizationService.T("CatalogStatusUpdateAvailable"));
+
+        item.ApplyCatalogEnrichment(Catalog("show-grid", version: "1.0.0"));
+        item.HasUpdate.Should().BeFalse();
+        item.CatalogMatched.Should().BeTrue();
+        item.UpdateStatusText.Should().Be(LocalizationService.T("LibraryStatusUpToDate"));
     }
 
     [Fact]
@@ -267,6 +277,7 @@ public class ModUpdateDetectionTests
         // The production path skips IsMissing before FindCatalogMatch; this pins the row stays inert.
         missing.IsMissing.Should().BeTrue();
         missing.HasUpdate.Should().BeFalse();
+        missing.CatalogMatched.Should().BeFalse();
         missing.LatestVersion.Should().BeNull();
         missing.UpdateStatusText.Should().BeEmpty();
     }

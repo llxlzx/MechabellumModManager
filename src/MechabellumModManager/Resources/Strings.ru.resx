@@ -349,6 +349,7 @@
   <data name="CatalogStatusInLibrary" xml:space="preserve"><value>В библиотеке</value></data>
   <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>Не установлено</value></data>
   <data name="CatalogStatusUpdateAvailable" xml:space="preserve"><value>Есть обновление</value></data>
+  <data name="LibraryStatusUpToDate" xml:space="preserve"><value>Актуально</value></data>
   <data name="NotifyModUpdateCloseGame" xml:space="preserve"><value>Закройте игру перед обновлением мода.</value></data>
   <data name="NotifyModUpdateBusy" xml:space="preserve"><value>Выполняется критическая операция; обновление модов сейчас недоступно.</value></data>
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>Можно обновить модов: {0} — {1}. Обновите их в разделе «Обзор модов».</value></data>

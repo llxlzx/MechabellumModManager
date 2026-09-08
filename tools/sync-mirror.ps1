@@ -3,14 +3,15 @@
   Publishes the manager's update manifest and the mod catalog to the domestic COS mirror.
 
 .DESCRIPTION
-  The client hardcodes two paths under the mirror root:
+  The client hardcodes paths under the mirror root:
 
     {mirror}/MechabellumModManager/latest.json
     {mirror}/MechabellumMods/catalog.json   (plus every file catalog.json points at)
+    {mirror}/MechabellumRedist/manifest.json (+ Melon/Unity/Cpp2IL/.NET artifacts)
 
-  so the bucket must mirror those two trees verbatim.
+  so the bucket must mirror those trees verbatim.
 
-  Upload order matters. Both manifests are the index into everything else, so they go
+  Upload order matters. Manifests are the index into everything else, so they go
   last: a player refreshing mid-sync then reads an old manifest pointing at files that
   are already there, instead of a new manifest pointing at files that are not.
 
@@ -45,12 +46,16 @@
   Release folder holding latest.json, e.g. release\v1.1.7. Omit to skip the manager tree.
 
 .PARAMETER IncludeSetup
-  Also upload the ~87 MB installer, and repoint setupUrl in the mirror's copy of
+  Also upload the installer, and repoint setupUrl in the mirror's copy of
   latest.json at it. Off by default: egress for the installer dwarfs everything else.
 
   Requires -MirrorBaseUrl. The client hands setupUrl straight to the browser rather
   than downloading it itself, so an installer uploaded without rewriting setupUrl is
   paid for and never served.
+
+.PARAMETER SkipRedist
+  Skip MechabellumRedist (Melon/Unity/Cpp2IL/.NET). Redist sync is ON by default for
+  thin Setup — without it, China installs cannot fetch runtime packages from COS.
 
 .PARAMETER MirrorBaseUrl
   Public mirror root, e.g. https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com
@@ -62,7 +67,7 @@
 .EXAMPLE
   .\tools\sync-mirror.ps1 -Bucket mmm-mirror-1312774738 `
       -ModsRepo D:\gongzuo\独立工作区\MechabellumMods `
-      -ReleaseDir .\release\v1.1.7
+      -ReleaseDir .\release\v1.2.0
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -70,6 +75,7 @@ param(
     [Parameter(Mandatory = $true)][string]$ModsRepo,
     [string]$ReleaseDir,
     [switch]$IncludeSetup,
+    [switch]$SkipRedist,
     [string]$MirrorBaseUrl,
     [string]$HotList,
     [switch]$Force
@@ -320,7 +326,61 @@ if ($ReleaseDir) {
     }
 }
 
+$redistManifestTemp = $null
+if (-not $SkipRedist) {
+    Write-Output "== redist (MechabellumRedist) =="
+    $repoRoot = Split-Path $PSScriptRoot -Parent
+    $redistRoot = Join-Path $repoRoot "installer\redist"
+    $templatePath = Join-Path $repoRoot "src\MechabellumModManager\Assets\redist-manifest.json"
+    if (-not (Test-Path -LiteralPath $templatePath -PathType Leaf)) {
+        throw "missing redist manifest template: $templatePath"
+    }
+
+    $template = Get-Content -LiteralPath $templatePath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $artifactsOut = New-Object System.Collections.Generic.List[object]
+    foreach ($art in $template.artifacts) {
+        $rel = ($art.path -replace '\\', '/')
+        $local = Join-Path $redistRoot ($rel -replace '/', [IO.Path]::DirectorySeparatorChar)
+        if (-not (Test-Path -LiteralPath $local -PathType Leaf)) {
+            throw "redist staging missing $rel (expected under installer\redist). Thin Setup downloads these from the mirror."
+        }
+        $hash = Get-FileHashHex -Path $local
+        $size = (Get-Item -LiteralPath $local).Length
+        Push-File -LocalPath $local -RemoteKey "MechabellumRedist/$rel"
+        $artifactsOut.Add([pscustomobject]@{
+            id        = $art.id
+            path      = $rel
+            sha256    = $hash
+            size      = $size
+            originUrl = $art.originUrl
+        }) | Out-Null
+    }
+
+    $manifestObj = [pscustomobject]@{
+        schemaVersion = 1
+        melonTag      = $template.melonTag
+        artifacts     = $artifactsOut
+    }
+    $redistManifestTemp = Join-Path ([IO.Path]::GetTempPath()) "redist-manifest-$([Guid]::NewGuid()).json"
+    $json = $manifestObj | ConvertTo-Json -Depth 6
+    [IO.File]::WriteAllText($redistManifestTemp, $json + "`n", (New-Object System.Text.UTF8Encoding($false)))
+    # Also refresh local staging copy for ops inspection.
+    Copy-Item -LiteralPath $redistManifestTemp -Destination (Join-Path $redistRoot "manifest.json") -Force
+}
+else {
+    Write-Output "== redist skipped (-SkipRedist) =="
+}
+
 Write-Output "== manifests (last) =="
+
+if ($redistManifestTemp) {
+    try {
+        Push-File -LocalPath $redistManifestTemp -RemoteKey "MechabellumRedist/manifest.json"
+    }
+    finally {
+        Remove-Item -LiteralPath $redistManifestTemp -Force -ErrorAction SilentlyContinue -WhatIf:$false
+    }
+}
 
 # catalog.json is the one object that grows with the whole catalog, and it is JSON, so it
 # compresses roughly tenfold. Below the threshold the saving is not worth the extra moving

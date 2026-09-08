@@ -46,6 +46,18 @@ public partial class App : Application
             return;
         }
 
+        if (EnsureRedistCli.TryParseArgs(
+                e.Args,
+                out var ensureRedistDir,
+                out var ensureMirror,
+                out var ensureIds,
+                out var ensureNoMirror))
+        {
+            var code = EnsureRedistCli.Run(ensureRedistDir!, ensureMirror, ensureIds, ensureNoMirror);
+            Shutdown(code);
+            return;
+        }
+
         if (InstallMelonLoaderCli.TryParseArgs(e.Args, out var melonGamePath, out var melonRedistDir))
         {
             var code = InstallMelonLoaderCli.Run(melonGamePath!, melonRedistDir);

@@ -1,0 +1,7 @@
+{
+  "version": "1.2.0",
+  "notes": "瘦 Setup（约 2.6MB）：Melon/Unity/Cpp2IL/.NET 改从 COS 镜像 MechabellumRedist 下载（失败回退 GitHub/微软）；安装向导末尾与程序内安装统一拉取；Mod 仍镜像优先。\\nThin Setup (~2.6MB): Melon/Unity/Cpp2IL/.NET via MechabellumRedist on COS (GitHub/MS fallback); wizard + in-app Melon use the same path; mods still mirror-first.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.0/MechabellumModManager_Setup_v1.2.0.exe",
+  "publishedAt": "2026-09-08T12:21:39Z",
+  "build": "v1.2.0-thin-setup-redist-mirror"
+}

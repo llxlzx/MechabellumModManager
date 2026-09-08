@@ -56,6 +56,28 @@ public static class InstallMelonLoaderCli
                 ? null
                 : Path.Combine(redistDir.Trim(), "melonloader", "MelonLoader.x64.zip");
             var zip = MelonLoaderDualStoreSync.ResolveLocalZip(preferredZip);
+            if (zip is null && !string.IsNullOrWhiteSpace(redistDir))
+            {
+                Log("local Melon zip missing — ensuring redist from mirror/origin…");
+                var ensure = new RedistEnsureService()
+                    .EnsureAsync(
+                        redistDir.Trim(),
+                        DomesticMirrorDefaults.BaseUrl,
+                        ids:
+                        [
+                            "melonloader-x64",
+                            "unity-deps-2022.3.62",
+                            "cpp2il-exe",
+                            "cpp2il-plugin"
+                        ])
+                    .GetAwaiter()
+                    .GetResult();
+                Log(ensure.Message);
+                if (!ensure.Success)
+                    return 3;
+                zip = MelonLoaderDualStoreSync.ResolveLocalZip(preferredZip);
+            }
+
             if (zip is null)
             {
                 Log("MelonLoader.x64.zip not found under redist / app folder");

@@ -36,30 +36,25 @@
 2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
 3. 稍后写入的 `release/vX.Y.Z/latest.json` → `"version": "X.Y.Z"`
 
-### 1.2 MelonLoader 离线包（打 Setup **必选**）
+### 1.2 运行时离线包（镜像暂存，**不**再打进 Setup）
 
-将官方文件放到：
+自 **v1.2.0** 起 Setup 为瘦包。将下列文件放到 `installer/redist\`，供 `tools/sync-mirror.ps1` 上传到 `MechabellumRedist/`（**默认同步**；调试可用 `-SkipRedist`）：
 
-`installer/redist/melonloader/MelonLoader.x64.zip`
+| 路径 | 说明 |
+|------|------|
+| `melonloader/MelonLoader.x64.zip` | Melon 0.7.3 钉死版 |
+| `unity-deps/UnityDependencies_2022.3.62.zip` | Unity 运行时依赖 |
+| `cpp2il/Cpp2IL.exe` + plugin dll | 与 Melon 0.7.3 匹配 |
+| `dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` | .NET 8 Desktop |
 
-来源：https://github.com/LavaGang/MelonLoader/releases  
+清单模板：`src/MechabellumModManager/Assets/redist-manifest.json`。  
+发版顺序：**先 sync-mirror（含 redist）→ verify-mirror → 再打瘦 Setup / 发 GitHub Release**。
 
-缺失时 `build-installer` **硬失败**（退出码 3）。正式发版禁止 `-SkipMelonRedistCheck`。
+安装向导末尾与程序内安装 Melon 会 `--ensure-redist`：COS → GitHub/微软，强制 sha256。
 
-### 1.2b Unity Il2Cpp 依赖 + .NET 8 离线包（China-offline fat Setup **必选**）
+### 1.2b（历史）fat Setup
 
-除 Melon zip 外，正式 fat Setup 还需：
-
-| 路径 | 来源 | 说明 |
-|------|------|------|
-| `installer/redist/unity-deps/UnityDependencies_{major.minor.patch}.zip` | https://github.com/LavaGang/Unity-Runtime-Libraries | 上游文件名为 `2022.3.62.zip` 等，**必须重命名**为 `UnityDependencies_2022.3.62.zip` 再放入 `unity-deps/` |
-| `installer/redist/dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` | https://dotnet.microsoft.com/download/dotnet/8.0 | Windows x64 Desktop Runtime 离线安装包 |
-
-Mechabellum 当前 Unity 版本见游戏 `Mechabellum_Data\globalgamemanagers`（如 `2022.3.62f3` → zip 名 `UnityDependencies_2022.3.62.zip`）。游戏 Unity 小版本升级后需刷新 `unity-deps` 并重新打 Setup。
-
-**国内 Setup 镜像：** GitHub Release 下载 Setup 仍可能需要代理或第三方镜像；本 fat Setup 的目标是 **安装完成后**、在已写入 Melon + 已 seed UnityDependencies 的前提下，**断网首次 Il2Cpp 生成**（成功级别 **B**）可完成。镜像分发由运维/文档负责，不在程序内实现。
-
-**发版前 residual 探测（Cpp2IL 等）：** 在真机上按 `docs/superpowers/specs/2026-09-05-china-offline-melon-fat-setup-design.md` 中 acceptance **F** 执行：断网启动游戏一次。若 Melon 仍提示 Il2CppAssemblyGenerator 目录下缺少其他包（常见为 Cpp2IL 相关），将其加入 `installer/redist/` 并纳入 `build-installer` 硬检查后再宣称 B 完成。
+v1.1.x 及以前把上述文件嵌入 Setup。新版本不要再依赖 `build-installer` 的硬门禁；旧 design 文档仅作历史参考。
 
 ### 1.3 代码与测试
 

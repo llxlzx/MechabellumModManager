@@ -351,6 +351,7 @@
   <data name="CatalogStatusInLibrary" xml:space="preserve"><value>已在库</value></data>
   <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>未安装</value></data>
   <data name="CatalogStatusUpdateAvailable" xml:space="preserve"><value>有新版本</value></data>
+  <data name="LibraryStatusUpToDate" xml:space="preserve"><value>已是最新</value></data>
   <data name="NotifyModUpdateCloseGame" xml:space="preserve"><value>请先退出游戏再更新 Mod。</value></data>
   <data name="NotifyModUpdateBusy" xml:space="preserve"><value>有关键操作正在进行，暂时无法更新 Mod。</value></data>
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>有 {0} 个已安装的 Mod 可以更新：{1}。请到「Mod 浏览」里更新。</value></data>
