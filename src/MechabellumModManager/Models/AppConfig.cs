@@ -21,7 +21,9 @@ public sealed class AppConfig
     public DateTimeOffset? LastApplyStartedAt { get; set; }
 
     /// <summary>
-    /// Optional first-party mirror root (no trailing slash). Empty skips the mirror and uses GitHub only.
+    /// First-party mirror root (no trailing slash).
+    /// <c>null</c> = never configured (manager applies <see cref="Services.DomesticMirrorDefaults.BaseUrl"/>).
+    /// <c>""</c> = player cleared the field (GitHub only; do not re-fill).
     /// Expected layout: {mirror}/MechabellumModManager/latest.json and {mirror}/MechabellumMods/...
     /// </summary>
     public string? MirrorBaseUrl { get; set; }
@@ -29,6 +31,8 @@ public sealed class AppConfig
     /// <summary>
     /// Fetch the catalog on launch and say which installed mods are outdated. Never installs
     /// anything — swapping an injected DLL behind the player's back is not worth the convenience.
+    /// On by default: a player who is not told is a player running a version the author has
+    /// already fixed, and the cost is one catalog fetch.
     /// </summary>
-    public bool CheckModUpdatesOnStartup { get; set; }
+    public bool CheckModUpdatesOnStartup { get; set; } = true;
 }

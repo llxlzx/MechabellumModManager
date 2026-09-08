@@ -23,8 +23,9 @@ public class MirrorContractTests
 
         catalog.MirrorBaseUrl.Should().BeNull();
         vm.LogText.Should().Contain("mirror.example.com");
+        // Empty string = opted out / refused; null would re-apply the factory default next launch.
         fx.Store.LoadOrDefault(fx.Paths.ConfigPath, () => new AppConfig())
-            .MirrorBaseUrl.Should().BeNull();
+            .MirrorBaseUrl.Should().Be("");
     }
 
     [Fact]

@@ -449,6 +449,7 @@
   <data name="LabelUpdated" xml:space="preserve"><value>更新</value></data>
   <data name="LabelName" xml:space="preserve"><value>名称</value></data>
   <data name="ActionDelete" xml:space="preserve"><value>删除</value></data>
+  <data name="ActionUpdate" xml:space="preserve"><value>更新</value></data>
   <data name="ActionCollapseDetail" xml:space="preserve"><value>收起介绍</value></data>
   <data name="TipToggleHighRisk" xml:space="preserve"><value>点击可临时切换风险标记；刷新列表后会按名称关键词重新判定</value></data>
   <data name="TipDeleteFromLibrary" xml:space="preserve"><value>从本地库删除此包</value></data>
@@ -585,7 +586,7 @@
   <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>打开诊断（不解除限制）</value></data>
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>已放弃未完成操作并清理状态。请确认游戏路径后继续使用。</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>国内镜像基址</value></data>
-  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>留空则只访问 GitHub。需与仓库同构，例如 https://example.com/mirror</value></data>
+  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>出厂已预填国内 COS；清空则只访问 GitHub。需与仓库同构。</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>源={0}</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>已拦截不安全的链接（仅允许 https）：{0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>已加载 {0} 个条目（离线缓存，目录更新：{1}）</value></data>

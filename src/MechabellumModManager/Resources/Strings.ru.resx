@@ -444,6 +444,7 @@
   <data name="LabelUpdated" xml:space="preserve"><value>Обновлено</value></data>
   <data name="LabelName" xml:space="preserve"><value>Имя</value></data>
   <data name="ActionDelete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="ActionUpdate" xml:space="preserve"><value>Обновить</value></data>
   <data name="ActionCollapseDetail" xml:space="preserve"><value>Скрыть описание</value></data>
   <data name="TipToggleHighRisk" xml:space="preserve"><value>Нажмите, чтобы временно переключить риск; после обновления снова по ключевым словам в имени</value></data>
   <data name="TipDeleteFromLibrary" xml:space="preserve"><value>Удалить пакет из библиотеки</value></data>
@@ -562,7 +563,7 @@
   <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data>
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>База внутреннего зеркала</value></data>
-  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Пусто = только GitHub. Та же раскладка, например https://example.com/mirror</value></data>
+  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>По умолчанию COS-зеркало; пусто = только GitHub. Та же раскладка.</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>источник={0}</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Небезопасная ссылка заблокирована (только https): {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Загружено {0} записей (офлайн-кэш, каталог: {1})</value></data>
