@@ -669,6 +669,9 @@
 
                     <!-- Mod list fills remaining height -->
                     <Grid Grid.Row="1" MinHeight="160">
+                        <!-- Row virtualization is on by default and measured to hold here (13 of
+                             5000 rows realised); Recycling is not the default, and reuses row
+                             containers instead of rebuilding one per scrolled row. -->
                         <DataGrid x:Name="CatalogModsGrid"
                                   ItemsSource="{Binding CatalogModsView}"
                                   SelectedItem="{Binding SelectedCatalogMod}"
@@ -676,6 +679,9 @@
                                   SelectionChanged="CatalogModsGrid_SelectionChanged"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
+                                  EnableRowVirtualization="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.IsDeferredScrollingEnabled="False"
                                   VerticalAlignment="Stretch">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Width="36">
@@ -806,12 +812,22 @@
                         </DockPanel>
                     </Border>
 
-                    <TextBlock Grid.Row="3"
-                               Margin="0,8,0,0"
-                               Text="{Binding CatalogStatus}"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               TextWrapping="Wrap"
-                               FontSize="12" />
+                    <StackPanel Grid.Row="3" Margin="0,8,0,0">
+                        <ProgressBar Height="6"
+                                     Margin="0,0,0,6"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     Value="{Binding CatalogDownloadPercent, Mode=OneWay}"
+                                     IsIndeterminate="{Binding IsCatalogDownloadIndeterminate, Mode=OneWay}"
+                                     Background="{StaticResource BgElevatedBrush}"
+                                     Foreground="{StaticResource AccentAmberBrush}"
+                                     BorderThickness="0"
+                                     Visibility="{Binding IsCatalogDownloading, Converter={StaticResource BoolToVis}}" />
+                        <TextBlock Text="{Binding CatalogStatus}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   TextWrapping="Wrap"
+                                   FontSize="12" />
+                    </StackPanel>
                 </Grid>
             </Border>
 

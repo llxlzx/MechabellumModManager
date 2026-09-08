@@ -6,27 +6,43 @@
   Covers the failure modes that are silent from the app's side:
 
   - the two hardcoded manifest paths resolve over https
-  - every file catalog.json references is actually reachable on the mirror
+  - every file the mirror is supposed to hold is actually reachable on it
   - the bytes served match the sha256 the catalog declares, since a mirror download
     with a mismatched hash is discarded and one with no hash is refused outright
   - the mirror hostname does not contain "github", which RemoteFetch.ClassifySource
     uses to decide a response came from the trusted GitHub origin
 
+  The mirror is a cache of a hot subset, not a full archive, so a mod that is absent
+  from it is expected rather than broken: the client falls back to the origin. Pass
+  -HotList to say which mods must be present; without it every catalog entry is
+  required, which is only right while the whole catalog is small enough to mirror.
+
   Read-only: safe to run against production at any time.
 
 .PARAMETER BaseUrl
-  Mirror root, no trailing slash, e.g. https://mmm-mirror-1300000000.cos.ap-shanghai.myqcloud.com
+  Mirror root, no trailing slash, e.g. https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com
 
 .PARAMETER ExpectVersion
   Optional. Fails if latest.json does not advertise this version. Use after a release.
 
+.PARAMETER HotList
+  The same mirror-hot.txt handed to sync-mirror.ps1. Entries in it must be served
+  correctly; entries outside it may 404. Defaults to mirror-hot.txt beside this script
+  when that file exists.
+
+.PARAMETER RequireAll
+  Treat every catalog entry as required even when a hot list exists. Use to confirm a
+  full mirror really is complete.
+
 .EXAMPLE
-  .\tools\verify-mirror.ps1 -BaseUrl https://mmm-mirror-1300000000.cos.ap-shanghai.myqcloud.com -ExpectVersion 1.1.8
+  .\tools\verify-mirror.ps1 -BaseUrl https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com -ExpectVersion 1.1.7
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$BaseUrl,
-    [string]$ExpectVersion
+    [string]$ExpectVersion,
+    [string]$HotList,
+    [switch]$RequireAll
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,6 +61,29 @@ function Report {
     }
 }
 
+function Test-IsNotFound {
+    param($ErrorRecord)
+    $response = $ErrorRecord.Exception.Response
+    return $response -and [int]$response.StatusCode -eq 404
+}
+
+$hotIds = $null
+if (-not $HotList) {
+    $defaultHotList = Join-Path $PSScriptRoot "mirror-hot.txt"
+    if (Test-Path -LiteralPath $defaultHotList -PathType Leaf) { $HotList = $defaultHotList }
+}
+if ($HotList -and -not $RequireAll) {
+    if (-not (Test-Path -LiteralPath $HotList -PathType Leaf)) {
+        throw "hot list not found: $HotList"
+    }
+    $hotIds = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($line in [System.IO.File]::ReadAllLines((Resolve-Path -LiteralPath $HotList).Path, [System.Text.Encoding]::UTF8)) {
+        $trimmed = "$line".Split('#')[0].Trim()
+        if ($trimmed) { [void]$hotIds.Add($trimmed) }
+    }
+    Write-Output "hot list: $HotList ($($hotIds.Count) mods required present)"
+}
+
 Write-Output "== base url =="
 $uri = [Uri]$BaseUrl
 Report ($uri.Scheme -eq "https") "scheme is https" "(got $($uri.Scheme); the app rejects a non-https mirror and logs it)"
@@ -60,15 +99,42 @@ function Get-Bytes {
     $stream.Position = 0
     $buffer = New-Object byte[] $stream.Length
     [void]$stream.Read($buffer, 0, $buffer.Length)
+
+    # sync-mirror.ps1 uploads catalog.json gzip-encoded once it passes 1 MB. Whether those bytes
+    # arrive still compressed depends on the host: Windows PowerShell decompresses them and
+    # leaves Content-Encoding set, so trusting that header would decompress twice. The magic
+    # number says what the bytes actually are, which is true on every host.
+    if ($buffer.Length -ge 2 -and $buffer[0] -eq 0x1F -and $buffer[1] -eq 0x8B) {
+        $compressed = New-Object System.IO.MemoryStream(, $buffer)
+        $gzip = New-Object System.IO.Compression.GZipStream($compressed, [System.IO.Compression.CompressionMode]::Decompress)
+        $plain = New-Object System.IO.MemoryStream
+        try {
+            $gzip.CopyTo($plain)
+            return $plain.ToArray()
+        }
+        finally {
+            $gzip.Dispose(); $compressed.Dispose(); $plain.Dispose()
+        }
+    }
+
     return $buffer
+}
+
+# A UTF-8 BOM survives Encoding.UTF8.GetString as a leading U+FEFF, which ConvertFrom-Json
+# rejects as an invalid primitive. Plenty of editors and PowerShell's own Set-Content -Encoding
+# UTF8 emit one, and a manifest with a BOM is perfectly valid for the app, so a BOM here must
+# not masquerade as a broken mirror.
+function ConvertFrom-JsonBytes {
+    param([byte[]]$Bytes)
+
+    $text = [System.Text.Encoding]::UTF8.GetString($Bytes)
+    return ($text.TrimStart([char]0xFEFF) | ConvertFrom-Json)
 }
 
 Write-Output "== manifests =="
 $catalog = $null
 try {
-    $catalogBytes = Get-Bytes "$BaseUrl/MechabellumMods/catalog.json"
-    $catalogText = [System.Text.Encoding]::UTF8.GetString($catalogBytes)
-    $catalog = $catalogText | ConvertFrom-Json
+    $catalog = ConvertFrom-JsonBytes (Get-Bytes "$BaseUrl/MechabellumMods/catalog.json")
     Report $true "MechabellumMods/catalog.json ($($catalog.mods.Count) entries)"
 }
 catch {
@@ -76,8 +142,7 @@ catch {
 }
 
 try {
-    $latestBytes = Get-Bytes "$BaseUrl/MechabellumModManager/latest.json"
-    $latest = [System.Text.Encoding]::UTF8.GetString($latestBytes) | ConvertFrom-Json
+    $latest = ConvertFrom-JsonBytes (Get-Bytes "$BaseUrl/MechabellumModManager/latest.json")
     Report $true "MechabellumModManager/latest.json (version $($latest.version))"
     if ($ExpectVersion) {
         Report ($latest.version -eq $ExpectVersion) "latest.json advertises $ExpectVersion" "(got $($latest.version))"
@@ -113,19 +178,32 @@ if ($catalog) {
         foreach ($mod in $catalog.mods) {
             $relative = ($mod.file -replace '\\', '/')
             $declared = "$($mod.sha256)".ToLowerInvariant()
+            $required = (-not $hotIds) -or $hotIds.Contains("$($mod.id)")
 
             if ($declared -notmatch '^[0-9a-f]{64}$') {
-                Report $false "$($mod.id) declares a sha256" "(the app refuses mirror downloads without one)"
+                Report $false "$($mod.id) declares a sha256" "(the app refuses downloads without one)"
                 continue
             }
 
             try {
                 $bytes = Get-Bytes "$BaseUrl/MechabellumMods/$relative"
                 $actual = ($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
+
+                # Wrong bytes are a failure whether or not the mod was meant to be here: an
+                # unlisted object still gets served to whoever asks, stale hash and all.
                 Report ($actual -eq $declared) "$($mod.id) -> $relative" "(catalog $declared, served $actual)"
+
+                if (-not $required) {
+                    Write-Output "  note  $($mod.id) is mirrored though the hot list omits it (harmless, but it is costing storage)"
+                }
             }
             catch {
-                Report $false "$($mod.id) -> $relative" "($($_.Exception.Message))"
+                if ((-not $required) -and (Test-IsNotFound $_)) {
+                    Write-Output "  cold  $($mod.id) absent from the mirror, served from the origin (expected)"
+                }
+                else {
+                    Report $false "$($mod.id) -> $relative" "($($_.Exception.Message))"
+                }
             }
 
             if ($mod.preview) {

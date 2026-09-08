@@ -319,23 +319,20 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
-    public async Task DownloadModAsync_allows_github_file_without_catalog_sha256()
+    public async Task DownloadModAsync_refuses_a_github_file_without_catalog_sha256_too()
     {
+        // The old rule trusted anything served from a github.com host. That stopped being a
+        // meaningful signal once mods outgrew the repo tree and had to come from Release assets
+        // and mirrors, so the hash is now required from every source alike.
         var handler = new ScriptedHttpHandler(_ => ScriptedHttpHandler.Bytes(HttpStatusCode.OK, "legacy"u8.ToArray()));
         using var http = new HttpClient(handler);
         var svc = new ModCatalogService(http);
         var dest = Path.Combine(Path.GetTempPath(), "mmm-dl-" + Guid.NewGuid().ToString("N"), "Mod.dll");
 
-        try
-        {
-            await svc.DownloadModAsync(new CatalogMod { File = "mods/x/Mod.dll" }, dest);
+        var act = async () => await svc.DownloadModAsync(new CatalogMod { File = "mods/x/Mod.dll" }, dest);
 
-            File.Exists(dest).Should().BeTrue();
-        }
-        finally
-        {
-            try { Directory.Delete(Path.GetDirectoryName(dest)!, recursive: true); } catch { /* cleanup */ }
-        }
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        File.Exists(dest).Should().BeFalse();
     }
 
     [Fact]
