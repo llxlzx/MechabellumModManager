@@ -27,8 +27,16 @@
   Release folder holding latest.json, e.g. release\v1.1.7. Omit to skip the manager tree.
 
 .PARAMETER IncludeSetup
-  Also upload the ~87 MB installer. Off by default: egress for the installer dwarfs
-  everything else, and latest.json can keep pointing setupUrl at GitHub.
+  Also upload the ~87 MB installer, and repoint setupUrl in the mirror's copy of
+  latest.json at it. Off by default: egress for the installer dwarfs everything else.
+
+  Requires -MirrorBaseUrl. The client hands setupUrl straight to the browser rather
+  than downloading it itself, so an installer uploaded without rewriting setupUrl is
+  paid for and never served.
+
+.PARAMETER MirrorBaseUrl
+  Public mirror root, e.g. https://mmm-mirror-1300000000.cos.ap-shanghai.myqcloud.com
+  Only used to build setupUrl. The GitHub copy of latest.json keeps its own setupUrl.
 
 .PARAMETER WhatIf
   Print the coscli calls without running them.
@@ -43,7 +51,8 @@ param(
     [Parameter(Mandatory = $true)][string]$Bucket,
     [Parameter(Mandatory = $true)][string]$ModsRepo,
     [string]$ReleaseDir,
-    [switch]$IncludeSetup
+    [switch]$IncludeSetup,
+    [string]$MirrorBaseUrl
 )
 
 $ErrorActionPreference = "Stop"
@@ -75,7 +84,47 @@ function Push-File {
     Invoke-Coscli -CoscliArgs @("cp", $LocalPath, "cos://$Bucket/$RemoteKey") -What $RemoteKey
 }
 
+# Rewrites just the setupUrl value in place. A ConvertFrom-Json/ConvertTo-Json round
+# trip would reformat the file and escape every non-ASCII character in "notes"; the
+# value is a plain URL, so it can never contain an escaped quote.
+function Set-SetupUrl {
+    param([string]$Text, [string]$Url)
+
+    $pattern = '("setupUrl"\s*:\s*")([^"]*)(")'
+    $matched = [regex]::Matches($Text, $pattern)
+    if ($matched.Count -ne 1) {
+        throw "expected exactly one setupUrl in latest.json, found $($matched.Count)"
+    }
+
+    $rewritten = [regex]::Replace($Text, $pattern, { param($m) $m.Groups[1].Value + $Url + $m.Groups[3].Value })
+
+    # Cheap guard against a botched substitution reaching players as invalid JSON.
+    $parsed = $rewritten | ConvertFrom-Json
+    if ($parsed.setupUrl -ne $Url) {
+        throw "setupUrl rewrite did not take: got '$($parsed.setupUrl)'"
+    }
+    return $rewritten
+}
+
 Assert-Coscli
+
+if ($IncludeSetup) {
+    if (-not $ReleaseDir) {
+        throw "-IncludeSetup needs -ReleaseDir, that is where the installer and latest.json live."
+    }
+    if (-not $MirrorBaseUrl) {
+        throw "-IncludeSetup needs -MirrorBaseUrl. Without it setupUrl keeps pointing at GitHub and nobody ever downloads the installer you just paid to upload."
+    }
+
+    $MirrorBaseUrl = $MirrorBaseUrl.TrimEnd('/')
+    $mirrorUri = [Uri]$MirrorBaseUrl
+    if ($mirrorUri.Scheme -ne "https") {
+        throw "-MirrorBaseUrl must be https, the app rejects anything else (got $($mirrorUri.Scheme))."
+    }
+    if ($mirrorUri.Host.Contains("github")) {
+        throw "-MirrorBaseUrl host contains 'github', which RemoteFetch.ClassifySource reads as the trusted GitHub origin and skips the mirror hash check. Rename the bucket."
+    }
+}
 
 $ModsRepo = (Resolve-Path -LiteralPath $ModsRepo).Path
 $catalogPath = Join-Path $ModsRepo "catalog.json"
@@ -102,13 +151,15 @@ foreach ($mod in $catalog.mods) {
     }
 }
 
+$setupName = $null
 if ($ReleaseDir) {
     $ReleaseDir = (Resolve-Path -LiteralPath $ReleaseDir).Path
     if ($IncludeSetup) {
         Write-Output "== installer =="
         $setup = Get-ChildItem -LiteralPath $ReleaseDir -Filter "*Setup*.exe" | Select-Object -First 1
         if (-not $setup) { throw "no *Setup*.exe under $ReleaseDir" }
-        Push-File -LocalPath $setup.FullName -RemoteKey "MechabellumModManager/$($setup.Name)"
+        $setupName = $setup.Name
+        Push-File -LocalPath $setup.FullName -RemoteKey "MechabellumModManager/$setupName"
     }
 }
 
@@ -117,7 +168,31 @@ Push-File -LocalPath $catalogPath -RemoteKey "MechabellumMods/catalog.json"
 
 if ($ReleaseDir) {
     $latest = Join-Path $ReleaseDir "latest.json"
-    Push-File -LocalPath $latest -RemoteKey "MechabellumModManager/latest.json"
+    if (-not (Test-Path -LiteralPath $latest -PathType Leaf)) {
+        throw "missing local file: $latest"
+    }
+
+    if ($setupName) {
+        # The mirror's latest.json points at the mirror's installer; the GitHub copy on
+        # disk is left untouched so the two origins each serve their own download.
+        $setupUrl = "$MirrorBaseUrl/MechabellumModManager/$([Uri]::EscapeDataString($setupName))"
+        $original = [System.IO.File]::ReadAllText($latest, [System.Text.Encoding]::UTF8)
+        $patched = Set-SetupUrl -Text $original -Url $setupUrl
+
+        $temp = Join-Path ([System.IO.Path]::GetTempPath()) "latest-mirror-$([Guid]::NewGuid()).json"
+        try {
+            [System.IO.File]::WriteAllText($temp, $patched, (New-Object System.Text.UTF8Encoding($false)))
+            Write-Output "  setupUrl -> $setupUrl"
+            Push-File -LocalPath $temp -RemoteKey "MechabellumModManager/latest.json"
+        }
+        finally {
+            # -WhatIf would otherwise propagate here and leak the temp file.
+            Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue -WhatIf:$false
+        }
+    }
+    else {
+        Push-File -LocalPath $latest -RemoteKey "MechabellumModManager/latest.json"
+    }
 }
 
 Write-Output ""
