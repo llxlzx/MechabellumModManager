@@ -596,6 +596,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>Сборки только что сгенерированы; в этот раз запускаем exe, чтобы Melon зашёл в папку менеджера (режим запуска не меняется).</value></data>
   <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>Loader не внедрился при этом запуске. Переключите режим на «только exe», затем «Применить и запустить», и проверьте чёрную консоль Melon.</value></data>
   <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>Откат включения двух папок прошёл не полностью: {0}. Используйте «Восстановить официальную папку».</value></data>
+  <data name="NotifyEnableDualRollbackSteamBusy" xml:space="preserve"><value>Steam или игра ещё запущены — откат диска небезопасен. Владение сессией сохранено. Закройте Steam и используйте аварийное восстановление в одну папку.</value></data>
   <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>Режим двух папок уже включён. Чтобы пересоздать его, сначала выполните «Восстановить официальную папку», затем включите снова.</value></data>
   <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit не сработал (обычно из-за окна выбора аккаунта); принудительно закрываем процессы Steam…</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>Откройте Steam сами, чтобы скачать другую ветку: менеджер не запускает Steam автоматически.</value></data>

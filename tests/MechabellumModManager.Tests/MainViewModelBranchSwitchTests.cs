@@ -2056,6 +2056,74 @@ public class MainViewModelBranchSwitchTests
     }
 
     [Fact]
+    public void RollbackEnableDualToSingle_steam_busy_keeps_session_owned_and_shows_emergency()
+    {
+        using var fx = Fixture.CreateWizardStart();
+        Directory.CreateDirectory(fx.OfficialStore);
+        File.WriteAllText(Path.Combine(fx.OfficialStore, "Mechabellum.exe"), "exe");
+        File.WriteAllText(Path.Combine(fx.OfficialStore, "GameAssembly.dll"), "dll");
+        if (Directory.Exists(fx.SteamLink))
+            Directory.Delete(fx.SteamLink, recursive: true);
+
+        // Create VM before Steam is marked running so load-time cleanup does not clear WizardStep.
+        var vm = fx.CreateVm();
+        vm.GamePath = fx.SteamLink;
+
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.WaitingDownloadB,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            SessionOwnedOfficialStore = true
+        });
+        fx.Probe.SteamRunning = true;
+        vm.BranchWizardStep = BranchWizardStep.WaitingDownloadB;
+
+        vm.AbandonUserCancelledWork();
+
+        var cfg = fx.LoadBranchConfig();
+        cfg.SessionOwnedOfficialStore.Should().BeTrue();
+        cfg.WizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        vm.BranchWizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        vm.IsRecoveryGateActive.Should().BeTrue();
+        vm.LogText.Should().Contain(LocalizationService.T("NotifyEnableDualRollbackSteamBusy"));
+        vm.CanEmergencyRecoverSingle.Should().BeTrue();
+        vm.CancelBusyWork();
+    }
+
+    [Fact]
+    public void Wizard_disk_ready_steam_open_shows_exit_steam_ui_not_download_banner()
+    {
+        using var fx = Fixture.CreateWizardStart();
+        WriteSettledAcf(fx, "publicbeta");
+        fx.WriteBranchConfig(new BranchSwitchConfig
+        {
+            Enabled = false,
+            WizardStep = BranchWizardStep.None,
+            SteamLinkPath = fx.SteamLink,
+            OfficialStorePath = fx.OfficialStore,
+            BetaStorePath = fx.BetaStore,
+            ActiveBranch = GameBranch.Official,
+            BetaBranchName = "publicbeta",
+            SessionOwnedOfficialStore = true
+        });
+        fx.Probe.SteamRunning = true;
+
+        var vm = fx.CreateVm();
+        vm.GamePath = fx.SteamLink;
+        vm.BranchWizardStep = BranchWizardStep.WaitingDownloadB;
+        vm.RefreshStatusCommand.Execute(null);
+
+        vm.ShowConfirmWizardExitSteam.Should().BeTrue();
+        vm.IsWizardDownloadReadyNow().Should().BeFalse();
+        vm.DeployBlockedReason.Should().Contain("退出 Steam");
+        vm.CancelBusyWork();
+    }
+
+    [Fact]
     public void AbandonUserCancelledWork_keeps_settle_and_does_not_promote_Ready()
     {
         using var fx = Fixture.CreateReadyDualFolder();

@@ -423,6 +423,7 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="LogEnableDualRolledBack" xml:space="preserve"><value>Cancelled enable dual and rolled back to a single folder.</value></data>
   <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>Enable dual was incomplete and Steam/game is still running, so disk rollback was skipped; session markers kept. Exit Steam, then use Restore Official folder.</value></data>
   <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>Enable-dual rollback did not fully succeed: {0}. Use Restore Official folder.</value></data>
+  <data name="NotifyEnableDualRollbackSteamBusy" xml:space="preserve"><value>Steam or the game is still running, so disk rollback is unsafe. Session ownership was kept — quit Steam, then use Emergency recover to a single folder.</value></data>
   <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>Dual-folder is already enabled. To rebuild: Restore Official folder first, then Enable dual again.</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>For mods to load, MelonLoader should open a black Melon console (not PowerShell). If it does not, check version.dll / MelonLoader under the game folder and send MelonLoader\Latest.log.</value></data>
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Launch requested; checking whether the game process starts…</value></data>

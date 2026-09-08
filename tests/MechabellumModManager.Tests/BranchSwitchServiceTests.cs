@@ -1039,6 +1039,145 @@ public class BranchSwitchServiceTests
         File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("current");
     }
 
+    [Fact]
+    public void RollbackEnableSession_steam_running_does_not_clear_session_ownership()
+    {
+        using var h = Harness.CreateWizardStart();
+        SeedGameRoot(h.OfficialStore, "official-session");
+        if (Directory.Exists(h.SteamLink))
+            Directory.Delete(h.SteamLink, recursive: true);
+        h.Cfg.Enabled = false;
+        h.Cfg.WizardStep = BranchWizardStep.WaitingDownloadB;
+        h.Cfg.SteamLinkPath = h.SteamLink;
+        h.Cfg.OfficialStorePath = h.OfficialStore;
+        h.Cfg.BetaStorePath = h.BetaStore;
+        h.Cfg.SessionOwnedOfficialStore = true;
+        h.Cfg.SessionOwnedBetaStore = false;
+        h.Svc.SaveConfig(h.Cfg);
+        h.Probe.SteamRunning = true;
+
+        var result = h.Svc.TryRollbackEnableSession(h.SteamLink);
+
+        result.Success.Should().BeFalse();
+        var cfg = h.Svc.LoadConfig();
+        cfg.SessionOwnedOfficialStore.Should().BeTrue();
+        cfg.WizardStep.Should().Be(BranchWizardStep.WaitingDownloadB);
+        Directory.Exists(h.OfficialStore).Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsAlignedWith_false_when_junction_ok_but_betakey_wrong()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Junctions.DeleteJunction(h.SteamLink);
+        h.Junctions.CreateJunction(h.SteamLink, h.BetaStore);
+        h.Cfg.Enabled = true;
+        h.Cfg.WizardStep = BranchWizardStep.Ready;
+        h.Cfg.ActiveBranch = GameBranch.Beta;
+        h.Cfg.BetaBranchName = "publicbeta";
+        h.Svc.SaveConfig(h.Cfg);
+        // Junction points at beta but ACF still has no/wrong BetaKey.
+        File.WriteAllText(h.AcfPath,
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"UserConfig"
+            	{
+            		"language"		"english"
+            	}
+            }
+            """);
+
+        h.Svc.IsAlignedWith(GameBranch.Beta).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsAlignedWith_true_when_fully_aligned_official()
+    {
+        using var h = Harness.CreateReadyDualFolder();
+        h.Cfg.Enabled = true;
+        h.Cfg.WizardStep = BranchWizardStep.Ready;
+        h.Cfg.ActiveBranch = GameBranch.Official;
+        h.Svc.SaveConfig(h.Cfg);
+        File.WriteAllText(h.AcfPath,
+            """
+            "AppState"
+            {
+            	"appid"		"669330"
+            	"UserConfig"
+            	{
+            		"language"		"english"
+            	}
+            }
+            """);
+
+        h.Svc.IsAlignedWith(GameBranch.Official).Should().BeTrue();
+    }
+
+    [Fact]
+    public void EmergencyRecover_prefers_session_rollback_then_clears_ownership()
+    {
+        using var h = Harness.CreateWizardStart();
+        SeedGameRoot(h.OfficialStore, "official-session");
+        if (Directory.Exists(h.SteamLink))
+            Directory.Delete(h.SteamLink, recursive: true);
+        h.Cfg.Enabled = false;
+        h.Cfg.WizardStep = BranchWizardStep.WaitingDownloadB;
+        h.Cfg.SteamLinkPath = h.SteamLink;
+        h.Cfg.OfficialStorePath = h.OfficialStore;
+        h.Cfg.BetaStorePath = h.BetaStore;
+        h.Cfg.SessionOwnedOfficialStore = true;
+        h.Svc.SaveConfig(h.Cfg);
+
+        var result = h.Svc.TryEmergencyRecoverToSingle(deleteOtherStore: false, h.SteamLink);
+
+        result.Success.Should().BeTrue(because: result.Message);
+        Directory.Exists(h.OfficialStore).Should().BeFalse();
+        File.ReadAllText(Path.Combine(h.SteamLink, "marker.txt")).Should().Be("official-session");
+        var cfg = h.Svc.LoadConfig();
+        cfg.SessionOwnedOfficialStore.Should().BeFalse();
+        cfg.WizardStep.Should().Be(BranchWizardStep.None);
+    }
+
+    [Fact]
+    public void TryPreflightArchiveMove_rejects_cross_volume_paths()
+    {
+        var ok = BranchSwitchService.TryPreflightArchiveMove(
+            @"C:\Steam\common\Mechabellum",
+            @"D:\SteamLibrary\common\Mechabellum_official",
+            out var error);
+
+        ok.Should().BeFalse();
+        error.Should().Contain("NTFS");
+    }
+
+    [Fact]
+    public void MapArchiveException_partial_move_mentions_both_paths()
+    {
+        var mapped = BranchSwitchService.MapArchiveException(
+            new PartialDirectoryMoveException(@"C:\src", @"C:\dst", new IOException("locked")));
+
+        mapped.Should().Contain(@"C:\src");
+        mapped.Should().Contain(@"C:\dst");
+        mapped.Should().Contain("急救");
+    }
+
+    [Fact]
+    public void HasPartialMoveResidue_true_when_journal_phase_is_partial_move()
+    {
+        using var h = Harness.CreateWizardStart();
+        h.Store.Save(h.Paths.BranchSwitchJournalPath, new BranchSwitchJournal
+        {
+            Phase = BranchSwitchService.PhasePartialMove,
+            SteamLinkPath = h.SteamLink,
+            PreviousStorePath = h.SteamLink,
+            TargetStorePath = h.OfficialStore
+        });
+
+        h.Svc.HasPartialMoveResidue().Should().BeTrue();
+    }
+
     static void SeedGameRoot(string dir, string marker)
     {
         Directory.CreateDirectory(dir);
