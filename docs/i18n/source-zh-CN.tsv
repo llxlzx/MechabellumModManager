@@ -158,7 +158,8 @@ LabelAuthor	作者
 LabelVersion	版本
 LabelUpdated	更新
 LabelName	名称
-ActionDelete	删除
+ActionDelete	删除
+ActionUpdate	更新
 ActionCollapseDetail	收起介绍
 TipToggleHighRisk	点击可临时切换风险标记；刷新列表后会按名称关键词重新判定
 TipDeleteFromLibrary	从本地库删除此包

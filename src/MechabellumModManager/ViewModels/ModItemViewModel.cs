@@ -72,8 +72,29 @@ public sealed partial class ModItemViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
     private bool _hasUpdate;
 
-    public string UpdateStatusText =>
-        HasUpdate ? LocalizationService.T("CatalogStatusUpdateAvailable") : "";
+    /// <summary>
+    /// The version the catalog currently serves, which <see cref="Version"/> deliberately is not:
+    /// that one describes the bytes on disk. Null when the catalog names no version, which is
+    /// common for entries whose staleness was decided by hash rather than by version.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
+    private string? _latestVersion;
+
+    public string UpdateStatusText
+    {
+        get
+        {
+            if (!HasUpdate)
+                return "";
+
+            // "1.0.0 -> 1.2.0" answers "how far behind am I", which a bare "update available"
+            // does not. Both halves have to be there for the arrow to mean anything.
+            return !string.IsNullOrWhiteSpace(Version) && !string.IsNullOrWhiteSpace(LatestVersion)
+                ? $"{Version} → {LatestVersion}"
+                : LocalizationService.T("CatalogStatusUpdateAvailable");
+        }
+    }
 
     public string TypeLabel => IsMissing
         ? LocalizationService.T("PackageMissing")
@@ -119,6 +140,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(TypeLabel));
         OnPropertyChanged(nameof(HighRiskLabel));
         OnPropertyChanged(nameof(VersionWarningHint));
+        OnPropertyChanged(nameof(LatestVersion));
         OnPropertyChanged(nameof(UpdateStatusText));
     }
 
@@ -154,6 +176,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         {
             _owner.LogTaxonomyWarning($"Mod '{Package.Id}': invalid catalog category '{catalog.Category}', treating as Uncategorized.");
         }
+        LatestVersion = string.IsNullOrWhiteSpace(catalog.Version) ? null : catalog.Version;
         HasUpdate = ModCatalogService.GetEntryState([Package], catalog) == CatalogEntryState.UpdateAvailable;
         RefreshCatalogFieldsFromPackage();
     }

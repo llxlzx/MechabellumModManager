@@ -125,6 +125,56 @@ public class ModUpdateFlowTests
     }
 
     [Fact]
+    public async Task Library_row_update_command_swaps_the_package_like_the_catalog_panel()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+        fx.Profiles.SetEnabled("default", "cam-aaaaaaaa", true);
+        fx.Profiles.SetEnabled("default", oldId, true);
+
+        var vm = fx.CreateVm(catalog: CatalogServing(version: "1.2.0"));
+        await vm.RunStartupModUpdateCheckAsync();
+
+        vm.OutdatedCount.Should().Be(1);
+        var row = vm.Mods.Should().ContainSingle(m => m.Package.Id == oldId).Subject;
+        row.HasUpdate.Should().BeTrue();
+
+        await vm.UpdateModCommand.ExecuteAsync(row);
+
+        var packages = fx.Library.List();
+        packages.Should().NotContain(p => p.Id == oldId);
+        var replacement = packages.Should().ContainSingle(p => p.CatalogId == "show-grid").Subject;
+        File.ReadAllBytes(Path.Combine(replacement.PackageDirectory, "ShowGrid.dll"))
+            .Should().Equal(NewBytes);
+        replacement.Version.Should().Be("1.2.0");
+        fx.Profiles.Get("default").EnabledPackageIds
+            .Should().Equal("cam-aaaaaaaa", replacement.Id);
+        // Library swap must repopulate Mods on the CollectionView thread — empty Mods + stuck
+        // OutdatedCount is the swallowed NotSupportedException failure mode.
+        vm.Mods.Should().ContainSingle(m => m.Package.Id == replacement.Id);
+        vm.OutdatedCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Library_row_update_is_blocked_while_the_game_is_running()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+        fx.Probe.GameRunning = true;
+
+        var notices = new List<string>();
+        var vm = fx.CreateVm(catalog: CatalogServing(version: "1.2.0"), notify: notices.Add);
+        await vm.RunStartupModUpdateCheckAsync();
+
+        var row = vm.Mods.Should().ContainSingle(m => m.Package.Id == oldId).Subject;
+        await vm.UpdateModCommand.ExecuteAsync(row);
+
+        fx.Library.List().Should().ContainSingle(p => p.Id == oldId);
+        notices.Should().Contain(n => n.Contains("退出游戏", StringComparison.Ordinal));
+        vm.OutdatedCount.Should().Be(1);
+    }
+
+    [Fact]
     public async Task Startup_check_reports_outdated_mods_without_installing_anything()
     {
         using var fx = MainViewModelFixture.CreateReady();
@@ -139,6 +189,13 @@ public class ModUpdateFlowTests
 
         notices.Should().ContainSingle().Which.Should().Contain("Show Grid");
         fx.Library.List().Should().ContainSingle(p => p.Id == oldId);
+
+        // The check is only useful if the installed list lights up without opening the catalog panel.
+        vm.CatalogMods.Should().ContainSingle(c => c.Id == "show-grid");
+        var row = vm.Mods.Should().ContainSingle(m => m.Package.Id == oldId).Subject;
+        row.HasUpdate.Should().BeTrue();
+        row.LatestVersion.Should().Be("1.2.0");
+        row.UpdateStatusText.Should().Be("1.0.0 → 1.2.0");
     }
 
     [Fact]
@@ -150,6 +207,7 @@ public class ModUpdateFlowTests
         var notices = new List<string>();
         var vm = fx.CreateVm(catalog: CatalogServing(version: "1.2.0"), notify: notices.Add);
 
+        vm.CheckModUpdatesOnStartup = false;
         await vm.RunStartupModUpdateCheckAsync();
         notices.Should().BeEmpty();
 
@@ -165,10 +223,10 @@ public class ModUpdateFlowTests
         using var fx = MainViewModelFixture.CreateReady();
 
         var vm = fx.CreateVm();
-        vm.CheckModUpdatesOnStartup.Should().BeFalse();
-        vm.CheckModUpdatesOnStartup = true;
+        vm.CheckModUpdatesOnStartup.Should().BeTrue("a player who is not told keeps running a version the author already fixed");
+        vm.CheckModUpdatesOnStartup = false;
 
-        fx.CreateVm().CheckModUpdatesOnStartup.Should().BeTrue();
+        fx.CreateVm().CheckModUpdatesOnStartup.Should().BeFalse();
     }
 
     /// <summary>Installs a package that looks like it came from the "show-grid" catalog entry.</summary>
