@@ -94,6 +94,34 @@ function Assert-Coscli {
     }
 }
 
+# The public https base for -Bucket, used to read back each object's stamped hash. -Bucket is
+# usually a coscli alias, which says nothing about the host, so fall back to the coscli config
+# that already maps alias -> real name + region. Returning $null just disables the skip
+# optimisation, so a shape this does not recognise costs uploads, never correctness.
+function Resolve-PublicBase {
+    if ($MirrorBaseUrl) { return $MirrorBaseUrl.TrimEnd('/') }
+
+    $configPath = Join-Path $env:USERPROFILE ".cos.yaml"
+    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) { return $null }
+
+    $name = $null
+    $region = $null
+    $matched = $false
+    foreach ($line in (Get-Content -LiteralPath $configPath -Encoding UTF8)) {
+        if ($line -match '^\s*-\s*name:\s*(\S+)') {
+            if ($matched -and $name -and $region) { break }
+            $name = $Matches[1]; $region = $null
+            $matched = ($name -eq $Bucket)
+            continue
+        }
+        if ($line -match '^\s*alias:\s*(\S+)' -and $Matches[1] -eq $Bucket) { $matched = $true; continue }
+        if ($line -match '^\s*region:\s*(\S+)') { $region = $Matches[1]; continue }
+    }
+
+    if ($matched -and $name -and $region) { return "https://$name.cos.$region.myqcloud.com" }
+    return $null
+}
+
 function Invoke-Coscli {
     param([string[]]$CoscliArgs, [string]$What)
 
@@ -112,19 +140,28 @@ function Get-FileHashHex {
 }
 
 # Reads back the sha256 this script stamped on the object last time. Any failure (absent
-# object, no metadata, an older coscli) reports "unknown", which re-uploads: wasting an
+# object, no metadata, no public read) reports "unknown", which re-uploads: wasting an
 # upload is recoverable, skipping a needed one silently serves stale bytes.
+#
+# This asks the public URL rather than coscli, for two reasons. coscli's own stat HEADs the
+# bucket before the object, which a correctly least-privileged sub-user policy -- scoped to
+# the objects, not the bucket -- answers with 403. And the public view is the one that
+# actually matters, since it is what the manager sees.
 function Get-RemoteHash {
     param([string]$RemoteKey)
 
-    $output = & coscli head "cos://$Bucket/$RemoteKey" 2>&1
-    if ($LASTEXITCODE -ne 0) { return $null }
+    if (-not $script:PublicBase) { return $null }
 
-    foreach ($line in @($output)) {
-        if ("$line" -match "(?i)$HashMetaKey\s*[:=]\s*([0-9a-fA-F]{64})") {
-            return $Matches[1].ToLowerInvariant()
-        }
+    try {
+        $response = Invoke-WebRequest -Uri "$($script:PublicBase)/$RemoteKey" `
+            -Method Head -UseBasicParsing -TimeoutSec 20
     }
+    catch {
+        return $null
+    }
+
+    $value = "$($response.Headers["x-cos-meta-$HashMetaKey"])"
+    if ($value -match '^[0-9a-fA-F]{64}$') { return $value.ToLowerInvariant() }
     return $null
 }
 
@@ -209,6 +246,14 @@ if ($IncludeSetup) {
     if ($mirrorUri.Host.Contains("github")) {
         throw "-MirrorBaseUrl host contains 'github', which RemoteFetch.ClassifySource reads as the trusted GitHub origin and skips the mirror hash check. Rename the bucket."
     }
+}
+
+$script:PublicBase = Resolve-PublicBase
+if ($script:PublicBase) {
+    Write-Output "incremental skip reads back from $($script:PublicBase)"
+}
+else {
+    Write-Output "could not resolve a public base for '$Bucket', so every object is re-uploaded. Pass -MirrorBaseUrl to enable the skip."
 }
 
 $ModsRepo = (Resolve-Path -LiteralPath $ModsRepo).Path
