@@ -265,6 +265,7 @@ public sealed partial class MainViewModel : ObservableObject
         _gamePath = ResolveInitialGamePath(config.GamePath);
         _launchMode = config.LaunchMode;
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
+        _checkModUpdatesOnStartup = config.CheckModUpdatesOnStartup;
 
         if (!string.Equals(config.GamePath ?? "", _gamePath, StringComparison.OrdinalIgnoreCase))
         {
@@ -961,6 +962,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _gamePath = "";
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
+    [ObservableProperty] private bool _checkModUpdatesOnStartup;
     [ObservableProperty] private MainContentPage _activeContentPage = MainContentPage.Library;
 
     public bool IsLibraryPage => ActiveContentPage == MainContentPage.Library;
@@ -1194,6 +1196,50 @@ public sealed partial class MainViewModel : ObservableObject
         var config = LoadConfig();
         config.MirrorBaseUrl = stored;
         SaveConfig(config);
+    }
+
+    partial void OnCheckModUpdatesOnStartupChanged(bool value)
+    {
+        var config = LoadConfig();
+        config.CheckModUpdatesOnStartup = value;
+        SaveConfig(config);
+    }
+
+    /// <summary>
+    /// Reports which installed mods the catalog has moved past. Deliberately does not install:
+    /// the player asked to be told, not to have a loaded DLL swapped under them.
+    /// </summary>
+    public async Task RunStartupModUpdateCheckAsync()
+    {
+        if (!CheckModUpdatesOnStartup)
+            return;
+
+        try
+        {
+            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            var packages = _library.List();
+            var stale = root.Mods
+                .Where(mod => ModCatalogService.GetEntryState(packages, mod) == CatalogEntryState.UpdateAvailable)
+                .Select(mod => CatalogLocaleResolver.ResolveName(mod))
+                .ToList();
+
+            if (stale.Count == 0)
+            {
+                AppendLog(LocalizationService.T("LogModUpdateCheckAllCurrent"));
+                return;
+            }
+
+            var message = string.Format(
+                LocalizationService.T("NotifyModUpdatesAvailable"),
+                stale.Count,
+                string.Join("、", stale));
+            AppendLog(message);
+            _notify(message);
+        }
+        catch (Exception ex)
+        {
+            AppendLog(string.Format(LocalizationService.T("LogModUpdateCheckFailed"), ex.Message));
+        }
     }
 
     partial void OnUsePortableDataRootChanged(bool value)
@@ -2599,8 +2645,8 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var mod in root.Mods)
             {
                 LogInvalidCatalogCategory(mod);
-                var inLib = ModCatalogService.IsInLibrary(packages, mod);
-                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib, _catalog.MirrorBaseUrl));
+                var state = ModCatalogService.GetEntryState(packages, mod);
+                CatalogMods.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
             }
 
             SelectedCatalogMod = null;
@@ -2649,12 +2695,12 @@ public sealed partial class MainViewModel : ObservableObject
     async Task AddCatalogModToLibraryAsync()
     {
         if (_addingCatalogMod) return;
-        var targets = _catalogSelection.Where(i => !i.IsInLibrary).ToList();
+        var targets = _catalogSelection.Where(IsAddOrUpdateTarget).ToList();
         if (targets.Count == 0) return;
 
         var skippedInLibrary = _catalogSelection.Count - targets.Count;
         if (skippedInLibrary > 0)
-            AppendLog($"已跳过 {skippedInLibrary} 个已在本地库的目录项。");
+            AppendLog($"已跳过 {skippedInLibrary} 个已是最新版本的目录项。");
 
         _addingCatalogMod = true;
         AddCatalogModToLibraryCommand.NotifyCanExecuteChanged();
@@ -2686,12 +2732,16 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            if (item.IsInLibrary)
+            if (item.IsInLibrary && !item.HasUpdate)
             {
-                AppendLog($"「{item.Name}」已在本地库（同名文件），跳过下载。");
+                AppendLog($"「{item.Name}」已是最新版本，跳过下载。");
                 CatalogStatus = $"已在本地库：{item.Name}";
                 return;
             }
+
+            var isUpdate = item.HasUpdate;
+            if (isUpdate && !CanReplaceInstalledMod(item.Name))
+                return;
 
             // Pre-check name keywords; RiskHeuristic still runs on ImportDll / ReloadMods.
             var probe = new ModPackage
@@ -2721,8 +2771,11 @@ public sealed partial class MainViewModel : ObservableObject
                 fileName = item.Id + ".dll";
 
             var tempPath = Path.Combine(Path.GetTempPath(), "mmm-catalog-" + Guid.NewGuid().ToString("N"), fileName);
-            CatalogStatus = $"正在下载 {item.Name}…";
+            CatalogStatus = isUpdate ? $"正在更新 {item.Name}…" : $"正在下载 {item.Name}…";
             AppendLog(CatalogStatus);
+            var supersededPackages = isUpdate
+                ? ModCatalogService.FindInstalled(_library.List(), item.Mod)
+                : Array.Empty<ModPackage>();
             await _catalog.DownloadModAsync(item.Mod, tempPath).ConfigureAwait(true);
             if (!string.IsNullOrWhiteSpace(_catalog.LastDownloadSource))
                 AppendLog(string.Format(LocalizationService.T("RemoteSourceLog"), _catalog.LastDownloadSource));
@@ -2747,11 +2800,21 @@ public sealed partial class MainViewModel : ObservableObject
                     AppendLog($"写入目录元数据失败：{metaEx.Message}");
                 }
 
-                var enabled = TryEnableImportedPackages(pkg);
-                AppendLog(enabled
-                    ? $"已从目录加入本地库并启用：{pkg.DisplayName} ({pkg.Id})"
-                    : $"已从目录加入本地库：{pkg.DisplayName} ({pkg.Id})（未启用）");
-                CatalogStatus = $"已加入本地库：{pkg.DisplayName}";
+                if (isUpdate)
+                {
+                    RetireSupersededPackages(supersededPackages, pkg);
+                    AppendLog($"已更新到目录版本：{pkg.DisplayName} ({pkg.Id})");
+                    CatalogStatus = $"已更新：{pkg.DisplayName}，请重新应用方案使其生效。";
+                }
+                else
+                {
+                    var enabled = TryEnableImportedPackages(pkg);
+                    AppendLog(enabled
+                        ? $"已从目录加入本地库并启用：{pkg.DisplayName} ({pkg.Id})"
+                        : $"已从目录加入本地库：{pkg.DisplayName} ({pkg.Id})（未启用）");
+                    CatalogStatus = $"已加入本地库：{pkg.DisplayName}";
+                }
+
                 ReloadMods();
                 RefreshCatalogInLibraryFlags();
                 UpdateLoaderVersionWarning();
@@ -2782,9 +2845,68 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Replacing a mod rewrites the library and every profile that references it, so it must not
+    /// race a deploy or a live game that has the old DLL loaded.
+    /// </summary>
+    bool CanReplaceInstalledMod(string modName)
+    {
+        if (IsSessionLocked || _taskProgress.Kind == ManagerTaskKind.Deploy)
+        {
+            _notify(LocalizationService.T("NotifyModUpdateBusy"));
+            AppendLog($"更新「{modName}」已取消：有正在进行的关键操作。");
+            return false;
+        }
+
+        if (_processProbe.IsGameRunning())
+        {
+            _notify(LocalizationService.T("NotifyModUpdateCloseGame"));
+            AppendLog($"更新「{modName}」已取消：游戏正在运行。");
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Points the profiles at the freshly imported package before dropping the old one, so a failure
+    /// mid-way leaves the player with a working mod rather than an empty slot.
+    /// </summary>
+    void RetireSupersededPackages(IReadOnlyList<ModPackage> superseded, ModPackage replacement)
+    {
+        foreach (var old in superseded)
+        {
+            if (string.Equals(old.Id, replacement.Id, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                _profiles.ReplacePackageInAllProfiles(old.Id, replacement.Id);
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"方案改指到新版本失败：{old.Id} → {replacement.Id}（{ex.Message}）");
+                continue;
+            }
+
+            try
+            {
+                _library.Delete(old.Id);
+                AppendLog($"已移除旧版本：{old.DisplayName} ({old.Id})");
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"旧版本已停用但未能删除：{old.Id}（{ex.Message}）");
+            }
+        }
+    }
+
     bool CanAddCatalogMod() =>
         !_addingCatalogMod &&
-        _catalogSelection.Any(i => !i.IsInLibrary);
+        _catalogSelection.Any(IsAddOrUpdateTarget);
+
+    static bool IsAddOrUpdateTarget(CatalogModItemViewModel item) =>
+        !item.IsInLibrary || item.HasUpdate;
 
     public void SetCatalogSelection(IReadOnlyList<CatalogModItemViewModel> items)
     {
@@ -2856,8 +2978,8 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var mod in root.Mods)
             {
                 LogInvalidCatalogCategory(mod);
-                var inLib = ModCatalogService.IsInLibrary(packages, mod);
-                CatalogMods.Add(new CatalogModItemViewModel(mod, inLib, _catalog.MirrorBaseUrl));
+                var state = ModCatalogService.GetEntryState(packages, mod);
+                CatalogMods.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
             }
 
             EnrichModsFromCatalog();
@@ -2911,7 +3033,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var packages = _library.List();
         foreach (var item in CatalogMods)
-            item.IsInLibrary = ModCatalogService.IsInLibrary(packages, item.Mod);
+            item.State = ModCatalogService.GetEntryState(packages, item.Mod);
     }
 
     [RelayCommand]

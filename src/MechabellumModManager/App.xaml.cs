@@ -133,6 +133,7 @@ public partial class App : Application
         MainWindow = window;
         window.Show();
         OfferCriticalOpRecovery(window, vm, criticalOp);
+        _ = vm.RunStartupModUpdateCheckAsync();
     }
 
     static void OfferCriticalOpRecovery(Window owner, MainViewModel vm, CriticalOpGuard criticalOp)

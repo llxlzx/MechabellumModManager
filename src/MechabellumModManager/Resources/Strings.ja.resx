@@ -348,6 +348,13 @@
   <data name="Tag_undo" xml:space="preserve"><value>取り消し</value></data>
   <data name="CatalogStatusInLibrary" xml:space="preserve"><value>ライブラリ内</value></data>
   <data name="CatalogStatusNotInstalled" xml:space="preserve"><value>未インストール</value></data>
+  <data name="CatalogStatusUpdateAvailable" xml:space="preserve"><value>更新あり</value></data>
+  <data name="NotifyModUpdateCloseGame" xml:space="preserve"><value>Mod を更新する前にゲームを終了してください。</value></data>
+  <data name="NotifyModUpdateBusy" xml:space="preserve"><value>重要な操作の実行中です。現在 Mod を更新できません。</value></data>
+  <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>{0} 個のインストール済み Mod を更新できます：{1}。「Mod 一覧」から更新してください。</value></data>
+  <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>起動時チェック：インストール済みの Mod はすべて最新です。</value></data>
+  <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>起動時の Mod 更新チェックに失敗しました：{0}</value></data>
+  <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>起動時に Mod の更新を確認</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>欠落</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>（欠落）{0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>拡張</value></data>

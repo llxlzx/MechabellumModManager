@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -6,6 +7,14 @@ using System.Text.Json.Serialization;
 using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
+
+/// <summary>Whether a catalog entry is missing locally, current, or superseded by a newer catalog copy.</summary>
+public enum CatalogEntryState
+{
+    NotInstalled,
+    UpToDate,
+    UpdateAvailable
+}
 
 public sealed class CatalogRoot
 {
@@ -318,27 +327,51 @@ public sealed class ModCatalogService
     /// True when a library package matches the catalog entry by catalog id or file hash.
     /// Filename-only matches are ignored so two mods shipping <c>Mod.dll</c> do not collide.
     /// </summary>
-    public static bool IsInLibrary(IEnumerable<ModPackage> packages, CatalogMod mod)
+    public static bool IsInLibrary(IEnumerable<ModPackage> packages, CatalogMod mod) =>
+        GetEntryState(packages, mod) != CatalogEntryState.NotInstalled;
+
+    /// <summary>
+    /// Whether the player has this catalog entry, and if so whether their copy is the one the
+    /// catalog currently serves.
+    /// </summary>
+    public static CatalogEntryState GetEntryState(IEnumerable<ModPackage> packages, CatalogMod mod)
+    {
+        ArgumentNullException.ThrowIfNull(packages);
+        ArgumentNullException.ThrowIfNull(mod);
+
+        var installed = FindInstalled(packages, mod);
+
+        if (installed.Count == 0)
+            return CatalogEntryState.NotInstalled;
+
+        // Byte equality is the only judgement that still holds when an author ships new content
+        // without bumping "version", so it outranks the metadata comparisons below.
+        if (!string.IsNullOrWhiteSpace(mod.Sha256))
+        {
+            if (installed.Any(pkg => HasMatchingFileHash(pkg, mod)))
+                return CatalogEntryState.UpToDate;
+            if (installed.Any(HasAnyRecordedHash))
+                return CatalogEntryState.UpdateAvailable;
+        }
+
+        return installed.Any(pkg => !IsOlderThanCatalog(pkg, mod))
+            ? CatalogEntryState.UpToDate
+            : CatalogEntryState.UpdateAvailable;
+    }
+
+    /// <summary>
+    /// The library packages that represent this catalog entry, matched by catalog id or file hash.
+    /// An update replaces exactly these.
+    /// </summary>
+    public static IReadOnlyList<ModPackage> FindInstalled(IEnumerable<ModPackage> packages, CatalogMod mod)
     {
         ArgumentNullException.ThrowIfNull(packages);
         ArgumentNullException.ThrowIfNull(mod);
 
         var catalogId = (mod.Id ?? "").Trim();
-        foreach (var pkg in packages)
-        {
-            if (!string.IsNullOrWhiteSpace(catalogId))
-            {
-                if (string.Equals(pkg.CatalogId, catalogId, StringComparison.OrdinalIgnoreCase))
-                    return true;
-                if (string.Equals(pkg.Id, catalogId, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-
-            if (HasMatchingFileHash(pkg, mod))
-                return true;
-        }
-
-        return false;
+        return packages
+            .Where(pkg => MatchesCatalogId(pkg, catalogId) || HasMatchingFileHash(pkg, mod))
+            .ToList();
     }
 
     /// <summary>Obsolete filename matcher kept for existing call-site migration.</summary>
@@ -346,6 +379,14 @@ public sealed class ModCatalogService
     {
         ArgumentNullException.ThrowIfNull(packages);
         return false;
+    }
+
+    static bool MatchesCatalogId(ModPackage pkg, string catalogId)
+    {
+        if (string.IsNullOrWhiteSpace(catalogId))
+            return false;
+        return string.Equals(pkg.CatalogId, catalogId, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(pkg.Id, catalogId, StringComparison.OrdinalIgnoreCase);
     }
 
     static bool HasMatchingFileHash(ModPackage pkg, CatalogMod mod)
@@ -362,6 +403,27 @@ public sealed class ModCatalogService
 
         return false;
     }
+
+    static bool HasAnyRecordedHash(ModPackage pkg) =>
+        pkg.Files.Any(file => !string.IsNullOrWhiteSpace(file.Sha256));
+
+    static bool IsOlderThanCatalog(ModPackage pkg, CatalogMod mod)
+    {
+        if (!string.IsNullOrWhiteSpace(mod.Version) &&
+            UpdateChecker.IsNewer(mod.Version!, pkg.Version ?? ""))
+            return true;
+
+        return TryParseCatalogDate(mod.UpdatedAt, out var catalogDate) &&
+            TryParseCatalogDate(pkg.CatalogUpdatedAt, out var localDate) &&
+            catalogDate > localDate;
+    }
+
+    static bool TryParseCatalogDate(string? raw, out DateTimeOffset value) =>
+        DateTimeOffset.TryParse(
+            (raw ?? "").Trim(),
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out value);
 
     public static ModPackageType ParsePackageType(string? type)
     {

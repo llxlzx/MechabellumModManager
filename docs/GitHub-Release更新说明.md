@@ -215,6 +215,22 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
   能显示 JSON  
 - 打开管理器 → **设置 → 检查更新**，应提示有新版本（若本机还是旧版）
 
+### 步骤 8 — 同步国内镜像（已搭镜像时必做）
+
+Release 发完之后跑：
+
+```powershell
+.\tools\sync-mirror.ps1 -Bucket <桶名-APPID> `
+    -ModsRepo "<MechabellumMods 本地克隆>" `
+    -ReleaseDir .\release\v1.1.7
+
+.\tools\verify-mirror.ps1 -BaseUrl https://<桶域名> -ExpectVersion 1.1.7
+```
+
+漏掉这一步的后果：配了镜像的玩家优先读镜像，他们的「检查更新」会一直停在旧版本。
+
+搭建步骤与成本护栏见 `docs/国内镜像搭建.md`。
+
 ---
 
 ## 4. latest.json 怎么写 (中文)
@@ -244,15 +260,25 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 ```powershell
 cd <path-to-your-MechabellumMods-clone>
 # 改 mods/、catalog.json、preview.png 等
+python scripts/stamp_hashes.py       # 动过任何 DLL 都必须重算 sha256
+python scripts/validate_catalog.py   # CI 跑的同一套校验
 git add -A
 git commit -m "说明"
 git push origin master
 ```
 
+`sha256` 不是可选项：管理器拒绝安装任何经国内镜像下载、但目录里没有哈希的 Mod，同时它也是判断玩家本地副本过期的最可靠依据。CI 会比对哈希与磁盘文件，不一致直接失败。
+
 确认：  
 https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json  
 
-玩家在管理器里点 **Mod 浏览 → 刷新目录** 即可，**不必**重发 Setup。
+已搭国内镜像的话，push 之后还要同步一次（不带 `-ReleaseDir`）：
+
+```powershell
+.\tools\sync-mirror.ps1 -Bucket <桶名-APPID> -ModsRepo "<MechabellumMods 本地克隆>"
+```
+
+玩家在管理器里点 **Mod 浏览 → 刷新目录** 即可，**不必**重发 Setup。目录里换了新版 Mod 的话，已装旧版的玩家会在状态列看到「有新版本」。
 
 作者提交方式见：`MechabellumMods` 仓库内的 `README.md`（英汉双语新手教程）。
 
@@ -419,6 +445,23 @@ Extracted zip should show `exe` + `Assets` at the top level (no extra junk folde
 - https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json — valid JSON  
 - Manager → **Settings → Check for updates** should offer the new version if the installed app is older
 
+### Step 8 — Sync the domestic mirror (required once a mirror exists)
+
+After publishing the Release:
+
+```powershell
+.\tools\sync-mirror.ps1 -Bucket <bucket-appid> `
+    -ModsRepo "<MechabellumMods clone>" `
+    -ReleaseDir .\release\v1.1.7
+
+.\tools\verify-mirror.ps1 -BaseUrl https://<bucket-domain> -ExpectVersion 1.1.7
+```
+
+Skip it and players who configured the mirror keep seeing the old version, because the
+mirror is tried before GitHub.
+
+Setup steps and cost guardrails: `docs/国内镜像搭建.md`.
+
 ---
 
 ## 4. latest.json (English)
@@ -448,15 +491,28 @@ The Release attachment **must** be named `latest.json`.
 ```powershell
 cd <path-to-your-MechabellumMods-clone>
 # edit mods/, catalog.json, previews, …
+python scripts/stamp_hashes.py       # re-stamp sha256 after touching any DLL
+python scripts/validate_catalog.py   # the same check CI runs
 git add -A
 git commit -m "Describe catalog change"
 git push origin master
 ```
 
+`sha256` is not optional: the manager refuses mirror-served downloads for entries without
+one, and uses it to detect a stale local copy. CI compares each hash against the file on
+disk and fails on mismatch.
+
 Confirm:  
 https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json  
 
-Players only need **Browse mods → Refresh catalog**. No new Setup required.
+If a domestic mirror is live, sync it too (no `-ReleaseDir` needed):
+
+```powershell
+.\tools\sync-mirror.ps1 -Bucket <bucket-appid> -ModsRepo "<MechabellumMods clone>"
+```
+
+Players only need **Browse mods → Refresh catalog**. No new Setup required. Anyone still on
+an older build of a mod sees "Update available" in the status column.
 
 Author flow: bilingual beginner guide in the MechabellumMods `README.md`.
 

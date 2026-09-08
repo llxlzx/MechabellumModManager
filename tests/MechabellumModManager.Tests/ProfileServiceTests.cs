@@ -32,6 +32,78 @@ public class ProfileServiceTests
     }
 
     [Fact]
+    public void ReplacePackageInAllProfiles_keeps_the_slot_the_old_package_occupied()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            var svc = new ProfileService(paths, new JsonStore());
+            svc.EnsureDefaults();
+            var other = svc.Create("second");
+
+            foreach (var id in new[] { "first", "grid-old", "last" })
+                svc.SetEnabled("default", id, true);
+            svc.SetEnabled(other.Id, "untouched", true);
+
+            svc.ReplacePackageInAllProfiles("grid-old", "grid-new");
+
+            svc.Get("default").EnabledPackageIds.Should().Equal("first", "grid-new", "last");
+            svc.Get(other.Id).EnabledPackageIds.Should().Equal("untouched");
+        }
+        finally
+        {
+            Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
+    public void ReplacePackageInAllProfiles_does_not_duplicate_when_both_ids_are_enabled()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            var svc = new ProfileService(paths, new JsonStore());
+            svc.EnsureDefaults();
+            svc.SetEnabled("default", "grid-old", true);
+            svc.SetEnabled("default", "grid-new", true);
+
+            svc.ReplacePackageInAllProfiles("grid-old", "grid-new");
+
+            svc.Get("default").EnabledPackageIds.Should().Equal("grid-new");
+        }
+        finally
+        {
+            Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
+    public void ReplacePackageInAllProfiles_leaves_profiles_alone_when_the_old_id_is_absent()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            var svc = new ProfileService(paths, new JsonStore());
+            svc.EnsureDefaults();
+            svc.SetEnabled("default", "keep", true);
+
+            svc.ReplacePackageInAllProfiles("grid-old", "grid-new");
+
+            svc.Get("default").EnabledPackageIds.Should().Equal("keep");
+        }
+        finally
+        {
+            Directory.Delete(data, true);
+        }
+    }
+
+    [Fact]
     public void EnsureDefaults_repairs_default_profile_name()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));

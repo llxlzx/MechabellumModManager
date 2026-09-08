@@ -68,6 +68,13 @@ public sealed partial class ModItemViewModel : ObservableObject
     [ObservableProperty]
     private BitmapImage? _previewImage;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
+    private bool _hasUpdate;
+
+    public string UpdateStatusText =>
+        HasUpdate ? LocalizationService.T("CatalogStatusUpdateAvailable") : "";
+
     public string TypeLabel => IsMissing
         ? LocalizationService.T("PackageMissing")
         : Package.Type switch
@@ -112,6 +119,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(TypeLabel));
         OnPropertyChanged(nameof(HighRiskLabel));
         OnPropertyChanged(nameof(VersionWarningHint));
+        OnPropertyChanged(nameof(UpdateStatusText));
     }
 
     public void RefreshCatalogFieldsFromPackage()
@@ -125,11 +133,15 @@ public sealed partial class ModItemViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(catalog);
         if (!string.IsNullOrWhiteSpace(catalog.Author))
             Package.Author = catalog.Author;
-        if (!string.IsNullOrWhiteSpace(catalog.Version))
+        // Version and CatalogUpdatedAt describe the bytes on disk, not the catalog's latest.
+        // Overwriting them would show a player running an old DLL the new version number, which
+        // is exactly the "everyone thinks they are current" problem update detection has to solve.
+        // Empty values are still filled in, since a package that never recorded one has nothing to lose.
+        if (string.IsNullOrWhiteSpace(Package.Version) && !string.IsNullOrWhiteSpace(catalog.Version))
             Package.Version = catalog.Version;
         if (!string.IsNullOrWhiteSpace(catalog.Summary))
             Package.Summary = catalog.Summary;
-        if (!string.IsNullOrWhiteSpace(catalog.UpdatedAt))
+        if (string.IsNullOrWhiteSpace(Package.CatalogUpdatedAt) && !string.IsNullOrWhiteSpace(catalog.UpdatedAt))
             Package.CatalogUpdatedAt = catalog.UpdatedAt;
         if (!string.IsNullOrWhiteSpace(catalog.Preview))
             Package.Preview = catalog.Preview;
@@ -142,6 +154,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         {
             _owner.LogTaxonomyWarning($"Mod '{Package.Id}': invalid catalog category '{catalog.Category}', treating as Uncategorized.");
         }
+        HasUpdate = ModCatalogService.GetEntryState([Package], catalog) == CatalogEntryState.UpdateAvailable;
         RefreshCatalogFieldsFromPackage();
     }
 

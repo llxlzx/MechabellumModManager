@@ -169,6 +169,32 @@ public sealed class ProfileService
         SaveProfile(profile);
     }
 
+    /// <summary>
+    /// Repoints every profile from one package to another, keeping its position in the enabled list.
+    /// Updating a mod produces a new content-addressed id, so without this the profiles that had the
+    /// old version enabled would silently lose the mod.
+    /// </summary>
+    public void ReplacePackageInAllProfiles(string oldPackageId, string newPackageId)
+    {
+        if (string.IsNullOrWhiteSpace(oldPackageId) || string.IsNullOrWhiteSpace(newPackageId))
+            return;
+        if (string.Equals(oldPackageId, newPackageId, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        foreach (var profile in List())
+        {
+            var ids = profile.EnabledPackageIds;
+            var at = ids.FindIndex(x => string.Equals(x, oldPackageId, StringComparison.OrdinalIgnoreCase));
+            if (at < 0)
+                continue;
+
+            ids.RemoveAll(x => string.Equals(x, oldPackageId, StringComparison.OrdinalIgnoreCase));
+            if (!ids.Any(x => string.Equals(x, newPackageId, StringComparison.OrdinalIgnoreCase)))
+                ids.Insert(Math.Min(at, ids.Count), newPackageId);
+            SaveProfile(profile);
+        }
+    }
+
     public void RemovePackageFromAllProfiles(string packageId)
     {
         if (string.IsNullOrWhiteSpace(packageId))

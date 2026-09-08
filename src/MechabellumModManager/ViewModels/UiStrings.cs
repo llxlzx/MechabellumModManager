@@ -83,6 +83,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string GamePath => T("GamePath");
     public string LaunchMode => T("LaunchMode");
     public string PortableDataRoot => T("PortableDataRoot");
+    public string CheckModUpdatesOnStartup => T("CheckModUpdatesOnStartup");
     public string MirrorBaseUrl => T("MirrorBaseUrl");
     public string MirrorBaseUrlHint => T("MirrorBaseUrlHint");
     public string Profiles => T("Profiles");
