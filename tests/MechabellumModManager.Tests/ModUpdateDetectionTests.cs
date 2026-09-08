@@ -196,11 +196,79 @@ public class ModUpdateDetectionTests
 
         item.ApplyCatalogEnrichment(Catalog("show-grid", version: "1.2.0"));
         item.HasUpdate.Should().BeTrue();
-        item.UpdateStatusText.Should().NotBeEmpty();
+        item.LatestVersion.Should().Be("1.2.0");
+        item.UpdateStatusText.Should().Be("1.0.0 → 1.2.0");
 
         item.ApplyCatalogEnrichment(Catalog("show-grid", version: "1.0.0"));
         item.HasUpdate.Should().BeFalse();
         item.UpdateStatusText.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Update_status_text_covers_the_three_display_states()
+    {
+        using var harness = new EnrichmentHarness();
+
+        var pkg = new ModPackage
+        {
+            Id = "grid-aaaaaaaa",
+            CatalogId = "show-grid",
+            DisplayName = "Show Grid",
+            Type = ModPackageType.MelonMod,
+            Version = "1.0.0"
+        };
+        var item = new ModItemViewModel(harness.Owner, pkg, isEnabled: false);
+
+        item.UpdateStatusText.Should().BeEmpty();
+
+        item.ApplyCatalogEnrichment(Catalog("show-grid", version: "1.2.0"));
+        item.UpdateStatusText.Should().Be("1.0.0 → 1.2.0");
+
+        // Staleness decided by hash alone leaves LatestVersion empty; fall back to the bare label.
+        pkg.Version = "1.0.0";
+        pkg.Files.Clear();
+        pkg.Files.Add(new DeployableFile { RelativePathInPackage = "Mod.dll", Sha256 = "aa" });
+        item.ApplyCatalogEnrichment(new CatalogMod
+        {
+            Id = "show-grid",
+            Name = "Show Grid",
+            File = "mods/show-grid/Mod.dll",
+            Sha256 = "bb"
+        });
+        item.HasUpdate.Should().BeTrue();
+        item.LatestVersion.Should().BeNull();
+        item.UpdateStatusText.Should().Be(LocalizationService.T("CatalogStatusUpdateAvailable"));
+    }
+
+    [Fact]
+    public void Matching_ignores_filename_so_two_mods_shipping_Mod_dll_do_not_collide()
+    {
+        var installed = Installed("alpha", version: "1.0.0", fileHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        var alpha = Catalog("alpha", version: "1.0.0", sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        var beta = Catalog("beta", version: "9.9.9", sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+
+        // Both catalog entries ship the same file name; only catalog id / hash may decide.
+        alpha.File.Should().EndWith("Mod.dll");
+        beta.File.Should().EndWith("Mod.dll");
+
+        ModCatalogService.Matches(installed, alpha).Should().BeTrue();
+        ModCatalogService.Matches(installed, beta).Should().BeFalse();
+        ModCatalogService.GetEntryState([installed], alpha).Should().Be(CatalogEntryState.UpToDate);
+        ModCatalogService.GetEntryState([installed], beta).Should().Be(CatalogEntryState.NotInstalled);
+    }
+
+    [Fact]
+    public void Enrichment_of_a_missing_row_is_skipped_by_the_library_pass()
+    {
+        using var harness = new EnrichmentHarness();
+        var missing = ModItemViewModel.CreateMissing(harness.Owner, "gone-aaaaaaaa");
+
+        // Defensive: even a direct call must not invent a "latest" for a package that is not on disk.
+        // The production path skips IsMissing before FindCatalogMatch; this pins the row stays inert.
+        missing.IsMissing.Should().BeTrue();
+        missing.HasUpdate.Should().BeFalse();
+        missing.LatestVersion.Should().BeNull();
+        missing.UpdateStatusText.Should().BeEmpty();
     }
 
     static ModPackage Installed(

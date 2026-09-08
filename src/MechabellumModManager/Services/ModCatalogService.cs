@@ -709,20 +709,23 @@ public sealed class ModCatalogService
         ArgumentNullException.ThrowIfNull(packages);
         ArgumentNullException.ThrowIfNull(mod);
 
-        var catalogId = (mod.Id ?? "").Trim();
-        return packages
-            .Where(pkg => MatchesCatalogId(pkg, catalogId) || HasMatchingFileHash(pkg, mod))
-            .ToList();
+        return packages.Where(pkg => Matches(pkg, mod)).ToList();
     }
 
-    /// <summary>Obsolete filename matcher kept for existing call-site migration.</summary>
-    public static bool IsInLibraryByFileName(IEnumerable<ModPackage> packages, string? catalogFile)
+    /// <summary>
+    /// Whether this library package is this catalog entry. The single judgement every caller
+    /// must use: matching on filename instead would pair a package with whichever unrelated
+    /// entry also ships <c>Mod.dll</c>, and an update would then overwrite the wrong mod.
+    /// </summary>
+    public static bool Matches(ModPackage pkg, CatalogMod mod)
     {
-        ArgumentNullException.ThrowIfNull(packages);
-        return false;
+        ArgumentNullException.ThrowIfNull(pkg);
+        ArgumentNullException.ThrowIfNull(mod);
+
+        return MatchesCatalogId(pkg, (mod.Id ?? "").Trim()) || HasMatchingFileHash(pkg, mod);
     }
 
-    static bool MatchesCatalogId(ModPackage pkg, string catalogId)
+        static bool MatchesCatalogId(ModPackage pkg, string catalogId)
     {
         if (string.IsNullOrWhiteSpace(catalogId))
             return false;

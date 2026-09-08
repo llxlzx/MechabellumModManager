@@ -118,6 +118,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string LabelName => T("LabelName");
     public string LabelSummary => T("LabelSummary");
     public string ActionDelete => T("ActionDelete");
+    public string ActionUpdate => T("ActionUpdate");
     public string ActionCollapseDetail => T("ActionCollapseDetail");
     public string TipToggleHighRisk => T("TipToggleHighRisk");
     public string TipDeleteFromLibrary => T("TipDeleteFromLibrary");

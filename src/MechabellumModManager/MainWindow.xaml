@@ -258,7 +258,20 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Button.Style>
-                                    <TextBlock Text="{Binding Ui.ModLibrary}" VerticalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Ui.ModLibrary}" VerticalAlignment="Center" />
+                                        <Border Margin="6,0,0,0"
+                                                Padding="6,1"
+                                                CornerRadius="8"
+                                                Background="{StaticResource AccentAmberBrush}"
+                                                Visibility="{Binding HasOutdatedMods, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding OutdatedCount}"
+                                                       Foreground="#FF1A1408"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+                                    </StackPanel>
                                 </Button>
                                 <Button Command="{Binding ShowCatalogPageCommand}"
                                         Margin="0,0,8,4"
@@ -1059,12 +1072,25 @@
                                                     Binding="{Binding Version}"
                                                     IsReadOnly="True"
                                                     Width="80" />
-                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}" Width="110">
+                                <DataGridTemplateColumn Header="{Binding DataContext.Ui.ColumnStatus, RelativeSource={RelativeSource AncestorType=Window}}" Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding UpdateStatusText}"
                                                        Foreground="{StaticResource WarnBrush}"
                                                        VerticalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="" Width="64">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding DataContext.Ui.ActionUpdate, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Command="{Binding DataContext.UpdateModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="10,6"
+                                                    MinHeight="30"
+                                                    FontSize="12"
+                                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVis}}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
