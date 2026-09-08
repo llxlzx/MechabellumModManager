@@ -670,8 +670,38 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var result = _branchSwitch.TryRollbackEnableSession(GamePath);
-            if (!result.Success && !string.IsNullOrWhiteSpace(result.Message))
-                AppendLog(string.Format(LocalizationService.T("NotifyEnableDualRollbackFailed"), result.Message));
+            if (!result.Success)
+            {
+                if (!string.IsNullOrWhiteSpace(result.Message))
+                    AppendLog(string.Format(LocalizationService.T("NotifyEnableDualRollbackFailed"), result.Message));
+
+                var blocked = _branchSwitch.LoadConfig();
+                if (blocked.SessionOwnedOfficialStore || blocked.SessionOwnedBetaStore)
+                {
+                    // Steam/game still running: keep session ownership; do not claim full rollback.
+                    _suppressBranchSwitchSave = true;
+                    try
+                    {
+                        BranchSwitchEnabled = blocked.Enabled;
+                        BranchWizardStep = blocked.WizardStep;
+                        IsAwaitingSteamSettle = false;
+                    }
+                    finally
+                    {
+                        _suppressBranchSwitchSave = false;
+                    }
+
+                    IsRecoveryGateActive = true;
+                    var tip = LocalizationService.T("NotifyEnableDualRollbackSteamBusy");
+                    AppendLog(tip);
+                    if (notify)
+                        _notify(tip);
+                    NotifyBranchGates();
+                    RefreshBranchStatusText();
+                    RefreshStatus();
+                    return;
+                }
+            }
 
             var cfg = _branchSwitch.LoadConfig();
             if (!string.IsNullOrWhiteSpace(cfg.SteamLinkPath)

@@ -425,6 +425,7 @@
   <data name="LogEnableDualRolledBack" xml:space="preserve"><value>已取消启用双服并回滚为单目录。</value></data>
   <data name="LogEnableDualPendingEmergencySteamBusy" xml:space="preserve"><value>启用双服未完成且 Steam/游戏仍在运行，无法安全回滚磁盘；已保留会话标记。请退出 Steam 后点「还原官方目录」。</value></data>
   <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>启用双服回滚未完全成功：{0}。请使用「还原官方目录」。</value></data>
+  <data name="NotifyEnableDualRollbackSteamBusy" xml:space="preserve"><value>Steam 或游戏仍在运行，无法安全回滚磁盘。会话归属已保留，请退出 Steam 后使用「急救恢复到单目录」。</value></data>
   <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>双服已启用。若要重建：先「还原官方目录」，再「启用双服」。</value></data>
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>若 Mod 要生效，启动后应出现 MelonLoader 黑色控制台窗口（不是 PowerShell）。若没有该窗口，请检查游戏目录下是否有 version.dll / MelonLoader，并把 MelonLoader\Latest.log 发给维护者。</value></data>
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>已请求启动，正在确认游戏是否起来…</value></data>

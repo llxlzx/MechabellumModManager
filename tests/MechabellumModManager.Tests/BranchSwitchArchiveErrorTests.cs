@@ -16,6 +16,17 @@ public class BranchSwitchArchiveErrorTests
     }
 
     [Fact]
+    public void MapArchiveException_volume_mismatch_is_chinese_guidance()
+    {
+        var mapped = BranchSwitchService.MapArchiveException(
+            new InvalidOperationException(
+                "Junction link and target must be on the same volume ('C:\\a' vs 'D:\\b')."));
+
+        mapped.Should().Contain("NTFS");
+        mapped.Should().Contain("同一");
+    }
+
+    [Fact]
     public void MoveDirectoryWithRetry_moves_when_unlocked()
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-move-" + Guid.NewGuid().ToString("N"));

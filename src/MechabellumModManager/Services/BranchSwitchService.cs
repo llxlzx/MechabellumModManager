@@ -83,6 +83,7 @@ public sealed class BranchSwitchService
     const string PhaseUnlinking = "unlinking";
     const string PhaseUnlinked = "unlinked";
     const string PhaseArchiving = "archiving";
+    public const string PhasePartialMove = "partial-move";
 
     static readonly JsonSerializerOptions JournalJsonOptions = new()
     {
@@ -598,6 +599,9 @@ public sealed class BranchSwitchService
         dest = Path.GetFullPath(dest);
         link = Path.GetFullPath(link);
 
+        if (!TryPreflightArchiveMove(link, dest, out var preflightError))
+            return BranchOperationResult.Fail(preflightError);
+
         // This move relocates the player's only install, so record where it came from before
         // touching the disk: a crash mid-move otherwise leaves no way to tell what happened.
         var archiveSource = _junctions.IsJunction(link)
@@ -677,6 +681,19 @@ public sealed class BranchSwitchService
             SaveConfig(cfg);
             ClearJournal();
             return BranchOperationResult.Ok();
+        }
+        catch (PartialDirectoryMoveException ex)
+        {
+            SaveJournal(new BranchSwitchJournal
+            {
+                Phase = PhasePartialMove,
+                PreviousBranch = branch,
+                TargetBranch = branch,
+                SteamLinkPath = link,
+                PreviousStorePath = ex.SourcePath,
+                TargetStorePath = ex.DestPath
+            });
+            return BranchOperationResult.Fail(MapArchiveException(ex));
         }
         catch (Exception ex)
         {
@@ -950,9 +967,9 @@ public sealed class BranchSwitchService
 
         if (_probe.IsGameOrSteamRunning())
         {
-            ClearWizardFlags(cfg);
-            SaveConfig(cfg);
-            return BranchOperationResult.Fail("Game or Steam is running.");
+            // Keep SessionOwned* / wizard flags so EmergencyRecover can still clean session stores.
+            // Clearing them here was the bug that left mid-enable disks with no ownership hints.
+            return BranchOperationResult.Fail(BranchOpMessages.GameOrSteamRunning);
         }
 
         var link = ResolveOrphanLinkPath(preferredLinkPath, cfg);
@@ -1653,17 +1670,15 @@ public sealed class BranchSwitchService
             catch (Exception delEx) when (delEx is UnauthorizedAccessException or IOException)
             {
                 // Leave dest intact; do not roll back — source may still be partially locked.
-                throw new IOException(
-                    "已复制到目标目录，但删除原目录失败（仍有文件被占用）。请手动确认后重试或重启后再试。\n"
-                    + "原始信息：" + delEx.Message,
-                    delEx);
+                throw new PartialDirectoryMoveException(source, dest, delEx);
             }
 
             if (Directory.Exists(source))
                 throw new IOException("Copy-delete move left the source directory in place.");
             return;
         }
-        catch (IOException ex) when (ex.Message.StartsWith("已复制到目标目录", StringComparison.Ordinal))
+        catch (IOException ex) when (ex is PartialDirectoryMoveException
+                                      || ex.Message.StartsWith("已复制到目标目录", StringComparison.Ordinal))
         {
             throw;
         }
@@ -1756,7 +1771,23 @@ public sealed class BranchSwitchService
 
     internal static string MapArchiveException(Exception ex)
     {
+        if (ex is PartialDirectoryMoveException partial)
+        {
+            return "游戏目录复制后删除失败，源与目标可能同时存在（"
+                   + partial.SourcePath + " → " + partial.DestPath
+                   + "）。请用「急救恢复到单目录」或手动删掉多余副本后再试。\n"
+                   + "原始信息：" + (partial.InnerException?.Message ?? partial.Message);
+        }
+
         var msg = ex.Message ?? "";
+        if (msg.Contains("same volume", StringComparison.OrdinalIgnoreCase)
+            || msg.Contains("NTFS", StringComparison.OrdinalIgnoreCase)
+            || msg.Contains("同一卷", StringComparison.OrdinalIgnoreCase))
+        {
+            return "正式服与测试服目录必须在同一 NTFS 卷上（联接/junction 不能跨盘）。"
+                   + "请把游戏装在同一 Steam 库目录后再启用双服。\n原始信息：" + msg;
+        }
+
         if (ex is UnauthorizedAccessException
             || msg.Contains("denied", StringComparison.OrdinalIgnoreCase)
             || msg.Contains("拒绝访问", StringComparison.OrdinalIgnoreCase))
@@ -1769,7 +1800,63 @@ public sealed class BranchSwitchService
                    + "原始信息：" + msg;
         }
 
+        if (msg.Contains("Failed to create directory junction", StringComparison.OrdinalIgnoreCase)
+            || msg.Contains("mklink", StringComparison.OrdinalIgnoreCase))
+        {
+            return "创建目录联接失败（可能缺少权限或路径不可写）。请以管理员运行管理器，"
+                   + "确认 Steam 库在 NTFS 本地盘上，再重试启用双服。\n原始信息：" + msg;
+        }
+
         return msg;
+    }
+
+    /// <summary>
+    /// Before Archive A relocates the only install: writable probe + same-volume check for junction dest.
+    /// </summary>
+    internal static bool TryPreflightArchiveMove(string linkOrSource, string dest, out string error)
+    {
+        error = "";
+        try
+        {
+            linkOrSource = Path.GetFullPath(linkOrSource);
+            dest = Path.GetFullPath(dest);
+            var sourceRoot = Path.GetPathRoot(linkOrSource);
+            var destRoot = Path.GetPathRoot(dest);
+            if (!string.Equals(sourceRoot, destRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                error = MapArchiveException(new InvalidOperationException(
+                    $"Junction link and target must be on the same volume ('{linkOrSource}' vs '{dest}')."));
+                return false;
+            }
+
+            if (Directory.Exists(linkOrSource) && !TryProbeDirectoryWritable(linkOrSource, out var probeError))
+            {
+                error = probeError;
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = MapArchiveException(ex);
+            return false;
+        }
+    }
+
+    public bool HasPartialMoveResidue()
+    {
+        try
+        {
+            if (!File.Exists(_paths.BranchSwitchJournalPath))
+                return false;
+            var journal = _store.LoadOrDefault(_paths.BranchSwitchJournalPath, () => new BranchSwitchJournal());
+            return string.Equals(journal.Phase, PhasePartialMove, StringComparison.Ordinal);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     static bool PathExists(string path)

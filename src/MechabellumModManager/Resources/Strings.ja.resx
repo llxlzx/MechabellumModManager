@@ -596,6 +596,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogLaunchExeAfterAssemblyGen" xml:space="preserve"><value>アセンブリを生成した直後のため、今回は exe を直接起動します（起動設定は変えません）。</value></data>
   <data name="NotifyLoaderNotInjectedUseExeOnly" xml:space="preserve"><value>今回の起動では Loader が注入されませんでした。起動方式を「exe のみ」に変えて「適用して起動」し、Melon の黒コンソールを確認してください。</value></data>
   <data name="NotifyEnableDualRollbackFailed" xml:space="preserve"><value>デュアルフォルダー有効化のロールバックが完全には成功しませんでした: {0}。「公式フォルダに戻す」を使用してください。</value></data>
+  <data name="NotifyEnableDualRollbackSteamBusy" xml:space="preserve"><value>Steam またはゲームが実行中のため、ディスクのロールバックは安全ではありません。セッション所有は保持されています。Steam を終了してから「単一フォルダへ緊急復旧」を使ってください。</value></data>
   <data name="NotifyEnableDualAlreadyOn" xml:space="preserve"><value>デュアルフォルダーは既に有効です。作り直す場合は、先に「公式フォルダに戻す」を実行してから再度有効化してください。</value></data>
   <data name="LogSteamForceCloseClient" xml:space="preserve"><value>steam://exit が効きませんでした（アカウント選択画面でよく起きます）。Steam クライアントのプロセスを強制終了します…</value></data>
   <data name="NotifyOpenSteamManuallyForWizardDownload" xml:space="preserve"><value>もう一方のブランチをダウンロードするには、ご自身で Steam を開いてください。管理ツールは Steam を自動起動しません。</value></data>
