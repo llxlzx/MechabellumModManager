@@ -28,3 +28,4 @@ auto-speed
 damage-rank
 sales-calculation
 replay-tool
+friend-overlay
