@@ -566,6 +566,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="MirrorBaseUrl" xml:space="preserve"><value>国内ミラー基点</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>国内 COS が初期値。空欄なら GitHub のみ。リポジトリと同型。</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
+  <data name="LogCatalogSourceStale" xml:space="preserve"><value>{0} のカタログが古いため、より新しい {1} を使用しました。</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>安全でないリンクをブロックしました（https のみ許可）: {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>{0} 件を読み込み（オフラインキャッシュ、更新: {1}）</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>カタログ取得失敗: {0}。</value></data>

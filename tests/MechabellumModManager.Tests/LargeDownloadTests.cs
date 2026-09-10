@@ -488,7 +488,11 @@ public sealed class LargeDownloadTests
         using var server = new LoopbackHttpServer(_ => LoopbackHttpServer.Gzipped(raw));
 
         using var http = ModCatalogService.CreateDefaultClient();
-        var svc = new ModCatalogService(http, server.BaseUri.ToString().TrimEnd('/'));
+        var svc = new ModCatalogService(http, server.BaseUri.ToString().TrimEnd('/'))
+        {
+            // Both candidates are fetched now, so the origin has to stay on the loopback server.
+            CatalogOriginUrl = new Uri(server.BaseUri, "catalog.json")
+        };
 
         var root = await svc.FetchCatalogAsync();
 

@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace MechabellumModManager.Services;
 
@@ -36,16 +38,26 @@ public sealed record UpdateCheckResult(
     string? Source = null);
 
 /// <summary>
-/// Checks GitHub Releases for a newer Setup via latest.json (with API fallback).
+/// Checks for a newer Setup via latest.json (with API fallback).
 /// Does not download or install — UI opens the URL for the user.
 /// </summary>
 public sealed class UpdateChecker
 {
     public const string Owner = "llxlzx";
     public const string Repo = "MechabellumModManager";
+    public const string Branch = "master";
 
     public static readonly Uri LatestJsonUri = new(
         $"https://github.com/{Owner}/{Repo}/releases/latest/download/latest.json");
+
+    /// <summary>
+    /// Repo-tree pointer to the current release manifest, so a version is discoverable from the repo
+    /// alone — no Release asset listing and no mirror sync required to find it. It only carries the
+    /// announcement: the Setup still has to be reachable over https, which is why the release process
+    /// pushes this file last, once the download it names is live.
+    /// </summary>
+    public static readonly Uri RawLatestJsonUri = new(
+        $"https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/release/latest.json");
 
     public static readonly Uri LatestApiUri = new(
         $"https://api.github.com/repos/{Owner}/{Repo}/releases/latest");
@@ -116,11 +128,16 @@ public sealed class UpdateChecker
             }
 
             var remote = NormalizeVersion(manifest.Version) ?? manifest.Version.Trim();
+
+            // A manifest is remote input and its URL is handed to the shell. Sanitized once, before
+            // the branch, so no result carries an unchecked URL: the generic external URL gate also
+            // allows mailto:, which has no business being an installer link.
+            var setup = ExternalUrlPolicy.IsHttpsUrl(manifest.SetupUrl)
+                ? manifest.SetupUrl!.Trim()
+                : $"https://github.com/{Owner}/{Repo}/releases/latest";
+
             if (IsNewer(remote, local))
             {
-                var setup = string.IsNullOrWhiteSpace(manifest.SetupUrl)
-                    ? $"https://github.com/{Owner}/{Repo}/releases/latest"
-                    : manifest.SetupUrl.Trim();
                 var notes = string.IsNullOrWhiteSpace(manifest.Notes) ? "（无更新说明）" : manifest.Notes.Trim();
                 return new UpdateCheckResult(
                     UpdateCheckKind.UpdateAvailable, local, remote, notes, setup,
@@ -129,7 +146,7 @@ public sealed class UpdateChecker
             }
 
             return new UpdateCheckResult(
-                UpdateCheckKind.UpToDate, local, remote, manifest.Notes, manifest.SetupUrl,
+                UpdateCheckKind.UpToDate, local, remote, manifest.Notes, setup,
                 $"已是最新版本（{local}）。",
                 source);
         }
@@ -141,19 +158,29 @@ public sealed class UpdateChecker
         }
     }
 
-    public IReadOnlyList<Uri> BuildLatestJsonCandidates() =>
-        RemoteFetch.BuildCandidates(MirrorBaseUrl, "MechabellumModManager/latest.json", LatestJsonUri);
+    public IReadOnlyList<Uri> BuildLatestJsonCandidates()
+    {
+        var candidates = new List<Uri>(3);
+        var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumModManager/latest.json");
+        if (mirror is not null)
+            candidates.Add(mirror);
+        candidates.Add(LatestJsonUri);
+        candidates.Add(RawLatestJsonUri);
+        return candidates;
+    }
 
+    /// <summary>
+    /// Reads every manifest source in parallel and keeps the one announcing the newest release. Taking
+    /// the first success would let a mirror that has not synced, or a Release that is not published
+    /// yet, decide what the player is told.
+    /// </summary>
     async Task<(UpdateManifest? Manifest, string? Source)> TryFetchLatestJsonAsync(CancellationToken ct)
     {
+        IReadOnlyList<RemoteFetchResult> fetched;
         try
         {
-            using var fetched = await RemoteFetch.GetAsync(_http, BuildLatestJsonCandidates(), ct)
+            fetched = await RemoteFetch.GetAllAsync(_http, BuildLatestJsonCandidates(), ct)
                 .ConfigureAwait(false);
-            await using var stream = await fetched.Response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            var manifest = await JsonSerializer.DeserializeAsync<UpdateManifest>(stream, JsonOptions, ct)
-                .ConfigureAwait(false);
-            return (manifest, RemoteFetch.ClassifySource(fetched.Used));
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -163,6 +190,103 @@ public sealed class UpdateChecker
         {
             return (null, null);
         }
+
+        var copies = new List<(Uri Used, UpdateManifest Manifest)>(fetched.Count);
+        try
+        {
+            foreach (var result in fetched)
+            {
+                try
+                {
+                    await using var stream = await result.Response.Content.ReadAsStreamAsync(ct)
+                        .ConfigureAwait(false);
+                    var manifest = await JsonSerializer
+                        .DeserializeAsync<UpdateManifest>(stream, JsonOptions, ct)
+                        .ConfigureAwait(false);
+                    // An unparsable version has to be dropped, not merely skipped by IsNewer: that
+                    // returns false in both directions, which would let the publishedAt tie-break
+                    // hand the decision to a manifest nobody can compare.
+                    if (manifest is not null && IsComparableVersion(manifest.Version))
+                        copies.Add((result.Used, manifest));
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch
+                {
+                    // An unparsable copy loses to whichever source answered with a usable manifest.
+                }
+            }
+        }
+        finally
+        {
+            foreach (var result in fetched)
+                result.Dispose();
+        }
+
+        if (copies.Count == 0)
+            return (null, null);
+
+        var best = 0;
+        for (var i = 1; i < copies.Count; i++)
+        {
+            if (AnnouncesNewerThan(copies[i].Manifest, copies[best].Manifest))
+                best = i;
+        }
+
+        return (copies[best].Manifest, RemoteFetch.ClassifySource(copies[best].Used));
+    }
+
+    /// <summary>
+    /// Whether <paramref name="candidate"/> announces a newer release than <paramref name="incumbent"/>.
+    /// Equal versions keep the incumbent so the earlier candidate (mirror, then Release, then repo
+    /// pointer) wins a tie and domestic players keep the mirrored download. A publishedAt stamp only
+    /// breaks a tie when both sides carry one, so a manifest that omits the field cannot lose by it.
+    /// </summary>
+    static bool AnnouncesNewerThan(UpdateManifest candidate, UpdateManifest incumbent)
+    {
+        if (IsNewer(candidate.Version, incumbent.Version))
+            return true;
+        if (IsNewer(incumbent.Version, candidate.Version))
+            return false;
+
+        return ParseStamp(candidate.PublishedAt) is { } candidateStamp
+               && ParseStamp(incumbent.PublishedAt) is { } incumbentStamp
+               && candidateStamp > incumbentStamp;
+    }
+
+    static DateTimeOffset? ParseStamp(string? raw) =>
+        DateTimeOffset.TryParse(
+            raw,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out var parsed)
+            ? parsed
+            : null;
+
+    static readonly Regex DottedNumber = new(
+        @"^\d+(\.\d+){0,3}$", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// True when <see cref="IsNewer"/> can meaningfully order this version against another.
+    /// Deliberately checks the raw string rather than the normalized one: <see cref="NormalizeVersion"/>
+    /// keeps only digits and dots, so "nightly9999" would arrive as a perfectly orderable 9999 and beat
+    /// every real release, and "1.2.0-rc.1" as 1.2.0.1 would beat stable 1.2.0.
+    /// </summary>
+    public static bool IsComparableVersion(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+
+        var value = raw.Trim();
+        if (value.StartsWith("v", StringComparison.OrdinalIgnoreCase))
+            value = value[1..];
+        var plus = value.IndexOf('+');
+        if (plus >= 0)
+            value = value[..plus];
+
+        return DottedNumber.IsMatch(value) && Version.TryParse(Pad(value), out _);
     }
 
     async Task<UpdateManifest?> TryFetchFromApiAsync(CancellationToken ct)

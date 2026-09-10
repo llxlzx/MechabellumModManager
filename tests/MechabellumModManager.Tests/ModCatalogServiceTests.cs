@@ -218,8 +218,9 @@ public class ModCatalogServiceTests
 
             root.Mods.Should().HaveCount(2);
             svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
+            svc.LastStaleSource.Should().BeNull();
             File.Exists(CatalogCache.GetPath(dataRoot)).Should().BeTrue();
-            handler.Requests.Should().ContainSingle();
+            handler.Requests.Should().HaveCount(2, "both candidates are fetched so a stale mirror cannot hide updates");
         }
         finally
         {
@@ -244,6 +245,170 @@ public class ModCatalogServiceTests
         root.Mods.Should().HaveCount(2);
         svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
         handler.Requests.Should().HaveCount(2);
+    }
+
+    static ModCatalogService CatalogServiceServing(string mirrorJson, string githubJson, out ScriptedHttpHandler handler, out HttpClient http)
+    {
+        handler = new ScriptedHttpHandler(req =>
+            req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal)
+                ? ScriptedHttpHandler.Json(HttpStatusCode.OK, mirrorJson)
+                : ScriptedHttpHandler.Json(HttpStatusCode.OK, githubJson));
+        http = new HttpClient(handler);
+        return new ModCatalogService(http, "https://mirror.example/m");
+    }
+
+    static string CatalogWith(string? rootUpdatedAt, string modUpdatedAt, string modVersion)
+    {
+        var rootLine = rootUpdatedAt is null ? "" : $"\"updatedAt\": \"{rootUpdatedAt}\",";
+        return $$"""
+            {
+              {{rootLine}}
+              "mods": [
+                {
+                  "id": "cam",
+                  "name": "Cam HUD",
+                  "version": "{{modVersion}}",
+                  "updatedAt": "{{modUpdatedAt}}",
+                  "file": "mods/cam/Cam.dll"
+                }
+              ]
+            }
+            """;
+    }
+
+    /// <summary>
+    /// The mirror answering 200 with a stale catalog is the failure that used to make players open
+    /// the catalog panel by hand; the newer origin copy has to win.
+    /// </summary>
+    [Fact]
+    public async Task FetchCatalogAsync_takes_the_github_copy_when_the_mirror_is_behind()
+    {
+        var svc = CatalogServiceServing(
+            CatalogWith("2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", "1.0.0"),
+            CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
+            out _,
+            out var http);
+
+        using (http)
+        {
+            var root = await svc.FetchCatalogAsync();
+
+            root.Mods[0].Version.Should().Be("1.3.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+            svc.LastStaleSource.Should().Be(RemoteFetch.MirrorSource);
+        }
+    }
+
+    [Fact]
+    public async Task FetchCatalogAsync_keeps_the_mirror_copy_when_both_are_equally_fresh()
+    {
+        var svc = CatalogServiceServing(
+            CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
+            CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
+            out _,
+            out var http);
+
+        using (http)
+        {
+            await svc.FetchCatalogAsync();
+
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
+            svc.LastStaleSource.Should().BeNull();
+        }
+    }
+
+    [Fact]
+    public async Task FetchCatalogAsync_keeps_the_mirror_copy_when_it_is_the_newer_one()
+    {
+        var svc = CatalogServiceServing(
+            CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
+            CatalogWith("2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", "1.0.0"),
+            out _,
+            out var http);
+
+        using (http)
+        {
+            var root = await svc.FetchCatalogAsync();
+
+            root.Mods[0].Version.Should().Be("1.3.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
+            svc.LastStaleSource.Should().BeNull();
+        }
+    }
+
+    /// <summary>
+    /// The maintainer updating a mod but forgetting to bump the root stamp is the case that would
+    /// otherwise leave a stale mirror looking equally fresh.
+    /// </summary>
+    [Fact]
+    public async Task FetchCatalogAsync_counts_entry_stamps_even_when_both_root_stamps_match()
+    {
+        var svc = CatalogServiceServing(
+            CatalogWith("2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", "1.0.0"),
+            CatalogWith("2026-09-01T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
+            out _,
+            out var http);
+
+        using (http)
+        {
+            var root = await svc.FetchCatalogAsync();
+
+            root.Mods[0].Version.Should().Be("1.3.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+            svc.LastStaleSource.Should().Be(RemoteFetch.MirrorSource);
+        }
+    }
+
+    /// <summary>
+    /// A catalog predating the root "updatedAt" field still has to be comparable.
+    /// </summary>
+    [Fact]
+    public async Task FetchCatalogAsync_falls_back_to_the_newest_entry_stamp_when_a_root_stamp_is_missing()
+    {
+        var svc = CatalogServiceServing(
+            CatalogWith(null, "2026-09-01T00:00:00Z", "1.0.0"),
+            CatalogWith(null, "2026-09-10T00:00:00Z", "1.3.0"),
+            out _,
+            out var http);
+
+        using (http)
+        {
+            var root = await svc.FetchCatalogAsync();
+
+            root.Mods[0].Version.Should().Be("1.3.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+        }
+    }
+
+    [Fact]
+    public async Task FetchCatalogAsync_ignores_a_malformed_copy_and_uses_the_parsable_one()
+    {
+        var svc = CatalogServiceServing(
+            "{ this is not json",
+            CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
+            out _,
+            out var http);
+
+        using (http)
+        {
+            var root = await svc.FetchCatalogAsync();
+
+            root.Mods[0].Version.Should().Be("1.3.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+        }
+    }
+
+    [Fact]
+    public async Task FetchCatalogAsync_throws_when_every_copy_is_malformed()
+    {
+        var svc = CatalogServiceServing("{ nope", "{ also nope", out _, out var http);
+
+        using (http)
+        {
+            var act = () => svc.FetchCatalogAsync();
+
+            await act.Should().ThrowAsync<HttpRequestException>();
+        }
     }
 
     [Fact]
@@ -297,6 +462,46 @@ public class ModCatalogServiceTests
             await svc.DownloadModAsync(new CatalogMod { File = "mods/x/Mod.dll", Sha256 = expected }, dest);
 
             File.ReadAllBytes(dest).Should().Equal(payload);
+        }
+        finally
+        {
+            try { Directory.Delete(Path.GetDirectoryName(dest)!, recursive: true); } catch { /* cleanup */ }
+        }
+    }
+
+    /// <summary>
+    /// The catalog can now come from GitHub while binaries are still tried mirror-first, so a mirror
+    /// serving the previous build at the identical size slips past the size check. The next candidate
+    /// has to get a turn instead of the whole download failing.
+    /// </summary>
+    [Fact]
+    public async Task DownloadModAsync_falls_through_to_the_next_candidate_when_a_hash_does_not_match()
+    {
+        var wanted = "the-build-the-catalog-names"u8.ToArray();
+        var stale = "a-previous-build-same-size!"u8.ToArray();
+        stale.Length.Should().Be(wanted.Length, "the point of this test is a size-identical rebuild");
+
+        var handler = new ScriptedHttpHandler(req =>
+            ScriptedHttpHandler.Bytes(
+                HttpStatusCode.OK,
+                req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal) ? stale : wanted));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http, "https://mirror.example/m");
+        var dest = Path.Combine(Path.GetTempPath(), "mmm-dl-" + Guid.NewGuid().ToString("N"), "Mod.dll");
+
+        try
+        {
+            await svc.DownloadModAsync(
+                new CatalogMod
+                {
+                    File = "mods/x/Mod.dll",
+                    Size = wanted.Length,
+                    Sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(wanted)).ToLowerInvariant()
+                },
+                dest);
+
+            File.ReadAllBytes(dest).Should().Equal(wanted);
+            svc.LastDownloadSource.Should().Be(RemoteFetch.GithubSource);
         }
         finally
         {
