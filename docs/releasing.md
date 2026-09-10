@@ -15,16 +15,22 @@
 | https://github.com/llxlzx/MechabellumModManager | 管理器程序 + Setup / 本体 |
 | https://github.com/llxlzx/MechabellumMods | Mod 浏览大全（catalog + dll + preview） |
 
-管理器检查更新优先读 / Update check prefers：
+管理器检查更新并行读下列三处，取版本最高的一份 / Update check reads all three in parallel and keeps the highest version：
 
-`https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json`
+1. `{镜像基址}/MechabellumModManager/latest.json`
+2. `https://github.com/llxlzx/MechabellumModManager/releases/latest/download/latest.json`
+3. `https://raw.githubusercontent.com/llxlzx/MechabellumModManager/master/release/latest.json`（仓库指针 / repo pointer）
 
-失败时回退 API / Fallback API：`/repos/llxlzx/MechabellumModManager/releases/latest`。
+版本相同则保留镜像那份（国内玩家仍走镜像下载）；仅当两侧都带 `publishedAt` 且另一侧更新时才改判。版本号无法解析的 manifest 直接丢弃。三处都失败时回退 API / Fallback API：`/repos/llxlzx/MechabellumModManager/releases/latest`。
+
+自 **v1.2.1** 起仓库根目录的 `release/latest.json` 是发版指针，**每次发版都要更新它**。它只负责「宣告」，`setupUrl` 仍必须指向可访问的 https（Release 资产，或 `sync-mirror.ps1 -IncludeSetup` 镜像出来的地址）。
+
+> **⚠️ 指针必须最后推送。** 它一进 master 就会被所有玩家读到，若此时 `setupUrl` 指向的 Release 资产还不存在，玩家会被告知有新版本却下载 404。所以仓库里的 `release/latest.json` 始终指向**当前已经能下载**的那一版；发新版时把它留到最后一步（见 [第 8 节](#8-最后一步推送仓库指针-中文)）再改。
 
 ## 语言 / Language
 
-- 中文：[发版前准备](#1-发版前准备-中文) · [本地出包](#2-本地出包-中文) · [创建 Release](#3-创建-github-release网页-中文) · [gh 备选](#4-命令行备选已装-gh-中文) · [Mod 大全](#5-mod-大全仓库与程序发版分开-中文) · [对照](#6-当前最新本地对照写作时-中文) · [更新行为](#7-管理器更新行为提醒用户-中文)
-- English: [Prepare](#1-before-you-ship-english) · [Build](#2-build-locally-english) · [GitHub Release](#3-create-github-release-web-english) · [gh CLI](#4-cli-alternative-gh-english) · [Catalog](#5-mods-catalog-repo-separate-from-app-english) · [Local paths](#6-local-paths-at-write-time-english) · [Update behavior](#7-manager-update-behavior-english)
+- 中文：[发版前准备](#1-发版前准备-中文) · [本地出包](#2-本地出包-中文) · [创建 Release](#3-创建-github-release网页-中文) · [gh 备选](#4-命令行备选已装-gh-中文) · [Mod 大全](#5-mod-大全仓库与程序发版分开-中文) · [对照](#6-当前最新本地对照写作时-中文) · [更新行为](#7-管理器更新行为提醒用户-中文) · [推送仓库指针](#8-最后一步推送仓库指针-中文)
+- English: [Prepare](#1-before-you-ship-english) · [Build](#2-build-locally-english) · [GitHub Release](#3-create-github-release-web-english) · [gh CLI](#4-cli-alternative-gh-english) · [Catalog](#5-mods-catalog-repo-separate-from-app-english) · [Local paths](#6-local-paths-at-write-time-english) · [Update behavior](#7-manager-update-behavior-english) · [Repo pointer](#8-last-step-push-the-repo-pointer-english)
 
 ---
 
@@ -35,6 +41,8 @@
 1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>X.Y.Z</Version>`
 2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
 3. 稍后写入的 `release/vX.Y.Z/latest.json` → `"version": "X.Y.Z"`
+
+此时**不要**动 `release/latest.json`。它是对外生效的指针，留到 [第 8 节](#8-最后一步推送仓库指针-中文)。
 
 ### 1.2 运行时离线包（镜像暂存，**不**再打进 Setup）
 
@@ -61,7 +69,8 @@ v1.1.x 及以前把上述文件嵌入 Setup。新版本不要再依赖 `build-in
 ```powershell
 cd <path-to-your-MechabellumModManager-clone>
 dotnet test -c Release
-git add -A   # 勿提交 Melon zip / publish / dist
+# 勿提交 Melon zip / publish / dist；release/latest.json 留到第 8 节
+git add -A -- . ':!release/latest.json'
 git commit -m "..."
 git push origin master
 ```
@@ -210,6 +219,25 @@ git push origin master
 
 ---
 
+## 8. 最后一步：推送仓库指针 (中文)
+
+只有确认新 Setup **真的能下载**之后才做这一步。否则指针会让所有玩家看到新版本却下载 404。
+
+```powershell
+# 1) 确认 setupUrl 可下载（应返回 200）
+curl.exe -I -L "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z.exe"
+
+# 2) 把 release/latest.json 改成与 release/vX.Y.Z/latest.json 相同的内容
+# 3) 单独提交并推送
+git add release/latest.json
+git commit -m "release: point repo manifest at vX.Y.Z"
+git push origin master
+```
+
+验证：`https://raw.githubusercontent.com/llxlzx/MechabellumModManager/master/release/latest.json` 返回新版本（raw 有几分钟 CDN 缓存），随后管理器「检查更新」即可发现。
+
+---
+
 ## 1. Before you ship (English)
 
 ### 1.1 Bump version (three places, same number)
@@ -217,6 +245,9 @@ git push origin master
 1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>X.Y.Z</Version>`
 2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
 3. `release/vX.Y.Z/latest.json` → `"version": "X.Y.Z"`
+
+Leave `release/latest.json` alone here. It is the pointer players actually read, so it always names the
+version that is already downloadable, and it is updated last — see [§8](#8-last-step-push-the-repo-pointer-english).
 
 ### 1.2 MelonLoader offline zip (required for Setup)
 
@@ -248,7 +279,8 @@ Resolve the game Unity version from `Mechabellum_Data\globalgamemanagers` (e.g. 
 ```powershell
 cd <path-to-your-MechabellumModManager-clone>
 dotnet test -c Release
-git add -A   # do not commit Melon zip / publish / dist
+# do not commit Melon zip / publish / dist; release/latest.json waits for §8
+git add -A -- . ':!release/latest.json'
 git commit -m "..."
 git push origin master
 ```
@@ -378,3 +410,24 @@ Players: **Browse mods → Refresh catalog**. Author flow: that repo’s `README
 - No silent auto-install  
 - After **Check for updates**, the user downloads and runs the new Setup  
 - Portable build requires .NET 8 Desktop Runtime on the machine  
+
+---
+
+## 8. Last step: push the repo pointer (English)
+
+Only after the new Setup is confirmed downloadable. Otherwise the pointer tells every player a new
+version exists while its `setupUrl` still 404s.
+
+```powershell
+# 1) Confirm setupUrl resolves (expect 200)
+curl.exe -I -L "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z.exe"
+
+# 2) Copy release/vX.Y.Z/latest.json over release/latest.json
+# 3) Commit and push it on its own
+git add release/latest.json
+git commit -m "release: point repo manifest at vX.Y.Z"
+git push origin master
+```
+
+Verify `https://raw.githubusercontent.com/llxlzx/MechabellumModManager/master/release/latest.json` serves
+the new version (raw has a few minutes of CDN cache), then **Check for updates** finds it.

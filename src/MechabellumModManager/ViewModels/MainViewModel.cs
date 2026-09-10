@@ -79,6 +79,7 @@ public sealed partial class MainViewModel : ObservableObject
     bool _checkingUpdates;
     bool _checkingCatalog;
     bool _addingCatalogMod;
+    DateTimeOffset? _lastSilentCatalogFetch;
     /// <summary>
     /// Dispatcher that owns <see cref="LibraryModsView"/> / <see cref="CatalogModsView"/>.
     /// Captured at construction so post-download continuations (thread-pool after
@@ -1032,6 +1033,9 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsLibraryPage));
         OnPropertyChanged(nameof(IsCatalogPage));
         OnPropertyChanged(nameof(IsSettingsPage));
+
+        if (value == MainContentPage.Library)
+            _ = SilentRefreshCatalogForLibraryAsync();
     }
     [ObservableProperty] private string _catalogStatus = "";
 
@@ -1286,15 +1290,36 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!CheckModUpdatesOnStartup)
             return;
+        if (_checkingCatalog || _addingCatalogMod)
+            return;
 
+        // Claimed for the same reason the other fetch paths claim it: the library page can come into
+        // view while this is still in flight, and two fetches applying two roots is pure waste.
+        _checkingCatalog = true;
+        _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
         try
         {
-            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            CatalogRoot root;
+            try
+            {
+                root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            }
+            catch (Exception networkEx)
+            {
+                // Without this the status column stays blank all session after one failed launch
+                // fetch, which reads as "nothing to update" rather than "we never got to look".
+                var cached = _catalog.TryLoadCachedCatalog();
+                if (cached is null)
+                    throw;
+                root = cached;
+                AppendLog(CatalogNetworkHint.Format(networkEx.Message, _catalog.MirrorBaseUrl, usedCache: true));
+            }
 
             // Populating the list is what makes the check visible: it enriches the installed
             // rows, so the status column and the per-row update button are live from launch
             // rather than waiting for the player to open the catalog panel.
             ApplyCatalogRoot(root);
+            LogStaleCatalogSource();
 
             var packages = _library.List();
             var stale = root.Mods
@@ -1318,6 +1343,10 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppendLog(string.Format(LocalizationService.T("LogModUpdateCheckFailed"), ex.Message));
+        }
+        finally
+        {
+            _checkingCatalog = false;
         }
     }
 
@@ -2699,7 +2728,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     async Task RefreshCatalogAsync()
     {
-        if (_checkingCatalog) return;
+        if (_checkingCatalog)
+        {
+            // Silence here reads as a dead button, and a fetch started by the library page or by
+            // launch is invisible otherwise.
+            CatalogStatus = "正在拉取目录…";
+            return;
+        }
         if (_addingCatalogMod)
         {
             AppendLog("正在加入本地库，已跳过目录刷新。");
@@ -2741,10 +2776,8 @@ public sealed partial class MainViewModel : ObservableObject
             }
 
             ApplyCatalogRoot(root);
-
-            SelectedCatalogMod = null;
-            SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
-            _unselectCatalog?.Invoke();
+            LogStaleCatalogSource();
+            _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
 
             if (SelectedLibraryMod is not null)
                 UpdateLibraryModDetail();
@@ -3125,6 +3158,8 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
             ApplyCatalogRoot(root);
+            LogStaleCatalogSource();
+            _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
             if (SelectedLibraryMod is not null)
                 UpdateLibraryModDetail();
         }
@@ -3136,6 +3171,64 @@ public sealed partial class MainViewModel : ObservableObject
         {
             _checkingCatalog = false;
         }
+    }
+
+    /// <summary>
+    /// How long a catalog already in hand is trusted before switching to the library refetches it.
+    /// </summary>
+    public TimeSpan SilentCatalogRefreshInterval { get; set; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Refetches the catalog when the library page comes into view, so the status column and the
+    /// per-row update button light up on their own. Without this the player had to open the catalog
+    /// panel and press refresh, because enrichment only runs on paths that fetch a catalog.
+    ///
+    /// Unlike <see cref="SoftRefreshCatalogForLibraryDetailAsync"/> this runs even when a catalog is
+    /// already loaded — a catalog held since launch is exactly the copy that goes stale.
+    /// </summary>
+    async Task SilentRefreshCatalogForLibraryAsync()
+    {
+        if (_checkingCatalog || _addingCatalogMod) return;
+
+        var now = DateTimeOffset.UtcNow;
+        if (_lastSilentCatalogFetch is { } last && now - last < SilentCatalogRefreshInterval)
+            return;
+
+        _checkingCatalog = true;
+        // Stamped before the fetch so a dead network is not re-dialed on every page switch.
+        _lastSilentCatalogFetch = now;
+        try
+        {
+            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+            ApplyCatalogRoot(root);
+            LogStaleCatalogSource();
+            if (SelectedLibraryMod is not null)
+                UpdateLibraryModDetail();
+        }
+        catch (Exception ex)
+        {
+            // Silent by design: the player did not ask for this fetch, so it must not interrupt.
+            AppendLog(string.Format(LocalizationService.T("LogModUpdateCheckFailed"), ex.Message));
+        }
+        finally
+        {
+            _checkingCatalog = false;
+        }
+    }
+
+    /// <summary>
+    /// Names the source that answered with an out-of-date catalog. Otherwise a mirror that stopped
+    /// syncing looks identical to "no updates published", which is the failure it is hardest to spot.
+    /// </summary>
+    void LogStaleCatalogSource()
+    {
+        if (_catalog.LastStaleSource is not { } stale)
+            return;
+
+        AppendLog(string.Format(
+            LocalizationService.T("LogCatalogSourceStale"),
+            stale,
+            _catalog.LastFetchSource ?? RemoteFetch.GithubSource));
     }
 
     /// <summary>
@@ -3159,6 +3252,12 @@ public sealed partial class MainViewModel : ObservableObject
             var state = ModCatalogService.GetEntryState(packages, mod);
             CatalogMods.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
         }
+
+        // Every row the player had selected was just discarded, and a selection pointing at detached
+        // view models keeps the add/update buttons enabled against the previous catalog's state.
+        SelectedCatalogMod = null;
+        SetCatalogSelection(Array.Empty<CatalogModItemViewModel>());
+        _unselectCatalog?.Invoke();
 
         EnrichModsFromCatalog();
         RefreshCatalogView();

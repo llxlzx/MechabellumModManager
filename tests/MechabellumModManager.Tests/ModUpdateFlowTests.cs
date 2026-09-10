@@ -229,6 +229,133 @@ public class ModUpdateFlowTests
         fx.CreateVm().CheckModUpdatesOnStartup.Should().BeFalse();
     }
 
+    /// <summary>
+    /// The reported bug: a mod pushed to the repo only showed as updatable after a manual refresh in
+    /// the catalog panel. Switching to the library has to be enough.
+    /// </summary>
+    [Fact]
+    public async Task Switching_to_the_library_page_detects_the_update_without_opening_the_catalog()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+
+        var vm = fx.CreateVm(catalog: CatalogServing(version: "1.2.0"));
+        vm.CheckModUpdatesOnStartup = false;
+
+        vm.ShowSettingsPageCommand.Execute(null);
+        vm.ShowLibraryPageCommand.Execute(null);
+
+        var row = await WaitForUpdateFlag(vm, oldId);
+        row.HasUpdate.Should().BeTrue();
+        row.UpdateStatusText.Should().Be("1.0.0 → 1.2.0");
+        vm.OutdatedCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A_second_switch_inside_the_throttle_window_does_not_refetch()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+
+        var catalog = CatalogServing(version: "1.2.0", out var handler);
+        var vm = fx.CreateVm(catalog: catalog);
+        vm.CheckModUpdatesOnStartup = false;
+
+        vm.ShowSettingsPageCommand.Execute(null);
+        vm.ShowLibraryPageCommand.Execute(null);
+        await WaitForUpdateFlag(vm, oldId);
+        var afterFirst = handler.Requests.Count;
+
+        vm.ShowSettingsPageCommand.Execute(null);
+        vm.ShowLibraryPageCommand.Execute(null);
+        await Task.Delay(50);
+
+        handler.Requests.Count.Should().Be(afterFirst, "the catalog in hand is still fresh");
+
+        vm.SilentCatalogRefreshInterval = TimeSpan.Zero;
+        vm.ShowSettingsPageCommand.Execute(null);
+        vm.ShowLibraryPageCommand.Execute(null);
+
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (handler.Requests.Count == afterFirst && DateTime.UtcNow < deadline)
+            await Task.Delay(20);
+
+        handler.Requests.Count.Should().BeGreaterThan(afterFirst, "an expired window has to refetch");
+    }
+
+    /// <summary>
+    /// A failed launch fetch used to leave the status column blank for the whole session, which reads
+    /// as "nothing to update" rather than "we never got to look".
+    /// </summary>
+    [Fact]
+    public async Task Startup_check_falls_back_to_the_cached_catalog_when_the_network_fails()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+        CatalogCache.Write(fx.Paths.DataRoot, CatalogJson(version: "1.2.0"));
+
+        var handler = new ScriptedHttpHandler(_ =>
+            ScriptedHttpHandler.Json(HttpStatusCode.ServiceUnavailable, "down"));
+        var catalog = new ModCatalogService(new HttpClient(handler), dataRoot: fx.Paths.DataRoot);
+
+        var vm = fx.CreateVm(catalog: catalog);
+        vm.CheckModUpdatesOnStartup = true;
+
+        await vm.RunStartupModUpdateCheckAsync();
+
+        var row = vm.Mods.Should().ContainSingle(m => m.Package.Id == oldId).Subject;
+        row.HasUpdate.Should().BeTrue();
+        row.LatestVersion.Should().Be("1.2.0");
+    }
+
+    /// <summary>
+    /// A mirror that stopped syncing answers 200 with an old catalog, and silence about that is the
+    /// hardest version of this bug to diagnose.
+    /// </summary>
+    [Fact]
+    public async Task A_stale_mirror_is_named_in_the_log_and_the_newer_copy_wins()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+
+        var handler = new ScriptedHttpHandler(req =>
+        {
+            if (!req.RequestUri!.AbsolutePath.EndsWith("catalog.json", StringComparison.Ordinal))
+                return ScriptedHttpHandler.Bytes(HttpStatusCode.OK, NewBytes);
+            return req.RequestUri.Host.Contains("mirror.example", StringComparison.Ordinal)
+                ? ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("1.0.0", "2026-09-01"))
+                : ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("1.2.0", "2026-09-10"));
+        });
+        var catalog = new ModCatalogService(new HttpClient(handler));
+
+        var vm = fx.CreateVm(catalog: catalog);
+        // The VM owns the mirror setting, so the service's own value is overwritten at construction.
+        vm.MirrorBaseUrl = "https://mirror.example/m";
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+
+        var row = vm.Mods.Should().ContainSingle(m => m.Package.Id == oldId).Subject;
+        row.HasUpdate.Should().BeTrue();
+        row.LatestVersion.Should().Be("1.2.0");
+        vm.LogText.Should().Contain(string.Format(
+            LocalizationService.T("LogCatalogSourceStale"),
+            RemoteFetch.MirrorSource,
+            RemoteFetch.GithubSource));
+    }
+
+    static async Task<ModItemViewModel> WaitForUpdateFlag(MainViewModel vm, string packageId)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (DateTime.UtcNow < deadline)
+        {
+            var candidate = vm.Mods.FirstOrDefault(m => m.Package.Id == packageId);
+            if (candidate is { HasUpdate: true })
+                return candidate;
+            await Task.Delay(20);
+        }
+
+        return vm.Mods.Should().ContainSingle(m => m.Package.Id == packageId).Subject;
+    }
+
     /// <summary>Installs a package that looks like it came from the "show-grid" catalog entry.</summary>
     static string SeedInstalledGridMod(MainViewModelFixture fx, string version, byte[]? bytes = null)
     {
@@ -255,29 +382,33 @@ public class ModUpdateFlowTests
         return id;
     }
 
-    static ModCatalogService CatalogServing(string version)
-    {
-        var catalogJson = $$"""
+    static string CatalogJson(string version, string updatedAt = "2026-09-06") =>
+        $$"""
+        {
+          "updatedAt": "{{updatedAt}}",
+          "mods": [
             {
-              "updatedAt": "2026-09-06",
-              "mods": [
-                {
-                  "id": "show-grid",
-                  "name": "Show Grid",
-                  "author": "巴巴",
-                  "version": "{{version}}",
-                  "updatedAt": "2026-09-06",
-                  "summary": "格线",
-                  "file": "mods/show-grid/ShowGrid.dll",
-                  "sha256": "{{Hex(NewBytes)}}",
-                  "size": {{NewBytes.Length}},
-                  "type": "melon_mod"
-                }
-              ]
+              "id": "show-grid",
+              "name": "Show Grid",
+              "author": "巴巴",
+              "version": "{{version}}",
+              "updatedAt": "{{updatedAt}}",
+              "summary": "格线",
+              "file": "mods/show-grid/ShowGrid.dll",
+              "sha256": "{{Hex(NewBytes)}}",
+              "size": {{NewBytes.Length}},
+              "type": "melon_mod"
             }
-            """;
+          ]
+        }
+        """;
 
-        var handler = new ScriptedHttpHandler(req =>
+    static ModCatalogService CatalogServing(string version) => CatalogServing(version, out _);
+
+    static ModCatalogService CatalogServing(string version, out ScriptedHttpHandler handler)
+    {
+        var catalogJson = CatalogJson(version);
+        handler = new ScriptedHttpHandler(req =>
             req.RequestUri!.AbsolutePath.EndsWith("catalog.json", StringComparison.Ordinal)
                 ? ScriptedHttpHandler.Json(HttpStatusCode.OK, catalogJson)
                 : ScriptedHttpHandler.Bytes(HttpStatusCode.OK, NewBytes));

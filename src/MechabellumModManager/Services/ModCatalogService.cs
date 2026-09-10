@@ -124,6 +124,19 @@ public sealed class ModCatalogService
     public string? LastFetchSource { get; private set; }
     public string? LastDownloadSource { get; private set; }
 
+    /// <summary>
+    /// Source that answered 200 with an older catalog than the copy that won, i.e. a mirror that
+    /// has not finished syncing. Null when every reachable copy was equally fresh. Reset per fetch.
+    /// </summary>
+    public string? LastStaleSource { get; private set; }
+
+    /// <summary>
+    /// The non-mirror catalog URL. Overridable for the same reason loopback http is accepted for
+    /// mod downloads: so the real <see cref="CreateDefaultClient"/> path can be exercised end to
+    /// end against a local server instead of the live repo.
+    /// </summary>
+    public Uri CatalogOriginUrl { get; set; } = CatalogUrl;
+
     public ModCatalogService(HttpClient? http = null, string? mirrorBaseUrl = null, string? dataRoot = null)
     {
         _http = http ?? CreateDefaultClient();
@@ -247,7 +260,7 @@ public sealed class ModCatalogService
     }
 
     public IReadOnlyList<Uri> BuildCatalogCandidates() =>
-        RemoteFetch.BuildCandidates(MirrorBaseUrl, "MechabellumMods/catalog.json", CatalogUrl);
+        RemoteFetch.BuildCandidates(MirrorBaseUrl, "MechabellumMods/catalog.json", CatalogOriginUrl);
 
     public IReadOnlyList<Uri> BuildFileCandidates(string relativePath)
     {
@@ -305,15 +318,104 @@ public sealed class ModCatalogService
         return null;
     }
 
+    /// <summary>
+    /// Fetches every candidate in parallel and keeps the freshest copy. A mirror that is behind on
+    /// syncing answers 200 with an old catalog, so taking the first success would hide updates the
+    /// origin already publishes — the exact reason the player used to have to refresh the catalog
+    /// panel by hand before the library could see them.
+    /// </summary>
     public async Task<CatalogRoot> FetchCatalogAsync(CancellationToken ct = default)
     {
-        using var fetched = await RemoteFetch.GetAsync(_http, BuildCatalogCandidates(), ct).ConfigureAwait(false);
-        LastFetchSource = RemoteFetch.ClassifySource(fetched.Used);
-        var json = await fetched.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        LastStaleSource = null;
+        var fetched = await RemoteFetch.GetAllAsync(_http, BuildCatalogCandidates(), ct).ConfigureAwait(false);
+
+        var copies = new List<CatalogCopy>(fetched.Count);
+        try
+        {
+            foreach (var result in fetched)
+            {
+                try
+                {
+                    var json = await result.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                    copies.Add(new CatalogCopy(result.Used, json, DeserializeCatalog(json)));
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch
+                {
+                    // A truncated copy, a bad declared charset, or malformed JSON loses to whichever
+                    // candidate came back readable.
+                }
+            }
+        }
+        finally
+        {
+            foreach (var result in fetched)
+                result.Dispose();
+        }
+
+        if (copies.Count == 0)
+            throw new HttpRequestException("Catalog reached but no candidate returned parsable JSON.");
+
+        var winner = PickFreshestIndex(copies);
+        if (winner != 0)
+            LastStaleSource = RemoteFetch.ClassifySource(copies[0].Used);
+
+        var chosen = copies[winner];
+        LastFetchSource = RemoteFetch.ClassifySource(chosen.Used);
         if (!string.IsNullOrWhiteSpace(DataRoot))
-            CatalogCache.Write(DataRoot, json);
-        return DeserializeCatalog(json);
+            CatalogCache.Write(DataRoot, chosen.Json);
+        return chosen.Root;
     }
+
+    readonly record struct CatalogCopy(Uri Used, string Json, CatalogRoot Root);
+
+    /// <summary>
+    /// Index of the freshest copy. Candidates arrive mirror-first and a tie keeps the earlier one, so
+    /// an equally fresh mirror still wins and domestic players stay on it.
+    /// </summary>
+    static int PickFreshestIndex(IReadOnlyList<CatalogCopy> copies)
+    {
+        var stamps = copies.Select(c => FreshnessStamp(c.Root)).ToArray();
+
+        var best = 0;
+        for (var i = 1; i < copies.Count; i++)
+        {
+            if (stamps[i] is { } candidate && (stamps[best] is null || candidate > stamps[best]))
+                best = i;
+        }
+
+        return best;
+    }
+
+    /// <summary>
+    /// Newest stamp anywhere in the catalog. Entry stamps count alongside the root one because a
+    /// maintainer who updates a mod but forgets to bump the root field would otherwise leave a stale
+    /// mirror looking equally fresh — the exact case this comparison exists for. Also covers catalogs
+    /// predating the root field.
+    /// </summary>
+    static DateTimeOffset? FreshnessStamp(CatalogRoot root)
+    {
+        var newest = ParseStamp(root.UpdatedAt);
+        foreach (var mod in root.Mods)
+        {
+            if (ParseStamp(mod.UpdatedAt) is { } stamp && (newest is null || stamp > newest))
+                newest = stamp;
+        }
+
+        return newest;
+    }
+
+    static DateTimeOffset? ParseStamp(string? raw) =>
+        DateTimeOffset.TryParse(
+            raw,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out var parsed)
+            ? parsed
+            : null;
 
     public CatalogRoot? TryLoadCachedCatalog()
     {
@@ -323,6 +425,7 @@ public sealed class ModCatalogService
             return null;
         try
         {
+            LastStaleSource = null;
             LastFetchSource = "cache";
             return DeserializeCatalog(json);
         }
@@ -384,6 +487,22 @@ public sealed class ModCatalogService
                 {
                     await FetchIntoPartAsync(uri, partPath, expectedSize, ceiling, progress, ct)
                         .ConfigureAwait(false);
+
+                    // Resuming rules out a streaming hash: TransformBlock state cannot survive a
+                    // restart, so the completed file is hashed in one pass instead. It happens per
+                    // candidate because a mirror that is behind on syncing can serve the previous
+                    // build at the identical size (assemblies are 512-byte aligned), which slips
+                    // past the size check — and another source may still have the named bytes.
+                    var actualHash = await ComputeFileHashAsync(partPath, ct).ConfigureAwait(false);
+                    if (!string.Equals(actualHash, expectedHash, StringComparison.Ordinal))
+                    {
+                        TryDeleteFile(partPath);
+                        contentFailure ??= HashMismatchMessage(expectedHash, actualHash);
+                        failures.Add($"{uri.Host}: sha256 mismatch");
+                        moveOn = true;
+                        continue;
+                    }
+
                     used = uri;
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -424,23 +543,15 @@ public sealed class ModCatalogService
             throw contentFailure is null
                 ? new HttpRequestException("All remote fetch candidates failed: " + detail)
                 : new InvalidOperationException(
-                    $"下载内容与目录声明不符，已全部拒绝：{detail}。请联系目录维护者核对。");
+                    $"下载内容与目录声明不符，已全部拒绝：{contentFailure}（{detail}）。请联系目录维护者核对。");
         }
 
         LastDownloadSource = RemoteFetch.ClassifySource(used);
-
-        // Resuming rules out a streaming hash: TransformBlock state cannot survive a restart,
-        // so the completed file is hashed in one pass instead.
-        var actualHash = await ComputeFileHashAsync(partPath, ct).ConfigureAwait(false);
-        if (!string.Equals(actualHash, expectedHash, StringComparison.Ordinal))
-        {
-            TryDeleteFile(partPath);
-            throw new InvalidOperationException(
-                $"下载文件校验失败（目录声明 {expectedHash[..Math.Min(12, expectedHash.Length)]}…，实际 {actualHash[..12]}…）。文件已丢弃，请稍后重试或改用 GitHub 源。");
-        }
-
         File.Move(partPath, destPath, overwrite: true);
     }
+
+    static string HashMismatchMessage(string expectedHash, string actualHash) =>
+        $"下载文件校验失败（目录声明 {expectedHash[..Math.Min(12, expectedHash.Length)]}…，实际 {actualHash[..12]}…）。文件已丢弃，请稍后重试或改用 GitHub 源。";
 
     /// <summary>
     /// Pulls one candidate into the <c>.part</c> file, resuming from whatever is already there.

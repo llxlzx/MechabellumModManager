@@ -590,6 +590,7 @@
   <data name="MirrorBaseUrl" xml:space="preserve"><value>国内镜像基址</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>出厂已预填国内 COS；清空则只访问 GitHub。需与仓库同构。</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>源={0}</value></data>
+  <data name="LogCatalogSourceStale" xml:space="preserve"><value>{0} 上的目录已过期，本次改用较新的 {1}。</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>已拦截不安全的链接（仅允许 https）：{0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>已加载 {0} 个条目（离线缓存，目录更新：{1}）</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>拉取目录失败：{0}。</value></data>

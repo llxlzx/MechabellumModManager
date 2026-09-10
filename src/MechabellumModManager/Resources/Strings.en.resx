@@ -587,6 +587,7 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Domestic mirror base</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Pre-filled with the domestic COS mirror; clear for GitHub only. Same layout as the repos.</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
+  <data name="LogCatalogSourceStale" xml:space="preserve"><value>The catalog on {0} is stale; used the newer {1} instead.</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Blocked an unsafe link (https only): {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Loaded {0} entries (offline cache, catalog updated: {1})</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>Catalog fetch failed: {0}.</value></data>

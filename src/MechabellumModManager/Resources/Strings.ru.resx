@@ -566,6 +566,7 @@
   <data name="MirrorBaseUrl" xml:space="preserve"><value>База внутреннего зеркала</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>По умолчанию COS-зеркало; пусто = только GitHub. Та же раскладка.</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>источник={0}</value></data>
+  <data name="LogCatalogSourceStale" xml:space="preserve"><value>Каталог на {0} устарел; использован более новый {1}.</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Небезопасная ссылка заблокирована (только https): {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>Загружено {0} записей (офлайн-кэш, каталог: {1})</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>Каталог недоступен: {0}.</value></data>

@@ -34,5 +34,7 @@ release/
 
 - 可放在版本目录根（如 `v1.0.7/latest.json`）方便本地对照。
 - 上传到 GitHub Release 时，资源文件名仍须为 `latest.json`（程序会按 `.../releases/latest/download/latest.json` 拉取）。
+- 本目录根的 `release/latest.json` 是**仓库指针**：自 v1.2.1 起「检查更新」也会读 `raw.githubusercontent.com/.../master/release/latest.json`。
+- 它始终指向**当前已经能下载**的那一版，并且**最后推送**：指针一进 master 就对所有玩家生效，若 `setupUrl` 指向的 Release 资产尚未上传，玩家会被提示更新却下载 404。先发 Release、确认能下载，再单独提交这个文件（见 `docs/releasing.md` 第 8 节）。
 - 字段说明见 `docs/releasing.md` 与 `docs/latest.example.json`。
 

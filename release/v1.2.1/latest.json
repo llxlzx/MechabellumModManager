@@ -1,0 +1,7 @@
+{
+  "version": "1.2.1",
+  "notes": "已装 Mod 页自主检测更新：切回列表即静默拉取目录，不必再去 Mod 工坊手动刷新；目录改为镜像与 GitHub 并行取较新的一份，镜像滞后不再遮住新版本；管理器检查更新新增仓库 release/latest.json 指针源。\nThe installed list now detects mod updates on its own: switching back to it silently refetches the catalog, so the workshop refresh is no longer required. The catalog is read from the mirror and GitHub in parallel and the fresher copy wins, so a lagging mirror can no longer hide updates. Manager update checks also read the repo's release/latest.json pointer.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.1/MechabellumModManager_Setup_v1.2.1.exe",
+  "publishedAt": "2026-09-10T14:40:00Z",
+  "build": "v1.2.1-library-autodetect-raw-pointer"
+}

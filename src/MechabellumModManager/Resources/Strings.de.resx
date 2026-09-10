@@ -566,6 +566,7 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Inländische Spiegelbasis</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Werkseitig COS-Spiegel; leer = nur GitHub. Gleiches Layout wie die Repos.</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>Quelle={0}</value></data>
+  <data name="LogCatalogSourceStale" xml:space="preserve"><value>Der Katalog auf {0} ist veraltet; stattdessen wurde das neuere {1} verwendet.</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Unsicherer Link blockiert (nur https): {0}</value></data>
   <data name="CatalogStatusOfflineCache" xml:space="preserve"><value>{0} Einträge geladen (Offline-Cache, Katalog: {1})</value></data>
   <data name="CatalogFetchFailed" xml:space="preserve"><value>Katalog fehlgeschlagen: {0}.</value></data>
