@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "melonTag": "v0.7.3",
+  "artifacts": [
+    {
+      "id": "melonloader-x64",
+      "path": "melonloader/MelonLoader.x64.zip",
+      "sha256": "5b2b2f3d1cd42b59ec886c5bdc2663edae87a0097a4f4a8f58c0965a99dda416",
+      "size": 20155622,
+      "originUrl": "https://github.com/LavaGang/MelonLoader/releases/download/v0.7.3/MelonLoader.x64.zip"
+    },
+    {
+      "id": "unity-deps-2022.3.62",
+      "path": "unity-deps/UnityDependencies_2022.3.62.zip",
+      "sha256": "447f50ca98554b03a15718bae3078cfca7a3f0f124669dc14bb1cc50603b5d46",
+      "size": 2490335,
+      "originUrl": "https://github.com/LavaGang/Unity-Runtime-Libraries/raw/master/2022.3.62.zip"
+    },
+    {
+      "id": "cpp2il-exe",
+      "path": "cpp2il/Cpp2IL.exe",
+      "sha256": "663fb432433b4371fd1ee0ebc321a8fff2a9aac5ac4230c843f9e03ddee4e04c",
+      "size": 15137811,
+      "originUrl": "https://github.com/SamboyCoding/Cpp2IL/releases/download/2022.1.0-pre-release.21/Cpp2IL-2022.1.0-pre-release.21-Windows.exe"
+    },
+    {
+      "id": "cpp2il-plugin",
+      "path": "cpp2il/Cpp2IL.Plugin.StrippedCodeRegSupport.dll",
+      "sha256": "2cc4f8c66541f18b4daed5410149ee7859c3190454d30bda5ccd0895d2989ee6",
+      "size": 10752,
+      "originUrl": null
+    },
+    {
+      "id": "dotnet8-desktop",
+      "path": "dotnet8/windowsdesktop-runtime-8.0.16-win-x64.exe",
+      "sha256": "24b0e77466823f76175770f7e56d85c20a13140310cdddb837c8007dd433b9ea",
+      "size": 58571768,
+      "originUrl": "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.16/windowsdesktop-runtime-8.0.16-win-x64.exe"
+    }
+  ]
+}
