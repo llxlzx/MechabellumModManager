@@ -80,6 +80,7 @@ public sealed partial class MainViewModel : ObservableObject
     bool _checkingCatalog;
     bool _addingCatalogMod;
     DateTimeOffset? _lastSilentCatalogFetch;
+    TimeSpan _silentCatalogRefreshInterval = TimeSpan.FromMinutes(15);
     /// <summary>
     /// Dispatcher that owns <see cref="LibraryModsView"/> / <see cref="CatalogModsView"/>.
     /// Captured at construction so post-download continuations (thread-pool after
@@ -289,6 +290,8 @@ public sealed partial class MainViewModel : ObservableObject
         _launchMode = config.LaunchMode;
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
         _checkModUpdatesOnStartup = config.CheckModUpdatesOnStartup;
+        SilentCatalogRefreshInterval = TimeSpan.FromMinutes(
+            Math.Clamp(config.CatalogHotCacheMinutes, 1, 24 * 60));
 
         if (!string.Equals(config.GamePath ?? "", _gamePath, StringComparison.OrdinalIgnoreCase))
         {
@@ -1299,10 +1302,20 @@ public sealed partial class MainViewModel : ObservableObject
         _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
         try
         {
-            CatalogRoot root;
+            CatalogRoot? root;
             try
             {
-                root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+                var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
+                root = outcome.Root;
+                if (outcome.Kind == CatalogFetchKind.HotSkip && CatalogMods.Count == 0)
+                {
+                    root = _catalog.TryLoadCachedCatalog();
+                    if (root is null)
+                    {
+                        outcome = await _catalog.FetchCatalogSmartAsync(forceCold: true).ConfigureAwait(true);
+                        root = outcome.Root;
+                    }
+                }
             }
             catch (Exception networkEx)
             {
@@ -1318,11 +1331,21 @@ public sealed partial class MainViewModel : ObservableObject
             // Populating the list is what makes the check visible: it enriches the installed
             // rows, so the status column and the per-row update button are live from launch
             // rather than waiting for the player to open the catalog panel.
-            ApplyCatalogRoot(root);
-            LogStaleCatalogSource();
+            if (root is not null)
+            {
+                ApplyCatalogRoot(root);
+                LogStaleCatalogSource();
+            }
+            else if (CatalogMods.Count == 0)
+            {
+                return;
+            }
 
             var packages = _library.List();
-            var stale = root.Mods
+            IEnumerable<CatalogMod> catalogMods = root is not null
+                ? root.Mods
+                : CatalogMods.Select(item => item.Mod);
+            var stale = catalogMods
                 .Where(mod => ModCatalogService.GetEntryState(packages, mod) == CatalogEntryState.UpdateAvailable)
                 .Select(mod => CatalogLocaleResolver.ResolveName(mod))
                 .ToList();
@@ -2756,7 +2779,9 @@ public sealed partial class MainViewModel : ObservableObject
             var fromCache = false;
             try
             {
-                root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+                var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: true).ConfigureAwait(true);
+                root = outcome.Root
+                    ?? throw new InvalidOperationException("Catalog fetch returned no root.");
             }
             catch (Exception networkEx)
             {
@@ -3156,12 +3181,19 @@ public sealed partial class MainViewModel : ObservableObject
         _checkingCatalog = true;
         try
         {
-            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
-            ApplyCatalogRoot(root);
-            LogStaleCatalogSource();
+            var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
+            if (outcome.Kind == CatalogFetchKind.HotSkip)
+                return;
+
             _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
-            if (SelectedLibraryMod is not null)
-                UpdateLibraryModDetail();
+            if (outcome.Root is not null)
+            {
+                ApplyCatalogRoot(outcome.Root);
+                if (outcome.Kind == CatalogFetchKind.ColdApplied)
+                    LogStaleCatalogSource();
+                if (SelectedLibraryMod is not null)
+                    UpdateLibraryModDetail();
+            }
         }
         catch
         {
@@ -3175,8 +3207,18 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// How long a catalog already in hand is trusted before switching to the library refetches it.
+    /// Setter keeps <see cref="ModCatalogService.HotCacheTtl"/> in lockstep so tests that zero
+    /// the interval cannot desync the VM gate from the service HotSkip clock.
     /// </summary>
-    public TimeSpan SilentCatalogRefreshInterval { get; set; } = TimeSpan.FromSeconds(60);
+    public TimeSpan SilentCatalogRefreshInterval
+    {
+        get => _silentCatalogRefreshInterval;
+        set
+        {
+            _silentCatalogRefreshInterval = value;
+            _catalog.HotCacheTtl = value;
+        }
+    }
 
     /// <summary>
     /// Refetches the catalog when the library page comes into view, so the status column and the
@@ -3190,20 +3232,25 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (_checkingCatalog || _addingCatalogMod) return;
 
-        var now = DateTimeOffset.UtcNow;
-        if (_lastSilentCatalogFetch is { } last && now - last < SilentCatalogRefreshInterval)
-            return;
-
         _checkingCatalog = true;
-        // Stamped before the fetch so a dead network is not re-dialed on every page switch.
-        _lastSilentCatalogFetch = now;
         try
         {
-            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
-            ApplyCatalogRoot(root);
-            LogStaleCatalogSource();
-            if (SelectedLibraryMod is not null)
-                UpdateLibraryModDetail();
+            var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
+            if (outcome.Kind == CatalogFetchKind.HotSkip)
+                return;
+
+            _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
+            if (outcome.Root is not null)
+            {
+                ApplyCatalogRoot(outcome.Root);
+                if (outcome.Kind == CatalogFetchKind.ColdApplied)
+                    LogStaleCatalogSource();
+                if (SelectedLibraryMod is not null)
+                    UpdateLibraryModDetail();
+            }
+
+            if (outcome.Kind != CatalogFetchKind.HotSkip && !string.IsNullOrEmpty(outcome.Detail))
+                AppendLog("[catalog " + outcome.Detail + "]");
         }
         catch (Exception ex)
         {

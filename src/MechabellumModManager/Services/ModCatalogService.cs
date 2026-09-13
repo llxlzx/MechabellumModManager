@@ -99,6 +99,10 @@ public sealed class CatalogMod
     public Dictionary<string, CatalogModLocale>? Locales { get; set; }
 }
 
+public enum CatalogFetchKind { HotSkip, WarmNotModified, ColdApplied }
+
+public sealed record CatalogFetchResult(CatalogFetchKind Kind, CatalogRoot? Root, string? Detail);
+
 /// <summary>
 /// Fetches Mod catalog and files from the independent MechabellumMods GitHub repo.
 /// </summary>
@@ -129,6 +133,10 @@ public sealed class ModCatalogService
     /// has not finished syncing. Null when every reachable copy was equally fresh. Reset per fetch.
     /// </summary>
     public string? LastStaleSource { get; private set; }
+
+    public TimeSpan HotCacheTtl { get; set; } = TimeSpan.FromMinutes(15);
+    public DateTimeOffset? LastCatalogAppliedUtc { get; private set; }
+    public string? LastCatalogEtag { get; private set; }
 
     /// <summary>
     /// The non-mirror catalog URL. Overridable for the same reason loopback http is accepted for
@@ -337,7 +345,11 @@ public sealed class ModCatalogService
                 try
                 {
                     var json = await result.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                    copies.Add(new CatalogCopy(result.Used, json, DeserializeCatalog(json)));
+                    copies.Add(new CatalogCopy(
+                        result.Used,
+                        json,
+                        DeserializeCatalog(json),
+                        result.Response.Headers.ETag?.Tag));
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
@@ -365,12 +377,90 @@ public sealed class ModCatalogService
 
         var chosen = copies[winner];
         LastFetchSource = RemoteFetch.ClassifySource(chosen.Used);
+        LastCatalogEtag = chosen.ETag;
         if (!string.IsNullOrWhiteSpace(DataRoot))
+        {
             CatalogCache.Write(DataRoot, chosen.Json);
+            CatalogCache.WriteEtag(DataRoot, chosen.ETag);
+        }
         return chosen.Root;
     }
 
-    readonly record struct CatalogCopy(Uri Used, string Json, CatalogRoot Root);
+    public async Task<CatalogFetchResult> FetchCatalogSmartAsync(bool forceCold, CancellationToken ct = default)
+    {
+        if (!forceCold &&
+            LastCatalogAppliedUtc is { } applied &&
+            DateTimeOffset.UtcNow - applied < HotCacheTtl)
+        {
+            return new CatalogFetchResult(CatalogFetchKind.HotSkip, null, "hot");
+        }
+
+        if (!forceCold && MirrorBaseUrl is not null)
+        {
+            var mirrorUri = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumMods/catalog.json");
+            if (mirrorUri is not null)
+            {
+                var etag = LastCatalogEtag;
+                if (string.IsNullOrWhiteSpace(etag) &&
+                    !string.IsNullOrWhiteSpace(DataRoot) &&
+                    CatalogCache.TryReadEtag(DataRoot, out var stored))
+                    etag = stored;
+
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(etag))
+                    {
+                        using var probe = await RemoteFetch.GetConditionalAsync(_http, mirrorUri, etag, ct)
+                            .ConfigureAwait(false);
+                        if (probe.Response.StatusCode == HttpStatusCode.NotModified)
+                        {
+                            var cached = TryLoadCachedCatalog();
+                            if (cached is null)
+                                return await ColdAsync(ct).ConfigureAwait(false);
+                            LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
+                            return new CatalogFetchResult(CatalogFetchKind.WarmNotModified, cached, "warm-304");
+                        }
+                        // 200 → Cold (GetAllAsync path via existing FetchCatalogAsync)
+                        return await ColdAsync(ct).ConfigureAwait(false);
+                    }
+
+                    // No etag: mirror-only GET + fingerprint
+                    using var mirrorOnly = await RemoteFetch.GetAsync(_http, new[] { mirrorUri }, ct)
+                        .ConfigureAwait(false);
+                    var json = await mirrorOnly.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                    var remote = DeserializeCatalog(json);
+                    var cachedRoot = TryLoadCachedCatalog();
+                    if (cachedRoot is not null &&
+                        FreshnessStamp(remote) is { } a &&
+                        FreshnessStamp(cachedRoot) is { } b &&
+                        a == b)
+                    {
+                        LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
+                        return new CatalogFetchResult(CatalogFetchKind.WarmNotModified, cachedRoot, "warm-fingerprint");
+                    }
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch
+                {
+                    // fall through to Cold
+                }
+            }
+        }
+
+        return await ColdAsync(ct).ConfigureAwait(false);
+    }
+
+    async Task<CatalogFetchResult> ColdAsync(CancellationToken ct)
+    {
+        var root = await FetchCatalogAsync(ct).ConfigureAwait(false);
+        LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
+        return new CatalogFetchResult(CatalogFetchKind.ColdApplied, root, "cold");
+    }
+
+    readonly record struct CatalogCopy(Uri Used, string Json, CatalogRoot Root, string? ETag);
 
     /// <summary>
     /// Index of the freshest copy. Candidates arrive mirror-first and a tie keeps the earlier one, so
