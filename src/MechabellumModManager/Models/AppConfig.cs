@@ -35,4 +35,7 @@ public sealed class AppConfig
     /// already fixed, and the cost is one catalog fetch.
     /// </summary>
     public bool CheckModUpdatesOnStartup { get; set; } = true;
+
+    /// <summary>Minutes catalog stays Hot before a Warm probe. Default 15. Not shown in Settings UI.</summary>
+    public int CatalogHotCacheMinutes { get; set; } = 15;
 }
