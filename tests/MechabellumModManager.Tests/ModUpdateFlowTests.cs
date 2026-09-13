@@ -260,18 +260,23 @@ public class ModUpdateFlowTests
         var catalog = CatalogServing(version: "1.2.0", out var handler);
         var vm = fx.CreateVm(catalog: catalog);
         vm.CheckModUpdatesOnStartup = false;
+        vm.SilentCatalogRefreshInterval.Should().Be(TimeSpan.FromMinutes(15),
+            "default hot window is 15 minutes; first switch may Cold, the next must HotSkip");
 
         vm.ShowSettingsPageCommand.Execute(null);
         vm.ShowLibraryPageCommand.Execute(null);
         await WaitForUpdateFlag(vm, oldId);
         var afterFirst = handler.Requests.Count;
+        vm.LogText.Should().Contain("[catalog ", "warm/cold silent fetch names the kind once");
 
         vm.ShowSettingsPageCommand.Execute(null);
         vm.ShowLibraryPageCommand.Execute(null);
         await Task.Delay(50);
 
         handler.Requests.Count.Should().Be(afterFirst, "the catalog in hand is still fresh");
+        vm.LogText.Should().Contain("[catalog ", "HotSkip must not spam another catalog line");
 
+        // Zero interval + setter must also zero the service TTL so the third switch is Warm/Cold.
         vm.SilentCatalogRefreshInterval = TimeSpan.Zero;
         vm.ShowSettingsPageCommand.Execute(null);
         vm.ShowLibraryPageCommand.Execute(null);
@@ -281,6 +286,21 @@ public class ModUpdateFlowTests
             await Task.Delay(20);
 
         handler.Requests.Count.Should().BeGreaterThan(afterFirst, "an expired window has to refetch");
+    }
+
+    [Fact]
+    public async Task Manual_refresh_force_colds_inside_hot_window()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var catalog = CatalogServing(version: "1.2.0", out var handler);
+        var vm = fx.CreateVm(catalog: catalog);
+        vm.CheckModUpdatesOnStartup = false;
+        vm.SilentCatalogRefreshInterval = TimeSpan.FromMinutes(15);
+
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+        var afterManual1 = handler.Requests.Count;
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+        handler.Requests.Count.Should().BeGreaterThan(afterManual1);
     }
 
     /// <summary>

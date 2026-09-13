@@ -73,6 +73,46 @@ public static class RemoteFetch
             "All remote fetch candidates failed: " + string.Join("; ", failures));
     }
 
+    public static async Task<RemoteFetchResult> GetConditionalAsync(
+        HttpClient http,
+        Uri uri,
+        string? ifNoneMatch,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(uri);
+
+        using var req = new HttpRequestMessage(HttpMethod.Get, uri);
+        if (!string.IsNullOrWhiteSpace(ifNoneMatch))
+            req.Headers.TryAddWithoutValidation("If-None-Match", ifNoneMatch.Trim());
+
+        HttpResponseMessage resp;
+        try
+        {
+            resp = await http.SendAsync(req, HttpCompletionOption.ResponseContentRead, ct)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (TaskCanceledException)
+        {
+            throw new HttpRequestException($"{uri.Host}: timeout");
+        }
+        catch (HttpRequestException)
+        {
+            throw;
+        }
+
+        if (resp.StatusCode == System.Net.HttpStatusCode.NotModified || resp.IsSuccessStatusCode)
+            return new RemoteFetchResult(uri, resp);
+
+        var code = (int)resp.StatusCode;
+        resp.Dispose();
+        throw new HttpRequestException($"{uri.Host}: HTTP {code}");
+    }
+
     /// <summary>
     /// Longest a straggler is given once some other candidate has already answered in full. Waiting
     /// for all of them unconditionally would put a blackholed origin's connect timeout in front of

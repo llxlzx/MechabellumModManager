@@ -58,6 +58,10 @@
 清单模板：`src/MechabellumModManager/Assets/redist-manifest.json`。  
 发版顺序：**先 sync-mirror（含 redist）→ verify-mirror → 再打瘦 Setup / 发 GitHub Release**。
 
+### Catalog / latest.json caching (clients ≥ scale-friendly detection)
+
+Mirror objects should keep normal COS ETags. Avoid Cache-Control that forces every client GET to ignore validators and always download a full body. Conditional requests (`If-None-Match`) are how installed clients stay quiet between publishes.
+
 安装向导末尾与程序内安装 Melon 会 `--ensure-redist`：COS → GitHub/微软，强制 sha256。
 
 ### 1.2b（历史）fat Setup
