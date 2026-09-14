@@ -4,7 +4,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-Set-Location (Split-Path $PSScriptRoot -Parent)
+Set-Location (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
 Write-Host "[1/3] Publishing..."
 dotnet publish "src\MechabellumModManager\MechabellumModManager.csproj" `
@@ -21,17 +21,17 @@ New-Item -ItemType Directory -Force -Path $assetsOut | Out-Null
 Copy-Item "src\MechabellumModManager\Assets\*" $assetsOut -Force
 
 @(
-  "installer\redist\dotnet8",
-  "installer\redist\dotnet6",
-  "installer\redist\melonloader",
-  "installer\redist\unity-deps",
-  "installer\redist\cpp2il"
+  "packaging\installer\redist\dotnet8",
+  "packaging\installer\redist\dotnet6",
+  "packaging\installer\redist\melonloader",
+  "packaging\installer\redist\unity-deps",
+  "packaging\installer\redist\cpp2il"
 ) | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ | Out-Null }
 
 Write-Host "[2/3] Checking offline redist staging (used by sync-mirror; NOT embedded in thin Setup)..."
-$melonZip = Join-Path (Get-Location) "installer\redist\melonloader\MelonLoader.x64.zip"
-$unityDepsDir = Join-Path (Get-Location) "installer\redist\unity-deps"
-$dotnet8Dir = Join-Path (Get-Location) "installer\redist\dotnet8"
+$melonZip = Join-Path (Get-Location) "packaging\installer\redist\melonloader\MelonLoader.x64.zip"
+$unityDepsDir = Join-Path (Get-Location) "packaging\installer\redist\unity-deps"
+$dotnet8Dir = Join-Path (Get-Location) "packaging\installer\redist\dotnet8"
 
 function Test-NonEmptyFile([string] $Path) {
     return (Test-Path -LiteralPath $Path) -and ((Get-Item -LiteralPath $Path).Length -gt 0)
@@ -39,7 +39,7 @@ function Test-NonEmptyFile([string] $Path) {
 
 $stagingOk = $true
 if (-not (Test-NonEmptyFile $melonZip)) {
-    Write-Warning "Staging missing MelonLoader.x64.zip (mirror sync will need it). Path: installer\redist\melonloader\"
+    Write-Warning "Staging missing MelonLoader.x64.zip (mirror sync will need it). Path: packaging\installer\redist\melonloader\"
     $stagingOk = $false
 } else {
     Write-Host "Found MelonLoader staging: $melonZip ($([math]::Round((Get-Item $melonZip).Length / 1MB, 1)) MB)"
@@ -55,7 +55,7 @@ if (-not $unityDepsZip) {
     Write-Host "Found UnityDependencies staging: $($unityDepsZip.FullName) ($([math]::Round($unityDepsZip.Length / 1MB, 1)) MB)"
 }
 
-$cpp2IlDir = Join-Path (Get-Location) "installer\redist\cpp2il"
+$cpp2IlDir = Join-Path (Get-Location) "packaging\installer\redist\cpp2il"
 $cpp2IlExe = Join-Path $cpp2IlDir "Cpp2IL.exe"
 $cpp2IlPlugin = Join-Path $cpp2IlDir "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
 if (-not (Test-NonEmptyFile $cpp2IlExe) -or -not (Test-NonEmptyFile $cpp2IlPlugin)) {
@@ -85,10 +85,10 @@ if ($SkipMelonRedistCheck) {
 
 
 # UTF-8 BOM check for Inno script (prevents Chinese CustomMessages mojibake)
-$issPath = Join-Path (Get-Location) "installer\MechabellumModManager.iss"
+$issPath = Join-Path (Get-Location) "packaging\installer\MechabellumModManager.iss"
 $issBytes = [IO.File]::ReadAllBytes($issPath)
 if ($issBytes.Length -lt 3 -or $issBytes[0] -ne 0xEF -or $issBytes[1] -ne 0xBB -or $issBytes[2] -ne 0xBF) {
-  Write-Error "installer\MechabellumModManager.iss must be UTF-8 with BOM (Inno Unicode). Re-save with BOM; do not use PowerShell Set-Content without -Encoding utf8BOM."
+  Write-Error "packaging\installer\MechabellumModManager.iss must be UTF-8 with BOM (Inno Unicode). Re-save with BOM; do not use PowerShell Set-Content without -Encoding utf8BOM."
   exit 4
 }
 $issText = [Text.Encoding]::UTF8.GetString($issBytes, 3, $issBytes.Length - 3)
@@ -114,7 +114,7 @@ if (-not $iscc) {
 }
 
 Write-Host "Using $iscc"
-& $iscc "installer\MechabellumModManager.iss"
+& $iscc "packaging\installer\MechabellumModManager.iss"
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
 
 Get-ChildItem "dist\*Setup*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "OK $($_.FullName)" }

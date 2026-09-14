@@ -19,7 +19,7 @@ DisableProgramGroupPage=yes
 ; Default is "auto": skips manager install-dir page on upgrade/reinstall. Always show it.
 DisableDirPage=no
 AlwaysShowDirOnReadyPage=yes
-OutputDir=..\dist
+OutputDir=..\..\dist
 OutputBaseFilename=MechabellumModManager_Setup_v{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
@@ -279,8 +279,8 @@ Name: "melon"; Description: "{cm:CompMelon}"; Types: full compact custom
 
 [Files]
 ; Published app + assets (build-installer.bat publishes first)
-Source: "..\publish\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion; Components: main
-Source: "..\publish\Assets\*"; DestDir: "{app}\Assets"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
+Source: "..\..\publish\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "..\..\publish\Assets\*"; DestDir: "{app}\Assets"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
 ; Helper scripts shipped with the app for repair / documentation
 Source: "scripts\*"; DestDir: "{app}\installer-scripts"; Flags: ignoreversion; Components: main
 ; Thin Setup: runtime packages downloaded at post-install (--ensure-redist), not embedded.
