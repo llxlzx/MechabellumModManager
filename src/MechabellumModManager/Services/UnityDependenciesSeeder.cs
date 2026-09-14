@@ -226,6 +226,7 @@ public sealed class UnityDependenciesSeeder
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             for (var i = 0; i < 8 && dir is not null; i++, dir = dir.Parent)
             {
+                candidates.Add(Path.Combine(dir.FullName, "packaging", "installer", "redist", "cpp2il"));
                 candidates.Add(Path.Combine(dir.FullName, "installer", "redist", "cpp2il"));
             }
         }
@@ -263,6 +264,7 @@ public sealed class UnityDependenciesSeeder
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             for (var i = 0; i < 8 && dir is not null; i++, dir = dir.Parent)
             {
+                candidates.Add(Path.Combine(dir.FullName, "packaging", "installer", "redist", "unity-deps"));
                 candidates.Add(Path.Combine(dir.FullName, "installer", "redist", "unity-deps"));
             }
         }

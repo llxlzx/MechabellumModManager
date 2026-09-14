@@ -33,7 +33,7 @@ public class SanitizeAcfSnapshotsCliTests
     {
         var script = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "installer", "scripts", "Sanitize-AcfSnapshots.ps1"));
+            "packaging", "installer", "scripts", "Sanitize-AcfSnapshots.ps1"));
         File.Exists(script).Should().BeTrue(because: script);
 
         var psi = new System.Diagnostics.ProcessStartInfo
@@ -60,7 +60,7 @@ public class SanitizeAcfSnapshotsCliTests
     {
         var script = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "installer", "scripts", "Run-SanitizeAcfCli.ps1"));
+            "packaging", "installer", "scripts", "Run-SanitizeAcfCli.ps1"));
         File.Exists(script).Should().BeTrue(because: script);
 
         var missingExe = Path.Combine(Path.GetTempPath(), "mmm-no-exe-" + Guid.NewGuid().ToString("N") + ".exe");

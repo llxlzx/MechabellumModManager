@@ -177,6 +177,7 @@ public sealed class MelonLoaderDualStoreSync
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             for (var i = 0; i < 6 && dir is not null; i++, dir = dir.Parent)
             {
+                candidates.Add(Path.Combine(dir.FullName, "packaging", "installer", "redist", "melonloader", "MelonLoader.x64.zip"));
                 candidates.Add(Path.Combine(dir.FullName, "installer", "redist", "melonloader", "MelonLoader.x64.zip"));
             }
         }
