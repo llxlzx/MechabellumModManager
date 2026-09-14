@@ -1,7 +1,7 @@
 # Design: Repo layout Step 1 (cleanup + .NET polish)
 
 Date: 2026-09-14  
-Status: approved for spec; implementation pending user review of this file
+Status: Step 1 implementation in progress
 
 ## Goal
 
