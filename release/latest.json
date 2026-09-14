@@ -1,10 +1,10 @@
 {
-    "version":  "1.2.4",
-    "notes":  "修复安装到 Program Files 时 Melon 离线红配无法写入：自动回退到本地缓存目录并播种 Cpp2IL/UnityDependencies，避免首次生成因 GitHub 超时失败；程序集生成失败时直接提示 Cpp2IL 下载错误，不再空等 180 秒。\nFix: when installed under Program Files, Melon offline redist falls back to a writable LocalAppData cache and seeds Cpp2IL/UnityDependencies so first-run generation is not stuck on GitHub timeouts; assembly generation now surfaces Cpp2IL download failures instead of waiting 180s silently.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.4/MechabellumModManager_Setup_v1.2.4.exe",
-    "setupSha256":  "0428db5159dd07d26529a6db5bc2088fe6b3a3ddba8fd86ef3f11a9642a3f1d5",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.4/MechabellumModManager_portable_v1.2.4.zip",
-    "portableSha256":  "82be17231b8dda596ea47089822455de84db6e626281cd2cf504ffcc3add236a",
-    "publishedAt":  "2026-09-14T16:23:41Z",
-    "build":  "v1.2.4-redist-writable-fallback-cpp2il-diag"
+  "version": "1.2.5",
+  "notes": "Setup 离线包失败时跳过 Melon，避免半成品 Loader；cpp2il-plugin 补全 originUrl；Melon CLI 播种失败返回 exit 6；简中走 COS，其它语言走 origin。\nSetup skips Melon when redist ensure fails to avoid a half-installed Loader; cpp2il-plugin has originUrl; Melon CLI returns exit 6 on seed failure; zh-CN uses COS, other languages use origin.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.5/MechabellumModManager_Setup_v1.2.5.exe",
+  "setupSha256": "4d3197f81cb246488d0f75583e4e6a91928f686728bdcd1fae9905dc53076af4",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.5/MechabellumModManager_portable_v1.2.5.zip",
+  "portableSha256": "a285192dbf7ae9e4426a5b86093c57f266c34182692cad96e678eaf9f6eb2aa0",
+  "publishedAt": "2026-09-14T16:49:47Z",
+  "build": "v1.2.5-setup-redist-gates-half-melon"
 }
