@@ -39,14 +39,14 @@
 ### 1.1 改版本号（三处一致）
 
 1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>X.Y.Z</Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
+2. `packaging/installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
 3. 稍后写入的 `release/vX.Y.Z/latest.json` → `"version": "X.Y.Z"`
 
 此时**不要**动 `release/latest.json`。它是对外生效的指针，留到 [第 8 节](#8-最后一步推送仓库指针-中文)。
 
 ### 1.2 运行时离线包（镜像暂存，**不**再打进 Setup）
 
-自 **v1.2.0** 起 Setup 为瘦包。将下列文件放到 `installer/redist\`，供 `tools/sync-mirror.ps1` 上传到 `MechabellumRedist/`（**默认同步**；调试可用 `-SkipRedist`）：
+自 **v1.2.0** 起 Setup 为瘦包。将下列文件放到 `packaging/installer/redist\`，供 `tools/sync-mirror.ps1` 上传到 `MechabellumRedist/`（**默认同步**；调试可用 `-SkipRedist`）：
 
 | 路径 | 说明 |
 |------|------|
@@ -91,7 +91,7 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 ## 2. 本地出包 (中文)
 
 ```powershell
-.\installer\build-installer.ps1
+.\packaging\installer\build-installer.ps1
 ```
 
 产物：`dist\MechabellumModManager_Setup_vX.Y.Z.exe`（应明显大于仅程序体积，因内嵌 Melon zip）。
@@ -247,7 +247,7 @@ git push origin master
 ### 1.1 Bump version (three places, same number)
 
 1. `src/MechabellumModManager/MechabellumModManager.csproj` → `<Version>X.Y.Z</Version>`
-2. `installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
+2. `packaging/installer/MechabellumModManager.iss` → `#define MyAppVersion "X.Y.Z"`
 3. `release/vX.Y.Z/latest.json` → `"version": "X.Y.Z"`
 
 Leave `release/latest.json` alone here. It is the pointer players actually read, so it always names the
@@ -257,7 +257,7 @@ version that is already downloadable, and it is updated last — see [§8](#8-la
 
 Place official file at:
 
-`installer/redist/melonloader/MelonLoader.x64.zip`
+`packaging/installer/redist/melonloader/MelonLoader.x64.zip`
 
 From: https://github.com/LavaGang/MelonLoader/releases  
 
@@ -269,14 +269,14 @@ In addition to the Melon zip, release fat Setup requires:
 
 | Path | Source | Notes |
 |------|--------|-------|
-| `installer/redist/unity-deps/UnityDependencies_{major.minor.patch}.zip` | https://github.com/LavaGang/Unity-Runtime-Libraries | Upstream names like `2022.3.62.zip` **must be renamed** to `UnityDependencies_2022.3.62.zip` under `unity-deps/` |
-| `installer/redist/dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` | https://dotnet.microsoft.com/download/dotnet/8.0 | Windows x64 Desktop Runtime offline installer |
+| `packaging/installer/redist/unity-deps/UnityDependencies_{major.minor.patch}.zip` | https://github.com/LavaGang/Unity-Runtime-Libraries | Upstream names like `2022.3.62.zip` **must be renamed** to `UnityDependencies_2022.3.62.zip` under `unity-deps/` |
+| `packaging/installer/redist/dotnet8/windowsdesktop-runtime-8.*-win-x64.exe` | https://dotnet.microsoft.com/download/dotnet/8.0 | Windows x64 Desktop Runtime offline installer |
 
 Resolve the game Unity version from `Mechabellum_Data\globalgamemanagers` (e.g. `2022.3.62f3` → `UnityDependencies_2022.3.62.zip`). Refresh `unity-deps` and ship a new Setup when Mechabellum’s Unity patch bumps.
 
 **Domestic Setup mirror:** Downloading Setup from GitHub Release may still need VPN or a third-party mirror. The fat Setup goal is **post-install** offline first-run Il2Cpp generation (success level **B**) after Melon is written and UnityDependencies is seeded. Mirror distribution is ops/docs only, not in-app.
 
-**Residual probe before calling B done (Cpp2IL, etc.):** On a real machine, run acceptance **F** in `docs/superpowers/specs/2026-09-05-china-offline-melon-fat-setup-design.md`: disconnect network, launch the game once. If Melon still asks for another missing package under `{game}\MelonLoader\Dependencies\Il2CppAssemblyGenerator\` (often Cpp2IL-related), add it to `installer/redist/`, extend the `build-installer` gate, rebuild Setup, then re-run acceptance before claiming B complete.
+**Residual probe before calling B done (Cpp2IL, etc.):** On a real machine, run acceptance **F** in `docs/dev/superpowers/specs/2026-09-05-china-offline-melon-fat-setup-design.md`: disconnect network, launch the game once. If Melon still asks for another missing package under `{game}\MelonLoader\Dependencies\Il2CppAssemblyGenerator\` (often Cpp2IL-related), add it to `packaging/installer/redist/`, extend the `build-installer` gate, rebuild Setup, then re-run acceptance before claiming B complete.
 
 ### 1.3 Code and tests
 
@@ -301,7 +301,7 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 ## 2. Build locally (English)
 
 ```powershell
-.\installer\build-installer.ps1
+.\packaging\installer\build-installer.ps1
 ```
 
 Output: `dist\MechabellumModManager_Setup_vX.Y.Z.exe` (should be clearly larger than app-only; Melon zip is embedded).

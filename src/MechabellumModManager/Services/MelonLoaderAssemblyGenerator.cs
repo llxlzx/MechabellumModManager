@@ -135,6 +135,8 @@ public sealed class MelonLoaderAssemblyGenerator
         var interval = pollInterval ?? DefaultPollInterval;
         progress?.Invoke("正在短暂启动游戏以触发 MelonLoader 生成程序集。");
 
+        var logSnapshot = MelonGenerationFailureReader.CaptureSnapshot(full);
+
         Process? proc = null;
         try
         {
@@ -153,6 +155,13 @@ public sealed class MelonLoaderAssemblyGenerator
             while (DateTime.UtcNow < deadline)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                var fatal = MelonGenerationFailureReader.TryDescribeNewFailure(full, logSnapshot);
+                if (fatal is not null)
+                {
+                    TryKill(proc);
+                    return Fail(fatal);
+                }
 
                 if (File.Exists(marker))
                 {
@@ -195,8 +204,13 @@ public sealed class MelonLoaderAssemblyGenerator
             }
 
             TryKill(proc);
-            return Fail(
-                $"等待程序集生成超时（{wait.TotalSeconds:0} 秒）。请手动启动一次游戏完成首次生成，并查看日志：MelonLoader\\Latest.log");
+            var timeoutDetail = MelonGenerationFailureReader.TryDescribeNewFailure(full, logSnapshot)
+                                ?? MelonGenerationFailureReader.TryDescribe(full);
+            var timeoutMsg =
+                $"等待程序集生成超时（{wait.TotalSeconds:0} 秒）。请手动启动一次游戏完成首次生成，并查看日志：MelonLoader\\Latest.log";
+            if (!string.IsNullOrWhiteSpace(timeoutDetail))
+                timeoutMsg += "\n" + timeoutDetail;
+            return Fail(timeoutMsg);
         }
         catch (OperationCanceledException)
         {

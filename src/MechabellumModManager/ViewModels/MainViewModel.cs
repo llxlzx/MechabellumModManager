@@ -2363,8 +2363,9 @@ public sealed partial class MainViewModel : ObservableObject
             await RunWithCriticalOpAsync(CriticalOpKind.MelonInstall, "MelonInstall", async () =>
             {
                 MelonLoaderInstallResult result;
-                var redistDir = Path.Combine(AppContext.BaseDirectory, "installer-redist");
-                Directory.CreateDirectory(redistDir);
+                var redistDir = RedistDirectoryResolver.Resolve(out var usedRedistFallback);
+                if (usedRedistFallback)
+                    AppendLog("安装目录不可写，改用本地缓存目录存放 Melon 离线包：" + redistDir);
                 // MirrorBaseUrl "" = opt-out (origin only). Null should not happen after factory fill.
                 var mirror = MirrorBaseUrl;
                 AppendLog("正在准备 Melon 运行时离线包（镜像优先）…");

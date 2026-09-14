@@ -1,6 +1,6 @@
 @echo off
 setlocal
-cd /d "%~dp0\.."
+cd /d "%~dp0\..\.."
 
 echo [1/3] Publishing manager...
 dotnet publish "src\MechabellumModManager\MechabellumModManager.csproj" -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o "publish"
@@ -18,35 +18,35 @@ if not exist "publish\Assets" mkdir "publish\Assets"
 copy /Y "src\MechabellumModManager\Assets\*" "publish\Assets\" >nul
 
 echo [2/3] Ensuring redist folders + offline redist check...
-if not exist "installer\redist\dotnet8" mkdir "installer\redist\dotnet8"
-if not exist "installer\redist\dotnet6" mkdir "installer\redist\dotnet6"
-if not exist "installer\redist\melonloader" mkdir "installer\redist\melonloader"
-if not exist "installer\redist\unity-deps" mkdir "installer\redist\unity-deps"
-if not exist "installer\redist\cpp2il" mkdir "installer\redist\cpp2il"
+if not exist "packaging\installer\redist\dotnet8" mkdir "packaging\installer\redist\dotnet8"
+if not exist "packaging\installer\redist\dotnet6" mkdir "packaging\installer\redist\dotnet6"
+if not exist "packaging\installer\redist\melonloader" mkdir "packaging\installer\redist\melonloader"
+if not exist "packaging\installer\redist\unity-deps" mkdir "packaging\installer\redist\unity-deps"
+if not exist "packaging\installer\redist\cpp2il" mkdir "packaging\installer\redist\cpp2il"
 
 if /I "%SKIP_MELON_REDIST_CHECK%"=="1" (
-  echo WARNING: SKIP_MELON_REDIST_CHECK=1 — skips all release redist checks. Do NOT use for release.
+  echo WARNING: SKIP_MELON_REDIST_CHECK=1 ??skips all release redist checks. Do NOT use for release.
   goto :after_redist_check
 )
-if not exist "installer\redist\melonloader\MelonLoader.x64.zip" (
-  echo ERROR: Missing installer\redist\melonloader\MelonLoader.x64.zip
+if not exist "packaging\installer\redist\melonloader\MelonLoader.x64.zip" (
+  echo ERROR: Missing packaging\installer\redist\melonloader\MelonLoader.x64.zip
   echo Place the official MelonLoader.x64.zip there before building a release Setup.
   echo Download: https://github.com/LavaGang/MelonLoader/releases
   echo Local debug only: set SKIP_MELON_REDIST_CHECK=1
   exit /b 3
 )
-for %%A in ("installer\redist\melonloader\MelonLoader.x64.zip") do if %%~zA==0 (
+for %%A in ("packaging\installer\redist\melonloader\MelonLoader.x64.zip") do if %%~zA==0 (
   echo ERROR: MelonLoader.x64.zip is empty.
   exit /b 3
 )
 echo Found MelonLoader offline zip.
 
 set "UNITY_DEPS_OK=0"
-for %%F in ("installer\redist\unity-deps\UnityDependencies_*.zip") do (
+for %%F in ("packaging\installer\redist\unity-deps\UnityDependencies_*.zip") do (
   if exist "%%~fF" if not "%%~zF"=="0" set "UNITY_DEPS_OK=1"
 )
 if "%UNITY_DEPS_OK%"=="0" (
-  echo ERROR: Missing non-empty installer\redist\unity-deps\UnityDependencies_*.zip
+  echo ERROR: Missing non-empty packaging\installer\redist\unity-deps\UnityDependencies_*.zip
   echo Download: https://github.com/LavaGang/Unity-Runtime-Libraries
   echo Rename upstream files e.g. 2022.3.62.zip to UnityDependencies_2022.3.62.zip
   echo Local debug only: set SKIP_MELON_REDIST_CHECK=1
@@ -57,18 +57,18 @@ echo Found UnityDependencies offline zip.
 set "DOTNET8_OK=0"
 
 set "HAS_CPP2IL="
-if exist "installer\redist\cpp2il\Cpp2IL.exe" if exist "installer\redist\cpp2il\Cpp2IL.Plugin.StrippedCodeRegSupport.dll" set "HAS_CPP2IL=1"
+if exist "packaging\installer\redist\cpp2il\Cpp2IL.exe" if exist "packaging\installer\redist\cpp2il\Cpp2IL.Plugin.StrippedCodeRegSupport.dll" set "HAS_CPP2IL=1"
 if not defined HAS_CPP2IL (
-  echo ERROR: Missing non-empty installer\redist\cpp2il\Cpp2IL.exe and plugin DLL
+  echo ERROR: Missing non-empty packaging\installer\redist\cpp2il\Cpp2IL.exe and plugin DLL
   echo Place Melon 0.7.3 matching Cpp2IL files ^(tag 2022.1.0-pre-release.21^).
   exit /b 3
 )
 
-for %%F in ("installer\redist\dotnet8\windowsdesktop-runtime-8.*-win-x64.exe") do (
+for %%F in ("packaging\installer\redist\dotnet8\windowsdesktop-runtime-8.*-win-x64.exe") do (
   if exist "%%~fF" if not "%%~zF"=="0" set "DOTNET8_OK=1"
 )
 if "%DOTNET8_OK%"=="0" (
-  echo ERROR: Missing non-empty installer\redist\dotnet8\windowsdesktop-runtime-8.*-win-x64.exe
+  echo ERROR: Missing non-empty packaging\installer\redist\dotnet8\windowsdesktop-runtime-8.*-win-x64.exe
   echo Download: https://dotnet.microsoft.com/download/dotnet/8.0
   echo Local debug only: set SKIP_MELON_REDIST_CHECK=1
   exit /b 3
@@ -91,7 +91,7 @@ if not defined ISCC (
 )
 
 echo Using ISCC: %ISCC%
-"%ISCC%" "installer\MechabellumModManager.iss"
+"%ISCC%" "packaging\installer\MechabellumModManager.iss"
 if errorlevel 1 (
   echo ISCC failed.
   exit /b 1

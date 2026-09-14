@@ -171,12 +171,28 @@ public sealed class MelonLoaderDualStoreSync
             // ignore
         }
 
+        try
+        {
+            // Writable fallback used when Program Files installer-redist is Access Denied.
+            candidates.Add(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MechabellumModManager",
+                "installer-redist",
+                "melonloader",
+                "MelonLoader.x64.zip"));
+        }
+        catch
+        {
+            // ignore
+        }
+
         // Dev / repo layout when running from publish\
         try
         {
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             for (var i = 0; i < 6 && dir is not null; i++, dir = dir.Parent)
             {
+                candidates.Add(Path.Combine(dir.FullName, "packaging", "installer", "redist", "melonloader", "MelonLoader.x64.zip"));
                 candidates.Add(Path.Combine(dir.FullName, "installer", "redist", "melonloader", "MelonLoader.x64.zip"));
             }
         }

@@ -10,7 +10,7 @@ public class UninstallCleanupPolicyTests
     {
         var iss = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "installer", "MechabellumModManager.iss"));
+            "packaging", "installer", "MechabellumModManager.iss"));
         File.Exists(iss).Should().BeTrue(because: iss);
         var text = File.ReadAllText(iss);
 

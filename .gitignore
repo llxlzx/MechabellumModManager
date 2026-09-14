@@ -1,23 +1,23 @@
-bin/
+﻿bin/
 obj/
 .vs/
 *.user
 .superpowers/
 dist/
 publish/
-发布/
-分发/
+鍙戝竷/
+鍒嗗彂/
 *.pdb
-installer/redist/**/*.exe
-installer/redist/**/*.zip
-installer/redist/unity-deps/*.zip
-!installer/redist/**/.gitkeep
-!installer/redist/**/README.md
+packaging/installer/redist/**/*.exe
+packaging/installer/redist/**/*.zip
+packaging/installer/redist/unity-deps/*.zip
+!packaging/installer/redist/**/.gitkeep
+!packaging/installer/redist/**/README.md
 
 # accidental local install into repo
 /MechabellumModManager.exe
-/钢铁指挥官Mod管理器/
-/钢铁指挥官Mod管理器.exe
+/閽㈤搧鎸囨尌瀹楳od绠＄悊鍣?
+/閽㈤搧鎸囨尌瀹楳od绠＄悊鍣?exe
 
 # Release packages live on GitHub Releases; do not re-commit binaries into git.
 release/**/*.exe
