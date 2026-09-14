@@ -1,7 +1,10 @@
 {
-  "version": "1.2.2",
-  "notes": "安装更稳：修了安装时卡住的问题。设置里可隐藏 Melon 黑窗。内容加速入口收进「高级」，界面更清爽。检查更新更省流量：平常少反复下载目录，有新版本时仍能较快发现。\nMore reliable install (no long hang). Optional Melon console hide. Content mirror under Advanced. Gentler update checks with less repeat traffic.",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.2/MechabellumModManager_Setup_v1.2.2.exe",
-  "publishedAt": "2026-09-13T15:50:00Z",
-  "build": "v1.2.2-scale-detection-melon-hang-hide-console-mirror-advanced"
+  "version": "1.2.3",
+  "notes": "管理器可一键下载并完成更新（安装版 / 便携版）。中国大陆默认走国内内容加速，其它地区默认走 GitHub。安装更稳，设置可隐藏 Melon 黑窗，内容加速收进高级。\nOne-click manager self-update (Setup and portable). Mainland China defaults to the domestic mirror; other regions default to GitHub. Stabler install, optional Melon console hide, content mirror under Advanced.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.3/MechabellumModManager_Setup_v1.2.3.exe",
+  "setupSha256": "80843f106e86309ec078f72c4ffce504d2a6c2085d80ec4cf7388592008b2bd4",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.3/MechabellumModManager_portable_v1.2.3.zip",
+  "portableSha256": "195130b14b5d3657b7d9a202130e9d27877b8e2048c0bac61cf33e8a0db0fbca",
+  "publishedAt": "2026-09-14T03:25:00Z",
+  "build": "v1.2.3-self-update-region-mirror-stable"
 }
