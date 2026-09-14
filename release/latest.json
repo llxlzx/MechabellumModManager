@@ -1,10 +1,10 @@
 {
-  "version": "1.2.4",
-  "notes": "目录检查更省流量：平常少反复下载整份目录，有新版本时仍能较快发现。管理器可一键更新（安装版/便携版）。中国大陆默认走国内内容加速，其它地区默认走 GitHub。\nGentler catalog checks (less repeat traffic; still discovers updates quickly). One-click manager self-update (Setup/portable). Mainland China defaults to domestic mirror; other regions use GitHub.",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.4/MechabellumModManager_Setup_v1.2.4.exe",
-  "setupSha256": "fbc59859bb4c408b3f3aa2698eeaee92c920f40cc57925ffd8669c4485a238cc",
-  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.4/MechabellumModManager_portable_v1.2.4.zip",
-  "portableSha256": "66f7b88ce4c91f70b8449e78b84a0b74b7068c0fba00c01d64ecb8ad13c882f3",
-  "publishedAt": "2026-09-14T04:40:00Z",
-  "build": "v1.2.4-catalog-hot-warm-cold-self-update"
+    "version":  "1.2.4",
+    "notes":  "修复安装到 Program Files 时 Melon 离线红配无法写入：自动回退到本地缓存目录并播种 Cpp2IL/UnityDependencies，避免首次生成因 GitHub 超时失败；程序集生成失败时直接提示 Cpp2IL 下载错误，不再空等 180 秒。\nFix: when installed under Program Files, Melon offline redist falls back to a writable LocalAppData cache and seeds Cpp2IL/UnityDependencies so first-run generation is not stuck on GitHub timeouts; assembly generation now surfaces Cpp2IL download failures instead of waiting 180s silently.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.4/MechabellumModManager_Setup_v1.2.4.exe",
+    "setupSha256":  "0428db5159dd07d26529a6db5bc2088fe6b3a3ddba8fd86ef3f11a9642a3f1d5",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.4/MechabellumModManager_portable_v1.2.4.zip",
+    "portableSha256":  "82be17231b8dda596ea47089822455de84db6e626281cd2cf504ffcc3add236a",
+    "publishedAt":  "2026-09-14T16:23:41Z",
+    "build":  "v1.2.4-redist-writable-fallback-cpp2il-diag"
 }

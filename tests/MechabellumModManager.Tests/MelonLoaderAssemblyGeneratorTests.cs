@@ -5,6 +5,88 @@ using MechabellumModManager.Services;
 public class MelonLoaderAssemblyGeneratorTests
 {
     [Fact]
+    public void TryDescribe_detects_cpp2il_download_failure()
+    {
+        var root = SeedStore(withAssemblies: false);
+        try
+        {
+            var logDir = Path.Combine(root, "MelonLoader");
+            Directory.CreateDirectory(logDir);
+            File.WriteAllText(Path.Combine(logDir, "Latest.log"),
+                """
+                [20:51:04.734] [Il2CppAssemblyGenerator] Downloading https://github.com/SamboyCoding/Cpp2IL/releases/download/x/Cpp2IL.exe
+                [20:51:25.809] [ERROR] [Il2CppAssemblyGenerator] HttpRequestException: (github.com:443)
+                [20:51:25.881] [ERROR] [INTERNAL FAILURE] Failed to Download Cpp2IL!
+                """);
+
+            var msg = MelonGenerationFailureReader.TryDescribe(root);
+
+            msg.Should().NotBeNullOrWhiteSpace();
+            msg.Should().Contain("Cpp2IL");
+            msg.Should().Match(s => s.Contains("GitHub", StringComparison.OrdinalIgnoreCase) || s.Contains("下载"));
+        }
+        finally { TryDelete(root); }
+    }
+
+    [Fact]
+    public async Task EnsureAssemblies_fails_fast_when_Latest_log_has_internal_failure()
+    {
+        var root = SeedStore(withAssemblies: false);
+        try
+        {
+            var logPath = Path.Combine(root, "MelonLoader", "Latest.log");
+            var gen = new MelonLoaderAssemblyGenerator(
+                startProcess: _ =>
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+                    File.WriteAllText(logPath,
+                        "[ERROR] [INTERNAL FAILURE] Failed to Download Cpp2IL!\n");
+                    return null;
+                },
+                delay: async (ts, ct) => await Task.Delay(5, ct));
+
+            var result = await gen.EnsureAssembliesAsync(
+                root,
+                timeout: TimeSpan.FromSeconds(30),
+                pollInterval: TimeSpan.FromMilliseconds(20));
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Contain("Cpp2IL");
+            result.Message.Should().NotContain("超时");
+        }
+        finally { TryDelete(root); }
+    }
+
+    [Fact]
+    public async Task EnsureAssemblies_timeout_includes_cpp2il_hint_when_log_present()
+    {
+        var root = SeedStore(withAssemblies: false);
+        try
+        {
+            var logPath = Path.Combine(root, "MelonLoader", "Latest.log");
+            var gen = new MelonLoaderAssemblyGenerator(
+                startProcess: _ =>
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+                    File.WriteAllText(logPath,
+                        "[ERROR] [INTERNAL FAILURE] Failed to Download Cpp2IL!\n");
+                    return null;
+                },
+                delay: async (ts, ct) => await Task.Delay(5, ct));
+
+            // Fail-fast will catch this; message must still mention Cpp2IL (not only bare timeout).
+            var result = await gen.EnsureAssembliesAsync(
+                root,
+                timeout: TimeSpan.FromMilliseconds(200),
+                pollInterval: TimeSpan.FromMilliseconds(20));
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Contain("Cpp2IL");
+        }
+        finally { TryDelete(root); }
+    }
+
+    [Fact]
     public async Task EnsureAssemblies_cancel_returns_fail_without_throw()
     {
         var root = SeedStore(withAssemblies: false);
