@@ -1,0 +1,30 @@
+# Heavy / generated — keep out of Cursor indexing & Agent context
+.worktrees/
+.review-phase0-base-wt/
+.superpowers/
+.git/
+
+dist/
+release/
+publish/
+发布/
+分发/
+installer/redist/
+coscli_output/
+
+bin/
+obj/
+.vs/
+*.user
+*.pdb
+*.exe
+*.dll
+*.zip
+*.7z
+*.msi
+*.nupkg
+
+# Build / package noise
+**/MechabellumModManager.exe
+**/钢铁指挥官Mod管理器/
+**/钢铁指挥官Mod管理器.exe

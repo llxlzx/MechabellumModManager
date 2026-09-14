@@ -54,7 +54,7 @@ if ($local) {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $ProgressPreference = 'Continue'
-        Invoke-WebRequest -Uri $url -OutFile $installerPath -UseBasicParsing
+        Invoke-WebRequest -Uri $url -OutFile $installerPath -UseBasicParsing -TimeoutSec 90
         $bytes = (Get-Item $installerPath).Length
         Write-Host ("Download complete ({0:N1} MB)." -f ($bytes / 1MB))
     } catch {

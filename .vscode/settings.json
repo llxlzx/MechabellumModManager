@@ -1,0 +1,33 @@
+{
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.worktrees/**": true,
+    "**/.review-phase0-base-wt/**": true,
+    "**/dist/**": true,
+    "**/release/**": true,
+    "**/publish/**": true,
+    "**/installer/redist/**": true,
+    "**/coscli_output/**": true,
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/.vs/**": true
+  },
+  "search.exclude": {
+    "**/.worktrees": true,
+    "**/.review-phase0-base-wt": true,
+    "**/dist": true,
+    "**/release": true,
+    "**/publish": true,
+    "**/installer/redist": true,
+    "**/coscli_output": true,
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true
+  },
+  "files.exclude": {
+    "**/.worktrees": true,
+    "**/.review-phase0-base-wt": true,
+    "**/coscli_output": true
+  }
+}

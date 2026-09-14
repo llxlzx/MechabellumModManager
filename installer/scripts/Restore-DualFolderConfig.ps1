@@ -206,6 +206,13 @@ function Ensure-Melon([string] $Target, [string] $Why) {
         Write-Host "Skip Melon ensure ($Why): installer script/redist unavailable for $Target"
         return
     }
+    # Thin Setup: redist zip is filled later by EnsureRedist (COS). Never fall back to
+    # GitHub here — that hangs Setup on "写入管理器配置" in regions without a proxy.
+    $localZip = Join-Path $RedistDir "melonloader\MelonLoader.x64.zip"
+    if (-not (Test-Path -LiteralPath $localZip)) {
+        Write-Host "Skip Melon ensure ($Why): local zip not ready yet (wait for EnsureRedist). $Target"
+        return
+    }
     Write-Host "Ensuring MelonLoader ($Why): $Target"
     & $installScript -GamePath $Target -RedistDir $RedistDir
     if ($LASTEXITCODE -ne 0) {

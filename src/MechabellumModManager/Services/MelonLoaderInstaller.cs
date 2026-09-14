@@ -35,6 +35,9 @@ public sealed class MelonLoaderInstaller
     readonly Func<bool> _isGameRunning;
     readonly Func<CancellationToken, Task<string>>? _resolveZipUrlAsync;
 
+    /// <summary>Forwarded to Loader.cfg optimize after install.</summary>
+    public bool? PreferHideConsole { get; set; }
+
     public MelonLoaderInstaller(
         HttpClient? http = null,
         ProcessProbe? probe = null,
@@ -132,8 +135,8 @@ public sealed class MelonLoaderInstaller
             // Seed before optimize so exact-match offline can become true when redist is present.
             var seed = new UnityDependenciesSeeder().Seed(gamePath);
             var optimize = seed.Success && seed.Version != null
-                ? new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath, seed.Version)
-                : new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath);
+                ? new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath, seed.Version, PreferHideConsole)
+                : new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath, hideConsole: PreferHideConsole);
             var firstLaunchHint =
                 "\n注意：首次启动游戏时 MelonLoader 会生成 IL2CPP 程序集（下载工具 + 分析 GameAssembly），" +
                 "可能卡住 1～2 分钟，属正常现象；完成后再次启动会快很多。";

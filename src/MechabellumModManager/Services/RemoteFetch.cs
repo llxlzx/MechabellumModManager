@@ -204,6 +204,49 @@ public static class RemoteFetch
         }
     }
 
+    /// <summary>
+    /// Conditional GET for Warm catalog probes. Treats 304 and 2xx as success; caller inspects status.
+    /// </summary>
+    public static async Task<RemoteFetchResult> GetConditionalAsync(
+        HttpClient http,
+        Uri uri,
+        string? ifNoneMatch,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(uri);
+
+        using var req = new HttpRequestMessage(HttpMethod.Get, uri);
+        if (!string.IsNullOrWhiteSpace(ifNoneMatch))
+            req.Headers.TryAddWithoutValidation("If-None-Match", ifNoneMatch.Trim());
+
+        HttpResponseMessage resp;
+        try
+        {
+            resp = await http.SendAsync(req, HttpCompletionOption.ResponseContentRead, ct)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (TaskCanceledException)
+        {
+            throw new HttpRequestException($"{uri.Host}: timeout");
+        }
+        catch (HttpRequestException)
+        {
+            throw;
+        }
+
+        if (resp.StatusCode == System.Net.HttpStatusCode.NotModified || resp.IsSuccessStatusCode)
+            return new RemoteFetchResult(uri, resp);
+
+        var code = (int)resp.StatusCode;
+        resp.Dispose();
+        throw new HttpRequestException($"{uri.Host}: HTTP {code}");
+    }
+
     public static string ClassifySource(Uri used)
     {
         ArgumentNullException.ThrowIfNull(used);

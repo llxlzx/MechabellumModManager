@@ -358,6 +358,11 @@
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>启动检查：已安装的 Mod 均为最新版本。</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>启动检查 Mod 更新失败：{0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>启动时检查 Mod 更新</value></data>
+  <data name="HideMelonConsole" xml:space="preserve"><value>隐藏 Melon 控制台</value></data>
+  <data name="HideMelonConsoleTip" xml:space="preserve"><value>写入游戏 UserData\Loader.cfg（hide_console）。下次启动生效；日志仍看 MelonLoader\Latest.log。请勿点控制台关闭键（会连带退出游戏）。</value></data>
+  <data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>已写入隐藏控制台设置，请重启游戏后生效。</value></data>
+  <data name="LogMelonConsoleHiddenHint" xml:space="preserve"><value>已启用「隐藏 Melon 控制台」：启动后不应再出现黑色 Melon 窗口。请用 MelonLoader\Latest.log 与管理器注入检测确认 Loader 是否加载。</value></data>
+  <data name="LogMelonLaunchVerifyHiddenHint" xml:space="preserve"><value>约 30 秒内管理器会检查游戏进程与 Latest.log。若未注入，请改用「仅 Exe」启动并导出诊断。</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>缺失</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>（缺失）{0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>模组</value></data>
@@ -406,6 +411,22 @@
 
 是否打开下载链接？
 {2}</value></data>
+  <data name="ConfirmOneClickSelfUpdate" xml:space="preserve"><value>{0}
+
+{1}
+
+安装类型：{2}
+
+是否立即下载并完成更新？管理器将随后退出。</value></data>
+  <data name="ConfirmOpenDownloadPageInstead" xml:space="preserve"><value>改为打开下载页面？</value></data>
+  <data name="ConfirmOpenDownloadAfterSelfUpdateFail" xml:space="preserve"><value>自动更新失败。是否打开下载页面手动安装？</value></data>
+  <data name="SelfUpdateChannelInstalled" xml:space="preserve"><value>安装版（Setup）</value></data>
+  <data name="SelfUpdateChannelPortable" xml:space="preserve"><value>便携版</value></data>
+  <data name="SelfUpdateDownloading" xml:space="preserve"><value>正在下载管理器更新…</value></data>
+  <data name="SelfUpdateApplying" xml:space="preserve"><value>正在应用更新，管理器即将退出…</value></data>
+  <data name="SelfUpdateFailed" xml:space="preserve"><value>自动更新失败：{0}</value></data>
+  <data name="TaskTitleSelfUpdate" xml:space="preserve"><value>正在更新管理器</value></data>
+  <data name="TaskMessageSelfUpdate" xml:space="preserve"><value>下载并安装新版本</value></data>
   <data name="ConfirmOpenGitHubReleases" xml:space="preserve"><value>{0}
 
 是否打开 GitHub Releases 页面？</value></data>
@@ -587,8 +608,12 @@
   <data name="CriticalOpRecoveryAbandon" xml:space="preserve"><value>放弃并清理</value></data>
   <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>打开诊断（不解除限制）</value></data>
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>已放弃未完成操作并清理状态。请确认游戏路径后继续使用。</value></data>
-  <data name="MirrorBaseUrl" xml:space="preserve"><value>国内镜像基址</value></data>
-  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>出厂已预填国内 COS；清空则只访问 GitHub。需与仓库同构。</value></data>
+  <data name="MirrorBaseUrl" xml:space="preserve"><value>镜像基址</value></data>
+  <data name="MirrorBaseUrlHint" xml:space="preserve"><value>出厂预填内容加速镜像；清空则只访问 GitHub。路径布局须与仓库一致。</value></data>
+  <data name="SettingsAdvanced" xml:space="preserve"><value>高级</value></data>
+  <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>内容加速镜像：已启用（出厂默认）</value></data>
+  <data name="MirrorSummaryCustom" xml:space="preserve"><value>内容加速镜像：自定义</value></data>
+  <data name="MirrorSummaryOff" xml:space="preserve"><value>内容加速镜像：已关闭（仅 GitHub）</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>源={0}</value></data>
   <data name="LogCatalogSourceStale" xml:space="preserve"><value>{0} 上的目录已过期，本次改用较新的 {1}。</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>已拦截不安全的链接（仅允许 https）：{0}</value></data>

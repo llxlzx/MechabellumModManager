@@ -30,6 +30,11 @@ public sealed class MelonLoaderDualStoreSync
     readonly GameDetector _detector;
     readonly MelonLoaderConfigOptimizer _optimizer;
 
+    /// <summary>
+    /// When set, passed through to <see cref="MelonLoaderConfigOptimizer.ApplyRecommendedSettings"/>.
+    /// </summary>
+    public bool? PreferHideConsole { get; set; }
+
     public ManagerEventLog? Events { get; set; }
 
     public MelonLoaderDualStoreSync(
@@ -69,8 +74,8 @@ public sealed class MelonLoaderDualStoreSync
             var seedReady = SeedDependencies(gamePath, DeriveRedistDirFromMelonZip(zipReady));
             // Re-apply after seed so offline can flip true when zip just landed (incl. seed.Version fallback).
             var optimizeReady = seedReady.Success && seedReady.Version != null
-                ? _optimizer.ApplyRecommendedSettings(gamePath, seedReady.Version)
-                : _optimizer.ApplyRecommendedSettings(gamePath);
+                ? _optimizer.ApplyRecommendedSettings(gamePath, seedReady.Version, PreferHideConsole)
+                : _optimizer.ApplyRecommendedSettings(gamePath, hideConsole: PreferHideConsole);
             var skipReason = string.IsNullOrWhiteSpace(zipReady) ? "no_local_zip" : "already_current";
             if (skipReason != "already_current")
             {
@@ -171,6 +176,21 @@ public sealed class MelonLoaderDualStoreSync
             // ignore
         }
 
+        try
+        {
+            // Writable fallback used when Program Files installer-redist is Access Denied.
+            candidates.Add(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MechabellumModManager",
+                "installer-redist",
+                "melonloader",
+                "MelonLoader.x64.zip"));
+        }
+        catch
+        {
+            // ignore
+        }
+
         // Dev / repo layout when running from publish\
         try
         {
@@ -209,8 +229,8 @@ public sealed class MelonLoaderDualStoreSync
             // Seed matching UnityDependencies zip BEFORE offline optimize so CanForceOffline can become true.
             var seed = SeedDependencies(gamePath, DeriveRedistDirFromMelonZip(zipPath));
             var optimize = seed.Success && seed.Version != null
-                ? _optimizer.ApplyRecommendedSettings(gamePath, seed.Version)
-                : _optimizer.ApplyRecommendedSettings(gamePath);
+                ? _optimizer.ApplyRecommendedSettings(gamePath, seed.Version, PreferHideConsole)
+                : _optimizer.ApplyRecommendedSettings(gamePath, hideConsole: PreferHideConsole);
             var assembliesNote = status.Kind == GameStatusKind.LoaderPresentAssembliesMissing
                 ? "\n首次启动该服时 MelonLoader 会重新生成程序集，可能需要一两分钟。"
                 : "";
@@ -296,8 +316,8 @@ public sealed class MelonLoaderDualStoreSync
             var zip = ResolveLocalZip();
             var seed = SeedDependencies(destGamePath, DeriveRedistDirFromMelonZip(zip));
             var optimize = seed.Success && seed.Version != null
-                ? _optimizer.ApplyRecommendedSettings(destGamePath, seed.Version)
-                : _optimizer.ApplyRecommendedSettings(destGamePath);
+                ? _optimizer.ApplyRecommendedSettings(destGamePath, seed.Version, PreferHideConsole)
+                : _optimizer.ApplyRecommendedSettings(destGamePath, hideConsole: PreferHideConsole);
             return new MelonLoaderInstallResult
             {
                 Success = true,

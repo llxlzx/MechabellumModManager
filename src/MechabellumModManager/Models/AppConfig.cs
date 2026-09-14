@@ -22,7 +22,9 @@ public sealed class AppConfig
 
     /// <summary>
     /// First-party mirror root (no trailing slash).
-    /// <c>null</c> = never configured (manager applies <see cref="Services.DomesticMirrorDefaults.BaseUrl"/>).
+    /// <c>null</c> = never configured (manager applies
+    /// <see cref="Services.DomesticMirrorDefaults.ResolveFactoryMirrorBaseUrl"/>: COS in mainland China,
+    /// empty elsewhere). Empty string = GitHub only.
     /// <c>""</c> = player cleared the field (GitHub only; do not re-fill).
     /// Expected layout: {mirror}/MechabellumModManager/latest.json and {mirror}/MechabellumMods/...
     /// </summary>
@@ -35,4 +37,16 @@ public sealed class AppConfig
     /// already fixed, and the cost is one catalog fetch.
     /// </summary>
     public bool CheckModUpdatesOnStartup { get; set; } = true;
+
+    /// <summary>
+    /// When true, write MelonLoader <c>[console] hide_console = true</c> for the current
+    /// game path (and dual stores when enabled). Takes effect on the next game launch.
+    /// </summary>
+    public bool HideMelonConsole { get; set; }
+
+    /// <summary>
+    /// Minutes a successfully applied catalog stays Hot before Warm probes. Default 15.
+    /// Not shown in Settings UI.
+    /// </summary>
+    public int CatalogHotCacheMinutes { get; set; } = 15;
 }

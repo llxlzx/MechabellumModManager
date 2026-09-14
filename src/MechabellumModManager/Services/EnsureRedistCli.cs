@@ -58,10 +58,12 @@ public static class EnsureRedistCli
                 return 4;
             }
 
+            // Unspecified mirror follows the same region gate as the app factory default so
+            // overseas Setup does not pull Melon/.NET through the domestic COS.
             var mirror = noMirror
                 ? ""
                 : string.IsNullOrWhiteSpace(mirrorBaseUrl)
-                    ? DomesticMirrorDefaults.BaseUrl
+                    ? DomesticMirrorDefaults.ResolveFactoryMirrorBaseUrl()
                     : mirrorBaseUrl.Trim();
 
             Log($"ensure redist → {redistDir}");

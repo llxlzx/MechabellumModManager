@@ -17,6 +17,15 @@ public sealed class UpdateManifest
     [JsonPropertyName("setupUrl")]
     public string SetupUrl { get; set; } = "";
 
+    [JsonPropertyName("portableUrl")]
+    public string? PortableUrl { get; set; }
+
+    [JsonPropertyName("setupSha256")]
+    public string? SetupSha256 { get; set; }
+
+    [JsonPropertyName("portableSha256")]
+    public string? PortableSha256 { get; set; }
+
     [JsonPropertyName("publishedAt")]
     public string? PublishedAt { get; set; }
 }
@@ -35,11 +44,12 @@ public sealed record UpdateCheckResult(
     string? Notes,
     string? SetupUrl,
     string Message,
-    string? Source = null);
+    string? Source = null,
+    UpdateManifest? Manifest = null);
 
 /// <summary>
-/// Checks for a newer Setup via latest.json (with API fallback).
-/// Does not download or install — UI opens the URL for the user.
+/// Checks for a newer manager build via latest.json (with API fallback).
+/// UI may one-click download/apply when sha256 fields are present.
 /// </summary>
 public sealed class UpdateChecker
 {
@@ -142,13 +152,15 @@ public sealed class UpdateChecker
                 return new UpdateCheckResult(
                     UpdateCheckKind.UpdateAvailable, local, remote, notes, setup,
                     $"发现新版本 {remote}（当前 {local}）。",
-                    source);
+                    source,
+                    manifest);
             }
 
             return new UpdateCheckResult(
                 UpdateCheckKind.UpToDate, local, remote, manifest.Notes, setup,
                 $"已是最新版本（{local}）。",
-                source);
+                source,
+                manifest);
         }
         catch (Exception ex)
         {

@@ -283,6 +283,21 @@ public class ModUpdateFlowTests
         handler.Requests.Count.Should().BeGreaterThan(afterFirst, "an expired window has to refetch");
     }
 
+    [Fact]
+    public async Task Manual_refresh_force_colds_inside_hot_window()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var catalog = CatalogServing(version: "1.2.0", out var handler);
+        var vm = fx.CreateVm(catalog: catalog);
+        vm.CheckModUpdatesOnStartup = false;
+        vm.SilentCatalogRefreshInterval = TimeSpan.FromMinutes(15);
+
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+        var afterManual1 = handler.Requests.Count;
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+        handler.Requests.Count.Should().BeGreaterThan(afterManual1);
+    }
+
     /// <summary>
     /// A failed launch fetch used to leave the status column blank for the whole session, which reads
     /// as "nothing to update" rather than "we never got to look".

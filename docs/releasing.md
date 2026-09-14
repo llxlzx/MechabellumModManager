@@ -118,16 +118,21 @@ release/vX.Y.Z/
 Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_vX.Y.Z.zip" -Force
 ```
 
-`latest.json` 示例：
+`latest.json` 示例（一键更新需含 portable 与 sha256；缺字段时客户端会回退为仅打开下载链接）：
 
 ```json
 {
-  "version": "1.1.6",
+  "version": "1.2.3",
   "notes": "本版更新说明……",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.6/MechabellumModManager_Setup_v1.1.6.exe",
-  "publishedAt": "2026-09-03T00:00:00Z"
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.3/MechabellumModManager_Setup_v1.2.3.exe",
+  "setupSha256": "<lowercase hex of Setup exe>",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.3/MechabellumModManager_portable_v1.2.3.zip",
+  "portableSha256": "<lowercase hex of portable zip>",
+  "publishedAt": "2026-09-14T00:00:00Z"
 }
 ```
+
+发版时用 `Get-FileHash -Algorithm SHA256` 填入哈希。`sync-mirror.ps1 -IncludeSetup` 会同时上传 Setup 与 `*portable*.zip`，并把镜像侧 `setupUrl` / `portableUrl` 改写到 COS。
 
 把 `release/vX.Y.Z/` 提交并推送到管理器仓库（可选但建议，便于对照）。
 
@@ -145,7 +150,7 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 |------|----------|----------------|
 | 安装包（必传） | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe` | 保持原名 |
 | 更新元数据（必传） | `release/vX.Y.Z/latest.json` | **必须仍是 `latest.json`** |
-| 本体便携包（推荐） | `MechabellumModManager_portable_vX.Y.Z.zip` | 建议带版本号 |
+| 本体便携包（**一键更新必传**） | `MechabellumModManager_portable_vX.Y.Z.zip` | 建议带版本号 |
 
 6. 勾选 **Set as the latest release**；不要勾 Pre-release  
 7. **Publish release**

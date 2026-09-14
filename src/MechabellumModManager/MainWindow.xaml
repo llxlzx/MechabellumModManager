@@ -399,6 +399,10 @@
                         <CheckBox Content="{Binding Ui.CheckModUpdatesOnStartup}"
                                   IsChecked="{Binding CheckModUpdatesOnStartup}"
                                   Margin="0,6,0,0" />
+                        <CheckBox Content="{Binding Ui.HideMelonConsole}"
+                                  IsChecked="{Binding HideMelonConsole}"
+                                  ToolTip="{Binding Ui.HideMelonConsoleTip}"
+                                  Margin="0,6,0,0" />
                     </StackPanel>
 
                     
@@ -511,23 +515,38 @@
                         </WrapPanel>
                     </StackPanel>
 
-                    <DockPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,12,0,0">
-                        <TextBlock Text="{Binding Ui.MirrorBaseUrl}"
-                                   Width="120"
-                                   VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   DockPanel.Dock="Left"
-                                   Margin="0,0,8,0" />
-                        <TextBlock Text="{Binding Ui.MirrorBaseUrlHint}"
-                                   VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   DockPanel.Dock="Bottom"
-                                   Margin="0,4,0,0" />
-                        <TextBox Text="{Binding MirrorBaseUrl, UpdateSourceTrigger=LostFocus}"
-                                 VerticalAlignment="Center" />
-                    </DockPanel>
+                    <Expander Grid.Row="3" Grid.ColumnSpan="3"
+                              Margin="0,12,0,0"
+                              IsExpanded="False">
+                        <Expander.Header>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Ui.SettingsAdvanced}"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding MirrorSummaryText}"
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Expander.Header>
+                        <StackPanel Margin="0,8,0,0">
+                            <DockPanel>
+                                <TextBlock Text="{Binding Ui.MirrorBaseUrl}"
+                                           Width="120"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           DockPanel.Dock="Left"
+                                           Margin="0,0,8,0" />
+                                <TextBox Text="{Binding MirrorBaseUrl, UpdateSourceTrigger=LostFocus}"
+                                         VerticalAlignment="Center" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding Ui.MirrorBaseUrlHint}"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Expander>
 
                     <DockPanel Grid.Row="4" Grid.ColumnSpan="3" Margin="0,10,0,0">
                         <TextBlock VerticalAlignment="Center"

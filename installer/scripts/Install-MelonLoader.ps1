@@ -293,7 +293,7 @@ if (Test-Path $localZip) {
     Write-Host "URL: $zipUrl"
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
+        Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing -TimeoutSec 90
     } catch {
         Write-Error @"
 Failed to download MelonLoader from GitHub (often blocked without a proxy).

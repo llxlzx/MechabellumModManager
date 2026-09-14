@@ -46,12 +46,13 @@
   Release folder holding latest.json, e.g. release\v1.1.7. Omit to skip the manager tree.
 
 .PARAMETER IncludeSetup
-  Also upload the installer, and repoint setupUrl in the mirror's copy of
-  latest.json at it. Off by default: egress for the installer dwarfs everything else.
+  Also upload the installer and portable zip (when present), and repoint setupUrl /
+  portableUrl in the mirror's copy of latest.json at them. Off by default: egress for
+  the installer dwarfs everything else.
 
-  Requires -MirrorBaseUrl. The client hands setupUrl straight to the browser rather
-  than downloading it itself, so an installer uploaded without rewriting setupUrl is
-  paid for and never served.
+  Requires -MirrorBaseUrl. The client hands these URLs to download/apply rather than
+  only opening a browser, so assets uploaded without rewriting the URLs are paid for
+  and never served.
 
 .PARAMETER SkipRedist
   Skip MechabellumRedist (Melon/Unity/Cpp2IL/.NET). Redist sync is ON by default for
@@ -212,26 +213,38 @@ function Read-HotList {
     return $ids
 }
 
-# Rewrites just the setupUrl value in place. A ConvertFrom-Json/ConvertTo-Json round
-# trip would reformat the file and escape every non-ASCII character in "notes"; the
-# value is a plain URL, so it can never contain an escaped quote.
-function Set-SetupUrl {
-    param([string]$Text, [string]$Url)
+function Set-JsonStringField {
+    param([string]$Text, [string]$Name, [string]$Url)
 
-    $pattern = '("setupUrl"\s*:\s*")([^"]*)(")'
+    $pattern = "(`"$Name`"\s*:\s*`")([^`"]*)(`")"
     $matched = [regex]::Matches($Text, $pattern)
-    if ($matched.Count -ne 1) {
-        throw "expected exactly one setupUrl in latest.json, found $($matched.Count)"
+    if ($matched.Count -eq 0) {
+        if ($Text -match '("publishedAt"\s*:)') {
+            $insert = "`"$Name`": `"$Url`",`r`n  "
+            return [regex]::Replace($Text, '("publishedAt"\s*:)', { param($m) $insert + $m.Groups[1].Value }, 1)
+        }
+        throw ("cannot insert {0}: publishedAt not found in latest.json" -f $Name)
+    }
+    if ($matched.Count -gt 1) {
+        throw "expected at most one $Name in latest.json, found $($matched.Count)"
     }
 
     $rewritten = [regex]::Replace($Text, $pattern, { param($m) $m.Groups[1].Value + $Url + $m.Groups[3].Value })
-
-    # Cheap guard against a botched substitution reaching players as invalid JSON.
     $parsed = $rewritten | ConvertFrom-Json
-    if ($parsed.setupUrl -ne $Url) {
-        throw "setupUrl rewrite did not take: got '$($parsed.setupUrl)'"
+    if ($parsed.$Name -ne $Url) {
+        throw "$Name rewrite did not take: got '$($parsed.$Name)'"
     }
     return $rewritten
+}
+
+function Set-SetupUrl {
+    param([string]$Text, [string]$Url)
+    return Set-JsonStringField -Text $Text -Name 'setupUrl' -Url $Url
+}
+
+function Set-PortableUrl {
+    param([string]$Text, [string]$Url)
+    return Set-JsonStringField -Text $Text -Name 'portableUrl' -Url $Url
 }
 
 Assert-Coscli
@@ -315,6 +328,7 @@ foreach ($mod in $catalog.mods) {
 }
 
 $setupName = $null
+$portableName = $null
 if ($ReleaseDir) {
     $ReleaseDir = (Resolve-Path -LiteralPath $ReleaseDir).Path
     if ($IncludeSetup) {
@@ -323,6 +337,18 @@ if ($ReleaseDir) {
         if (-not $setup) { throw "no *Setup*.exe under $ReleaseDir" }
         $setupName = $setup.Name
         Push-File -LocalPath $setup.FullName -RemoteKey "MechabellumModManager/$setupName"
+
+        $portable = Get-ChildItem -LiteralPath $ReleaseDir -Filter "*portable*.zip" | Select-Object -First 1
+        if (-not $portable) {
+            $portable = Get-ChildItem -LiteralPath $ReleaseDir -Filter "*portable*.zip" -Recurse | Select-Object -First 1
+        }
+        if ($portable) {
+            $portableName = $portable.Name
+            Push-File -LocalPath $portable.FullName -RemoteKey "MechabellumModManager/$portableName"
+        }
+        else {
+            Write-Output "  warn: no *portable*.zip under $ReleaseDir (one-click portable update needs it)"
+        }
     }
 }
 
@@ -420,17 +446,25 @@ if ($ReleaseDir) {
         throw "missing local file: $latest"
     }
 
-    if ($setupName) {
-        # The mirror's latest.json points at the mirror's installer; the GitHub copy on
+    if ($setupName -or $portableName) {
+        # The mirror's latest.json points at the mirror's installer/portable; the GitHub copy on
         # disk is left untouched so the two origins each serve their own download.
-        $setupUrl = "$MirrorBaseUrl/MechabellumModManager/$([Uri]::EscapeDataString($setupName))"
         $original = [System.IO.File]::ReadAllText($latest, [System.Text.Encoding]::UTF8)
-        $patched = Set-SetupUrl -Text $original -Url $setupUrl
+        $patched = $original
+        if ($setupName) {
+            $setupUrl = "$MirrorBaseUrl/MechabellumModManager/$([Uri]::EscapeDataString($setupName))"
+            $patched = Set-SetupUrl -Text $patched -Url $setupUrl
+            Write-Output "  setupUrl -> $setupUrl"
+        }
+        if ($portableName) {
+            $portableUrl = "$MirrorBaseUrl/MechabellumModManager/$([Uri]::EscapeDataString($portableName))"
+            $patched = Set-PortableUrl -Text $patched -Url $portableUrl
+            Write-Output "  portableUrl -> $portableUrl"
+        }
 
         $temp = Join-Path ([System.IO.Path]::GetTempPath()) "latest-mirror-$([Guid]::NewGuid()).json"
         try {
             [System.IO.File]::WriteAllText($temp, $patched, (New-Object System.Text.UTF8Encoding($false)))
-            Write-Output "  setupUrl -> $setupUrl"
             Push-File -LocalPath $temp -RemoteKey "MechabellumModManager/latest.json"
         }
         finally {

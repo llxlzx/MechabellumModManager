@@ -35,6 +35,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly RiskHeuristic _riskHeuristic;
     readonly SteamGameLocator _steamLocator;
     readonly UpdateChecker _updateChecker;
+    readonly ManagerSelfUpdateService _selfUpdate;
     readonly ModCatalogService _catalog;
     readonly AssemblyInspector _assemblyInspector;
     readonly ManagerLogWriter _managerLog;
@@ -173,6 +174,12 @@ public sealed partial class MainViewModel : ObservableObject
         _steamLocator = steamLocator ?? new SteamGameLocator();
         _requestProcessExit = requestProcessExit;
         _updateChecker = updateChecker ?? new UpdateChecker();
+        _selfUpdate = new ManagerSelfUpdateService(
+            requestShutdown: () =>
+            {
+                try { _requestProcessExit?.Invoke(); }
+                catch { /* ignore */ }
+            });
         _catalog = catalog ?? new ModCatalogService();
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
         _managerLog = managerLog ?? new ManagerLogWriter(paths.LogsDir);
@@ -269,9 +276,16 @@ public sealed partial class MainViewModel : ObservableObject
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
-        // null = never configured → factory COS default. "" = player opted out (do not refill).
+        // null = never configured → factory default by OS region (COS only in CN).
+        // "" = player opted out / overseas factory (do not refill with COS).
+        // Overseas machines that already received the old global COS factory fill are moved
+        // back to GitHub-only so they stop drawing domestic egress; a custom non-default URL
+        // is left alone.
         if (config.MirrorBaseUrl is null)
-            ApplyMirrorBaseUrl(DomesticMirrorDefaults.BaseUrl, save: true);
+            ApplyMirrorBaseUrl(DomesticMirrorDefaults.ResolveFactoryMirrorBaseUrl(), save: true);
+        else if (DomesticMirrorDefaults.IsBuiltInCosUrl(config.MirrorBaseUrl)
+                 && !DomesticMirrorDefaults.IsMainlandChinaRegion())
+            ApplyMirrorBaseUrl("", save: true);
         else
             ApplyMirrorBaseUrl(config.MirrorBaseUrl, save: false);
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
@@ -289,6 +303,10 @@ public sealed partial class MainViewModel : ObservableObject
         _launchMode = config.LaunchMode;
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
         _checkModUpdatesOnStartup = config.CheckModUpdatesOnStartup;
+        _hideMelonConsole = config.HideMelonConsole;
+        _melonDualSync.PreferHideConsole = config.HideMelonConsole;
+        SilentCatalogRefreshInterval = TimeSpan.FromMinutes(
+            Math.Clamp(config.CatalogHotCacheMinutes <= 0 ? 15 : config.CatalogHotCacheMinutes, 1, 24 * 60));
 
         if (!string.Equals(config.GamePath ?? "", _gamePath, StringComparison.OrdinalIgnoreCase))
         {
@@ -1022,6 +1040,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _checkModUpdatesOnStartup;
+    [ObservableProperty] private bool _hideMelonConsole;
     [ObservableProperty] private MainContentPage _activeContentPage = MainContentPage.Library;
 
     public bool IsLibraryPage => ActiveContentPage == MainContentPage.Library;
@@ -1171,6 +1190,7 @@ public sealed partial class MainViewModel : ObservableObject
             Ui.Refresh();
             RebuildFilterOptionLabels();
             RefreshBranchStatusText();
+            RefreshMirrorSummary();
             foreach (var mod in Mods)
                 mod.NotifyDetailChanged();
             foreach (var mod in CatalogMods)
@@ -1267,6 +1287,8 @@ public sealed partial class MainViewModel : ObservableObject
         _catalog.DataRoot = _paths.DataRoot;
         _updateChecker.MirrorBaseUrl = active;
 
+        RefreshMirrorSummary();
+
         if (!save)
             return;
 
@@ -1275,11 +1297,96 @@ public sealed partial class MainViewModel : ObservableObject
         SaveConfig(config);
     }
 
+    public string MirrorSummaryText { get; private set; } = "";
+
+    void RefreshMirrorSummary()
+    {
+        string text;
+        if (string.IsNullOrEmpty(MirrorBaseUrl))
+            text = LocalizationService.T("MirrorSummaryOff");
+        else if (string.Equals(MirrorBaseUrl, DomesticMirrorDefaults.BaseUrl, StringComparison.OrdinalIgnoreCase))
+            text = LocalizationService.T("MirrorSummaryOnDefault");
+        else
+            text = LocalizationService.T("MirrorSummaryCustom");
+
+        if (string.Equals(MirrorSummaryText, text, StringComparison.Ordinal))
+            return;
+        MirrorSummaryText = text;
+        OnPropertyChanged(nameof(MirrorSummaryText));
+    }
+
     partial void OnCheckModUpdatesOnStartupChanged(bool value)
     {
         var config = LoadConfig();
         config.CheckModUpdatesOnStartup = value;
         SaveConfig(config);
+    }
+
+    partial void OnHideMelonConsoleChanged(bool value)
+    {
+        var config = LoadConfig();
+        config.HideMelonConsole = value;
+        SaveConfig(config);
+        _melonDualSync.PreferHideConsole = value;
+        ApplyHideMelonConsolePreference(value);
+    }
+
+    void ApplyHideMelonConsolePreference(bool hide)
+    {
+        var anyOk = false;
+        foreach (var root in EnumerateHideConsoleTargets())
+        {
+            try
+            {
+                var result = _melonOptimizer.SetHideConsole(root, hide);
+                if (!string.IsNullOrWhiteSpace(result.Message))
+                    AppendLog($"{Path.GetFileName(root)}: {result.Message}");
+                if (result.Changed)
+                    anyOk = true;
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"写入 hide_console 失败（{root}）：{ex.Message}");
+            }
+        }
+
+        if (anyOk && _processProbe.IsGameRunning())
+            AppendLog(LocalizationService.T("LogHideMelonConsoleRestartHint"));
+    }
+
+    IEnumerable<string> EnumerateHideConsoleTargets()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void TryAdd(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !SteamGameLocator.LooksLikeGameRoot(path))
+                return;
+            try
+            {
+                set.Add(Path.GetFullPath(path));
+            }
+            catch
+            {
+                // ignore invalid paths
+            }
+        }
+
+        TryAdd(GamePath);
+        try
+        {
+            var branch = _branchSwitch.LoadConfig();
+            if (branch.Enabled)
+            {
+                TryAdd(branch.OfficialStorePath);
+                TryAdd(branch.BetaStorePath);
+            }
+        }
+        catch
+        {
+            // ignore branch config errors
+        }
+
+        return set;
     }
 
     /// <summary>
@@ -1299,10 +1406,56 @@ public sealed partial class MainViewModel : ObservableObject
         _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
         try
         {
-            CatalogRoot root;
+            CatalogRoot? root = null;
             try
             {
-                root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+                var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
+                if (outcome.Kind == CatalogFetchKind.HotSkip)
+                {
+                    if (CatalogMods.Count == 0)
+                    {
+                        root = _catalog.TryLoadCachedCatalog();
+                        if (root is null)
+                        {
+                            outcome = await _catalog.FetchCatalogSmartAsync(forceCold: true)
+                                .ConfigureAwait(true);
+                            root = outcome.Root;
+                            if (!string.IsNullOrEmpty(outcome.Detail))
+                                AppendLog("[catalog " + outcome.Detail + "]");
+                        }
+                    }
+                    else
+                    {
+                        // Already applied this session — reuse in-memory catalog for the notify pass.
+                        var packagesHot = _library.List();
+                        var staleHot = CatalogMods
+                            .Where(m => ModCatalogService.GetEntryState(packagesHot, m.Mod)
+                                        == CatalogEntryState.UpdateAvailable)
+                            .Select(m => CatalogLocaleResolver.ResolveName(m.Mod))
+                            .ToList();
+                        if (staleHot.Count == 0)
+                        {
+                            AppendLog(LocalizationService.T("LogModUpdateCheckAllCurrent"));
+                            return;
+                        }
+
+                        var messageHot = string.Format(
+                            LocalizationService.T("NotifyModUpdatesAvailable"),
+                            staleHot.Count,
+                            string.Join("、", staleHot));
+                        AppendLog(messageHot);
+                        _notify(messageHot);
+                        return;
+                    }
+                }
+                else
+                {
+                    root = outcome.Root;
+                    if (outcome.Kind == CatalogFetchKind.ColdApplied)
+                        LogStaleCatalogSource();
+                    if (!string.IsNullOrEmpty(outcome.Detail))
+                        AppendLog("[catalog " + outcome.Detail + "]");
+                }
             }
             catch (Exception networkEx)
             {
@@ -1315,11 +1468,13 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog(CatalogNetworkHint.Format(networkEx.Message, _catalog.MirrorBaseUrl, usedCache: true));
             }
 
+            if (root is null)
+                return;
+
             // Populating the list is what makes the check visible: it enriches the installed
             // rows, so the status column and the per-row update button are live from launch
             // rather than waiting for the player to open the catalog panel.
             ApplyCatalogRoot(root);
-            LogStaleCatalogSource();
 
             var packages = _library.List();
             var stale = root.Mods
@@ -1624,8 +1779,8 @@ public sealed partial class MainViewModel : ObservableObject
                     AppendLog("警告：UnityDependencies 播种失败 — " + seed.Message);
 
                 var result = seed.Success && seed.Version != null
-                    ? _melonOptimizer.ApplyRecommendedSettings(GamePath, seed.Version)
-                    : _melonOptimizer.ApplyRecommendedSettings(GamePath);
+                    ? _melonOptimizer.ApplyRecommendedSettings(GamePath, seed.Version, HideMelonConsole)
+                    : _melonOptimizer.ApplyRecommendedSettings(GamePath, hideConsole: HideMelonConsole);
                 if (result.Changed || logAlways || !_loggedMelonOptimize)
                 {
                     AppendLog(result.Message);
@@ -1634,7 +1789,7 @@ public sealed partial class MainViewModel : ObservableObject
             }
             else
             {
-                var result = _melonOptimizer.ApplyRecommendedSettings(GamePath);
+                var result = _melonOptimizer.ApplyRecommendedSettings(GamePath, hideConsole: HideMelonConsole);
                 if (result.Changed || logAlways || !_loggedMelonOptimize)
                 {
                     AppendLog(result.Message);
@@ -1974,8 +2129,16 @@ public sealed partial class MainViewModel : ObservableObject
                 ["at"] = config.LastLaunchRequestedAt.Value.ToString("o")
             });
             AppendLog(LocalizationService.T("LogLaunchRequestedVerifying"));
-            AppendLog(LocalizationService.T("LogMelonConsoleHint"));
-            AppendLog(LocalizationService.T("LogMelonLaunchVerifyHint"));
+            if (HideMelonConsole)
+            {
+                AppendLog(LocalizationService.T("LogMelonConsoleHiddenHint"));
+                AppendLog(LocalizationService.T("LogMelonLaunchVerifyHiddenHint"));
+            }
+            else
+            {
+                AppendLog(LocalizationService.T("LogMelonConsoleHint"));
+                AppendLog(LocalizationService.T("LogMelonLaunchVerifyHint"));
+            }
             if (_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
             {
                 AppendLog(LocalizationService.T("LogFirstAssemblyLaunchHint"));
@@ -2340,8 +2503,9 @@ public sealed partial class MainViewModel : ObservableObject
             await RunWithCriticalOpAsync(CriticalOpKind.MelonInstall, "MelonInstall", async () =>
             {
                 MelonLoaderInstallResult result;
-                var redistDir = Path.Combine(AppContext.BaseDirectory, "installer-redist");
-                Directory.CreateDirectory(redistDir);
+                var redistDir = RedistDirectoryResolver.Resolve(out var usedRedistFallback);
+                if (usedRedistFallback)
+                    AppendLog("安装目录不可写，改用本地缓存目录存放 Melon 离线包：" + redistDir);
                 // MirrorBaseUrl "" = opt-out (origin only). Null should not happen after factory fill.
                 var mirror = MirrorBaseUrl;
                 AppendLog("正在准备 Melon 运行时离线包（镜像优先）…");
@@ -2368,12 +2532,19 @@ public sealed partial class MainViewModel : ObservableObject
                     AppendLog(string.Format(LocalizationService.T("LogMelonInstallLocalZip"), zip));
                     _taskProgress.Report(LocalizationService.T("TaskMessageMelonInstallLocal"));
                     NotifyTaskProgress();
-                    result = await Task.Run(() => _melonDualSync.InstallFromZip(GamePath, zip)).ConfigureAwait(true);
+                    result = await Task.Run(() =>
+                    {
+                        _melonDualSync.PreferHideConsole = HideMelonConsole;
+                        return _melonDualSync.InstallFromZip(GamePath, zip);
+                    }).ConfigureAwait(true);
                 }
                 else
                 {
                     AppendLog(LocalizationService.T("LogMelonInstallDownload"));
-                    var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning());
+                    var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning())
+                    {
+                        PreferHideConsole = HideMelonConsole
+                    };
                     var progress = new Progress<MelonLoaderProgress>(p =>
                     {
                         _taskProgress.Report(p.Message, p.Percent);
@@ -2756,7 +2927,11 @@ public sealed partial class MainViewModel : ObservableObject
             var fromCache = false;
             try
             {
-                root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
+                var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: true).ConfigureAwait(true);
+                root = outcome.Root
+                       ?? throw new InvalidOperationException("Cold catalog fetch returned no root.");
+                if (!string.IsNullOrEmpty(outcome.Detail))
+                    AppendLog("[catalog " + outcome.Detail + "]");
             }
             catch (Exception networkEx)
             {
@@ -3156,10 +3331,18 @@ public sealed partial class MainViewModel : ObservableObject
         _checkingCatalog = true;
         try
         {
-            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
-            ApplyCatalogRoot(root);
-            LogStaleCatalogSource();
+            var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
+            if (outcome.Kind == CatalogFetchKind.HotSkip)
+                return;
+            if (outcome.Root is null)
+                return;
+
+            ApplyCatalogRoot(outcome.Root);
+            if (outcome.Kind == CatalogFetchKind.ColdApplied)
+                LogStaleCatalogSource();
             _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
+            if (!string.IsNullOrEmpty(outcome.Detail))
+                AppendLog("[catalog " + outcome.Detail + "]");
             if (SelectedLibraryMod is not null)
                 UpdateLibraryModDetail();
         }
@@ -3173,10 +3356,21 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    TimeSpan _silentCatalogRefreshInterval = TimeSpan.FromMinutes(15);
+
     /// <summary>
     /// How long a catalog already in hand is trusted before switching to the library refetches it.
+    /// Kept in sync with <see cref="ModCatalogService.HotCacheTtl"/>.
     /// </summary>
-    public TimeSpan SilentCatalogRefreshInterval { get; set; } = TimeSpan.FromSeconds(60);
+    public TimeSpan SilentCatalogRefreshInterval
+    {
+        get => _silentCatalogRefreshInterval;
+        set
+        {
+            _silentCatalogRefreshInterval = value;
+            _catalog.HotCacheTtl = value;
+        }
+    }
 
     /// <summary>
     /// Refetches the catalog when the library page comes into view, so the status column and the
@@ -3190,20 +3384,25 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (_checkingCatalog || _addingCatalogMod) return;
 
-        var now = DateTimeOffset.UtcNow;
-        if (_lastSilentCatalogFetch is { } last && now - last < SilentCatalogRefreshInterval)
-            return;
-
         _checkingCatalog = true;
-        // Stamped before the fetch so a dead network is not re-dialed on every page switch.
-        _lastSilentCatalogFetch = now;
         try
         {
-            var root = await _catalog.FetchCatalogAsync().ConfigureAwait(true);
-            ApplyCatalogRoot(root);
-            LogStaleCatalogSource();
-            if (SelectedLibraryMod is not null)
-                UpdateLibraryModDetail();
+            var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
+            if (outcome.Kind == CatalogFetchKind.HotSkip)
+                return;
+
+            _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
+            if (outcome.Root is not null)
+            {
+                ApplyCatalogRoot(outcome.Root);
+                if (outcome.Kind == CatalogFetchKind.ColdApplied)
+                    LogStaleCatalogSource();
+                if (SelectedLibraryMod is not null)
+                    UpdateLibraryModDetail();
+            }
+
+            if (!string.IsNullOrEmpty(outcome.Detail))
+                AppendLog("[catalog " + outcome.Detail + "]");
         }
         catch (Exception ex)
         {
@@ -3389,7 +3588,13 @@ public sealed partial class MainViewModel : ObservableObject
             if (!string.IsNullOrWhiteSpace(result.Source))
                 AppendLog(string.Format(LocalizationService.T("RemoteSourceLog"), result.Source));
 
-            if (result.Kind == UpdateCheckKind.UpdateAvailable && !string.IsNullOrWhiteSpace(result.SetupUrl))
+            if (result.Kind == UpdateCheckKind.UpdateAvailable
+                && result.Manifest is not null)
+            {
+                await OfferManagerSelfUpdateAsync(result).ConfigureAwait(true);
+            }
+            else if (result.Kind == UpdateCheckKind.UpdateAvailable
+                     && !string.IsNullOrWhiteSpace(result.SetupUrl))
             {
                 var detail = string.Format(
                     LocalizationService.T("ConfirmOpenDownloadLink"),
@@ -3440,6 +3645,76 @@ public sealed partial class MainViewModel : ObservableObject
                 SyncStickyBranchTaskStrip();
                 NotifyTaskProgress();
             }
+        }
+    }
+
+    async Task OfferManagerSelfUpdateAsync(UpdateCheckResult result)
+    {
+        var manifest = result.Manifest!;
+        var kind = ManagerDeploymentDetector.Detect();
+        var canOneClick = ManagerSelfUpdatePlanner.CanApplyOneClick(kind, manifest);
+        var openUrl = ManagerSelfUpdatePlanner.OpenUrlFallback(kind, manifest) ?? result.SetupUrl;
+
+        if (canOneClick)
+        {
+            var channel = kind == ManagerDeploymentKind.Installed
+                ? LocalizationService.T("SelfUpdateChannelInstalled")
+                : LocalizationService.T("SelfUpdateChannelPortable");
+            var detail = string.Format(
+                LocalizationService.T("ConfirmOneClickSelfUpdate"),
+                result.Message,
+                result.Notes ?? "",
+                channel);
+            if (!Confirm(detail))
+            {
+                if (!string.IsNullOrWhiteSpace(openUrl)
+                    && Confirm(LocalizationService.T("ConfirmOpenDownloadPageInstead")))
+                    TryOpenUrl(openUrl!);
+                return;
+            }
+
+            UpdateStatus = LocalizationService.T("SelfUpdateDownloading");
+            AppendLog(UpdateStatus);
+            _taskProgress.Begin(
+                ManagerTaskKind.CheckUpdate,
+                LocalizationService.T("TaskTitleSelfUpdate"),
+                LocalizationService.T("TaskMessageSelfUpdate"),
+                sessionLock: true);
+            NotifyTaskProgress();
+
+            try
+            {
+                var reporter = new Progress<DownloadProgress>(p =>
+                {
+                    if (p.TotalBytes > 0)
+                        _taskProgress.Report(percent: 100.0 * p.BytesDownloaded / p.TotalBytes);
+                    NotifyTaskProgress();
+                });
+                await _selfUpdate.ApplyAsync(manifest, kind, reporter).ConfigureAwait(true);
+                UpdateStatus = LocalizationService.T("SelfUpdateApplying");
+                AppendLog(UpdateStatus);
+            }
+            catch (Exception ex)
+            {
+                AppendLog(string.Format(LocalizationService.T("SelfUpdateFailed"), ex.Message));
+                _notify(string.Format(LocalizationService.T("SelfUpdateFailed"), ex.Message));
+                if (!string.IsNullOrWhiteSpace(openUrl)
+                    && Confirm(LocalizationService.T("ConfirmOpenDownloadAfterSelfUpdateFail")))
+                    TryOpenUrl(openUrl!);
+            }
+
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(openUrl))
+        {
+            var detail = string.Format(
+                LocalizationService.T("ConfirmOpenDownloadLink"),
+                result.Message,
+                result.Notes ?? "",
+                openUrl);
+            if (Confirm(detail))
+                TryOpenUrl(openUrl!);
         }
     }
 
@@ -4211,6 +4486,7 @@ public sealed partial class MainViewModel : ObservableObject
                 // Do not notify on every startup; only log if something changed/failed.
                 try
                 {
+                    _melonDualSync.PreferHideConsole = HideMelonConsole;
                     var sync = _melonDualSync.EnsureOnBothStores(cfg.OfficialStorePath, cfg.BetaStorePath);
                     if (!sync.Success
                         || (sync.Message?.Contains("安装", StringComparison.Ordinal) == true)
@@ -5040,6 +5316,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(cfg.OfficialStorePath) || string.IsNullOrWhiteSpace(cfg.BetaStorePath))
                 return;
 
+            _melonDualSync.PreferHideConsole = HideMelonConsole;
             var result = _melonDualSync.EnsureOnBothStores(cfg.OfficialStorePath, cfg.BetaStorePath);
             if (!string.IsNullOrWhiteSpace(result.Message))
                 AppendLog(result.Message);
