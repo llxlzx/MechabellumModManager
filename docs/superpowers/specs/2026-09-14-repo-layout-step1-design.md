@@ -1,7 +1,7 @@
 # Design: Repo layout Step 1 (cleanup + .NET polish)
 
 Date: 2026-09-14  
-Status: Step 1 implementation in progress
+Status: Step 1 complete (local; push optional)
 
 ## Goal
 

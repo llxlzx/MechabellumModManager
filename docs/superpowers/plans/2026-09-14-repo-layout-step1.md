@@ -18,23 +18,23 @@
 
 **Files:** `tools/`, `_samples/`, `relay/`, `.worktrees/`, `.review-phase0-base-wt/`
 
-- [ ] Create `D:\gongzuo\_archived-from-mod-manager\2026-09-14\tools\`
-- [ ] Move: `add-resource-key.ps1`, `publish-mods-release.ps1`, `sync-mirror.ps1`, `verify-mirror.ps1`, `mirror-hot.txt`
-- [ ] Delete: `tools/check-cursor-shell.ps1`, empty `tools/`, `_samples/`, `relay/`, `.worktrees/`, `.review-phase0-base-wt/`
-- [ ] Verify archive has 5 files; repo paths absent
-- [ ] Commit: `chore: archive tools and remove dead sample/relay residue`
+- [x] Create `D:\gongzuo\_archived-from-mod-manager\2026-09-14\tools\`
+- [x] Move: `add-resource-key.ps1`, `publish-mods-release.ps1`, `sync-mirror.ps1`, `verify-mirror.ps1`, `mirror-hot.txt`
+- [x] Delete: `tools/check-cursor-shell.ps1`, empty `tools/`, `_samples/`, `relay/`, `.worktrees/`, `.review-phase0-base-wt/`
+- [x] Verify archive has 5 files; repo paths absent
+- [x] Commit: `chore: archive tools and remove dead sample/relay residue`
 
 ### Task 2: Directory.Build.props + csproj dedupe + gitignore
 
 **Files:** `Directory.Build.props` (new), `src/.../MechabellumModManager.csproj`, `tests/.../MechabellumModManager.Tests.csproj`, `.gitignore`
 
-- [ ] Add root `Directory.Build.props` with Nullable, ImplicitUsings, LangVersion=latest
-- [ ] Remove duplicated Nullable/ImplicitUsings from both csproj files
-- [ ] Ensure `.gitignore` still ignores `.worktrees/`; no need to resurrect tools/
-- [ ] Commit: `build: share common MSBuild defaults via Directory.Build.props`
+- [x] Add root `Directory.Build.props` with Nullable, ImplicitUsings, LangVersion=latest
+- [x] Remove duplicated Nullable/ImplicitUsings from both csproj files
+- [x] Ensure `.gitignore` still ignores `.worktrees/`; no need to resurrect tools/
+- [x] Commit: `build: share common MSBuild defaults via Directory.Build.props`
 
 ### Task 3: Verify build and tests
 
-- [ ] `dotnet build MechabellumModManager.sln -c Release`
-- [ ] `dotnet test MechabellumModManager.sln -c Release --no-build` (or build+test)
-- [ ] Confirm diff scope excludes installer/docs/release/publish/dist tree moves
+- [x] `dotnet build MechabellumModManager.sln -c Release`
+- [x] `dotnet test MechabellumModManager.sln -c Release --no-build` (or build+test)
+- [x] Confirm diff scope excludes installer/docs/release/publish/dist tree moves
