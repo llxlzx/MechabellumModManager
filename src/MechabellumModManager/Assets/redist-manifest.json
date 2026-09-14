@@ -28,7 +28,7 @@
       "path": "cpp2il/Cpp2IL.Plugin.StrippedCodeRegSupport.dll",
       "sha256": "2cc4f8c66541f18b4daed5410149ee7859c3190454d30bda5ccd0895d2989ee6",
       "size": 10752,
-      "originUrl": null
+      "originUrl": "https://github.com/SamboyCoding/Cpp2IL/releases/download/2022.1.0-pre-release.21/Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
     },
     {
       "id": "dotnet8-desktop",

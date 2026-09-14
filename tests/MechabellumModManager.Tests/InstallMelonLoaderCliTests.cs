@@ -22,6 +22,39 @@ public class InstallMelonLoaderCliTests
     }
 
     [Fact]
+    public void Run_returns_seed_incomplete_when_unity_deps_redist_empty()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mmm-cli-noseed-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "game");
+        var redist = Path.Combine(root, "redist");
+        try
+        {
+            Directory.CreateDirectory(game);
+            File.WriteAllText(Path.Combine(game, "Mechabellum.exe"), "exe");
+            File.WriteAllText(Path.Combine(game, "GameAssembly.dll"), "dll");
+            var data = Path.Combine(game, "Mechabellum_Data");
+            Directory.CreateDirectory(data);
+            File.WriteAllBytes(
+                Path.Combine(data, "globalgamemanagers"),
+                System.Text.Encoding.ASCII.GetBytes("xxxx2022.3.62f3yyyy"));
+
+            // Empty preferred unity-deps wins over repo packaging walk → seed must fail.
+            Directory.CreateDirectory(Path.Combine(redist, "unity-deps"));
+            Directory.CreateDirectory(Path.Combine(redist, "melonloader"));
+            var zipPath = CreateFakeMelonZip(Path.Combine(redist, "melonloader"));
+
+            var code = InstallMelonLoaderCli.Run(game, redist);
+            code.Should().Be(InstallMelonLoaderCli.ExitSeedIncomplete);
+            File.Exists(Path.Combine(game, "version.dll")).Should().BeTrue();
+            File.Exists(zipPath).Should().BeTrue();
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { /* ignore */ }
+        }
+    }
+
+    [Fact]
     public void Run_reapplies_optimize_after_late_seed_from_redist_dir()
     {
         // Zip is NOT under .../melonloader/, so InstallFromZip cannot derive redist;
@@ -45,6 +78,24 @@ public class InstallMelonLoaderCliTests
             File.WriteAllText(
                 Path.Combine(redist, "unity-deps", "UnityDependencies_2022.3.62.zip"),
                 "deps-payload");
+
+            var repoCpp2Il = Path.GetFullPath(Path.Combine(
+                AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+                "packaging", "installer", "redist", "cpp2il"));
+            var cpp2IlDir = Path.Combine(redist, "cpp2il");
+            Directory.CreateDirectory(cpp2IlDir);
+            if (Directory.Exists(repoCpp2Il))
+            {
+                foreach (var f in Directory.GetFiles(repoCpp2Il))
+                    File.Copy(f, Path.Combine(cpp2IlDir, Path.GetFileName(f)), overwrite: true);
+            }
+            else
+            {
+                File.WriteAllBytes(Path.Combine(cpp2IlDir, "Cpp2IL.exe"), [0x4D, 0x5A]);
+                File.WriteAllBytes(
+                    Path.Combine(cpp2IlDir, "Cpp2IL.Plugin.StrippedCodeRegSupport.dll"),
+                    [0x4D, 0x5A]);
+            }
 
             Directory.CreateDirectory(looseZipDir);
             var zipPath = CreateFakeMelonZip(looseZipDir);

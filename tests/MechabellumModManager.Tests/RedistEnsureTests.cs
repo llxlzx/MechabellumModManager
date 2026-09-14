@@ -58,19 +58,33 @@ public class RedistEnsureTests
     }
 
     [Fact]
-    public void BuildCandidates_opt_out_skips_mirror()
+    public void BuildCandidates_plugin_with_origin_works_without_mirror()
     {
         var artifact = new RedistArtifact
         {
-            Id = "melonloader-x64",
-            Path = "melonloader/MelonLoader.x64.zip",
+            Id = "cpp2il-plugin",
+            Path = "cpp2il/Cpp2IL.Plugin.StrippedCodeRegSupport.dll",
             Sha256 = "aa",
-            OriginUrl = "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.16/windowsdesktop-runtime-8.0.16-win-x64.exe"
+            OriginUrl = "https://github.com/SamboyCoding/Cpp2IL/releases/download/2022.1.0-pre-release.21/Cpp2IL.Plugin.StrippedCodeRegSupport.dll"
         };
 
         var list = RedistEnsureService.BuildArtifactCandidates("", artifact);
         list.Should().ContainSingle();
-        list[0].Host.Should().Contain("microsoft");
+        list[0].AbsoluteUri.Should().Contain("Cpp2IL.Plugin.StrippedCodeRegSupport.dll");
+    }
+
+    [Fact]
+    public void BuildCandidates_plugin_null_origin_without_mirror_is_empty()
+    {
+        var artifact = new RedistArtifact
+        {
+            Id = "cpp2il-plugin",
+            Path = "cpp2il/Cpp2IL.Plugin.StrippedCodeRegSupport.dll",
+            Sha256 = "aa",
+            OriginUrl = null
+        };
+
+        RedistEnsureService.BuildArtifactCandidates("", artifact).Should().BeEmpty();
     }
 
     [Fact]

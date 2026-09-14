@@ -13,6 +13,9 @@ public static class InstallMelonLoaderCli
 {
     public const string Arg = "--install-melon-loader";
 
+    /// <summary>Melon framework written but UnityDependencies/Cpp2IL seed incomplete.</summary>
+    public const int ExitSeedIncomplete = 6;
+
     public static bool TryParseArgs(string[] args, out string? gamePath, out string? redistDir)
     {
         gamePath = null;
@@ -110,11 +113,16 @@ public static class InstallMelonLoaderCli
                 Log(optimize.Message);
 
             var status = new GameDetector().Detect(gamePath.Trim());
-            if (status.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
-                return 0;
+            if (status.Kind is not (GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing))
+            {
+                Log($"post-install detect: {status.Kind} {status.Message}");
+                return 1;
+            }
 
-            Log($"post-install detect: {status.Kind} {status.Message}");
-            return 1;
+            if (!seed.Success)
+                return ExitSeedIncomplete;
+
+            return 0;
         }
         catch (Exception ex)
         {
