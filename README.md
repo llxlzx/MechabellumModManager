@@ -33,7 +33,7 @@ Use the links below to jump within this page (Chinese and English sections share
 - **Mod 浏览**：从 [MechabellumMods](https://github.com/llxlzx/MechabellumMods) 拉取目录，「加入本地库」（**不会**自动启用）。
 - **投稿 / 举报**：管理器按界面语言打开 **QQ 邮箱网页**（中文）或 **Gmail 写信页**（其他语言），并复制主题/正文模板；发送至 **llxmod@foxmail.com**。维护者审核后上传社区目录。作者**无需** Fork/PR。
 - **多语言**：简体中文 / English / 日本語 / Deutsch / Русский（可跟随系统）。
-- **安装包**：可选安装 .NET 8（管理器）、.NET 6（MelonLoader）、MelonLoader；优先使用 `installer/redist/` 离线包。
+- **安装包**：可选安装 .NET 8（管理器）、.NET 6（MelonLoader）、MelonLoader；优先使用 `packaging/installer/redist/` 离线包。
 
 ---
 
@@ -58,7 +58,7 @@ Use the links below to jump within this page (Chinese and English sections share
    - **MelonLoader** — 若游戏里还没有 Loader（已安装会跳过）  
 5. 完成安装后从开始菜单启动管理器。
 
-离线环境：制作 Setup 时把官方 Runtime / MelonLoader zip 放进 `installer/redist/`（见该目录说明），再编译安装包。
+离线环境：制作 Setup 时把官方 Runtime / MelonLoader zip 放进 `packaging/installer/redist/`（见该目录说明），再编译安装包。
 
 ### 日常使用
 
@@ -101,7 +101,7 @@ Use the links below to jump within this page (Chinese and English sections share
 
 开发机需安装 [Inno Setup 6](https://jrsoftware.org/isinfo.php)。正式包**必须**准备 MelonLoader 离线 zip：
 
-`installer/redist/melonloader/MelonLoader.x64.zip`
+`packaging/installer/redist/melonloader/MelonLoader.x64.zip`
 
 ```powershell
 .\installer\build-installer.ps1
@@ -142,7 +142,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 - **Browse mods**: fetch [MechabellumMods](https://github.com/llxlzx/MechabellumMods) catalog; **Add to library** (does **not** auto-enable).
 - **Submit / report**: manager opens **QQ Mail web** (Chinese UI) or **Gmail compose** (other languages) and copies the subject/body template to **llxmod@foxmail.com**. Maintainers review and upload; authors do **not** need Fork/PR.
 - **Languages**: zh-CN / en / ja / de / ru (or follow the OS).
-- **Installer**: optional .NET 8 (app), .NET 6 (MelonLoader), MelonLoader; prefers offline files under `installer/redist/`.
+- **Installer**: optional .NET 8 (app), .NET 6 (MelonLoader), MelonLoader; prefers offline files under `packaging/installer/redist/`.
 
 ---
 
@@ -167,7 +167,7 @@ See also [docs/分发-使用说明.md](docs/分发-使用说明.md) (bilingual e
    - **MelonLoader** — if not already installed in the game (skipped when present)  
 5. Launch from the Start Menu when finished.
 
-Offline builds: place official Runtime / MelonLoader zips into `installer/redist/` before compiling Setup.
+Offline builds: place official Runtime / MelonLoader zips into `packaging/installer/redist/` before compiling Setup.
 
 ### Daily use
 
@@ -210,7 +210,7 @@ After review, maintainers upload to the community catalog; players **Refresh cat
 
 Install [Inno Setup 6](https://jrsoftware.org/isinfo.php). Release builds **require**:
 
-`installer/redist/melonloader/MelonLoader.x64.zip`
+`packaging/installer/redist/melonloader/MelonLoader.x64.zip`
 
 ```powershell
 .\installer\build-installer.ps1
