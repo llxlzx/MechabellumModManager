@@ -866,8 +866,8 @@ public sealed class ModCatalogService
     }
 
     /// <summary>
-    /// True when a library package matches the catalog entry by catalog id or file hash.
-    /// Filename-only matches are ignored so two mods shipping <c>Mod.dll</c> do not collide.
+    /// True when a library package matches the catalog entry by catalog id, file hash, or a
+    /// distinctive Melon assembly stem (see <see cref="Matches"/>).
     /// </summary>
     public static bool IsInLibrary(IEnumerable<ModPackage> packages, CatalogMod mod) =>
         GetEntryState(packages, mod) != CatalogEntryState.NotInstalled;
@@ -902,7 +902,7 @@ public sealed class ModCatalogService
     }
 
     /// <summary>
-    /// The library packages that represent this catalog entry, matched by catalog id or file hash.
+    /// The library packages that represent this catalog entry (catalog id, hash, or Melon stem).
     /// An update replaces exactly these.
     /// </summary>
     public static IReadOnlyList<ModPackage> FindInstalled(IEnumerable<ModPackage> packages, CatalogMod mod)
@@ -914,25 +914,65 @@ public sealed class ModCatalogService
     }
 
     /// <summary>
-    /// Whether this library package is this catalog entry. The single judgement every caller
-    /// must use: matching on filename instead would pair a package with whichever unrelated
-    /// entry also ships <c>Mod.dll</c>, and an update would then overwrite the wrong mod.
+    /// Whether this library package is this catalog entry. Generic filenames like <c>Mod.dll</c>
+    /// never count; only a distinctive catalog file stem may pair with the Melon
+    /// <see cref="ModPackage.DisplayName"/> (set from MelonInfo on import).
     /// </summary>
     public static bool Matches(ModPackage pkg, CatalogMod mod)
     {
         ArgumentNullException.ThrowIfNull(pkg);
         ArgumentNullException.ThrowIfNull(mod);
 
-        return MatchesCatalogId(pkg, (mod.Id ?? "").Trim()) || HasMatchingFileHash(pkg, mod);
+        return MatchesCatalogId(pkg, (mod.Id ?? "").Trim()) ||
+            HasMatchingFileHash(pkg, mod) ||
+            MatchesMelonAssembly(pkg, mod);
     }
 
-        static bool MatchesCatalogId(ModPackage pkg, string catalogId)
+    static bool MatchesCatalogId(ModPackage pkg, string catalogId)
     {
         if (string.IsNullOrWhiteSpace(catalogId))
             return false;
         return string.Equals(pkg.CatalogId, catalogId, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(pkg.Id, catalogId, StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    /// Game-folder imports keep MelonInfo name as <see cref="ModPackage.DisplayName"/> and a
+    /// slug+hash package id, so they never share catalog id. Pair them to the catalog file stem
+    /// when that stem is distinctive (not <c>Mod</c> / <c>Plugin</c>) and authors agree when both
+    /// sides declare one.
+    /// </summary>
+    static bool MatchesMelonAssembly(ModPackage pkg, CatalogMod mod)
+    {
+        var displayName = (pkg.DisplayName ?? "").Trim();
+        if (displayName.Length == 0)
+            return false;
+
+        var stem = Path.GetFileNameWithoutExtension((mod.File ?? "").Replace('\\', '/').Trim());
+        if (string.IsNullOrWhiteSpace(stem) || IsGenericAssemblyStem(stem))
+            return false;
+
+        if (!string.Equals(displayName, stem, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (pkg.Type != ParsePackageType(mod.Type))
+            return false;
+
+        var pkgAuthor = (pkg.Author ?? "").Trim();
+        var catAuthor = (mod.Author ?? "").Trim();
+        if (pkgAuthor.Length > 0 &&
+            catAuthor.Length > 0 &&
+            !string.Equals(pkgAuthor, catAuthor, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return true;
+    }
+
+    static bool IsGenericAssemblyStem(string stem) =>
+        stem.Equals("Mod", StringComparison.OrdinalIgnoreCase) ||
+        stem.Equals("Plugin", StringComparison.OrdinalIgnoreCase) ||
+        stem.Equals("Assembly", StringComparison.OrdinalIgnoreCase) ||
+        stem.Equals("Assembly-CSharp", StringComparison.OrdinalIgnoreCase);
 
     static bool HasMatchingFileHash(ModPackage pkg, CatalogMod mod)
     {
