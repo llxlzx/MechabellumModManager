@@ -294,6 +294,8 @@ public sealed partial class MainViewModel : ObservableObject
         _launchMode = config.LaunchMode;
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
         _checkModUpdatesOnStartup = config.CheckModUpdatesOnStartup;
+        _hideMelonConsole = config.HideMelonConsole;
+        _melonDualSync.PreferHideConsole = config.HideMelonConsole;
         SilentCatalogRefreshInterval = TimeSpan.FromMinutes(
             Math.Clamp(config.CatalogHotCacheMinutes, 1, 24 * 60));
 
@@ -1029,6 +1031,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private LaunchMode _launchMode;
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _checkModUpdatesOnStartup;
+    [ObservableProperty] private bool _hideMelonConsole;
     [ObservableProperty] private MainContentPage _activeContentPage = MainContentPage.Library;
 
     public bool IsLibraryPage => ActiveContentPage == MainContentPage.Library;
@@ -1178,6 +1181,7 @@ public sealed partial class MainViewModel : ObservableObject
             Ui.Refresh();
             RebuildFilterOptionLabels();
             RefreshBranchStatusText();
+            RefreshMirrorSummary();
             foreach (var mod in Mods)
                 mod.NotifyDetailChanged();
             foreach (var mod in CatalogMods)
@@ -1274,6 +1278,8 @@ public sealed partial class MainViewModel : ObservableObject
         _catalog.DataRoot = _paths.DataRoot;
         _updateChecker.MirrorBaseUrl = active;
 
+        RefreshMirrorSummary();
+
         if (!save)
             return;
 
@@ -1282,11 +1288,96 @@ public sealed partial class MainViewModel : ObservableObject
         SaveConfig(config);
     }
 
+    public string MirrorSummaryText { get; private set; } = "";
+
+    void RefreshMirrorSummary()
+    {
+        string text;
+        if (string.IsNullOrEmpty(MirrorBaseUrl))
+            text = LocalizationService.T("MirrorSummaryOff");
+        else if (string.Equals(MirrorBaseUrl, DomesticMirrorDefaults.BaseUrl, StringComparison.OrdinalIgnoreCase))
+            text = LocalizationService.T("MirrorSummaryOnDefault");
+        else
+            text = LocalizationService.T("MirrorSummaryCustom");
+
+        if (string.Equals(MirrorSummaryText, text, StringComparison.Ordinal))
+            return;
+        MirrorSummaryText = text;
+        OnPropertyChanged(nameof(MirrorSummaryText));
+    }
+
     partial void OnCheckModUpdatesOnStartupChanged(bool value)
     {
         var config = LoadConfig();
         config.CheckModUpdatesOnStartup = value;
         SaveConfig(config);
+    }
+
+    partial void OnHideMelonConsoleChanged(bool value)
+    {
+        var config = LoadConfig();
+        config.HideMelonConsole = value;
+        SaveConfig(config);
+        _melonDualSync.PreferHideConsole = value;
+        ApplyHideMelonConsolePreference(value);
+    }
+
+    void ApplyHideMelonConsolePreference(bool hide)
+    {
+        var anyOk = false;
+        foreach (var root in EnumerateHideConsoleTargets())
+        {
+            try
+            {
+                var result = _melonOptimizer.SetHideConsole(root, hide);
+                if (!string.IsNullOrWhiteSpace(result.Message))
+                    AppendLog($"{Path.GetFileName(root)}: {result.Message}");
+                if (result.Changed)
+                    anyOk = true;
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"写入 hide_console 失败（{root}）：{ex.Message}");
+            }
+        }
+
+        if (anyOk && _processProbe.IsGameRunning())
+            AppendLog(LocalizationService.T("LogHideMelonConsoleRestartHint"));
+    }
+
+    IEnumerable<string> EnumerateHideConsoleTargets()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void TryAdd(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !SteamGameLocator.LooksLikeGameRoot(path))
+                return;
+            try
+            {
+                set.Add(Path.GetFullPath(path));
+            }
+            catch
+            {
+                // ignore invalid paths
+            }
+        }
+
+        TryAdd(GamePath);
+        try
+        {
+            var branch = _branchSwitch.LoadConfig();
+            if (branch.Enabled)
+            {
+                TryAdd(branch.OfficialStorePath);
+                TryAdd(branch.BetaStorePath);
+            }
+        }
+        catch
+        {
+            // ignore branch config errors
+        }
+
+        return set;
     }
 
     /// <summary>
@@ -1651,8 +1742,8 @@ public sealed partial class MainViewModel : ObservableObject
                     AppendLog("警告：UnityDependencies 播种失败 — " + seed.Message);
 
                 var result = seed.Success && seed.Version != null
-                    ? _melonOptimizer.ApplyRecommendedSettings(GamePath, seed.Version)
-                    : _melonOptimizer.ApplyRecommendedSettings(GamePath);
+                    ? _melonOptimizer.ApplyRecommendedSettings(GamePath, seed.Version, HideMelonConsole)
+                    : _melonOptimizer.ApplyRecommendedSettings(GamePath, hideConsole: HideMelonConsole);
                 if (result.Changed || logAlways || !_loggedMelonOptimize)
                 {
                     AppendLog(result.Message);
@@ -1661,7 +1752,7 @@ public sealed partial class MainViewModel : ObservableObject
             }
             else
             {
-                var result = _melonOptimizer.ApplyRecommendedSettings(GamePath);
+                var result = _melonOptimizer.ApplyRecommendedSettings(GamePath, hideConsole: HideMelonConsole);
                 if (result.Changed || logAlways || !_loggedMelonOptimize)
                 {
                     AppendLog(result.Message);
@@ -2007,8 +2098,16 @@ public sealed partial class MainViewModel : ObservableObject
                 ["at"] = config.LastLaunchRequestedAt.Value.ToString("o")
             });
             AppendLog(LocalizationService.T("LogLaunchRequestedVerifying"));
-            AppendLog(LocalizationService.T("LogMelonConsoleHint"));
-            AppendLog(LocalizationService.T("LogMelonLaunchVerifyHint"));
+            if (HideMelonConsole)
+            {
+                AppendLog(LocalizationService.T("LogMelonConsoleHiddenHint"));
+                AppendLog(LocalizationService.T("LogMelonLaunchVerifyHiddenHint"));
+            }
+            else
+            {
+                AppendLog(LocalizationService.T("LogMelonConsoleHint"));
+                AppendLog(LocalizationService.T("LogMelonLaunchVerifyHint"));
+            }
             if (_melonOptimizer.NeedsFirstAssemblyGeneration(GamePath))
             {
                 AppendLog(LocalizationService.T("LogFirstAssemblyLaunchHint"));
@@ -2416,12 +2515,19 @@ public sealed partial class MainViewModel : ObservableObject
                     AppendLog(string.Format(LocalizationService.T("LogMelonInstallLocalZip"), zip));
                     _taskProgress.Report(LocalizationService.T("TaskMessageMelonInstallLocal"));
                     NotifyTaskProgress();
-                    result = await Task.Run(() => _melonDualSync.InstallFromZip(GamePath, zip)).ConfigureAwait(true);
+                    result = await Task.Run(() =>
+                    {
+                        _melonDualSync.PreferHideConsole = HideMelonConsole;
+                        return _melonDualSync.InstallFromZip(GamePath, zip);
+                    }).ConfigureAwait(true);
                 }
                 else
                 {
                     AppendLog(LocalizationService.T("LogMelonInstallDownload"));
-                    var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning());
+                    var installer = new MelonLoaderInstaller(isGameRunning: () => _processProbe.IsGameRunning())
+                    {
+                        PreferHideConsole = HideMelonConsole
+                    };
                     var progress = new Progress<MelonLoaderProgress>(p =>
                     {
                         _taskProgress.Report(p.Message, p.Percent);
@@ -4322,6 +4428,7 @@ public sealed partial class MainViewModel : ObservableObject
                 // Do not notify on every startup; only log if something changed/failed.
                 try
                 {
+                    _melonDualSync.PreferHideConsole = HideMelonConsole;
                     var sync = _melonDualSync.EnsureOnBothStores(cfg.OfficialStorePath, cfg.BetaStorePath);
                     if (!sync.Success
                         || (sync.Message?.Contains("安装", StringComparison.Ordinal) == true)
@@ -5151,6 +5258,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(cfg.OfficialStorePath) || string.IsNullOrWhiteSpace(cfg.BetaStorePath))
                 return;
 
+            _melonDualSync.PreferHideConsole = HideMelonConsole;
             var result = _melonDualSync.EnsureOnBothStores(cfg.OfficialStorePath, cfg.BetaStorePath);
             if (!string.IsNullOrWhiteSpace(result.Message))
                 AppendLog(result.Message);
