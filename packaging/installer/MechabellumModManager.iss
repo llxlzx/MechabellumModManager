@@ -1,4 +1,4 @@
-; Mechabellum Mod Manager — Inno Setup 6
+﻿; Mechabellum Mod Manager — Inno Setup 6
 ; Compile with: ISCC.exe MechabellumModManager.iss
 ; Or run: build-installer.bat
 
