@@ -219,6 +219,12 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="RefreshCatalog" xml:space="preserve">
     <value>Katalog aktualisieren</value>
   </data>
+  <data name="RefreshInstalledMods" xml:space="preserve">
+    <value>Installierte Mods aktualisieren</value>
+  </data>
+  <data name="LogLibraryRefreshed" xml:space="preserve">
+    <value>Liste der installierten Mods aktualisiert</value>
+  </data>
   <data name="AddToLibrary" xml:space="preserve">
     <value>Zur Bibliothek</value>
   </data>

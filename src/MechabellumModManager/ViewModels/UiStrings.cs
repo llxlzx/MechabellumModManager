@@ -64,6 +64,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string Cancel => T("Cancel");
     public string Ok => T("Ok");
     public string RefreshCatalog => T("RefreshCatalog");
+    public string RefreshInstalledMods => T("RefreshInstalledMods");
     public string AddToLibrary => T("AddToLibrary");
     public string ImportFromGame => T("ImportFromGame");
     public string ExportDiagnosticsButton => T("ExportDiagnosticsButton");

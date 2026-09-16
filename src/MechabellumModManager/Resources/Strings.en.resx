@@ -219,6 +219,12 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="RefreshCatalog" xml:space="preserve">
     <value>Refresh Catalog</value>
   </data>
+  <data name="RefreshInstalledMods" xml:space="preserve">
+    <value>Refresh Installed Mods</value>
+  </data>
+  <data name="LogLibraryRefreshed" xml:space="preserve">
+    <value>Installed mod list refreshed</value>
+  </data>
   <data name="AddToLibrary" xml:space="preserve">
     <value>Add to Library</value>
   </data>

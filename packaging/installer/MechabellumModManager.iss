@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "1.2.5"
+#define MyAppVersion "1.2.6"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -30,6 +30,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 SetupLogging=yes
 ShowLanguageDialog=yes
+SetupIconFile=..\..\src\MechabellumModManager\Assets\app.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 InfoBeforeFile=
 CloseApplications=yes
@@ -163,7 +164,8 @@ russian.StatusWriteConfig=Запись конфигурации менеджер
 russian.StatusSeedUserConfig=Запись пользовательской конфигурации (без окна; подождите)…
 russian.ErrWriteConfig=Не удалось записать конфигурацию. Путь к игре можно указать позже в настройках.
 russian.StatusRestoreOptional=Дополнительный скрипт восстановления не выполнен (установка продолжается; конфиг записан встроенным способом).
-russian.StatusSanitizeAcf=Удаление недействительных снимков ветки Steam (сам Steam не изменяется)…
+russian.StatusSanitizeAcf=Удаление недействительных снимков ветки Steam (сам Steam не изменяется)…
+
 russian.StatusEnsureRedist=Загрузка пакетов runtime с зеркала (при сбое — официальные источники)…
 russian.StatusEnsureRedistDone=Пакеты runtime готовы.
 russian.StatusEnsureRedistFail=Не удалось запустить менеджер для загрузки; продолжаем (возможны ошибки).
@@ -255,7 +257,8 @@ german.StatusWriteConfig=Manager-Konfiguration wird geschrieben (Dual-Ordner-Ein
 german.StatusSeedUserConfig=Benutzerkonfiguration wird geschrieben (ohne UI; bitte warten)…
 german.ErrWriteConfig=Manager-Konfiguration konnte nicht geschrieben werden. Spielpfad später in den Einstellungen setzen.
 german.StatusRestoreOptional=Optionales Wiederherstellungsskript nicht ausgeführt (Installation läuft weiter; Konfiguration nativ geschrieben).
-german.StatusSanitizeAcf=Ungültige Steam-Branch-Snapshots werden entfernt (Steam selbst wird nicht geändert)…
+german.StatusSanitizeAcf=Ungültige Steam-Branch-Snapshots werden entfernt (Steam selbst wird nicht geändert)…
+
 german.StatusEnsureRedist=Runtime-Pakete vom Spiegel werden geladen (bei Fehler offizielle Quellen)…
 german.StatusEnsureRedistDone=Runtime-Pakete bereit.
 german.StatusEnsureRedistFail=Manager konnte nicht starten; Download übersprungen (kann scheitern).
@@ -314,6 +317,21 @@ Name: "{autodesktop}\{cm:AppDisplayName}"; Filename: "{app}\{#MyAppExeName}"; Ta
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:RunNow,{cm:AppDisplayName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+function OpenProcess(dwDesiredAccess: Cardinal; bInheritHandle: BOOL; dwProcessId: Cardinal): THandle;
+  external 'OpenProcess@kernel32.dll stdcall';
+function GetExitCodeProcess(hProcess: THandle; var lpExitCode: Cardinal): BOOL;
+  external 'GetExitCodeProcess@kernel32.dll stdcall';
+function CloseHandle(hObject: THandle): BOOL;
+  external 'CloseHandle@kernel32.dll stdcall';
+function WaitForSingleObject(hHandle: THandle; dwMilliseconds: Cardinal): Cardinal;
+  external 'WaitForSingleObject@kernel32.dll stdcall';
+
+const
+  PROCESS_QUERY_LIMITED_INFORMATION = $1000;
+  SYNCHRONIZE = $00100000;
+  STILL_ACTIVE = 259;
+  WAIT_TIMEOUT = $102;
+
 var
   GamePathPage: TInputDirWizardPage;
   RiskLabel: TNewStaticText;
@@ -517,23 +535,102 @@ end;
 
 function EnsureRedistViaApp(const Redist: string): Integer;
 var
-  Params: string;
-  ResultCode: Integer;
+  Params, ProgressFile, Line, PctStr, Artifact, Detail: string;
+  Pid, ExitCode: Cardinal;
+  HProc: THandle;
+  Pct, P1, P2, WaitMs, ResultCode: Integer;
+  ProgressA: AnsiString;
 begin
   { Thin Setup: pull Melon/Unity/Cpp2IL/.NET into installer-redist.
-    zh-CN prefers domestic COS; other languages use origin only. }
-  Params := '--ensure-redist --redist-dir "' + Redist + '"';
+    zh-CN prefers domestic COS; other languages use origin only.
+    Progress file + ewNoWait so StatusLabel / ProgressGauge can update mid-download. }
+  ProgressFile := ExpandConstant('{tmp}\ensure-redist-progress.txt');
+  DeleteFile(ProgressFile);
+  Params := '--ensure-redist --redist-dir "' + Redist + '" --progress-file "' + ProgressFile + '"';
   if CompareText(ActiveLanguage, 'chinesesimplified') = 0 then
     Params := Params + ' --mirror-base-url "https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com"'
   else
     Params := Params + ' --no-mirror';
-  if not Exec(ExpandConstant('{app}\{#MyAppExeName}'), Params, '', SW_SHOWMINNOACTIVE, ewWaitUntilTerminated, ResultCode) then
+
+  if not Exec(ExpandConstant('{app}\{#MyAppExeName}'), Params, '', SW_SHOWMINNOACTIVE, ewNoWait, ResultCode) then
   begin
     Result := -1;
     exit;
   end;
-  Result := ResultCode;
+  Pid := Cardinal(ResultCode);
+
+  HProc := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION or SYNCHRONIZE, False, Pid);
+  WaitMs := 0;
+  while HProc = 0 do
+  begin
+    { Rare: handle not ready yet — do not start a second instance. }
+    Sleep(200);
+    WaitMs := WaitMs + 200;
+    HProc := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION or SYNCHRONIZE, False, Pid);
+    if WaitMs > 10000 then
+    begin
+      Result := -1;
+      DeleteFile(ProgressFile);
+      exit;
+    end;
+  end;
+
+  try
+    WizardForm.ProgressGauge.Min := 0;
+    WizardForm.ProgressGauge.Max := 100;
+    WizardForm.ProgressGauge.Position := 0;
+    WizardForm.ProgressGauge.Update;
+    repeat
+      if LoadStringFromFile(ProgressFile, ProgressA) then
+      begin
+        Line := Trim(string(ProgressA));
+        P1 := Pos('|', Line);
+        if P1 > 1 then
+        begin
+          PctStr := Copy(Line, 1, P1 - 1);
+          Pct := StrToIntDef(PctStr, -1);
+          Artifact := '';
+          Detail := '';
+          if Pct >= 0 then
+          begin
+            Line := Copy(Line, P1 + 1, Length(Line));
+            P2 := Pos('|', Line);
+            if P2 > 0 then
+            begin
+              Artifact := Copy(Line, 1, P2 - 1);
+              Detail := Copy(Line, P2 + 1, Length(Line));
+            end
+            else
+              Artifact := Line;
+
+            if Artifact <> '' then
+              SetStatus(CustomMessage('StatusEnsureRedist') + ' ' + IntToStr(Pct) + '% (' + Artifact + ')')
+            else
+              SetStatus(CustomMessage('StatusEnsureRedist') + ' ' + IntToStr(Pct) + '%');
+            if Detail <> '' then
+            begin
+              WizardForm.StatusLabel.Caption := WizardForm.StatusLabel.Caption + ' ' + Detail;
+              WizardForm.StatusLabel.Update;
+            end;
+            if Pct > 100 then
+              Pct := 100;
+            WizardForm.ProgressGauge.Position := Pct;
+            WizardForm.ProgressGauge.Update;
+            WizardForm.Update;
+          end;
+        end;
+      end;
+    until WaitForSingleObject(HProc, 200) <> WAIT_TIMEOUT;
+
+    if not GetExitCodeProcess(HProc, ExitCode) then
+      ExitCode := 1;
+    Result := Integer(ExitCode);
+  finally
+    CloseHandle(HProc);
+    DeleteFile(ProgressFile);
+  end;
 end;
+
 function LooksLikeGame(const Path: string): Boolean;
 begin
   Result := FileExists(AddBackslash(Path) + 'Mechabellum.exe') and

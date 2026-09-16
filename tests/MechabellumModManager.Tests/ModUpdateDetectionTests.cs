@@ -251,13 +251,13 @@ public class ModUpdateDetectionTests
     }
 
     [Fact]
-    public void Matching_ignores_filename_so_two_mods_shipping_Mod_dll_do_not_collide()
+    public void Matching_ignores_generic_Mod_dll_so_two_mods_shipping_Mod_dll_do_not_collide()
     {
         var installed = Installed("alpha", version: "1.0.0", fileHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         var alpha = Catalog("alpha", version: "1.0.0", sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         var beta = Catalog("beta", version: "9.9.9", sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 
-        // Both catalog entries ship the same file name; only catalog id / hash may decide.
+        // Both catalog entries ship the same generic file name; only catalog id / hash may decide.
         alpha.File.Should().EndWith("Mod.dll");
         beta.File.Should().EndWith("Mod.dll");
 
@@ -265,6 +265,77 @@ public class ModUpdateDetectionTests
         ModCatalogService.Matches(installed, beta).Should().BeFalse();
         ModCatalogService.GetEntryState([installed], alpha).Should().Be(CatalogEntryState.UpToDate);
         ModCatalogService.GetEntryState([installed], beta).Should().Be(CatalogEntryState.NotInstalled);
+    }
+
+    [Fact]
+    public void Imported_melon_matches_catalog_by_distinct_dll_stem_even_without_catalog_id()
+    {
+        // Game-folder import: MelonInfo name becomes DisplayName; package id is slug+hash, not catalog id.
+        var imported = new ModPackage
+        {
+            Id = "friendoverlay-d9873801",
+            DisplayName = "FriendOverlay",
+            Author = "MechabellumFriendOverlay",
+            Type = ModPackageType.MelonMod,
+            Version = "0.3.30",
+            Files =
+            {
+                new DeployableFile
+                {
+                    RelativePathInPackage = "FriendOverlay.dll",
+                    Sha256 = "d9873801fe1709ac502e1c7178c540e5856fad8c93c788031d86248b95bc4487"
+                }
+            }
+        };
+
+        var catalog = new CatalogMod
+        {
+            Id = "friend-overlay",
+            Name = "好友列表叠加面板 MOD",
+            Author = "MechabellumFriendOverlay",
+            Version = "0.3.33",
+            File = "mods/friend-overlay/FriendOverlay.dll",
+            Sha256 = "c3ea8630fca927b3af2519391c572e1b9ef78dec4a3fe5da16b09c3f85ce5496",
+            Type = "MelonMod"
+        };
+
+        ModCatalogService.Matches(imported, catalog).Should().BeTrue();
+        ModCatalogService.GetEntryState([imported], catalog).Should().Be(CatalogEntryState.UpdateAvailable);
+    }
+
+    [Fact]
+    public void Melon_name_match_requires_author_agreement_when_both_sides_declare_one()
+    {
+        var imported = new ModPackage
+        {
+            Id = "friendoverlay-aaaaaaaa",
+            DisplayName = "FriendOverlay",
+            Author = "SomeoneElse",
+            Type = ModPackageType.MelonMod,
+            Version = "0.3.30",
+            Files =
+            {
+                new DeployableFile
+                {
+                    RelativePathInPackage = "FriendOverlay.dll",
+                    Sha256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+            }
+        };
+
+        var catalog = new CatalogMod
+        {
+            Id = "friend-overlay",
+            Name = "好友列表叠加面板 MOD",
+            Author = "MechabellumFriendOverlay",
+            Version = "0.3.33",
+            File = "mods/friend-overlay/FriendOverlay.dll",
+            Sha256 = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            Type = "MelonMod"
+        };
+
+        ModCatalogService.Matches(imported, catalog).Should().BeFalse();
+        ModCatalogService.GetEntryState([imported], catalog).Should().Be(CatalogEntryState.NotInstalled);
     }
 
     [Fact]
