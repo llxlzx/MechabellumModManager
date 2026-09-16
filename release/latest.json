@@ -1,10 +1,10 @@
 {
-    "version":  "1.2.7",
-    "notes":  "安装不再误报离线包下载失败。游戏异常退出后若 Steam 仍显示正在运行，管理器会提示先完全退出 Steam 再启动。重复的旧 Mod 点更新会清掉旧文件。\nSetup no longer reports a false offline-package download failure. If Steam still marks the game running after a crash, the manager asks you to fully quit Steam before launching again. Update on a stale duplicate removes the old copy.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.7/MechabellumModManager_Setup_v1.2.7.exe",
-    "setupSha256":  "7591560898bac92b1c481196885a99b7d1a6c6d915b9f09b524d79ca5429e015",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.7/MechabellumModManager_portable_v1.2.7.zip",
-    "portableSha256":  "93d3adbc55dfe0f0de4bc148d61c1be1491df82de1f89d6ef41ed6e6a734eb42",
-    "publishedAt":  "2026-09-16T02:54:34Z",
-    "build":  "v1.2.7-steam-stale-and-redist-exit"
+    "version":  "1.2.8",
+    "notes":  "设置新增「隐藏 Melon 控制台」（写入 Loader.cfg hide_console，下次启动生效）。国内镜像收进默认折叠的「高级」。全量自检 781 项通过，无阻断级缺陷。\nSettings: Hide Melon console (Loader.cfg hide_console). Mirror URL under collapsed Advanced. Full suite 781 passed; no blocking defects.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.8/MechabellumModManager_Setup_v1.2.8.exe",
+    "setupSha256":  "f1c94289505e5ef863ef7dfafbe2a170d55aaa630f2442241f8a4301a4e24a26",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.8/MechabellumModManager_portable_v1.2.8.zip",
+    "portableSha256":  "7f70369a5cc9ae98ed71467580876e8e6af804a747c758229146e4f6c6d084a5",
+    "publishedAt":  "2026-09-16T13:53:32Z",
+    "build":  "v1.2.8-hide-console-mirror-advanced"
 }
