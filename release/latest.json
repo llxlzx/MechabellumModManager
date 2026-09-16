@@ -1,10 +1,10 @@
 {
-  "version": "1.2.5",
-  "notes": "Setup 离线包失败时跳过 Melon，避免半成品 Loader；cpp2il-plugin 补全 originUrl；Melon CLI 播种失败返回 exit 6；简中走 COS，其它语言走 origin。\nSetup skips Melon when redist ensure fails to avoid a half-installed Loader; cpp2il-plugin has originUrl; Melon CLI returns exit 6 on seed failure; zh-CN uses COS, other languages use origin.",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.5/MechabellumModManager_Setup_v1.2.5.exe",
-  "setupSha256": "4d3197f81cb246488d0f75583e4e6a91928f686728bdcd1fae9905dc53076af4",
-  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.5/MechabellumModManager_portable_v1.2.5.zip",
-  "portableSha256": "a285192dbf7ae9e4426a5b86093c57f266c34182692cad96e678eaf9f6eb2aa0",
-  "publishedAt": "2026-09-14T16:49:47Z",
-  "build": "v1.2.5-setup-redist-gates-half-melon"
+    "version":  "1.2.6",
+    "notes":  "导入的 FriendOverlay 等 MelonMod 可按 DLL 名匹配目录并提示更新；Setup --ensure-redist 支持 --progress-file；库刷新与品牌资源更新。\nImported MelonMods (e.g. FriendOverlay) match catalog by distinct DLL stem for updates; Setup --ensure-redist supports --progress-file; library refresh and brand refresh.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.6/MechabellumModManager_Setup_v1.2.6.exe",
+    "setupSha256":  "3d7589befa5816381a6adcef0b8d49a8d860f2a6792600220048a73ae3ee2d88",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.6/MechabellumModManager_portable_v1.2.6.zip",
+    "portableSha256":  "960fc22124b81c3eec97dd4799b991099eb3eda377dc1ae67150c19400c5a819",
+    "publishedAt":  "2026-09-16T01:05:20Z",
+    "build":  "v1.2.6-import-melon-match-redist-progress"
 }
