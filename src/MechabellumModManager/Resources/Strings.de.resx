@@ -363,6 +363,11 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>Start-Prüfung: Alle installierten Mods sind aktuell.</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>Mod-Update-Prüfung beim Start fehlgeschlagen: {0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>Beim Start nach Mod-Updates suchen</value></data>
+<data name="HideMelonConsole" xml:space="preserve"><value>Melon-Konsole ausblenden</value></data>
+<data name="HideMelonConsoleTip" xml:space="preserve"><value>Schreibt UserData\Loader.cfg (hide_console). Wirkt beim nächsten Start; Logs in MelonLoader\Latest.log. Konsole nicht mit X schließen (beendet das Spiel).</value></data>
+<data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>Ausblenden geschrieben; Spiel neu starten, damit es greift.</value></data>
+<data name="LogMelonConsoleHiddenHint" xml:space="preserve"><value>Melon-Konsole ausblenden ist an: kein schwarzes Fenster. Prüfen Sie MelonLoader\Latest.log und die Injektionsprüfung.</value></data>
+<data name="LogMelonLaunchVerifyHiddenHint" xml:space="preserve"><value>Innerhalb von ~30s prüft der Manager Prozess und Latest.log. Sonst Startmodus „nur Exe“ und Diagnose exportieren.</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>Fehlt</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>(Fehlt) {0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>Erweiterung</value></data>
@@ -573,6 +578,10 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Inländische Spiegelbasis</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Werkseitig COS-Spiegel; leer = nur GitHub. Gleiches Layout wie die Repos.</value></data>
+<data name="SettingsAdvanced" xml:space="preserve"><value>Erweitert</value></data>
+<data name="MirrorSummaryOnDefault" xml:space="preserve"><value>Content-Spiegel: an (Werkseinstellung)</value></data>
+<data name="MirrorSummaryCustom" xml:space="preserve"><value>Content-Spiegel: benutzerdefiniert</value></data>
+<data name="MirrorSummaryOff" xml:space="preserve"><value>Content-Spiegel: aus (nur GitHub)</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>Quelle={0}</value></data>
   <data name="LogCatalogSourceStale" xml:space="preserve"><value>Der Katalog auf {0} ist veraltet; stattdessen wurde das neuere {1} verwendet.</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Unsicherer Link blockiert (nur https): {0}</value></data>

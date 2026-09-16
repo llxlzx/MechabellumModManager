@@ -363,6 +363,11 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>Startup check: every installed mod is current.</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>Startup mod update check failed: {0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>Check for mod updates on launch</value></data>
+<data name="HideMelonConsole" xml:space="preserve"><value>Hide Melon console</value></data>
+<data name="HideMelonConsoleTip" xml:space="preserve"><value>Writes UserData\Loader.cfg (hide_console). Applies on next game launch; logs stay in MelonLoader\Latest.log. Do not close the console with X (that exits the game).</value></data>
+<data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>Hide-console setting written; restart the game for it to take effect.</value></data>
+<data name="LogMelonConsoleHiddenHint" xml:space="preserve"><value>Hide Melon console is on: the black Melon window should not appear. Use MelonLoader\Latest.log and injection checks to confirm the loader.</value></data>
+<data name="LogMelonLaunchVerifyHiddenHint" xml:space="preserve"><value>Within ~30s the manager checks the game process and Latest.log. If not injected, switch launch mode to Exe only and export diagnostics.</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>Missing</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>(Missing) {0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>Mod</value></data>
@@ -594,6 +599,10 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Domestic mirror base</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Pre-filled with the domestic COS mirror; clear for GitHub only. Same layout as the repos.</value></data>
+<data name="SettingsAdvanced" xml:space="preserve"><value>Advanced</value></data>
+<data name="MirrorSummaryOnDefault" xml:space="preserve"><value>Content mirror: on (factory default)</value></data>
+<data name="MirrorSummaryCustom" xml:space="preserve"><value>Content mirror: custom</value></data>
+<data name="MirrorSummaryOff" xml:space="preserve"><value>Content mirror: off (GitHub only)</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
   <data name="LogCatalogSourceStale" xml:space="preserve"><value>The catalog on {0} is stale; used the newer {1} instead.</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Blocked an unsafe link (https only): {0}</value></data>

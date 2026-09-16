@@ -38,4 +38,10 @@ public sealed class AppConfig
 
     /// <summary>Minutes catalog stays Hot before a Warm probe. Default 15. Not shown in Settings UI.</summary>
     public int CatalogHotCacheMinutes { get; set; } = 15;
+
+    /// <summary>
+    /// When true, write MelonLoader <c>[console] hide_console = true</c> for the current
+    /// game path (and dual stores when enabled). Takes effect on the next game launch.
+    /// </summary>
+    public bool HideMelonConsole { get; set; }
 }

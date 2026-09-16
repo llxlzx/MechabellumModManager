@@ -363,6 +363,11 @@
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>起動時チェック：インストール済みの Mod はすべて最新です。</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>起動時の Mod 更新チェックに失敗しました：{0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>起動時に Mod の更新を確認</value></data>
+<data name="HideMelonConsole" xml:space="preserve"><value>Melon コンソールを隠す</value></data>
+<data name="HideMelonConsoleTip" xml:space="preserve"><value>UserData\Loader.cfg の hide_console を書き込みます。次回起動から有効。ログは MelonLoader\Latest.log。コンソールの×で閉じないでください（ゲームも終了します）。</value></data>
+<data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>コンソール非表示を書き込みました。ゲームを再起動してください。</value></data>
+<data name="LogMelonConsoleHiddenHint" xml:space="preserve"><value>Melon コンソール非表示が有効です。黒い窓は出ません。MelonLoader\Latest.log と注入チェックで確認してください。</value></data>
+<data name="LogMelonLaunchVerifyHiddenHint" xml:space="preserve"><value>約30秒以内にプロセスと Latest.log を確認します。未注入なら「Exe のみ」起動と診断エクスポートを。</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>欠落</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>（欠落）{0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>拡張</value></data>
@@ -573,6 +578,10 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>国内ミラー基点</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>国内 COS が初期値。空欄なら GitHub のみ。リポジトリと同型。</value></data>
+<data name="SettingsAdvanced" xml:space="preserve"><value>詳細設定</value></data>
+<data name="MirrorSummaryOnDefault" xml:space="preserve"><value>コンテンツミラー：オン（出荷時既定）</value></data>
+<data name="MirrorSummaryCustom" xml:space="preserve"><value>コンテンツミラー：カスタム</value></data>
+<data name="MirrorSummaryOff" xml:space="preserve"><value>コンテンツミラー：オフ（GitHub のみ）</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>source={0}</value></data>
   <data name="LogCatalogSourceStale" xml:space="preserve"><value>{0} のカタログが古いため、より新しい {1} を使用しました。</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>安全でないリンクをブロックしました（https のみ許可）: {0}</value></data>

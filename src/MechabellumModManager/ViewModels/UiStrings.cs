@@ -85,8 +85,14 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string LaunchMode => T("LaunchMode");
     public string PortableDataRoot => T("PortableDataRoot");
     public string CheckModUpdatesOnStartup => T("CheckModUpdatesOnStartup");
+    public string HideMelonConsole => T("HideMelonConsole");
+    public string HideMelonConsoleTip => T("HideMelonConsoleTip");
+    public string SettingsAdvanced => T("SettingsAdvanced");
     public string MirrorBaseUrl => T("MirrorBaseUrl");
     public string MirrorBaseUrlHint => T("MirrorBaseUrlHint");
+    public string MirrorSummaryOnDefault => T("MirrorSummaryOnDefault");
+    public string MirrorSummaryCustom => T("MirrorSummaryCustom");
+    public string MirrorSummaryOff => T("MirrorSummaryOff");
     public string Profiles => T("Profiles");
     public string ModLibrary => T("ModLibrary");
     public string SyncLog => T("SyncLog");

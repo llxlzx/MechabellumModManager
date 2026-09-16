@@ -363,6 +363,11 @@
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>Проверка при запуске: все установленные моды актуальны.</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>Не удалось проверить обновления модов при запуске: {0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>Проверять обновления модов при запуске</value></data>
+<data name="HideMelonConsole" xml:space="preserve"><value>Скрыть консоль Melon</value></data>
+<data name="HideMelonConsoleTip" xml:space="preserve"><value>Пишет UserData\Loader.cfg (hide_console). Действует после следующего запуска; логи в MelonLoader\Latest.log. Не закрывайте консоль крестиком (закроется игра).</value></data>
+<data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>Настройка скрытия консоли записана; перезапустите игру.</value></data>
+<data name="LogMelonConsoleHiddenHint" xml:space="preserve"><value>Скрытие консоли Melon включено: чёрное окно не должно появляться. Проверяйте MelonLoader\Latest.log и статус внедрения.</value></data>
+<data name="LogMelonLaunchVerifyHiddenHint" xml:space="preserve"><value>Около 30 с менеджер проверит процесс и Latest.log. Если Loader не внедрён — режим «только Exe» и экспорт диагностики.</value></data>
   <data name="PackageMissing" xml:space="preserve"><value>Отсутствует</value></data>
   <data name="PackageMissingNameFormat" xml:space="preserve"><value>(Отсутствует) {0}</value></data>
   <data name="PackageTypeMelonMod" xml:space="preserve"><value>Мод</value></data>
@@ -573,6 +578,10 @@
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>База внутреннего зеркала</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>По умолчанию COS-зеркало; пусто = только GitHub. Та же раскладка.</value></data>
+<data name="SettingsAdvanced" xml:space="preserve"><value>Дополнительно</value></data>
+<data name="MirrorSummaryOnDefault" xml:space="preserve"><value>CDN-зеркало: включено (заводское)</value></data>
+<data name="MirrorSummaryCustom" xml:space="preserve"><value>CDN-зеркало: своё</value></data>
+<data name="MirrorSummaryOff" xml:space="preserve"><value>CDN-зеркало: выкл. (только GitHub)</value></data>
   <data name="RemoteSourceLog" xml:space="preserve"><value>источник={0}</value></data>
   <data name="LogCatalogSourceStale" xml:space="preserve"><value>Каталог на {0} устарел; использован более новый {1}.</value></data>
   <data name="LogBlockedUnsafeUrl" xml:space="preserve"><value>Небезопасная ссылка заблокирована (только https): {0}</value></data>
