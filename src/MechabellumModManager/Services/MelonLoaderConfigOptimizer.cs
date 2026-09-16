@@ -24,6 +24,10 @@ public sealed class MelonLoaderConfigOptimizer
         @"^(?<indent>\s*)force_offline_generation\s*=\s*(?<value>true|false)\s*$",
         RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
+    static readonly Regex HideConsoleRegex = new(
+        @"^(?<indent>\s*)hide_console\s*=\s*(?<value>true|false)\s*$",
+        RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
     readonly UnityVersionResolver _resolver;
 
     public MelonLoaderConfigOptimizer(UnityVersionResolver? resolver = null)
@@ -98,15 +102,98 @@ public sealed class MelonLoaderConfigOptimizer
         return File.Exists(zipPath) && File.Exists(cpp2IlExe);
     }
 
+    /// <summary>
+    /// Settings toggle: write Melon <c>[console] hide_console</c>.
+    /// When <paramref name="hide"/> is false and the key is absent, no-op (Melon default shows console).
+    /// </summary>
+    public MelonLoaderOptimizeResult SetHideConsole(string gamePath, bool hide)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
+        {
+            return new MelonLoaderOptimizeResult
+            {
+                Changed = false,
+                Message = "游戏路径无效，无法写入 hide_console。",
+                NeedsFirstAssemblyGeneration = false
+            };
+        }
+
+        var path = GetLoaderConfigPath(gamePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+        if (!File.Exists(path))
+        {
+            if (!hide)
+            {
+                return new MelonLoaderOptimizeResult
+                {
+                    Changed = false,
+                    Message = "未写入 hide_console（默认显示控制台）。",
+                    NeedsFirstAssemblyGeneration = NeedsFirstAssemblyGeneration(gamePath)
+                };
+            }
+
+            File.WriteAllText(
+                path,
+                "[console]" + Environment.NewLine + "hide_console = true" + Environment.NewLine,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            return new MelonLoaderOptimizeResult
+            {
+                Changed = true,
+                Message = "已写入 hide_console = true（下次启动游戏生效）。",
+                NeedsFirstAssemblyGeneration = NeedsFirstAssemblyGeneration(gamePath)
+            };
+        }
+
+        var text = File.ReadAllText(path, Encoding.UTF8);
+        if (!hide && !HideConsoleRegex.IsMatch(text))
+        {
+            return new MelonLoaderOptimizeResult
+            {
+                Changed = false,
+                Message = "未写入 hide_console（默认显示控制台）。",
+                NeedsFirstAssemblyGeneration = NeedsFirstAssemblyGeneration(gamePath)
+            };
+        }
+
+        var updated = ApplyHideConsole(text, hide, out var changed);
+        if (!changed)
+        {
+            return new MelonLoaderOptimizeResult
+            {
+                Changed = false,
+                Message = "hide_console 已是目标值。",
+                NeedsFirstAssemblyGeneration = NeedsFirstAssemblyGeneration(gamePath)
+            };
+        }
+
+        File.WriteAllText(path, updated, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        return new MelonLoaderOptimizeResult
+        {
+            Changed = true,
+            Message = hide
+                ? "已写入 hide_console = true（下次启动游戏生效）。"
+                : "已写入 hide_console = false（下次启动游戏生效）。",
+            NeedsFirstAssemblyGeneration = NeedsFirstAssemblyGeneration(gamePath)
+        };
+    }
+
     public MelonLoaderOptimizeResult ApplyRecommendedSettings(string gamePath) =>
-        ApplyRecommendedSettings(gamePath, knownUnityVersion: null);
+        ApplyRecommendedSettings(gamePath, knownUnityVersion: null, hideConsole: null);
 
     /// <param name="knownUnityVersion">
     /// Optional Unity version from a successful seed (or single-zip fallback).
     /// Preferred when normalizable; enables offline even if game resolve fails,
     /// as long as the exact UnityDependencies zip is on disk.
     /// </param>
-    public MelonLoaderOptimizeResult ApplyRecommendedSettings(string gamePath, string? knownUnityVersion)
+    /// <param name="hideConsole">
+    /// When non-null, write <c>hide_console</c> (including on new MinimalLoaderCfg).
+    /// When null, leave hide keys untouched.
+    /// </param>
+    public MelonLoaderOptimizeResult ApplyRecommendedSettings(
+        string gamePath,
+        string? knownUnityVersion = null,
+        bool? hideConsole = null)
     {
         if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
         {
@@ -134,14 +221,15 @@ public sealed class MelonLoaderConfigOptimizer
         }
         else
         {
-            text = MinimalLoaderCfg(forceOffline);
+            text = MinimalLoaderCfg(forceOffline, hideConsole);
             File.WriteAllText(path, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             return new MelonLoaderOptimizeResult
             {
                 Changed = true,
                 Message =
                     "已写入 MelonLoader 优化配置（退出防卡死" +
-                    (forceOffline ? " + 离线程序集生成" : "") + "）。" +
+                    (forceOffline ? " + 离线程序集生成" : "") +
+                    (hideConsole == true ? " + 隐藏控制台" : "") + "）。" +
                     (needsGen ? " 首次启动仍需生成 IL2CPP 程序集，可能需 1～2 分钟，请等待黑屏/控制台完成。" : ""),
                 NeedsFirstAssemblyGeneration = needsGen
             };
@@ -172,6 +260,12 @@ public sealed class MelonLoaderConfigOptimizer
             changedKeys.Add("force_offline_generation");
         }
 
+        if (hideConsole is { } hide)
+        {
+            updated = ApplyHideConsole(updated, hide, out var hideChanged);
+            if (hideChanged) changedKeys.Add("hide_console");
+        }
+
         if (changedKeys.Count == 0)
         {
             return new MelonLoaderOptimizeResult
@@ -195,6 +289,24 @@ public sealed class MelonLoaderConfigOptimizer
                 (needsGen ? " 首次启动仍需生成 IL2CPP 程序集，可能需 1～2 分钟，请等待完成后再操作。" : ""),
             NeedsFirstAssemblyGeneration = needsGen
         };
+    }
+
+    static string ApplyHideConsole(string text, bool hide, out bool changed)
+    {
+        changed = false;
+        var desiredLine = hide ? "hide_console = true" : "hide_console = false";
+        var updated = SetBoolKey(text, HideConsoleRegex, "hide_console", hide, out var flipped);
+        if (flipped)
+        {
+            changed = true;
+            return updated;
+        }
+
+        if (HideConsoleRegex.IsMatch(updated))
+            return updated;
+
+        changed = true;
+        return EnsureSectionKey(updated, "[console]", desiredLine);
     }
 
     static string SetBoolKey(string text, Regex regex, string key, bool desired, out bool changed)
@@ -232,15 +344,24 @@ public sealed class MelonLoaderConfigOptimizer
         return text.Insert(insertAt, keyLine + Environment.NewLine);
     }
 
-    static string MinimalLoaderCfg(bool forceOffline) =>
-        $"""
-        [loader]
-        # Only use this if the game freezes when trying to quit. Equivalent to the '--quitfix' launch option
-        force_quit = true
+    static string MinimalLoaderCfg(bool forceOffline, bool? hideConsole)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("[loader]");
+        sb.AppendLine("# Only use this if the game freezes when trying to quit. Equivalent to the '--quitfix' launch option");
+        sb.AppendLine("force_quit = true");
+        sb.AppendLine();
+        sb.AppendLine("[unityengine]");
+        sb.AppendLine("# Forces the Il2Cpp Assembly Generator to run without contacting the remote API.");
+        sb.AppendLine($"force_offline_generation = {(forceOffline ? "true" : "false")}");
+        if (hideConsole is { } hide)
+        {
+            sb.AppendLine();
+            sb.AppendLine("[console]");
+            sb.AppendLine("# Hides the console. Equivalent to the '--melonloader.hideconsole' launch option");
+            sb.AppendLine($"hide_console = {(hide ? "true" : "false")}");
+        }
 
-        [unityengine]
-        # Forces the Il2Cpp Assembly Generator to run without contacting the remote API.
-        force_offline_generation = {(forceOffline ? "true" : "false")}
-
-        """;
+        return sb.ToString();
+    }
 }

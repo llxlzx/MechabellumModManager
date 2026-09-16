@@ -257,6 +257,106 @@ public class MelonLoaderConfigOptimizerTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact]
+    public void SetHideConsole_creates_console_section_true()
+    {
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            var opt = new MelonLoaderConfigOptimizer();
+            var result = opt.SetHideConsole(root, hide: true);
+            result.Changed.Should().BeTrue();
+            File.ReadAllText(opt.GetLoaderConfigPath(root)).Should().Contain("hide_console = true");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void SetHideConsole_writes_false_when_key_present()
+    {
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            var opt = new MelonLoaderConfigOptimizer();
+            opt.SetHideConsole(root, hide: true);
+            var result = opt.SetHideConsole(root, hide: false);
+            result.Changed.Should().BeTrue();
+            var cfg = File.ReadAllText(opt.GetLoaderConfigPath(root));
+            cfg.Should().Contain("hide_console = false");
+            cfg.Should().NotContain("hide_console = true");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void SetHideConsole_noop_when_false_and_key_absent()
+    {
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            var opt = new MelonLoaderConfigOptimizer();
+            var result = opt.SetHideConsole(root, hide: false);
+            result.Changed.Should().BeFalse();
+            File.Exists(opt.GetLoaderConfigPath(root)).Should().BeFalse();
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void ApplyRecommendedSettings_new_cfg_includes_hide_when_requested()
+    {
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            var opt = new MelonLoaderConfigOptimizer();
+            opt.ApplyRecommendedSettings(root, hideConsole: true);
+            var cfg = File.ReadAllText(opt.GetLoaderConfigPath(root));
+            cfg.Should().Contain("hide_console = true");
+            cfg.Should().Contain("force_quit = true");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void ApplyRecommendedSettings_null_hide_does_not_add_console_on_new_cfg()
+    {
+        var root = CreateTempGame(withAssemblies: false);
+        try
+        {
+            var opt = new MelonLoaderConfigOptimizer();
+            opt.ApplyRecommendedSettings(root, hideConsole: null);
+            File.ReadAllText(opt.GetLoaderConfigPath(root)).Should().NotContain("hide_console");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void ApplyRecommendedSettings_null_hide_leaves_existing_hide_unchanged()
+    {
+        var root = CreateTempGame(withAssemblies: true);
+        try
+        {
+            var path = Path.Combine(root, "UserData", "Loader.cfg");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path,
+                """
+                [loader]
+                force_quit = true
+
+                [console]
+                hide_console = true
+
+                [unityengine]
+                force_offline_generation = false
+                """);
+
+            var opt = new MelonLoaderConfigOptimizer();
+            opt.ApplyRecommendedSettings(root, hideConsole: null);
+            File.ReadAllText(path).Should().Contain("hide_console = true");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     static string CreateTempGame(bool withAssemblies)
     {
         var root = Path.Combine(Path.GetTempPath(), "mmm-ml-opt-" + Guid.NewGuid().ToString("N"));
