@@ -1,10 +1,10 @@
 {
     "version":  "1.2.7",
-    "notes":  "重复的旧 Mod 不再假显示可更新；点更新会删掉旧副本并保留已装的目录版。\nStale duplicate mods no longer show a no-op Update; clicking Update removes the old copy and keeps the catalog build already in the library.",
+    "notes":  "安装不再误报离线包下载失败。游戏异常退出后若 Steam 仍显示正在运行，管理器会提示先完全退出 Steam 再启动。重复的旧 Mod 点更新会清掉旧文件。\nSetup no longer reports a false offline-package download failure. If Steam still marks the game running after a crash, the manager asks you to fully quit Steam before launching again. Update on a stale duplicate removes the old copy.",
     "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.7/MechabellumModManager_Setup_v1.2.7.exe",
-    "setupSha256":  "219f33b66961024c1154cbf3d66df5c7fa1baccadccb4ff382e18342d4c63df5",
+    "setupSha256":  "7591560898bac92b1c481196885a99b7d1a6c6d915b9f09b524d79ca5429e015",
     "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.7/MechabellumModManager_portable_v1.2.7.zip",
-    "portableSha256":  "071f2ed722d3c5b203dd7b12f348c248ceda02d93dad84c1109b2ff0b9570e33",
-    "publishedAt":  "2026-09-16T01:59:27Z",
-    "build":  "v1.2.7-stale-duplicate-update"
+    "portableSha256":  "93d3adbc55dfe0f0de4bc148d61c1be1491df82de1f89d6ef41ed6e6a734eb42",
+    "publishedAt":  "2026-09-16T02:54:34Z",
+    "build":  "v1.2.7-steam-stale-and-redist-exit"
 }
