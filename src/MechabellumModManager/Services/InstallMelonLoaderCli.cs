@@ -107,8 +107,8 @@ public static class InstallMelonLoaderCli
 
             // Re-apply after late seed so force_offline can flip true once the zip lands (use seed.Version if resolve would fail).
             var optimize = seed.Success && seed.Version != null
-                ? new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath.Trim(), seed.Version)
-                : new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath.Trim());
+                ? new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath.Trim(), seed.Version, LoadHideConsolePreference())
+                : new MelonLoaderConfigOptimizer().ApplyRecommendedSettings(gamePath.Trim(), hideConsole: LoadHideConsolePreference());
             if (optimize.Changed || !string.IsNullOrWhiteSpace(optimize.Message))
                 Log(optimize.Message);
 
@@ -128,6 +128,25 @@ public static class InstallMelonLoaderCli
         {
             Log(ex.ToString());
             return 1;
+        }
+    }
+
+    static bool? LoadHideConsolePreference()
+    {
+        try
+        {
+            var path = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "MechabellumModManager",
+                "config.json");
+            if (!File.Exists(path))
+                return null;
+            var cfg = System.Text.Json.JsonSerializer.Deserialize<Models.AppConfig>(File.ReadAllText(path));
+            return cfg?.HideMelonConsole;
+        }
+        catch
+        {
+            return null;
         }
     }
 
