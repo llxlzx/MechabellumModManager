@@ -194,6 +194,8 @@ function Apply-LoaderCfgOptimizations {
         [string] $Root,
         [string] $KnownUnityVersion = $null
     )
+    # Manager-owned: [console] hide_console. This function only touches force_quit /
+    # force_offline_generation and must never invent or strip hide_console lines.
     $userData = Join-Path $Root "UserData"
     New-Item -ItemType Directory -Force -Path $userData | Out-Null
     $cfg = Join-Path $userData "Loader.cfg"
