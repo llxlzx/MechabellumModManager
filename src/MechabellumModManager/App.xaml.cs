@@ -51,9 +51,15 @@ public partial class App : Application
                 out var ensureRedistDir,
                 out var ensureMirror,
                 out var ensureIds,
-                out var ensureNoMirror))
+                out var ensureNoMirror,
+                out var ensureProgressFile))
         {
-            var code = EnsureRedistCli.Run(ensureRedistDir!, ensureMirror, ensureIds, ensureNoMirror);
+            var code = EnsureRedistCli.Run(
+                ensureRedistDir!,
+                ensureMirror,
+                ensureIds,
+                ensureNoMirror,
+                ensureProgressFile);
             Shutdown(code);
             return;
         }

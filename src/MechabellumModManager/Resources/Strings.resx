@@ -219,6 +219,12 @@
   <data name="RefreshCatalog" xml:space="preserve">
     <value>刷新目录</value>
   </data>
+  <data name="RefreshInstalledMods" xml:space="preserve">
+    <value>刷新已安装MOD列表</value>
+  </data>
+  <data name="LogLibraryRefreshed" xml:space="preserve">
+    <value>已刷新已装 Mod 列表</value>
+  </data>
   <data name="AddToLibrary" xml:space="preserve">
     <value>加入本地库</value>
   </data>

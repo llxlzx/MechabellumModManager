@@ -15,6 +15,14 @@ public sealed class RedistEnsureResult
     public Dictionary<string, string> SourceById { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
+/// <summary>Overall redist fill progress (0–100), for installer CLI / UI.</summary>
+public sealed class RedistProgress
+{
+    public int Percent { get; init; }
+    public string ArtifactId { get; init; } = "";
+    public string Detail { get; init; } = "";
+}
+
 /// <summary>
 /// Fills {redistDir} from MechabellumRedist/manifest.json (COS → origin) with mandatory sha256.
 /// </summary>
@@ -106,6 +114,7 @@ public sealed class RedistEnsureService
         string? mirrorBaseUrl,
         IReadOnlyList<string>? ids = null,
         string? bundledManifestJson = null,
+        IProgress<RedistProgress>? progress = null,
         CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(redistDir);
@@ -129,17 +138,37 @@ public sealed class RedistEnsureService
         var sources = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var errors = new List<string>();
 
-        foreach (var artifact in wanted)
+        var weights = wanted.Select(ArtifactWeight).ToArray();
+        var totalWeight = weights.Sum();
+        if (totalWeight <= 0)
+            totalWeight = 1;
+        long completedWeight = 0;
+
+        for (var i = 0; i < wanted.Count; i++)
         {
+            var artifact = wanted[i];
+            var weight = weights[i];
             try
             {
-                var source = await EnsureOneAsync(redistDir, mirrorBaseUrl, artifact, ct).ConfigureAwait(false);
+                var source = await EnsureOneAsync(
+                        redistDir,
+                        mirrorBaseUrl,
+                        artifact,
+                        weight,
+                        completedWeight,
+                        totalWeight,
+                        progress,
+                        ct)
+                    .ConfigureAwait(false);
                 sources[artifact.Id] = source;
             }
             catch (Exception ex)
             {
                 errors.Add($"{artifact.Id}: {ex.Message}");
             }
+
+            completedWeight += weight;
+            ReportProgress(progress, completedWeight, totalWeight, artifact.Id, "done");
         }
 
         if (errors.Count > 0)
@@ -152,6 +181,7 @@ public sealed class RedistEnsureService
             };
         }
 
+        ReportProgress(progress, totalWeight, totalWeight, "", "complete");
         return new RedistEnsureResult
         {
             Success = true,
@@ -230,13 +260,25 @@ public sealed class RedistEnsureService
         string redistDir,
         string? mirrorBaseUrl,
         RedistArtifact artifact,
+        long artifactWeight,
+        long completedWeight,
+        long totalWeight,
+        IProgress<RedistProgress>? progress,
         CancellationToken ct)
     {
         var dest = Path.Combine(redistDir, artifact.Path.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
 
         if (File.Exists(dest) && HashFile(dest) == artifact.Sha256)
+        {
+            ReportProgress(
+                progress,
+                completedWeight + artifactWeight,
+                totalWeight,
+                artifact.Id,
+                "local");
             return LocalSource;
+        }
 
         var candidates = BuildArtifactCandidates(mirrorBaseUrl, artifact);
         if (candidates.Count == 0)
@@ -256,10 +298,21 @@ public sealed class RedistEnsureService
                     continue;
                 }
 
+                var contentLength = resp.Content.Headers.ContentLength;
                 await using (var input = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false))
                 await using (var output = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    await input.CopyToAsync(output, ct).ConfigureAwait(false);
+                    await CopyWithProgressAsync(
+                            input,
+                            output,
+                            contentLength,
+                            artifact.Id,
+                            artifactWeight,
+                            completedWeight,
+                            totalWeight,
+                            progress,
+                            ct)
+                        .ConfigureAwait(false);
                 }
 
                 var hash = HashFile(temp);
@@ -288,6 +341,77 @@ public sealed class RedistEnsureService
         }
 
         throw new InvalidOperationException(string.Join("; ", failures));
+    }
+
+    static async Task CopyWithProgressAsync(
+        Stream input,
+        Stream output,
+        long? contentLength,
+        string artifactId,
+        long artifactWeight,
+        long completedWeight,
+        long totalWeight,
+        IProgress<RedistProgress>? progress,
+        CancellationToken ct)
+    {
+        var buffer = new byte[81920];
+        long received = 0;
+        var lastReportedPercent = -1;
+        int read;
+        while ((read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+            received += read;
+
+            double fileFrac;
+            string detail;
+            if (contentLength is > 0)
+            {
+                fileFrac = Math.Min(1.0, received / (double)contentLength.Value);
+                detail = $"{ByteSize.Format(received)} / {ByteSize.Format(contentLength.Value)}";
+            }
+            else
+            {
+                // Unknown length: advance within the artifact slice by received KB, capped at 99%.
+                fileFrac = Math.Min(0.99, received / (double)Math.Max(artifactWeight, 1));
+                detail = ByteSize.Format(received);
+            }
+
+            var overall = completedWeight + (long)(artifactWeight * fileFrac);
+            var percentInt = (int)Math.Min(100, overall * 100.0 / totalWeight);
+            var shouldReport = contentLength is > 0
+                ? percentInt != lastReportedPercent
+                : received == read || received % (512 * 1024) < read;
+
+            if (shouldReport)
+            {
+                lastReportedPercent = percentInt;
+                ReportProgress(progress, overall, totalWeight, artifactId, detail);
+            }
+        }
+    }
+
+    static long ArtifactWeight(RedistArtifact artifact) =>
+        artifact.Size is > 0 ? artifact.Size.Value : 1_000_000L;
+
+    static void ReportProgress(
+        IProgress<RedistProgress>? progress,
+        long completedWeight,
+        long totalWeight,
+        string artifactId,
+        string detail)
+    {
+        if (progress is null)
+            return;
+        var percent = totalWeight <= 0
+            ? 0
+            : (int)Math.Clamp(completedWeight * 100.0 / totalWeight, 0, 100);
+        progress.Report(new RedistProgress
+        {
+            Percent = percent,
+            ArtifactId = artifactId,
+            Detail = detail
+        });
     }
 
     public static string HashFile(string path)

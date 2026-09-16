@@ -201,6 +201,69 @@ public class RedistEnsureTests
         handler.Requests.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Ensure_reports_monotonic_progress_to_100()
+    {
+        // Larger payload so Content-Length progress reports more than one tick.
+        var payload = Encoding.UTF8.GetBytes(new string('x', 200_000));
+        var sha = Convert.ToHexString(SHA256.HashData(payload)).ToLowerInvariant();
+        var manifest = $$"""
+            {
+              "schemaVersion": 1,
+              "artifacts": [
+                {
+                  "id": "big",
+                  "path": "big.bin",
+                  "sha256": "{{sha}}",
+                  "size": {{payload.Length}},
+                  "originUrl": "https://origin.example/big.bin"
+                },
+                {
+                  "id": "small",
+                  "path": "small.bin",
+                  "sha256": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                  "size": 3,
+                  "originUrl": "https://origin.example/small.bin"
+                }
+              ]
+            }
+            """;
+
+        var handler = new ScriptedHttpHandler(req =>
+        {
+            if (req.RequestUri!.AbsolutePath.EndsWith("/big.bin", StringComparison.Ordinal))
+                return Bytes(HttpStatusCode.OK, payload);
+            if (req.RequestUri.AbsolutePath.EndsWith("/small.bin", StringComparison.Ordinal))
+                return Bytes(HttpStatusCode.OK, FooBytes);
+            return ScriptedHttpHandler.Json(HttpStatusCode.NotFound, "miss");
+        });
+        using var http = new HttpClient(handler);
+        using var dir = new TempDir();
+        var svc = new RedistEnsureService(http);
+        var reports = new List<RedistProgress>();
+        var progress = new SyncProgress(reports.Add);
+
+        var result = await svc.EnsureAsync(
+            dir.Path,
+            mirrorBaseUrl: "",
+            ids: ["big", "small"],
+            bundledManifestJson: manifest,
+            progress: progress);
+
+        result.Success.Should().BeTrue();
+        reports.Should().NotBeEmpty();
+        for (var i = 1; i < reports.Count; i++)
+            reports[i].Percent.Should().BeGreaterThanOrEqualTo(reports[i - 1].Percent);
+        reports.Last().Percent.Should().Be(100);
+    }
+
+    sealed class SyncProgress : IProgress<RedistProgress>
+    {
+        readonly Action<RedistProgress> _onReport;
+        public SyncProgress(Action<RedistProgress> onReport) => _onReport = onReport;
+        public void Report(RedistProgress value) => _onReport(value);
+    }
+
     static HttpResponseMessage Bytes(HttpStatusCode code, byte[] body)
     {
         var resp = new HttpResponseMessage(code)

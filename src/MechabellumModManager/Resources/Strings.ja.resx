@@ -219,6 +219,12 @@
   <data name="RefreshCatalog" xml:space="preserve">
     <value>カタログ更新</value>
   </data>
+  <data name="RefreshInstalledMods" xml:space="preserve">
+    <value>インストール済みMODを更新</value>
+  </data>
+  <data name="LogLibraryRefreshed" xml:space="preserve">
+    <value>インストール済みModリストを更新しました</value>
+  </data>
   <data name="AddToLibrary" xml:space="preserve">
     <value>ライブラリに追加</value>
   </data>

@@ -3733,6 +3733,13 @@ public sealed partial class MainViewModel : ObservableObject
         RunOnUiThread(ReloadModsCore);
     }
 
+    [RelayCommand]
+    void ReloadLibrary()
+    {
+        ReloadMods();
+        AppendLog(LocalizationService.T("LogLibraryRefreshed"));
+    }
+
     void ReloadModsCore()
     {
         var enabled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

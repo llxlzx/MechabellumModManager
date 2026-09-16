@@ -219,6 +219,12 @@
   <data name="RefreshCatalog" xml:space="preserve">
     <value>Обновить каталог</value>
   </data>
+  <data name="RefreshInstalledMods" xml:space="preserve">
+    <value>Обновить список установленных модов</value>
+  </data>
+  <data name="LogLibraryRefreshed" xml:space="preserve">
+    <value>Список установленных модов обновлён</value>
+  </data>
   <data name="AddToLibrary" xml:space="preserve">
     <value>В локальную библиотеку</value>
   </data>
