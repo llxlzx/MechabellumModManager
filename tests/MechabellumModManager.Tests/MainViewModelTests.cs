@@ -81,6 +81,27 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public async Task ApplyAndLaunch_skips_steam_when_registry_still_marks_game_running()
+    {
+        using var fx = Fixture.CreateReady();
+        string? notified = null;
+        var starter = new RecordingStarter();
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            starter: starter,
+            notify: m => notified = m,
+            steamAppMarkedRunning: () => true);
+        vm.LaunchMode = LaunchMode.SteamThenExe;
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        starter.Starts.Should().BeEmpty();
+        notified.Should().Be(LocalizationService.T("NotifyLaunchSteamStaleRunning"));
+        vm.LogText.Should().Contain(LocalizationService.T("NotifyLaunchSteamStaleRunning"));
+        vm.LogText.Should().NotContain(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+    }
+
+    [Fact]
     public async Task ApplyAndLaunch_reports_process_not_seen_when_probe_stays_false()
     {
         using var fx = Fixture.CreateReady();

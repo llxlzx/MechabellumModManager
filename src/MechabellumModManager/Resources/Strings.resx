@@ -439,6 +439,7 @@
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>已请求启动，正在确认游戏是否起来…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>已检测到游戏进程。</value></data>
   <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>未检测到游戏进程。可再点「应用并启动」，或检查 Steam 是否弹出账户选择器/被拦。</value></data>
+  <data name="NotifyLaunchSteamStaleRunning" xml:space="preserve"><value>Steam 仍把本游戏标为正在运行，但游戏进程已经不在（常见于崩溃或被强制结束），因此拒绝再次启动。请完全退出 Steam 客户端后重新打开，再点一次「应用并启动」，不要连点。</value></data>
   <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam 打开的不是管理器里的游戏目录：{0}。Melon 不会进这个窗口。请改「仅直启 exe」，或把管理器游戏路径改成 Steam 实际打开的库。</value></data>
   <data name="LogFirstAssemblyLaunchHint" xml:space="preserve"><value>首次启动 Melon 正在生成程序集，黑屏或控制台滚动是正常的，请等一两分钟。</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>已解除双目录配置。请在 Steam 中确认当前游戏分支是否正确。</value></data>

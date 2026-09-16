@@ -433,6 +433,7 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Start angefordert; prüfe, ob der Spielprozess startet…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>Spielprozess erkannt.</value></data>
   <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>Kein Spielprozess erkannt. Erneut „Anwenden und starten“ oder prüfen, ob Steam ein Kontofenster zeigte oder den Start blockierte.</value></data>
+  <data name="NotifyLaunchSteamStaleRunning" xml:space="preserve"><value>Steam markiert dieses Spiel noch als laufend, obwohl der Prozess weg ist (typisch nach Absturz oder erzwungenem Beenden), und lehnt einen neuen Start deshalb ab. Steam-Client vollständig beenden, neu öffnen, dann einmal „Anwenden und starten“. Nicht mehrfach klicken.</value></data>
   <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam hat einen anderen Spieleordner geöffnet als der Manager: {0}. Melon lädt in diesem Fenster nicht. Startmodus auf „Nur Exe“ stellen oder den Manager-Pfad auf die von Steam geöffnete Bibliothek setzen.</value></data>
   <data name="LogFirstAssemblyLaunchHint" xml:space="preserve"><value>Beim ersten Melon-Start werden Assemblies erzeugt. Schwarzer Bildschirm oder scrollende Konsole ist normal — 1–2 Minuten warten.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Doppelordner entfernt. In Steam prüfen, ob der aktuelle Spielzweig stimmt.</value></data>

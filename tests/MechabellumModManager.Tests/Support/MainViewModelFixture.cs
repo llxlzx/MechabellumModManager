@@ -240,7 +240,8 @@ public sealed class MainViewModelFixture : IDisposable
         Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
         Func<bool>? promptSubmitGuide = null,
         Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null,
-        MelonLoaderAssemblyGenerator? melonAssemblyGenerator = null)
+        MelonLoaderAssemblyGenerator? melonAssemblyGenerator = null,
+        Func<bool>? steamAppMarkedRunning = null)
     {
         var processStarter = starter ?? new RecordingProcessStarter();
         var launcher = new GameLauncher(processStarter, () => false);
@@ -287,7 +288,8 @@ public sealed class MainViewModelFixture : IDisposable
             promptExportDiagnostics: promptExportDiagnostics,
             saveZipFile: saveZipFile,
             revealInExplorer: revealInExplorer,
-            melonAssemblyGenerator: melonAssemblyGenerator);
+            melonAssemblyGenerator: melonAssemblyGenerator,
+            steamAppMarkedRunning: steamAppMarkedRunning ?? (() => false));
     }
 
     public void WriteBranchConfig(BranchSwitchConfig cfg) =>

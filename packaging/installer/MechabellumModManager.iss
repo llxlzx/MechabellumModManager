@@ -317,20 +317,7 @@ Name: "{autodesktop}\{cm:AppDisplayName}"; Filename: "{app}\{#MyAppExeName}"; Ta
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:RunNow,{cm:AppDisplayName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-function OpenProcess(dwDesiredAccess: Cardinal; bInheritHandle: BOOL; dwProcessId: Cardinal): THandle;
-  external 'OpenProcess@kernel32.dll stdcall';
-function GetExitCodeProcess(hProcess: THandle; var lpExitCode: Cardinal): BOOL;
-  external 'GetExitCodeProcess@kernel32.dll stdcall';
-function CloseHandle(hObject: THandle): BOOL;
-  external 'CloseHandle@kernel32.dll stdcall';
-function WaitForSingleObject(hHandle: THandle; dwMilliseconds: Cardinal): Cardinal;
-  external 'WaitForSingleObject@kernel32.dll stdcall';
-
-const
-  PROCESS_QUERY_LIMITED_INFORMATION = $1000;
-  SYNCHRONIZE = $00100000;
-  STILL_ACTIVE = 259;
-  WAIT_TIMEOUT = $102;
+{ ewNoWait ResultCode is STILL_ACTIVE (259), not a PID. Do not OpenProcess it. }
 
 var
   GamePathPage: TInputDirWizardPage;
@@ -533,19 +520,37 @@ begin
 end;
 
 
+function TryReadEnsureRedistExit(const ExitFile: string; var Code: Integer): Boolean;
+var
+  Raw: AnsiString;
+  Line: string;
+begin
+  Code := -1;
+  Result := False;
+  if not FileExists(ExitFile) then
+    exit;
+  if not LoadStringFromFile(ExitFile, Raw) then
+    exit;
+  Line := Trim(string(Raw));
+  if Line = '' then
+    exit;
+  Code := StrToIntDef(Line, -1);
+  Result := Code <> -1;
+end;
+
 function EnsureRedistViaApp(const Redist: string): Integer;
 var
-  Params, ProgressFile, Line, PctStr, Artifact, Detail: string;
-  Pid, ExitCode: Cardinal;
-  HProc: THandle;
-  Pct, P1, P2, WaitMs, ResultCode: Integer;
+  Params, ProgressFile, ExitFile, Line, PctStr, Artifact, Detail, LastLine: string;
+  Pct, P1, P2, ResultCode, ExitCode, Waited, Idle: Integer;
   ProgressA: AnsiString;
 begin
   { Thin Setup: pull Melon/Unity/Cpp2IL/.NET into installer-redist.
     zh-CN prefers domestic COS; other languages use origin only.
-    Progress file + ewNoWait so StatusLabel / ProgressGauge can update mid-download. }
+    Child writes percent|id|detail and a .exit sidecar. ewNoWait ResultCode is not a PID. }
   ProgressFile := ExpandConstant('{tmp}\ensure-redist-progress.txt');
+  ExitFile := ProgressFile + '.exit';
   DeleteFile(ProgressFile);
+  DeleteFile(ExitFile);
   Params := '--ensure-redist --redist-dir "' + Redist + '" --progress-file "' + ProgressFile + '"';
   if CompareText(ActiveLanguage, 'chinesesimplified') = 0 then
     Params := Params + ' --mirror-base-url "https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com"'
@@ -557,33 +562,24 @@ begin
     Result := -1;
     exit;
   end;
-  Pid := Cardinal(ResultCode);
 
-  HProc := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION or SYNCHRONIZE, False, Pid);
-  WaitMs := 0;
-  while HProc = 0 do
+  WizardForm.ProgressGauge.Min := 0;
+  WizardForm.ProgressGauge.Max := 100;
+  WizardForm.ProgressGauge.Position := 0;
+  WizardForm.ProgressGauge.Update;
+  LastLine := '';
+  Waited := 0;
+  Idle := 0;
+  ExitCode := -1;
+  while not TryReadEnsureRedistExit(ExitFile, ExitCode) do
   begin
-    { Rare: handle not ready yet — do not start a second instance. }
-    Sleep(200);
-    WaitMs := WaitMs + 200;
-    HProc := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION or SYNCHRONIZE, False, Pid);
-    if WaitMs > 10000 then
+    if LoadStringFromFile(ProgressFile, ProgressA) then
     begin
-      Result := -1;
-      DeleteFile(ProgressFile);
-      exit;
-    end;
-  end;
-
-  try
-    WizardForm.ProgressGauge.Min := 0;
-    WizardForm.ProgressGauge.Max := 100;
-    WizardForm.ProgressGauge.Position := 0;
-    WizardForm.ProgressGauge.Update;
-    repeat
-      if LoadStringFromFile(ProgressFile, ProgressA) then
+      Line := Trim(string(ProgressA));
+      if Line <> LastLine then
       begin
-        Line := Trim(string(ProgressA));
+        LastLine := Line;
+        Idle := 0;
         P1 := Pos('|', Line);
         if P1 > 1 then
         begin
@@ -616,19 +612,26 @@ begin
               Pct := 100;
             WizardForm.ProgressGauge.Position := Pct;
             WizardForm.ProgressGauge.Update;
-            WizardForm.Update;
           end;
         end;
       end;
-    until WaitForSingleObject(HProc, 200) <> WAIT_TIMEOUT;
-
-    if not GetExitCodeProcess(HProc, ExitCode) then
-      ExitCode := 1;
-    Result := Integer(ExitCode);
-  finally
-    CloseHandle(HProc);
-    DeleteFile(ProgressFile);
+    end;
+    WizardForm.Update;
+    Sleep(200);
+    Waited := Waited + 200;
+    Idle := Idle + 200;
+    { 2 min with no progress and no exit file, or 45 min overall. }
+    if (Idle > 120000) or (Waited > 2700000) then
+    begin
+      Result := -1;
+      DeleteFile(ProgressFile);
+      exit;
+    end;
   end;
+
+  Result := ExitCode;
+  DeleteFile(ProgressFile);
+  DeleteFile(ExitFile);
 end;
 
 function LooksLikeGame(const Path: string): Boolean;

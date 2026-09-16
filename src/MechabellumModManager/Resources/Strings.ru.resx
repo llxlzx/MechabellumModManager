@@ -433,6 +433,7 @@
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Запуск запрошен; проверяю, появился ли процесс игры…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>Процесс игры обнаружен.</value></data>
   <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>Процесс игры не обнаружен. Нажмите «Применить и запустить» ещё раз или проверьте, не показал ли Steam выбор аккаунта и не заблокировал ли запуск.</value></data>
+  <data name="NotifyLaunchSteamStaleRunning" xml:space="preserve"><value>Steam всё ещё помечает игру как запущенную, хотя процесса уже нет (часто после сбоя или принудительного завершения), поэтому отказывает в повторном запуске. Полностью закройте клиент Steam, откройте снова и один раз нажмите «Применить и запустить». Не нажимайте несколько раз.</value></data>
   <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam открыл другую папку игры, не ту, что в менеджере: {0}. Melon в это окно не попадёт. Выберите «только exe» или укажите в менеджере библиотеку, которую реально открывает Steam.</value></data>
   <data name="LogFirstAssemblyLaunchHint" xml:space="preserve"><value>При первом запуске Melon генерирует сборки. Чёрный экран или прокрутка консоли — нормально, подождите 1–2 минуты.</value></data>
   <data name="NotifyBranchTeardownDone" xml:space="preserve"><value>Двухкаталожная настройка снята. В Steam проверьте, что текущая ветка игры верна.</value></data>

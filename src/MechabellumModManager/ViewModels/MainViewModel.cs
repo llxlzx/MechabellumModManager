@@ -67,6 +67,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly BranchSwitchService _branchSwitch;
     readonly CriticalOpGuard _criticalOp;
     readonly IProcessProbe _processProbe;
+    readonly Func<bool> _steamAppMarkedRunning;
     readonly IProcessStarter _processStarter;
     readonly ISteamLifecycle _steamLifecycle;
     readonly TaskProgressSession _taskProgress = new();
@@ -157,7 +158,8 @@ public sealed partial class MainViewModel : ObservableObject
         Action? requestProcessExit = null,
         ISteamLifecycle? steamLifecycle = null,
         Func<MailProvider?>? promptMailProvider = null,
-        Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null)
+        Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null,
+        Func<bool>? steamAppMarkedRunning = null)
     {
         _paths = paths;
         _store = store;
@@ -206,6 +208,8 @@ public sealed partial class MainViewModel : ObservableObject
         _setBusyMessage = setBusyMessage;
         _endBusy = endBusy;
         _processProbe = processProbe ?? new ProcessProbe();
+        _steamAppMarkedRunning = steamAppMarkedRunning
+            ?? (() => SteamAppRunningState.ReadIsStaleWithoutProcess(gameProcessRunning: false));
         _processStarter = processStarter ?? new ShellProcessStarter();
         _delay = delay ?? (span => Task.Delay(span));
         _steamExitTimeout = steamExitTimeout ?? TimeSpan.FromSeconds(45);
@@ -1984,6 +1988,12 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog(LocalizationService.T("LogLaunchExeAfterAssemblyGen"));
         }
 
+        if (IsSteamLaunchBlockedByStaleFlag(launchConfig.LaunchMode))
+        {
+            NotifySteamStaleRunning();
+            return;
+        }
+
         var launch = _launcher.Launch(launchConfig);
         if (!launch.Success)
             AppendLog(launch.Message);
@@ -2005,11 +2015,23 @@ public sealed partial class MainViewModel : ObservableObject
                 UpdateFirstAssemblyWarning();
             }
 
-            await VerifyLaunchProcessThenInjectionAsync().ConfigureAwait(true);
+            await VerifyLaunchProcessThenInjectionAsync(launchConfig.LaunchMode).ConfigureAwait(true);
         }
     }
 
-    async Task VerifyLaunchProcessThenInjectionAsync()
+    bool IsSteamLaunchBlockedByStaleFlag(LaunchMode mode) =>
+        mode is LaunchMode.SteamOnly or LaunchMode.SteamThenExe
+        && !_processProbe.IsGameRunning()
+        && _steamAppMarkedRunning();
+
+    void NotifySteamStaleRunning()
+    {
+        var msg = LocalizationService.T("NotifyLaunchSteamStaleRunning");
+        AppendLog(msg);
+        _notify(msg);
+    }
+
+    async Task VerifyLaunchProcessThenInjectionAsync(LaunchMode launchedAs)
     {
         var seen = false;
         for (var i = 0; i < 15; i++)
@@ -2028,7 +2050,9 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (!seen)
         {
-            var msg = LocalizationService.T("NotifyLaunchProcessNotSeen");
+            var msg = IsSteamLaunchBlockedByStaleFlag(launchedAs)
+                ? LocalizationService.T("NotifyLaunchSteamStaleRunning")
+                : LocalizationService.T("NotifyLaunchProcessNotSeen");
             AppendLog(msg);
             _notify(msg);
             return;

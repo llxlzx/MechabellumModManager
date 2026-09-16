@@ -93,12 +93,39 @@ public static class EnsureRedistCli
             Log(result.Message);
             foreach (var (id, source) in result.SourceById)
                 Log($"  {id}: {source}");
-            return result.Success ? 0 : 1;
+            var code = result.Success ? 0 : 1;
+            WriteExitCodeFile(progressFile, code);
+            return code;
         }
         catch (Exception ex)
         {
             Log(ex.ToString());
+            WriteExitCodeFile(progressFile, 1);
             return 1;
+        }
+    }
+
+    /// <summary>
+    /// Sidecar for thin Setup. Exec ewNoWait's ResultCode is STILL_ACTIVE (259), not a PID,
+    /// so the installer must not OpenProcess it. It waits on this file instead.
+    /// </summary>
+    internal static void WriteExitCodeFile(string? progressFile, int code)
+    {
+        if (string.IsNullOrWhiteSpace(progressFile))
+            return;
+        try
+        {
+            var path = progressFile.Trim() + ".exit";
+            var dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            var tmp = path + ".tmp";
+            File.WriteAllText(tmp, code.ToString());
+            File.Move(tmp, path, overwrite: true);
+        }
+        catch
+        {
+            /* Setup times out if this never appears */
         }
     }
 
