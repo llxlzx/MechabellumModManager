@@ -1,10 +1,10 @@
 {
-    "version":  "1.2.6",
-    "notes":  "导入的 FriendOverlay 等 MelonMod 可按 DLL 名匹配目录并提示更新；Setup --ensure-redist 支持 --progress-file；库刷新与品牌资源更新。\nImported MelonMods (e.g. FriendOverlay) match catalog by distinct DLL stem for updates; Setup --ensure-redist supports --progress-file; library refresh and brand refresh.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.6/MechabellumModManager_Setup_v1.2.6.exe",
-    "setupSha256":  "3d7589befa5816381a6adcef0b8d49a8d860f2a6792600220048a73ae3ee2d88",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.6/MechabellumModManager_portable_v1.2.6.zip",
-    "portableSha256":  "960fc22124b81c3eec97dd4799b991099eb3eda377dc1ae67150c19400c5a819",
-    "publishedAt":  "2026-09-16T01:05:20Z",
-    "build":  "v1.2.6-import-melon-match-redist-progress"
+    "version":  "1.2.7",
+    "notes":  "重复的旧 Mod 不再假显示可更新；点更新会删掉旧副本并保留已装的目录版。\nStale duplicate mods no longer show a no-op Update; clicking Update removes the old copy and keeps the catalog build already in the library.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.7/MechabellumModManager_Setup_v1.2.7.exe",
+    "setupSha256":  "219f33b66961024c1154cbf3d66df5c7fa1baccadccb4ff382e18342d4c63df5",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.7/MechabellumModManager_portable_v1.2.7.zip",
+    "portableSha256":  "071f2ed722d3c5b203dd7b12f348c248ceda02d93dad84c1109b2ff0b9570e33",
+    "publishedAt":  "2026-09-16T01:59:27Z",
+    "build":  "v1.2.7-stale-duplicate-update"
 }
