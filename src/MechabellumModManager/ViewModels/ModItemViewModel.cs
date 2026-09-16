@@ -73,6 +73,14 @@ public sealed partial class ModItemViewModel : ObservableObject
     private bool _hasUpdate;
 
     /// <summary>
+    /// True when this row is an older copy and the library already holds the catalog bytes.
+    /// Update is suppressed; the player should delete the duplicate.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
+    private bool _isStaleDuplicate;
+
+    /// <summary>
     /// True after <see cref="ApplyCatalogEnrichment"/> successfully matched this row to a catalog entry.
     /// Distinguishes "up to date" from "never compared" so the status column does not lie.
     /// </summary>
@@ -95,6 +103,9 @@ public sealed partial class ModItemViewModel : ObservableObject
         {
             if (IsMissing || !CatalogMatched)
                 return "";
+
+            if (IsStaleDuplicate)
+                return LocalizationService.T("LibraryStatusDuplicate");
 
             if (!HasUpdate)
                 return LocalizationService.T("LibraryStatusUpToDate");
@@ -162,7 +173,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         NotifyDetailChanged();
     }
 
-    public void ApplyCatalogEnrichment(CatalogMod catalog)
+    public void ApplyCatalogEnrichment(CatalogMod catalog, IEnumerable<ModPackage>? library = null)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         if (!string.IsNullOrWhiteSpace(catalog.Author))
@@ -189,7 +200,10 @@ public sealed partial class ModItemViewModel : ObservableObject
             _owner.LogTaxonomyWarning($"Mod '{Package.Id}': invalid catalog category '{catalog.Category}', treating as Uncategorized.");
         }
         LatestVersion = string.IsNullOrWhiteSpace(catalog.Version) ? null : catalog.Version;
-        HasUpdate = ModCatalogService.GetEntryState([Package], catalog) == CatalogEntryState.UpdateAvailable;
+        var alone = ModCatalogService.GetEntryState([Package], catalog);
+        IsStaleDuplicate = library != null &&
+            ModCatalogService.IsStaleDuplicate(Package, library, catalog);
+        HasUpdate = alone == CatalogEntryState.UpdateAvailable && !IsStaleDuplicate;
         CatalogMatched = true;
         RefreshCatalogFieldsFromPackage();
     }

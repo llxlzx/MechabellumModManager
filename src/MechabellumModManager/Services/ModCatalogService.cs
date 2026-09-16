@@ -905,6 +905,23 @@ public sealed class ModCatalogService
     /// The library packages that represent this catalog entry (catalog id, hash, or Melon stem).
     /// An update replaces exactly these.
     /// </summary>
+    /// <summary>
+    /// This package is behind the catalog, but another library copy already matches the catalog
+    /// bytes. The row must not offer Update — that click used to no-op because the catalog entry
+    /// itself is already current.
+    /// </summary>
+    public static bool IsStaleDuplicate(ModPackage pkg, IEnumerable<ModPackage> library, CatalogMod mod)
+    {
+        ArgumentNullException.ThrowIfNull(pkg);
+        ArgumentNullException.ThrowIfNull(library);
+        ArgumentNullException.ThrowIfNull(mod);
+
+        if (GetEntryState([pkg], mod) != CatalogEntryState.UpdateAvailable)
+            return false;
+
+        return GetEntryState(library, mod) == CatalogEntryState.UpToDate;
+    }
+
     public static IReadOnlyList<ModPackage> FindInstalled(IEnumerable<ModPackage> packages, CatalogMod mod)
     {
         ArgumentNullException.ThrowIfNull(packages);

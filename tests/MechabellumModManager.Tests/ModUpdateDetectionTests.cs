@@ -339,6 +339,52 @@ public class ModUpdateDetectionTests
     }
 
     [Fact]
+    public void Stale_copy_is_a_duplicate_not_an_update_when_the_library_already_has_the_catalog_bytes()
+    {
+        using var harness = new EnrichmentHarness();
+
+        var currentHash = new string('c', 64);
+        var oldHash = new string('d', 64);
+        var catalog = new CatalogMod
+        {
+            Id = "friend-overlay",
+            Name = "好友列表叠加面板 MOD",
+            Author = "MechabellumFriendOverlay",
+            Version = "0.3.33",
+            File = "mods/friend-overlay/FriendOverlay.dll",
+            Sha256 = currentHash,
+            Type = "MelonMod"
+        };
+        var current = new ModPackage
+        {
+            Id = "friendoverlay-current",
+            DisplayName = "FriendOverlay",
+            Author = "MechabellumFriendOverlay",
+            Type = ModPackageType.MelonMod,
+            Version = "0.3.33",
+            Files = { new DeployableFile { RelativePathInPackage = "FriendOverlay.dll", Sha256 = currentHash } }
+        };
+        var old = new ModPackage
+        {
+            Id = "friendoverlay-old",
+            DisplayName = "FriendOverlay",
+            Author = "MechabellumFriendOverlay",
+            Type = ModPackageType.MelonMod,
+            Version = "0.3.12",
+            Files = { new DeployableFile { RelativePathInPackage = "FriendOverlay.dll", Sha256 = oldHash } }
+        };
+        var row = new ModItemViewModel(harness.Owner, old, isEnabled: false);
+
+        ModCatalogService.IsStaleDuplicate(old, [current, old], catalog).Should().BeTrue();
+        ModCatalogService.IsStaleDuplicate(current, [current, old], catalog).Should().BeFalse();
+
+        row.ApplyCatalogEnrichment(catalog, [current, old]);
+        row.HasUpdate.Should().BeFalse("a newer copy is already in the library, so Update must not look actionable");
+        row.IsStaleDuplicate.Should().BeTrue();
+        row.UpdateStatusText.Should().Be(LocalizationService.T("LibraryStatusDuplicate"));
+    }
+
+    [Fact]
     public void Enrichment_of_a_missing_row_is_skipped_by_the_library_pass()
     {
         using var harness = new EnrichmentHarness();

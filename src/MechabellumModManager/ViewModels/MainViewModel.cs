@@ -2865,13 +2865,21 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanUpdateMod))]
     async Task UpdateModAsync(ModItemViewModel? item)
     {
-        if (item is null || item.IsMissing || !item.HasUpdate || _addingCatalogMod)
+        if (item is null || item.IsMissing || (!item.HasUpdate && !item.IsStaleDuplicate) || _addingCatalogMod)
             return;
 
         var match = FindCatalogMatch(item);
-        if (match is null || !match.HasUpdate)
+        if (match is null)
         {
             AppendLog($"「{item.DisplayName}」在目录里找不到可更新的对应项。");
+            return;
+        }
+
+        // Catalog entry is already current because another copy matches. Retire this row
+        // instead of no-op'ing — that was the "更新没反应" path.
+        if (!match.HasUpdate)
+        {
+            RetireStaleDuplicate(item, match);
             return;
         }
 
@@ -2882,7 +2890,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     bool CanUpdateMod(ModItemViewModel? item) =>
-        item is { IsMissing: false, HasUpdate: true } && !_addingCatalogMod;
+        item is { IsMissing: false } && (item.HasUpdate || item.IsStaleDuplicate) && !_addingCatalogMod;
 
     async Task RunCatalogDownloadAsync(Func<Task> work)
     {
@@ -3076,6 +3084,29 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         return true;
+    }
+
+    void RetireStaleDuplicate(ModItemViewModel item, CatalogModItemViewModel match)
+    {
+        var current = ModCatalogService.FindInstalled(_library.List(), match.Mod)
+            .FirstOrDefault(pkg =>
+                !string.Equals(pkg.Id, item.Package.Id, StringComparison.OrdinalIgnoreCase) &&
+                ModCatalogService.GetEntryState([pkg], match.Mod) == CatalogEntryState.UpToDate);
+
+        if (current is null)
+        {
+            AppendLog($"「{item.DisplayName}」已有目录版本，但找不到可保留的副本。");
+            return;
+        }
+
+        if (!CanReplaceInstalledMod(item.DisplayName))
+            return;
+
+        RetireSupersededPackages([item.Package], current);
+        ReloadMods();
+        RefreshCatalogInLibraryFlags();
+        EnrichModsFromCatalog();
+        AppendLog($"已移除重复旧版「{item.DisplayName}」，保留 {current.Version ?? current.Id}。");
     }
 
     /// <summary>
@@ -3371,8 +3402,9 @@ public sealed partial class MainViewModel : ObservableObject
         {
             foreach (var mod in Mods)
             {
-                if (!mod.HasUpdate && mod.LatestVersion is null && !mod.CatalogMatched) continue;
+                if (!mod.HasUpdate && mod.LatestVersion is null && !mod.CatalogMatched && !mod.IsStaleDuplicate) continue;
                 mod.HasUpdate = false;
+                mod.IsStaleDuplicate = false;
                 mod.LatestVersion = null;
                 mod.CatalogMatched = false;
             }
@@ -3384,7 +3416,7 @@ public sealed partial class MainViewModel : ObservableObject
                 if (mod.IsMissing) continue;
                 var match = FindCatalogMatch(mod);
                 if (match is null) continue;
-                mod.ApplyCatalogEnrichment(match.Mod);
+                mod.ApplyCatalogEnrichment(match.Mod, _library.List());
             }
         }
 
