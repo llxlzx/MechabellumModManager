@@ -141,6 +141,84 @@
   <data name="SubmitModFailed" xml:space="preserve">
     <value>无法打开网页邮箱或完成投稿准备</value>
   </data>
+  <data name="DirectUpload" xml:space="preserve">
+    <value>白名单直传</value>
+  </data>
+  <data name="DirectUploadTitle" xml:space="preserve">
+    <value>白名单直传</value>
+  </data>
+  <data name="DirectUploadInviteCode" xml:space="preserve">
+    <value>邀请码</value>
+  </data>
+  <data name="DirectUploadSaveCode" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="DirectUploadModId" xml:space="preserve">
+    <value>Mod Id（目录文件夹名）</value>
+  </data>
+  <data name="DirectUploadName" xml:space="preserve">
+    <value>显示名称</value>
+  </data>
+  <data name="DirectUploadSummary" xml:space="preserve">
+    <value>简介</value>
+  </data>
+  <data name="DirectUploadVersion" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="DirectUploadPickDll" xml:space="preserve">
+    <value>选择 DLL</value>
+  </data>
+  <data name="DirectUploadPickPreview" xml:space="preserve">
+    <value>预览图</value>
+  </data>
+  <data name="DirectUploadPublish" xml:space="preserve">
+    <value>发布到目录</value>
+  </data>
+  <data name="DirectUploadSuccess" xml:space="preserve">
+    <value>已发布到 GitHub MechabellumMods。玩家刷新目录后可见。</value>
+  </data>
+  <data name="DirectUploadMirrorLagHint" xml:space="preserve">
+    <value>若使用国内镜像，缓存可能尚未同步，属正常现象。</value>
+  </data>
+  <data name="DirectUploadFailed" xml:space="preserve">
+    <value>直传失败</value>
+  </data>
+  <data name="DirectUploadNotConfigured" xml:space="preserve">
+    <value>直传服务地址未配置。请部署 Worker 后填写 DirectUploadApiBaseUrl，或更新管理器默认地址。</value>
+  </data>
+  <data name="DirectUploadNeedInvite" xml:space="preserve">
+    <value>请先填写邀请码。</value>
+  </data>
+  <data name="DirectUploadNeedFields" xml:space="preserve">
+    <value>请填写 Id、名称并选择 DLL。</value>
+  </data>
+  <data name="DirectUploadCodeSaved" xml:space="preserve">
+    <value>邀请码已保存。</value>
+  </data>
+  <data name="DirectUploadPublishing" xml:space="preserve">
+    <value>正在上传并发布…</value>
+  </data>
+  <data name="DirectUploadErrInvalidInvite" xml:space="preserve">
+    <value>邀请码无效或已吊销。</value>
+  </data>
+  <data name="DirectUploadErrForbidden" xml:space="preserve">
+    <value>无权更新该 Mod（未认领或不属于你）。</value>
+  </data>
+  <data name="DirectUploadErrValidation" xml:space="preserve">
+    <value>字段或文件不符合要求。</value>
+  </data>
+  <data name="DirectUploadErrTooLarge" xml:space="preserve">
+    <value>文件过大（当前上限约 95MB）。</value>
+  </data>
+  <data name="DirectUploadErrConflict" xml:space="preserve">
+    <value>目录并发冲突，请重试。</value>
+  </data>
+  <data name="DirectUploadErrGithub" xml:space="preserve">
+    <value>写入 GitHub 失败，请稍后重试或联系维护者。</value>
+  </data>
+  <data name="DirectUploadErrNetwork" xml:space="preserve">
+    <value>网络错误，请检查连接后重试。</value>
+  </data>
   <data name="SubmitMailOpenedDomestic" xml:space="preserve">
     <value>已复制主题与正文；已打开 QQ 邮箱网页，请新建邮件粘贴并添加附件后发送至 llxmod@foxmail.com。</value>
   </data>
@@ -659,6 +737,7 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>镜像地址必须使用 https，已忽略该设置：{0}</value></data>
   <data name="UpdateStatusChecking" xml:space="preserve"><value>正在检查更新…</value></data>
   <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>检查更新失败：{0}</value></data>
+  <data name="UpdateUiFailedNotNetwork" xml:space="preserve"><value>更新对话框界面资源异常（已忽略，不记为网络失败）。请重试「检查更新」或重启管理器。</value></data>
   <data name="ManagerUpdateDialogTitle" xml:space="preserve"><value>管理器更新</value></data>
   <data name="ManagerUpdateFoundFormat" xml:space="preserve"><value>发现新版本 {1}（当前 {0}）</value></data>
   <data name="ManagerUpdateNoNotes" xml:space="preserve"><value>（无更新说明）</value></data>

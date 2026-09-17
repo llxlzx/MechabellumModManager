@@ -7,9 +7,17 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        Background="{StaticResource BgPanelBrush}"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        FontFamily="{StaticResource AppFontFamily}">
+        Background="{DynamicResource BgPanelBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="{DynamicResource AppFontFamily}">
+    <!-- Own merge so StaticResource resolves even if Application resources are late/unavailable -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/MechabellumModManager;component/Themes/AppTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Border Padding="20"
             BorderBrush="{StaticResource SteelEdgeBrush}"
             BorderThickness="1">
@@ -69,7 +77,7 @@
                            FontSize="12"
                            TextWrapping="Wrap"
                            Visibility="Collapsed"
-                           Foreground="#C45C5C" />
+                           Foreground="{StaticResource DangerBrush}" />
             </StackPanel>
         </DockPanel>
     </Border>

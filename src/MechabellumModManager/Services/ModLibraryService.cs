@@ -154,6 +154,91 @@ public sealed class ModLibraryService
         return false;
     }
 
+    /// <summary>
+    /// True when any library package already owns a primary DLL with this file name for the
+    /// same Melon slot (Mods vs Plugins). Used to stop re-importing a stale game-folder copy
+    /// after a catalog update replaced the library package (different hash, same FriendOverlay.dll).
+    /// </summary>
+    public bool LibraryOwnsDeployFileName(string fileName, ModPackageType type)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return false;
+
+        var name = Path.GetFileName(fileName);
+        foreach (var pkg in List())
+        {
+            if (pkg.Type != type)
+                continue;
+            if (pkg.Files.Any(f =>
+                    string.Equals(
+                        Path.GetFileName(f.RelativePathInPackage.Replace('/', Path.DirectorySeparatorChar)),
+                        name,
+                        StringComparison.OrdinalIgnoreCase)))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Best-effort remove of a package's primary DLL from the live game Mods/Plugins folder
+    /// so auto-import cannot resurrect a deleted library row.
+    /// </summary>
+    public bool TryRemoveDeployedPrimaryDll(string gamePath, ModPackage pkg)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath) || pkg is null)
+            return false;
+
+        var folder = pkg.Type switch
+        {
+            ModPackageType.MelonMod => "Mods",
+            ModPackageType.MelonPlugin => "Plugins",
+            _ => null
+        };
+        if (folder is null)
+            return false;
+
+        var removed = false;
+        foreach (var f in pkg.Files)
+        {
+            var name = Path.GetFileName(f.RelativePathInPackage.Replace('/', Path.DirectorySeparatorChar));
+            if (string.IsNullOrWhiteSpace(name) ||
+                !name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var target = Path.Combine(gamePath, folder, name);
+            if (!File.Exists(target))
+                continue;
+
+            try
+            {
+                // Only delete when hash matches this package, or no other package owns the name.
+                var onDisk = Sha256Hex(target);
+                var hashOwned = string.Equals(onDisk, f.Sha256, StringComparison.OrdinalIgnoreCase);
+                var othersOwnName = List().Any(p =>
+                    !string.Equals(p.Id, pkg.Id, StringComparison.OrdinalIgnoreCase) &&
+                    p.Type == pkg.Type &&
+                    p.Files.Any(pf =>
+                        string.Equals(
+                            Path.GetFileName(pf.RelativePathInPackage.Replace('/', Path.DirectorySeparatorChar)),
+                            name,
+                            StringComparison.OrdinalIgnoreCase)));
+
+                if (!hashOwned && othersOwnName)
+                    continue;
+
+                File.Delete(target);
+                removed = true;
+            }
+            catch
+            {
+                // best-effort
+            }
+        }
+
+        return removed;
+    }
+
     public GameImportResult ImportFromGame(string gamePath)
     {
         var messages = new List<string>();
@@ -185,6 +270,14 @@ public sealed class ModLibraryService
             {
                 skipped++;
                 messages.Add($"跳过已导入：{Path.GetFileName(dllPath)}");
+                continue;
+            }
+
+            var fileName = Path.GetFileName(dllPath);
+            if (LibraryOwnsDeployFileName(fileName, forceType))
+            {
+                skipped++;
+                messages.Add($"跳过同名已在库中（请点「应用方案」同步游戏目录）：{fileName}");
                 continue;
             }
 

@@ -52,6 +52,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string?>? _openFolder;
     readonly Func<string, (ReportCategory Category, string Notes)?>? _promptReport;
     readonly Func<bool>? _promptSubmitGuide;
+    readonly Action? _promptDirectUpload;
     readonly Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? _promptEditTaxonomy;
     readonly Action<string>? _copyText;
     readonly Action? _unselectLibrary;
@@ -93,6 +94,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly object _catalogModsSync = new();
     readonly List<CatalogModItemViewModel> _catalogSelection = new();
     bool _autoImportedFromGame;
+    bool _autoRetiringStale;
     readonly HashSet<string> _assemblyGeneratePrompted = new(StringComparer.OrdinalIgnoreCase);
     bool _suppressLanguageSave;
     bool _reporting;
@@ -139,6 +141,7 @@ public sealed partial class MainViewModel : ObservableObject
         Func<string?>? openFolder = null,
         Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
         Func<bool>? promptSubmitGuide = null,
+        Action? promptDirectUpload = null,
         Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? promptEditTaxonomy = null,
         Action<string>? copyText = null,
         Action? unselectLibrary = null,
@@ -203,6 +206,7 @@ public sealed partial class MainViewModel : ObservableObject
         _openFolder = openFolder;
         _promptReport = promptReport;
         _promptSubmitGuide = promptSubmitGuide;
+        _promptDirectUpload = promptDirectUpload;
         _promptEditTaxonomy = promptEditTaxonomy;
         _copyText = copyText;
         _unselectLibrary = unselectLibrary;
@@ -1748,6 +1752,8 @@ public sealed partial class MainViewModel : ObservableObject
 
         try
         {
+            TryCleanupConflictingBepInExDoorstop();
+
             if (GameStatus.Kind is GameStatusKind.Ready or GameStatusKind.LoaderPresentAssembliesMissing)
             {
                 var zip = MelonLoaderDualStoreSync.ResolveLocalZip();
@@ -1781,6 +1787,20 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppendLog($"MelonLoader 优化配置失败：{ex.Message}");
+        }
+    }
+
+    void TryCleanupConflictingBepInExDoorstop()
+    {
+        try
+        {
+            var cleanup = new BepInExDoorstopCleanup().TryDisableConflictingDoorstop(GamePath);
+            if (cleanup.Changed)
+                AppendLog(cleanup.Message);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"清理 BepInEx Doorstop 失败：{ex.Message}");
         }
     }
 
@@ -2682,6 +2702,12 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    void DirectUpload()
+    {
+        _promptDirectUpload?.Invoke();
+    }
+
+    [RelayCommand]
     void SendFeedback()
     {
         var compose = GitHubCommunityLinks.BuildFeedbackCompose();
@@ -3280,6 +3306,8 @@ public sealed partial class MainViewModel : ObservableObject
 
             try
             {
+                if (!string.IsNullOrWhiteSpace(GamePath))
+                    _library.TryRemoveDeployedPrimaryDll(GamePath, old);
                 _library.Delete(old.Id);
                 AppendLog($"已移除旧版本：{old.DisplayName} ({old.Id})");
             }
@@ -3570,6 +3598,61 @@ public sealed partial class MainViewModel : ObservableObject
 
         OutdatedCount = Mods.Count(m => !m.IsMissing && m.HasUpdate);
         UpdateModCommand.NotifyCanExecuteChanged();
+
+        TryAutoRetireStaleDuplicates();
+    }
+
+    /// <summary>
+    /// After a catalog update, ImportFromGame used to resurrect the old Mods\*.dll as a second
+    /// library row ("更新，可删除"). Drop those rows automatically once a current copy exists.
+    /// </summary>
+    void TryAutoRetireStaleDuplicates()
+    {
+        if (_autoRetiringStale || CatalogMods.Count == 0)
+            return;
+
+        var packages = _library.List();
+        var pairs = new List<(ModPackage Old, ModPackage Current)>();
+
+        foreach (var catalogVm in CatalogMods)
+        {
+            var installed = ModCatalogService.FindInstalled(packages, catalogVm.Mod);
+            var current = installed.FirstOrDefault(pkg =>
+                ModCatalogService.GetEntryState([pkg], catalogVm.Mod) == CatalogEntryState.UpToDate);
+            if (current is null)
+                continue;
+
+            foreach (var old in installed)
+            {
+                if (string.Equals(old.Id, current.Id, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (!ModCatalogService.IsStaleDuplicate(old, packages, catalogVm.Mod))
+                    continue;
+                pairs.Add((old, current));
+            }
+        }
+
+        if (pairs.Count == 0)
+            return;
+
+        _autoRetiringStale = true;
+        try
+        {
+            foreach (var group in pairs.GroupBy(p => p.Current.Id, StringComparer.OrdinalIgnoreCase))
+            {
+                var current = group.First().Current;
+                var superseded = group.Select(g => g.Old).ToList();
+                RetireSupersededPackages(superseded, current);
+            }
+
+            ReloadMods();
+            RefreshCatalogInLibraryFlags();
+            AppendLog($"已自动清理 {pairs.Count} 个重复旧版 Mod。");
+        }
+        finally
+        {
+            _autoRetiringStale = false;
+        }
     }
 
     void RefreshCatalogInLibraryFlags()
@@ -3667,12 +3750,22 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             UpdateStatus = string.Format(LocalizationService.T("UpdateStatusCheckFailed"), ex.Message);
-            RecordEvent(ManagerEventLog.UpdateCheckFailed, new Dictionary<string, string?>
-            {
-                ["error"] = ex.Message
-            });
             AppendLog(UpdateStatus);
-            RecalculateDiagnosis();
+            // UI/resource failures (e.g. update dialog StaticResource) are not network failures.
+            if (!DiagnosisNetworkEventFilter.IsLikelyUiPresentationFailure(ex))
+            {
+                RecordEvent(ManagerEventLog.UpdateCheckFailed, new Dictionary<string, string?>
+                {
+                    ["source"] = "github",
+                    ["error"] = ex.Message
+                });
+                RecalculateDiagnosis();
+            }
+            else
+            {
+                AppendLog(LocalizationService.T("UpdateUiFailedNotNetwork"));
+                RecalculateDiagnosis();
+            }
         }
         finally
         {
@@ -3874,6 +3967,8 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         try
         {
+            if (!string.IsNullOrWhiteSpace(GamePath))
+                _library.TryRemoveDeployedPrimaryDll(GamePath, mod.Package);
             _library.Delete(mod.Package.Id);
             ReloadMods();
             RecomputeDirty();

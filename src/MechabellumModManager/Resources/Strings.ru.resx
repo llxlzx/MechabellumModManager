@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -141,6 +141,84 @@
   <data name="SubmitModFailed" xml:space="preserve">
     <value>Не удалось открыть веб-почту или подготовить заявку</value>
   </data>
+  <data name="DirectUpload" xml:space="preserve">
+    <value>Whitelist upload</value>
+  </data>
+  <data name="DirectUploadTitle" xml:space="preserve">
+    <value>Whitelist upload</value>
+  </data>
+  <data name="DirectUploadInviteCode" xml:space="preserve">
+    <value>Invite code</value>
+  </data>
+  <data name="DirectUploadSaveCode" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="DirectUploadModId" xml:space="preserve">
+    <value>Mod Id (folder name)</value>
+  </data>
+  <data name="DirectUploadName" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="DirectUploadSummary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="DirectUploadVersion" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="DirectUploadPickDll" xml:space="preserve">
+    <value>Pick DLL</value>
+  </data>
+  <data name="DirectUploadPickPreview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="DirectUploadPublish" xml:space="preserve">
+    <value>Publish</value>
+  </data>
+  <data name="DirectUploadSuccess" xml:space="preserve">
+    <value>Published to GitHub MechabellumMods. Players see it after refreshing the catalog.</value>
+  </data>
+  <data name="DirectUploadMirrorLagHint" xml:space="preserve">
+    <value>If you use the domestic mirror, cache may lag until synced.</value>
+  </data>
+  <data name="DirectUploadFailed" xml:space="preserve">
+    <value>Upload failed</value>
+  </data>
+  <data name="DirectUploadNotConfigured" xml:space="preserve">
+    <value>Direct-upload API URL is not configured. Deploy the Worker, then set DirectUploadApiBaseUrl or update the app default.</value>
+  </data>
+  <data name="DirectUploadNeedInvite" xml:space="preserve">
+    <value>Enter an invite code first.</value>
+  </data>
+  <data name="DirectUploadNeedFields" xml:space="preserve">
+    <value>Fill Id, name, and pick a DLL.</value>
+  </data>
+  <data name="DirectUploadCodeSaved" xml:space="preserve">
+    <value>Invite code saved.</value>
+  </data>
+  <data name="DirectUploadPublishing" xml:space="preserve">
+    <value>Uploading and publishing…</value>
+  </data>
+  <data name="DirectUploadErrInvalidInvite" xml:space="preserve">
+    <value>Invalid or revoked invite code.</value>
+  </data>
+  <data name="DirectUploadErrForbidden" xml:space="preserve">
+    <value>Not allowed to update this mod (unowned or not yours).</value>
+  </data>
+  <data name="DirectUploadErrValidation" xml:space="preserve">
+    <value>Invalid fields or file.</value>
+  </data>
+  <data name="DirectUploadErrTooLarge" xml:space="preserve">
+    <value>File too large (limit ~95MB for now).</value>
+  </data>
+  <data name="DirectUploadErrConflict" xml:space="preserve">
+    <value>Catalog conflict — retry.</value>
+  </data>
+  <data name="DirectUploadErrGithub" xml:space="preserve">
+    <value>GitHub write failed. Retry later or contact the maintainer.</value>
+  </data>
+  <data name="DirectUploadErrNetwork" xml:space="preserve">
+    <value>Network error. Check connection and retry.</value>
+  </data>>
   <data name="SubmitMailOpenedDomestic" xml:space="preserve">
     <value>Тема и текст скопированы; открыт QQ Mail в браузере — создайте письмо, вставьте, приложите файлы и отправьте на llxmod@foxmail.com.</value>
   </data>

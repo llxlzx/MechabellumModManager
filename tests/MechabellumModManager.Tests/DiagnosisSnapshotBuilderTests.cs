@@ -52,6 +52,66 @@ public class DiagnosisSnapshotBuilderTests
         DiagnosisSnapshotBuilder.IsAcfBetaMismatch(key, branch).Should().Be(expected);
     }
 
+    [Fact]
+    public void Capture_ignores_update_check_failed_that_looks_like_ui_resource_error()
+    {
+        using var fx = new Fixture();
+        var events = new[]
+        {
+            new DiagnosisEvent
+            {
+                Time = DateTimeOffset.Now,
+                Code = ManagerEventLog.UpdateCheckFailed,
+                Data = new Dictionary<string, string?>
+                {
+                    ["error"] = "在“System.Windows.StaticResourceExtension”上提供值时引发了异常。，行号为“53”，行位置为“32”。"
+                }
+            }
+        };
+
+        var snap = DiagnosisSnapshotBuilder.Capture(
+            fx.Paths,
+            gamePath: null,
+            status: null,
+            lastLaunchRequestedAt: null,
+            branch: null,
+            isAwaitingSteamSettle: false,
+            events: events);
+
+        snap.CatalogOrUpdateNetworkFailed.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Capture_keeps_real_update_check_network_failure()
+    {
+        using var fx = new Fixture();
+        var events = new[]
+        {
+            new DiagnosisEvent
+            {
+                Time = DateTimeOffset.Now,
+                Code = ManagerEventLog.UpdateCheckFailed,
+                Data = new Dictionary<string, string?>
+                {
+                    ["source"] = "github",
+                    ["error"] = "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing."
+                }
+            }
+        };
+
+        var snap = DiagnosisSnapshotBuilder.Capture(
+            fx.Paths,
+            gamePath: null,
+            status: null,
+            lastLaunchRequestedAt: null,
+            branch: null,
+            isAwaitingSteamSettle: false,
+            events: events);
+
+        snap.CatalogOrUpdateNetworkFailed.Should().BeTrue();
+        snap.NetworkFailureSource.Should().Be("github");
+    }
+
     sealed class Fixture : IDisposable
     {
         public string Root { get; }

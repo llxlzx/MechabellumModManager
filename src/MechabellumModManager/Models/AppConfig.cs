@@ -44,4 +44,13 @@ public sealed class AppConfig
     /// game path (and dual stores when enabled). Takes effect on the next game launch.
     /// </summary>
     public bool HideMelonConsole { get; set; }
+
+    /// <summary>Whitelist invite code for in-app direct publish (plaintext in config.json).</summary>
+    public string AuthorInviteCode { get; set; } = "";
+
+    /// <summary>
+    /// Override for the direct-upload Worker base URL (no trailing slash).
+    /// Null/empty = use <see cref="Services.DirectUploadDefaults.ApiBaseUrl"/>.
+    /// </summary>
+    public string? DirectUploadApiBaseUrl { get; set; }
 }

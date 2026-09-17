@@ -1,0 +1,88 @@
+<Window x:Class="MechabellumModManager.Dialogs.DirectUploadDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding TitleText}"
+        Width="520"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource BgPanelBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource AppFontFamily}">
+    <Border Padding="20"
+            BorderBrush="{StaticResource SteelEdgeBrush}"
+            BorderThickness="1">
+        <StackPanel>
+            <TextBlock Text="{Binding InviteLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
+            <DockPanel Margin="0,0,0,12">
+                <Button DockPanel.Dock="Right"
+                        MinWidth="88"
+                        MinHeight="32"
+                        Margin="8,0,0,0"
+                        Content="{Binding SaveCodeLabel}"
+                        Click="SaveCode_Click" />
+                <TextBox x:Name="InviteBox" MinHeight="32" VerticalContentAlignment="Center" />
+            </DockPanel>
+
+            <TextBlock Text="{Binding ModIdLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
+            <TextBox x:Name="IdBox" MinHeight="32" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+
+            <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
+            <TextBox x:Name="NameBox" MinHeight="32" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+
+            <TextBlock Text="{Binding SummaryLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
+            <TextBox x:Name="SummaryBox" MinHeight="56" Margin="0,0,0,8" TextWrapping="Wrap" AcceptsReturn="True" />
+
+            <TextBlock Text="{Binding VersionLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
+            <TextBox x:Name="VersionBox" MinHeight="32" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+
+            <DockPanel Margin="0,0,0,8">
+                <Button DockPanel.Dock="Right"
+                        MinWidth="100"
+                        MinHeight="32"
+                        Margin="8,0,0,0"
+                        Content="{Binding PickDllLabel}"
+                        Click="PickDll_Click" />
+                <TextBox x:Name="DllPathBox"
+                         MinHeight="32"
+                         IsReadOnly="True"
+                         VerticalContentAlignment="Center" />
+            </DockPanel>
+
+            <DockPanel Margin="0,0,0,12">
+                <Button DockPanel.Dock="Right"
+                        MinWidth="100"
+                        MinHeight="32"
+                        Margin="8,0,0,0"
+                        Content="{Binding PickPreviewLabel}"
+                        Click="PickPreview_Click" />
+                <TextBox x:Name="PreviewPathBox"
+                         MinHeight="32"
+                         IsReadOnly="True"
+                         VerticalContentAlignment="Center" />
+            </DockPanel>
+
+            <TextBlock x:Name="StatusText"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,12"
+                       Foreground="{StaticResource AccentAmberBrush}" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Width="88"
+                        MinHeight="32"
+                        Margin="0,0,8,0"
+                        IsCancel="True"
+                        Content="{Binding CancelLabel}"
+                        Click="Cancel_Click" />
+                <Button x:Name="PublishButton"
+                        MinWidth="140"
+                        MinHeight="32"
+                        Padding="12,8"
+                        IsDefault="True"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Content="{Binding PublishLabel}"
+                        Click="Publish_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

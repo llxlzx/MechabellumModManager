@@ -1,0 +1,15 @@
+name = "mod-publish"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+
+[[kv_namespaces]]
+binding = "PUBLISH_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+GITHUB_OWNER = "llxlzx"
+GITHUB_REPO = "MechabellumMods"
+GITHUB_BRANCH = "master"
+
+# Secrets (set via wrangler secret put):
+#   GITHUB_TOKEN

@@ -392,6 +392,67 @@ public class ModLibraryImportTests
         }
     }
 
+    [SkippableFact]
+    public void ImportFromGame_skips_same_filename_when_library_already_owns_slot()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(Path.GetTempPath(), "mmm-game-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            Directory.CreateDirectory(game);
+            File.WriteAllBytes(Path.Combine(game, "Mechabellum.exe"), new byte[] { 0x4D, 0x5A });
+            File.WriteAllBytes(Path.Combine(game, "GameAssembly.dll"), new byte[] { 0x4D, 0x5A });
+            Directory.CreateDirectory(Path.Combine(game, "Mods"));
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            // Library already has QuickCamera.dll (catalog-updated package).
+            lib.ImportDll(SampleDll);
+
+            // Game still has a different-bytes file with the same deploy name (stale Mods copy).
+            var staleBytes = File.ReadAllBytes(SampleDll).ToArray();
+            staleBytes[^1] ^= 0x5A;
+            File.WriteAllBytes(Path.Combine(game, "Mods", "QuickCamera.dll"), staleBytes);
+
+            var result = lib.ImportFromGame(game);
+            result.Imported.Should().Be(0);
+            result.Skipped.Should().BeGreaterThanOrEqualTo(1);
+            result.Messages.Should().Contain(m => m.Contains("同名已在库中", StringComparison.Ordinal));
+            lib.List().Should().ContainSingle();
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (Directory.Exists(game)) Directory.Delete(game, true);
+        }
+    }
+
+    [SkippableFact]
+    public void TryRemoveDeployedPrimaryDll_deletes_matching_mods_file()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-lib-" + Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(Path.GetTempPath(), "mmm-game-" + Guid.NewGuid().ToString("N"));
+        var paths = new PathsService(data);
+        paths.EnsureCreated();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(game, "Mods"));
+            var dest = Path.Combine(game, "Mods", "QuickCamera.dll");
+            File.Copy(SampleDll, dest);
+
+            var lib = new ModLibraryService(paths, new AssemblyInspector(), new JsonStore(), new ProfileService(paths, new JsonStore()));
+            var pkg = lib.ImportDll(SampleDll);
+            lib.TryRemoveDeployedPrimaryDll(game, pkg).Should().BeTrue();
+            File.Exists(dest).Should().BeFalse();
+        }
+        finally
+        {
+            if (Directory.Exists(data)) Directory.Delete(data, true);
+            if (Directory.Exists(game)) Directory.Delete(game, true);
+        }
+    }
+
     static void CreateZip(string zipPath, params (string Entry, byte[] Bytes)[] entries)
     {
         if (File.Exists(zipPath)) File.Delete(zipPath);

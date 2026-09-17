@@ -82,10 +82,12 @@ public static class DiagnosisSnapshotBuilder
             && MelonLoaderVersionGate.ShouldForceUpgradeStore(gamePath, status?.MelonLoaderVersion);
 
         var networkFailed = events.Any(e =>
-            e.Code is ManagerEventLog.CatalogFetchFailed or ManagerEventLog.UpdateCheckFailed);
+            e.Code is ManagerEventLog.CatalogFetchFailed or ManagerEventLog.UpdateCheckFailed
+            && !DiagnosisNetworkEventFilter.IsLikelyUiPresentationFailure(e));
 
         var lastNetwork = events.LastOrDefault(e =>
-            e.Code is ManagerEventLog.CatalogFetchFailed or ManagerEventLog.UpdateCheckFailed);
+            e.Code is ManagerEventLog.CatalogFetchFailed or ManagerEventLog.UpdateCheckFailed
+            && !DiagnosisNetworkEventFilter.IsLikelyUiPresentationFailure(e));
         string? networkSource = null;
         if (lastNetwork?.Data is not null && lastNetwork.Data.TryGetValue("source", out var src))
             networkSource = src;

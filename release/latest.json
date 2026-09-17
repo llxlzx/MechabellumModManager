@@ -1,10 +1,10 @@
 {
-    "version":  "1.2.9",
-    "notes":  "检查更新改为应用内下载 Setup 并拉起安装程序后退出（可跳过）；启动静默检查与手动共用同一流程。修复更新对话框样式资源。全量自检 798 通过。\nIn-app manager update: download Setup, launch installer, then exit (skippable). Startup silent check shares the same flow. Fix update dialog brush resource. Suite 798 passed.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.9/MechabellumModManager_Setup_v1.2.9.exe",
-    "setupSha256":  "9eeba6e1b46759262d7aa932a9bf9cd518e01c5c9d77a3ab9c556f30e729f33b",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.9/MechabellumModManager_portable_v1.2.9.zip",
-    "portableSha256":  "a270cc3361148524aa4600afc7f62fe38726d58185c1e57162d8838c96fd25f2",
-    "publishedAt":  "2026-09-17T04:27:54Z",
-    "build":  "v1.2.9-in-app-setup-update"
+    "version":  "1.3.0",
+    "notes":  "修复 FriendOverlay 更新后旧版被自动导入/删除后又回来；Melon 就绪时清理冲突的 BepInEx Doorstop（避免黑窗卡住启动）；更新对话框主题与诊断里把 UI 异常误标成网络失败等问题。\nFix stale FriendOverlay re-import after update/delete; remove conflicting BepInEx Doorstop when Melon is active (stops BepInEx console stall); update-dialog theme + diagnosis no longer mislabels UI failures as network errors.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.0/MechabellumModManager_Setup_v1.3.0.exe",
+    "setupSha256":  "3950a53abee4d406db68a1bb10e07a6c061267a1529d050aa260f5245bab25a8",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.0/MechabellumModManager_portable_v1.3.0.zip",
+    "portableSha256":  "6dd0e03b57df25f06752d2d46d5f107e9c4dea6366f45eabbc6cf90890cf510d",
+    "publishedAt":  "2026-09-17T14:32:11Z",
+    "build":  "v1.3.0-stale-import-bepinex-doorstop"
 }

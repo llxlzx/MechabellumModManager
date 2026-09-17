@@ -261,6 +261,7 @@ public partial class App : Application
             openFolder: () => BrowseImportFolder(window),
             promptReport: modName => PromptReport(window, modName),
             promptSubmitGuide: () => PromptSubmitGuide(window),
+            promptDirectUpload: () => PromptDirectUpload(window, paths, store),
             promptEditTaxonomy: pkg => PromptEditTaxonomy(window, pkg),
             copyText: text => Clipboard.SetText(text),
             unselectLibrary: window.UnselectLibraryMods,
@@ -419,6 +420,24 @@ public partial class App : Application
     {
         var dialog = new SubmitGuideDialog { Owner = owner };
         return dialog.ShowDialog() == true;
+    }
+
+    static void PromptDirectUpload(Window owner, PathsService paths, JsonStore store)
+    {
+        var config = store.LoadOrDefault(paths.ConfigPath, () => new AppConfig());
+        var ui = (owner.DataContext as MainViewModel)?.Ui ?? new UiStrings();
+        var dialog = new DirectUploadDialog(
+            config,
+            c =>
+            {
+                paths.EnsureCreated();
+                store.Save(paths.ConfigPath, c);
+            },
+            ui)
+        {
+            Owner = owner
+        };
+        dialog.ShowDialog();
     }
 
     static (string? Override, IReadOnlyList<string> ExtraTags)? PromptEditTaxonomy(Window owner, ModPackage package)
