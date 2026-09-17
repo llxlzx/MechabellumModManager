@@ -13,6 +13,19 @@ public static class ExternalUrlPolicy
     public static bool IsHttpsUrl(string? url) =>
         TryParse(url, out var uri) && uri!.Scheme == Uri.UriSchemeHttps;
 
+    /// <summary>
+    /// Installer packages only: https and path ends with <c>.exe</c> (query/fragment ignored).
+    /// Release HTML pages must not be downloaded as Setup.
+    /// </summary>
+    public static bool IsDownloadableSetupUrl(string? url)
+    {
+        if (!TryParse(url, out var uri) || uri is null)
+            return false;
+        if (uri.Scheme != Uri.UriSchemeHttps)
+            return false;
+        return uri.AbsolutePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static bool TryParse(string? url, out Uri? uri)
     {
         uri = null;

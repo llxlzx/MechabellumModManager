@@ -26,4 +26,16 @@ public class ExternalUrlPolicyTests
     {
         ExternalUrlPolicy.IsAllowed(url).Should().BeFalse();
     }
+
+    [Theory]
+    [InlineData("https://cdn.example/MechabellumModManager_Setup_v1.2.8.exe", true)]
+    [InlineData("https://cdn.example/Setup.exe?x=1", true)]
+    [InlineData("https://github.com/x/y/releases/latest", false)]
+    [InlineData("http://cdn.example/Setup.exe", false)]
+    [InlineData("mailto:a@b.com", false)]
+    [InlineData(null, false)]
+    public void IsDownloadableSetupUrl_requires_https_exe(string? url, bool expected)
+    {
+        ExternalUrlPolicy.IsDownloadableSetupUrl(url).Should().Be(expected);
+    }
 }

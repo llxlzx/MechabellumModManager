@@ -180,3 +180,18 @@ NotifyWizardDoneWaitingSteam	åŒç›®å½•å‘å¯¼å·²å®Œæˆï¼Œæ­£åœ¨ç­‰å¾… Steam å®Œæˆ
 LogSteamExitRequestFailed	è¯·æ±‚é€€å‡º Steam å¤±è´¥ï¼š{0}
 LogSteamOrGameStillRunning	Steam æˆ–æ¸¸æˆä»åœ¨è¿è¡Œï¼Œå·²ä¸­æ­¢åˆ‡æœã€‚
 LogSwapFolderFailed	åˆ‡æ¢ç›®å½•å¤±è´¥ã€‚
+UpdateStatusChecking	ÕıÔÚ¼ì²é¸üĞÂ¡­
+UpdateStatusCheckFailed	¼ì²é¸üĞÂÊ§°Ü£º{0}
+ManagerUpdateDialogTitle	¹ÜÀíÆ÷¸üĞÂ
+ManagerUpdateFoundFormat	·¢ÏÖĞÂ°æ±¾ {1}£¨µ±Ç° {0}£©
+ManagerUpdateNoNotes	£¨ÎŞ¸üĞÂËµÃ÷£©
+ManagerUpdateNow	¸üĞÂ
+ManagerUpdateSkip	Ìø¹ı
+ManagerUpdateOpenReleases	´ò¿ª·¢²¼Ò³
+ManagerUpdateCancelDownload	È¡Ïû
+ManagerUpdateRetry	ÖØÊÔ
+ManagerUpdateDownloadCancelled	ÒÑÈ¡ÏûÏÂÔØ¡£
+ManagerUpdateDownloadFailed	ÏÂÔØÊ§°Ü£º{0}
+NotifyManagerUpdateMissingSetup	Î´ÕÒµ½°²×°°üÂ·¾¶£¬ÎŞ·¨Æô¶¯°²×°³ÌĞò¡£
+NotifyManagerUpdateStartFailed	ÎŞ·¨Æô¶¯°²×°³ÌĞò£º{0}
+ConfirmCloseWhileManagerUpdating	ÕıÔÚÏÂÔØ»ò´¦Àí¹ÜÀíÆ÷¸üĞÂ¡£¹Ø±Õ½«È¡ÏûÏÂÔØ¡£È·¶¨¹Ø±Õ£¿

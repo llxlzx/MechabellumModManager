@@ -35,17 +35,21 @@ public sealed record UpdateCheckResult(
     string? Notes,
     string? SetupUrl,
     string Message,
-    string? Source = null);
+    string? Source = null,
+    string? BrowseUrl = null);
 
 /// <summary>
 /// Checks for a newer Setup via latest.json (with API fallback).
-/// Does not download or install — UI opens the URL for the user.
+/// Does not download or install — UI prompts, then downloads or opens BrowseUrl.
 /// </summary>
 public sealed class UpdateChecker
 {
     public const string Owner = "llxlzx";
     public const string Repo = "MechabellumModManager";
     public const string Branch = "master";
+
+    public static string DefaultBrowseUrl =>
+        $"https://github.com/{Owner}/{Repo}/releases/latest";
 
     public static readonly Uri LatestJsonUri = new(
         $"https://github.com/{Owner}/{Repo}/releases/latest/download/latest.json");
@@ -129,12 +133,12 @@ public sealed class UpdateChecker
 
             var remote = NormalizeVersion(manifest.Version) ?? manifest.Version.Trim();
 
-            // A manifest is remote input and its URL is handed to the shell. Sanitized once, before
-            // the branch, so no result carries an unchecked URL: the generic external URL gate also
-            // allows mailto:, which has no business being an installer link.
-            var setup = ExternalUrlPolicy.IsHttpsUrl(manifest.SetupUrl)
+            // Installer link must be a real https .exe. Non-downloadable values (Release pages,
+            // mailto, http) become BrowseUrl only — never handed to the downloader as Setup.
+            string? setup = ExternalUrlPolicy.IsDownloadableSetupUrl(manifest.SetupUrl)
                 ? manifest.SetupUrl!.Trim()
-                : $"https://github.com/{Owner}/{Repo}/releases/latest";
+                : null;
+            var browse = DefaultBrowseUrl;
 
             if (IsNewer(remote, local))
             {
@@ -142,13 +146,15 @@ public sealed class UpdateChecker
                 return new UpdateCheckResult(
                     UpdateCheckKind.UpdateAvailable, local, remote, notes, setup,
                     $"发现新版本 {remote}（当前 {local}）。",
-                    source);
+                    source,
+                    browse);
             }
 
             return new UpdateCheckResult(
                 UpdateCheckKind.UpToDate, local, remote, manifest.Notes, setup,
                 $"已是最新版本（{local}）。",
-                source);
+                source,
+                browse);
         }
         catch (Exception ex)
         {

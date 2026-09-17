@@ -649,4 +649,19 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>Блокирующих проблем не найдено</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Следуйте подсказкам менеджера.</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Адрес зеркала должен использовать https; настройка проигнорирована: {0}</value></data>
+  <data name="UpdateStatusChecking" xml:space="preserve"><value>Проверка обновлений…</value></data>
+  <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>Не удалось проверить обновления: {0}</value></data>
+  <data name="ManagerUpdateDialogTitle" xml:space="preserve"><value>Обновление менеджера</value></data>
+  <data name="ManagerUpdateFoundFormat" xml:space="preserve"><value>Доступна версия {1} (текущая {0})</value></data>
+  <data name="ManagerUpdateNoNotes" xml:space="preserve"><value>(Нет описания)</value></data>
+  <data name="ManagerUpdateNow" xml:space="preserve"><value>Обновить</value></data>
+  <data name="ManagerUpdateSkip" xml:space="preserve"><value>Пропустить</value></data>
+  <data name="ManagerUpdateOpenReleases" xml:space="preserve"><value>Открыть страницу релизов</value></data>
+  <data name="ManagerUpdateCancelDownload" xml:space="preserve"><value>Отмена</value></data>
+  <data name="ManagerUpdateRetry" xml:space="preserve"><value>Повторить</value></data>
+  <data name="ManagerUpdateDownloadCancelled" xml:space="preserve"><value>Загрузка отменена.</value></data>
+  <data name="ManagerUpdateDownloadFailed" xml:space="preserve"><value>Ошибка загрузки: {0}</value></data>
+  <data name="NotifyManagerUpdateMissingSetup" xml:space="preserve"><value>Путь к установщику не найден.</value></data>
+  <data name="NotifyManagerUpdateStartFailed" xml:space="preserve"><value>Не удалось запустить установщик: {0}</value></data>
+  <data name="ConfirmCloseWhileManagerUpdating" xml:space="preserve"><value>Идёт загрузка обновления менеджера. Закрытие отменит её. Закрыть?</value></data>
 </root>

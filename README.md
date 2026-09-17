@@ -73,7 +73,7 @@ Use the links below to jump within this page (Chinese and English sections share
 
 ### 检查更新
 
-设置里点 **检查更新**：读取 GitHub Release 上的 `latest.json`，**不会**静默自动安装；需你确认后再打开下载链接。
+设置里点 **检查更新**（启动时也会静默检查）：读取镜像/`latest.json`，有新版本时弹出更新窗。确认后**在应用内下载** Setup 并拉起安装程序，然后退出管理器；也可跳过（本会话启动不再提示）。**不会**静默自动安装。
 
 ---
 
@@ -182,7 +182,7 @@ High-risk mods require confirmation. Use the status bar and sync log to verify d
 
 ### Updates
 
-**Check for updates** reads `latest.json` from GitHub Releases. There is **no** silent auto-install; you confirm before opening the download link.
+**Check for updates** (also a silent check on launch) reads mirror/`latest.json`. When a newer version exists, a dialog appears: confirm to **download Setup in-app**, launch the installer, then exit the manager; or skip (no more launch prompts this session). There is **no** silent auto-install.
 
 ---
 

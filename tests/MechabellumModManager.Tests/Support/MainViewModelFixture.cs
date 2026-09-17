@@ -241,7 +241,9 @@ public sealed class MainViewModelFixture : IDisposable
         Func<bool>? promptSubmitGuide = null,
         Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null,
         MelonLoaderAssemblyGenerator? melonAssemblyGenerator = null,
-        Func<bool>? steamAppMarkedRunning = null)
+        Func<bool>? steamAppMarkedRunning = null,
+        ManagerSetupDownloader? setupDownloader = null,
+        Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null)
     {
         var processStarter = starter ?? new RecordingProcessStarter();
         var launcher = new GameLauncher(processStarter, () => false);
@@ -287,6 +289,8 @@ public sealed class MainViewModelFixture : IDisposable
             promptConfirmOption: promptConfirmOption,
             promptExportDiagnostics: promptExportDiagnostics,
             saveZipFile: saveZipFile,
+            setupDownloader: setupDownloader,
+            promptManagerUpdate: promptManagerUpdate,
             revealInExplorer: revealInExplorer,
             melonAssemblyGenerator: melonAssemblyGenerator,
             steamAppMarkedRunning: steamAppMarkedRunning ?? (() => false));

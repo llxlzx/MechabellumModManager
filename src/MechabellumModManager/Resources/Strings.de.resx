@@ -649,4 +649,19 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>Kein blockierendes Problem gefunden</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Den Hinweisen im Manager folgen.</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Die Spiegel-Adresse muss https verwenden; Einstellung ignoriert: {0}</value></data>
+  <data name="UpdateStatusChecking" xml:space="preserve"><value>Suche nach Updates…</value></data>
+  <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>Update-Prüfung fehlgeschlagen: {0}</value></data>
+  <data name="ManagerUpdateDialogTitle" xml:space="preserve"><value>Manager-Update</value></data>
+  <data name="ManagerUpdateFoundFormat" xml:space="preserve"><value>Neue Version {1} verfügbar (aktuell {0})</value></data>
+  <data name="ManagerUpdateNoNotes" xml:space="preserve"><value>(Keine Versionshinweise)</value></data>
+  <data name="ManagerUpdateNow" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="ManagerUpdateSkip" xml:space="preserve"><value>Überspringen</value></data>
+  <data name="ManagerUpdateOpenReleases" xml:space="preserve"><value>Release-Seite öffnen</value></data>
+  <data name="ManagerUpdateCancelDownload" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="ManagerUpdateRetry" xml:space="preserve"><value>Erneut</value></data>
+  <data name="ManagerUpdateDownloadCancelled" xml:space="preserve"><value>Download abgebrochen.</value></data>
+  <data name="ManagerUpdateDownloadFailed" xml:space="preserve"><value>Download fehlgeschlagen: {0}</value></data>
+  <data name="NotifyManagerUpdateMissingSetup" xml:space="preserve"><value>Setup-Pfad fehlt; Installer kann nicht gestartet werden.</value></data>
+  <data name="NotifyManagerUpdateStartFailed" xml:space="preserve"><value>Installer konnte nicht gestartet werden: {0}</value></data>
+  <data name="ConfirmCloseWhileManagerUpdating" xml:space="preserve"><value>Manager-Update wird heruntergeladen. Schließen bricht ab. Trotzdem schließen?</value></data>
 </root>

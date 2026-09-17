@@ -657,4 +657,19 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>未发现阻断问题</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>按管理器提示操作即可。</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>镜像地址必须使用 https，已忽略该设置：{0}</value></data>
+  <data name="UpdateStatusChecking" xml:space="preserve"><value>正在检查更新…</value></data>
+  <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>检查更新失败：{0}</value></data>
+  <data name="ManagerUpdateDialogTitle" xml:space="preserve"><value>管理器更新</value></data>
+  <data name="ManagerUpdateFoundFormat" xml:space="preserve"><value>发现新版本 {1}（当前 {0}）</value></data>
+  <data name="ManagerUpdateNoNotes" xml:space="preserve"><value>（无更新说明）</value></data>
+  <data name="ManagerUpdateNow" xml:space="preserve"><value>更新</value></data>
+  <data name="ManagerUpdateSkip" xml:space="preserve"><value>跳过</value></data>
+  <data name="ManagerUpdateOpenReleases" xml:space="preserve"><value>打开发布页</value></data>
+  <data name="ManagerUpdateCancelDownload" xml:space="preserve"><value>取消</value></data>
+  <data name="ManagerUpdateRetry" xml:space="preserve"><value>重试</value></data>
+  <data name="ManagerUpdateDownloadCancelled" xml:space="preserve"><value>已取消下载。</value></data>
+  <data name="ManagerUpdateDownloadFailed" xml:space="preserve"><value>下载失败：{0}</value></data>
+  <data name="NotifyManagerUpdateMissingSetup" xml:space="preserve"><value>未找到安装包路径，无法启动安装程序。</value></data>
+  <data name="NotifyManagerUpdateStartFailed" xml:space="preserve"><value>无法启动安装程序：{0}</value></data>
+  <data name="ConfirmCloseWhileManagerUpdating" xml:space="preserve"><value>正在下载或处理管理器更新。关闭将取消下载。确定关闭？</value></data>
 </root>

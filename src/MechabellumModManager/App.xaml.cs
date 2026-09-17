@@ -152,6 +152,7 @@ public partial class App : Application
         window.Show();
         OfferCriticalOpRecovery(window, vm, criticalOp);
         _ = vm.RunStartupModUpdateCheckAsync();
+        _ = vm.RunStartupManagerUpdateCheckAsync();
     }
 
     static void OfferCriticalOpRecovery(Window owner, MainViewModel vm, CriticalOpGuard criticalOp)
@@ -234,6 +235,7 @@ public partial class App : Application
         var betaEditor = new SteamBetaKeyEditor(probe);
         var branchSwitch = new BranchSwitchService(paths, store, probe, junctions, betaEditor);
         criticalOp = new CriticalOpGuard(paths);
+        var setupDownloader = new ManagerSetupDownloader();
 
         return new MainViewModel(
             paths,
@@ -274,6 +276,14 @@ public partial class App : Application
             setBusyMessage: SetBusyMessage,
             endBusy: EndBusy,
             criticalOp: criticalOp,
+            setupDownloader: setupDownloader,
+            promptManagerUpdate: (prompt, ct) =>
+            {
+                _ = ct;
+                var dialog = new ManagerUpdateDialog(prompt, setupDownloader) { Owner = window };
+                dialog.ShowDialog();
+                return Task.FromResult(dialog.Result);
+            },
             requestProcessExit: () =>
             {
                 EndBusy();

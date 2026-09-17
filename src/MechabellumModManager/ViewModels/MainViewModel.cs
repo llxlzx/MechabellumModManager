@@ -103,6 +103,10 @@ public sealed partial class MainViewModel : ObservableObject
     int _wizardDownloadPollGeneration;
     bool _wizardArchiveBRunning;
     Action? _requestProcessExit;
+    readonly ManagerSetupDownloader _setupDownloader;
+    readonly Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? _promptManagerUpdate;
+    bool _managerUpdateSkippedThisSession;
+    bool _managerUpdateUiOpen;
 
     public IRelayCommand ApplyProfileCommand { get; }
 
@@ -159,7 +163,9 @@ public sealed partial class MainViewModel : ObservableObject
         ISteamLifecycle? steamLifecycle = null,
         Func<MailProvider?>? promptMailProvider = null,
         Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null,
-        Func<bool>? steamAppMarkedRunning = null)
+        Func<bool>? steamAppMarkedRunning = null,
+        ManagerSetupDownloader? setupDownloader = null,
+        Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null)
     {
         _paths = paths;
         _store = store;
@@ -175,6 +181,8 @@ public sealed partial class MainViewModel : ObservableObject
         _riskHeuristic = riskHeuristic ?? new RiskHeuristic();
         _steamLocator = steamLocator ?? new SteamGameLocator();
         _requestProcessExit = requestProcessExit;
+        _setupDownloader = setupDownloader ?? new ManagerSetupDownloader();
+        _promptManagerUpdate = promptManagerUpdate;
         _updateChecker = updateChecker ?? new UpdateChecker();
         _catalog = catalog ?? new ModCatalogService();
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
@@ -575,6 +583,16 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool TryHandleWindowClosing(bool busyDialogOpen, out bool cancel)
     {
+        if (_managerUpdateUiOpen)
+        {
+            var prompt = LocalizationService.T("ConfirmCloseWhileManagerUpdating");
+            if (!_confirm(prompt))
+            {
+                cancel = true;
+                return true;
+            }
+        }
+
         var level = EvaluateCloseOrUpdateGate(busyDialogOpen);
         if (level == CriticalOpGateLevel.HardBlock)
         {
@@ -3562,12 +3580,20 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    async Task CheckForUpdatesAsync()
+    Task CheckForUpdatesAsync() => RunManagerUpdateCheckAsync(fromStartup: false);
+
+    /// <summary>
+    /// Silent manager self-update check after CriticalOp recovery. No UI when up to date or on failure.
+    /// </summary>
+    public Task RunStartupManagerUpdateCheckAsync() => RunManagerUpdateCheckAsync(fromStartup: true);
+
+    async Task RunManagerUpdateCheckAsync(bool fromStartup)
     {
         var level = EvaluateCloseOrUpdateGate(busyDialogOpen: false);
         if (level == CriticalOpGateLevel.HardBlock)
         {
-            _notify(LocalizationService.T("CriticalOpBlockUpdate"));
+            if (!fromStartup)
+                _notify(LocalizationService.T("CriticalOpBlockUpdate"));
             return;
         }
 
@@ -3581,10 +3607,14 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog("User accepted soft update risk during settle/wait.");
         }
 
-        if (_checkingUpdates) return;
+        if (fromStartup && _managerUpdateSkippedThisSession)
+            return;
+        if (_checkingUpdates || _managerUpdateUiOpen)
+            return;
+
         _checkingUpdates = true;
-        UpdateStatus = "正在检查更新…";
-        AppendLog("正在检查更新…");
+        UpdateStatus = LocalizationService.T("UpdateStatusChecking");
+        AppendLog(UpdateStatus);
         _taskProgress.Begin(
             ManagerTaskKind.CheckUpdate,
             LocalizationService.T("TaskTitleCheckUpdate"),
@@ -3599,17 +3629,10 @@ public sealed partial class MainViewModel : ObservableObject
             if (!string.IsNullOrWhiteSpace(result.Source))
                 AppendLog(string.Format(LocalizationService.T("RemoteSourceLog"), result.Source));
 
-            if (result.Kind == UpdateCheckKind.UpdateAvailable && !string.IsNullOrWhiteSpace(result.SetupUrl))
-            {
-                var detail = string.Format(
-                    LocalizationService.T("ConfirmOpenDownloadLink"),
-                    result.Message,
-                    result.Notes ?? "",
-                    result.SetupUrl);
-                if (Confirm(detail))
-                    TryOpenUrl(result.SetupUrl!);
-            }
-            else if (result.Kind == UpdateCheckKind.Failed)
+            if (result.Kind == UpdateCheckKind.UpToDate)
+                return;
+
+            if (result.Kind == UpdateCheckKind.Failed)
             {
                 RecordEvent(ManagerEventLog.UpdateCheckFailed, new Dictionary<string, string?>
                 {
@@ -3617,9 +3640,12 @@ public sealed partial class MainViewModel : ObservableObject
                     ["error"] = result.Message
                 });
                 RecalculateDiagnosis();
+                if (fromStartup)
+                    return;
+
                 var hint = LocalizationService.T("UpdateFailedDomesticHint");
-                var prompt = string.Format(LocalizationService.T("ConfirmUpdateFailedDomestic"), result.Message);
-                if (Confirm(prompt))
+                var failPrompt = string.Format(LocalizationService.T("ConfirmUpdateFailedDomestic"), result.Message);
+                if (Confirm(failPrompt))
                 {
                     TryCopyText(hint);
                     AppendLog(hint);
@@ -3627,13 +3653,20 @@ public sealed partial class MainViewModel : ObservableObject
                 }
                 else if (Confirm(LocalizationService.T("ConfirmStillOpenGitHubReleases")))
                 {
-                    TryOpenUrl($"https://github.com/{UpdateChecker.Owner}/{UpdateChecker.Repo}/releases/latest");
+                    TryOpenUrl(UpdateChecker.DefaultBrowseUrl);
                 }
+
+                return;
             }
+
+            if (result.Kind != UpdateCheckKind.UpdateAvailable)
+                return;
+
+            await OfferManagerUpdateAsync(result).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
-            UpdateStatus = $"检查更新失败：{ex.Message}";
+            UpdateStatus = string.Format(LocalizationService.T("UpdateStatusCheckFailed"), ex.Message);
             RecordEvent(ManagerEventLog.UpdateCheckFailed, new Dictionary<string, string?>
             {
                 ["error"] = ex.Message
@@ -3650,6 +3683,75 @@ public sealed partial class MainViewModel : ObservableObject
                 SyncStickyBranchTaskStrip();
                 NotifyTaskProgress();
             }
+        }
+    }
+
+    async Task OfferManagerUpdateAsync(UpdateCheckResult result)
+    {
+        var prompt = new ManagerUpdatePrompt(
+            result.LocalVersion,
+            result.RemoteVersion ?? "",
+            result.Notes ?? "",
+            result.SetupUrl,
+            result.BrowseUrl ?? UpdateChecker.DefaultBrowseUrl);
+
+        ManagerUpdateUiResult ui;
+        _managerUpdateUiOpen = true;
+        try
+        {
+            if (_promptManagerUpdate is not null)
+            {
+                ui = await _promptManagerUpdate(prompt, CancellationToken.None).ConfigureAwait(true);
+            }
+            else
+            {
+                // Headless / tests without UI: skip.
+                ui = new ManagerUpdateUiResult(ManagerUpdateUiAction.Skip);
+            }
+        }
+        finally
+        {
+            _managerUpdateUiOpen = false;
+        }
+
+        switch (ui.Action)
+        {
+            case ManagerUpdateUiAction.Skip:
+                _managerUpdateSkippedThisSession = true;
+                return;
+
+            case ManagerUpdateUiAction.OpenBrowseUrl:
+                TryOpenUrl(prompt.BrowseUrl ?? UpdateChecker.DefaultBrowseUrl);
+                return;
+
+            case ManagerUpdateUiAction.StayAfterFailure:
+                return;
+
+            case ManagerUpdateUiAction.LaunchSetup:
+                if (string.IsNullOrWhiteSpace(ui.LocalSetupPath))
+                {
+                    _notify(LocalizationService.T("NotifyManagerUpdateMissingSetup"));
+                    return;
+                }
+
+                try
+                {
+                    _processStarter.StartShell(ui.LocalSetupPath);
+                }
+                catch (Exception ex)
+                {
+                    _notify(string.Format(LocalizationService.T("NotifyManagerUpdateStartFailed"), ex.Message));
+                    AppendLog($"Failed to start Setup: {ex.Message}");
+                    return;
+                }
+
+                try { _requestProcessExit?.Invoke(); }
+                catch (Exception ex)
+                {
+                    AppendLog($"Shutdown after Setup start failed: {ex.Message}");
+                }
+
+                return;
         }
     }
 

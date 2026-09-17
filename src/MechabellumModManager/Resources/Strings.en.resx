@@ -654,4 +654,19 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>No blocking issue found</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Follow the manager prompts.</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Mirror address must use https; setting ignored: {0}</value></data>
+  <data name="UpdateStatusChecking" xml:space="preserve"><value>Checking for updates…</value></data>
+  <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>Update check failed: {0}</value></data>
+  <data name="ManagerUpdateDialogTitle" xml:space="preserve"><value>Manager update</value></data>
+  <data name="ManagerUpdateFoundFormat" xml:space="preserve"><value>New version {1} available (current {0})</value></data>
+  <data name="ManagerUpdateNoNotes" xml:space="preserve"><value>(No release notes)</value></data>
+  <data name="ManagerUpdateNow" xml:space="preserve"><value>Update</value></data>
+  <data name="ManagerUpdateSkip" xml:space="preserve"><value>Skip</value></data>
+  <data name="ManagerUpdateOpenReleases" xml:space="preserve"><value>Open releases page</value></data>
+  <data name="ManagerUpdateCancelDownload" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ManagerUpdateRetry" xml:space="preserve"><value>Retry</value></data>
+  <data name="ManagerUpdateDownloadCancelled" xml:space="preserve"><value>Download cancelled.</value></data>
+  <data name="ManagerUpdateDownloadFailed" xml:space="preserve"><value>Download failed: {0}</value></data>
+  <data name="NotifyManagerUpdateMissingSetup" xml:space="preserve"><value>Setup path missing; cannot start the installer.</value></data>
+  <data name="NotifyManagerUpdateStartFailed" xml:space="preserve"><value>Could not start the installer: {0}</value></data>
+  <data name="ConfirmCloseWhileManagerUpdating" xml:space="preserve"><value>A manager update download is in progress. Closing will cancel it. Close anyway?</value></data>
 </root>

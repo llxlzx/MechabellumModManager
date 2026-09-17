@@ -205,11 +205,11 @@ public class UpdateCheckerTests
     }
 
     /// <summary>
-    /// A manifest is remote input and its URL is handed to the shell. The generic external-URL gate
-    /// also allows mailto:, which has no business being an installer link.
+    /// Non-downloadable setupUrl must not be treated as an installer path (Release pages / mailto).
+    /// BrowseUrl carries the releases page; SetupUrl stays null so the UI does not download HTML.
     /// </summary>
     [Fact]
-    public async Task CheckAsync_replaces_a_non_https_setup_url_with_the_releases_page()
+    public async Task CheckAsync_invalid_setupUrl_sets_BrowseUrl_not_SetupUrl()
     {
         var handler = new ScriptedHttpHandler(_ =>
             ScriptedHttpHandler.Json(HttpStatusCode.OK,
@@ -220,7 +220,24 @@ public class UpdateCheckerTests
         var result = await checker.CheckAsync();
 
         result.Kind.Should().Be(UpdateCheckKind.UpdateAvailable);
-        result.SetupUrl.Should().Be("https://github.com/llxlzx/MechabellumModManager/releases/latest");
+        result.SetupUrl.Should().BeNull();
+        result.BrowseUrl.Should().Be("https://github.com/llxlzx/MechabellumModManager/releases/latest");
+    }
+
+    [Fact]
+    public async Task CheckAsync_releases_page_setupUrl_is_browse_only()
+    {
+        var handler = new ScriptedHttpHandler(_ =>
+            ScriptedHttpHandler.Json(HttpStatusCode.OK,
+                """{"version":"1.2.1","setupUrl":"https://github.com/llxlzx/MechabellumModManager/releases/latest"}"""));
+        using var http = new HttpClient(handler);
+        var checker = new UpdateChecker(http, () => "1.2.0");
+
+        var result = await checker.CheckAsync();
+
+        result.Kind.Should().Be(UpdateCheckKind.UpdateAvailable);
+        result.SetupUrl.Should().BeNull();
+        result.BrowseUrl.Should().Be("https://github.com/llxlzx/MechabellumModManager/releases/latest");
     }
 
     /// <summary>
