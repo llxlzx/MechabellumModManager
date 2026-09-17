@@ -1,10 +1,10 @@
 {
-    "version":  "1.2.8",
-    "notes":  "设置新增「隐藏 Melon 控制台」（写入 Loader.cfg hide_console，下次启动生效）。国内镜像收进默认折叠的「高级」。全量自检 781 项通过，无阻断级缺陷。\nSettings: Hide Melon console (Loader.cfg hide_console). Mirror URL under collapsed Advanced. Full suite 781 passed; no blocking defects.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.8/MechabellumModManager_Setup_v1.2.8.exe",
-    "setupSha256":  "f1c94289505e5ef863ef7dfafbe2a170d55aaa630f2442241f8a4301a4e24a26",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.8/MechabellumModManager_portable_v1.2.8.zip",
-    "portableSha256":  "7f70369a5cc9ae98ed71467580876e8e6af804a747c758229146e4f6c6d084a5",
-    "publishedAt":  "2026-09-16T13:53:32Z",
-    "build":  "v1.2.8-hide-console-mirror-advanced"
+    "version":  "1.2.9",
+    "notes":  "检查更新改为应用内下载 Setup 并拉起安装程序后退出（可跳过）；启动静默检查与手动共用同一流程。修复更新对话框样式资源。全量自检 798 通过。\nIn-app manager update: download Setup, launch installer, then exit (skippable). Startup silent check shares the same flow. Fix update dialog brush resource. Suite 798 passed.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.9/MechabellumModManager_Setup_v1.2.9.exe",
+    "setupSha256":  "9eeba6e1b46759262d7aa932a9bf9cd518e01c5c9d77a3ab9c556f30e729f33b",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.2.9/MechabellumModManager_portable_v1.2.9.zip",
+    "portableSha256":  "a270cc3361148524aa4600afc7f62fe38726d58185c1e57162d8838c96fd25f2",
+    "publishedAt":  "2026-09-17T04:27:54Z",
+    "build":  "v1.2.9-in-app-setup-update"
 }
