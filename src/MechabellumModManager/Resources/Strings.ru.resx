@@ -516,6 +516,7 @@
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Запуск запрошен; проверяю, появился ли процесс игры…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>Процесс игры обнаружен.</value></data>
   <data name="LogLaunchProcessSeenLate" xml:space="preserve"><value>Процесс игры появился.</value></data>
+  <data name="LogLaunchStillWaiting" xml:space="preserve"><value>Всё ещё ждём запуска игры через Steam; это пока не сбой.</value></data>
   <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>Процесс игры не обнаружен. Нажмите «Применить и запустить» ещё раз или проверьте, не показал ли Steam выбор аккаунта и не заблокировал ли запуск.</value></data>
   <data name="NotifyLaunchSteamStaleRunning" xml:space="preserve"><value>Steam всё ещё помечает игру как запущенную, хотя процесса уже нет (часто после сбоя или принудительного завершения), поэтому отказывает в повторном запуске. Полностью закройте клиент Steam, откройте снова и один раз нажмите «Применить и запустить». Не нажимайте несколько раз.</value></data>
   <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam открыл другую папку игры, не ту, что в менеджере: {0}. Melon в это окно не попадёт. Выберите «только exe» или укажите в менеджере библиотеку, которую реально открывает Steam.</value></data>
@@ -730,6 +731,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Адрес зеркала должен использовать https; настройка проигнорирована: {0}</value></data>
   <data name="UpdateStatusChecking" xml:space="preserve"><value>Проверка обновлений…</value></data>
   <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>Не удалось проверить обновления: {0}</value></data>
+  <data name="UpdateUiFailedNotNetwork" xml:space="preserve"><value>Ошибка ресурса интерфейса диалога обновления (проигнорирована, это не сбой сети). Повторите «Проверить обновления» или перезапустите менеджер.</value></data>
   <data name="ManagerUpdateDialogTitle" xml:space="preserve"><value>Обновление менеджера</value></data>
   <data name="ManagerUpdateFoundFormat" xml:space="preserve"><value>Доступна версия {1} (текущая {0})</value></data>
   <data name="ManagerUpdateNoNotes" xml:space="preserve"><value>(Нет описания)</value></data>

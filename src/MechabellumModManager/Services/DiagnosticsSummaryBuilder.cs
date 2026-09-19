@@ -13,6 +13,7 @@ public static class DiagnosticsSummaryBuilder
     {
         ["game_missing"] = "当前游戏路径缺少 Mechabellum.exe / GameAssembly.dll",
         ["melon_log_missing"] = "未找到 MelonLoader Latest.log",
+        ["melon_log_unreadable"] = "MelonLoader Latest.log 存在但被占用，未能读入",
         ["melon_log_stale_or_incomplete"] = "Melon 日志过旧或不完整",
         ["melon_proxy_dll_missing"] = "缺少 version.dll / winhttp.dll",
         ["link_incomplete_but_store_valid"] = "Steam 路径不完整，但独立仓目录看起来有游戏",
@@ -127,6 +128,9 @@ public static class DiagnosticsSummaryBuilder
         {
             tips.Add("Steam 路径当前不完整：勿反复点继续；等 Steam 下载/校验完成，或验证游戏文件。");
         }
+
+        if (set.Contains("melon_log_unreadable"))
+            tips.Add("退出游戏后重新导出诊断包，以便带上 MelonLoader\\Latest.log。");
 
         if (set.Contains("orphan_dual_layout") || set.Contains("leftover_dual_store_folders"))
         {

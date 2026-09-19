@@ -183,9 +183,42 @@ public class MainViewModelTests
         await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
         await vm.LaunchFollowUp;
 
-        notified.Should().Be(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+        notified.Should().NotBe(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+        vm.LogText.Should().Contain(LocalizationService.T("LogLaunchStillWaiting"));
+        vm.LogText.Should().NotContain(LocalizationService.T("NotifyLaunchProcessNotSeen"));
         vm.LogText.Should().Contain(LocalizationService.T("LogLaunchProcessSeenLate"));
         vm.LogText.Should().NotContain(LocalizationService.T("LogLaunchProcessSeen"));
+        vm.IsAwaitingGameProcess.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Steam_follow_up_notifies_only_after_the_extra_wait_expires()
+    {
+        using var fx = Fixture.CreateReady();
+        string? notified = null;
+        MainViewModel vm = null!;
+        vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            notify: m => notified = m,
+            delay: _ =>
+            {
+                vm.IsAwaitingGameProcess.Should().BeTrue();
+                vm.StatusKindLabel.Should().Be("正在等待游戏进程");
+                vm.ShowReadyAccent.Should().BeFalse();
+                return Task.CompletedTask;
+            });
+        vm.LaunchMode = LaunchMode.SteamThenExe;
+        vm.LaunchConfirmPollsOverride = 1;
+        vm.LaunchFollowUpPolls = 1;
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+        vm.LogText.Should().Contain(LocalizationService.T("LogLaunchStillWaiting"));
+
+        await vm.LaunchFollowUp;
+
+        notified.Should().Be(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+        vm.IsAwaitingGameProcess.Should().BeFalse();
+        vm.StatusKindLabel.Should().NotBe("正在等待游戏进程");
     }
 
     [Fact]

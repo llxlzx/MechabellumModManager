@@ -100,6 +100,9 @@
                                         <DataTrigger Binding="{Binding ShowReadyAccent}" Value="False">
                                             <Setter Property="BorderBrush" Value="{StaticResource WarnBrush}" />
                                         </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsAwaitingGameProcess}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
+                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding ShowReadyAccent}" Value="True">
                                             <Setter Property="BorderBrush" Value="{StaticResource AccentTealBrush}" />
                                         </DataTrigger>
@@ -121,6 +124,9 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
                                             <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAwaitingGameProcess}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding ShowReadyAccent}" Value="True">
                                                     <Setter Property="Foreground" Value="{StaticResource AccentAmberHotBrush}" />
                                                 </DataTrigger>
@@ -129,13 +135,13 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                                 <TextBlock Grid.Column="1"
-                                           Text="{Binding GameStatus.Message}"
+                                           Text="{Binding StatusDetail}"
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="NoWrap"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,0"
-                                           ToolTip="{Binding GameStatus.Message}" />
+                                           ToolTip="{Binding StatusDetail}" />
                                 <Button Grid.Column="2"
                                         MinWidth="108"
                                         Padding="10,4"

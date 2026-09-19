@@ -202,6 +202,32 @@ public class GameDetectorTests
                 now: now,
                 applyStartedAt: applyStarted);
 
+            s.LoaderInjected.Should().NotBe(true);
+            s.LoaderInjected.Should().NotBe(false);
+            s.Message.Should().NotContain("未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void Apply_newer_than_launch_while_game_running_stays_not_injected()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var staleLaunch = new DateTimeOffset(2026, 9, 6, 21, 0, 0, TimeSpan.FromHours(8));
+            var applyStarted = new DateTimeOffset(2026, 9, 7, 18, 10, 0, TimeSpan.FromHours(8));
+            var logWrite = new DateTimeOffset(2026, 9, 7, 18, 12, 0, TimeSpan.FromHours(8));
+            var now = new DateTimeOffset(2026, 9, 7, 18, 13, 0, TimeSpan.FromHours(8));
+            WriteLatestLog(root, "0.7.3", logWrite.LocalDateTime, "6 Mods loaded.\n");
+
+            var s = new GameDetector().Detect(
+                root,
+                lastLaunchRequestedAt: staleLaunch,
+                now: now,
+                applyStartedAt: applyStarted,
+                gameAlreadyRunning: true);
+
             s.LoaderInjected.Should().BeFalse();
             s.Message.Should().Contain("未在本次启动注入");
         }

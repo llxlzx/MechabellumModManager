@@ -202,6 +202,16 @@ public sealed class DiagnosticsExportService
             catch { /* ignore */ }
 
             var diagnosis = request.Diagnosis ?? EvaluateDiagnosis(request, eventLog);
+            if (findings.Any(f => string.Equals(f, "melon_log_unreadable", StringComparison.OrdinalIgnoreCase))
+                && string.Equals(diagnosis.Code, DiagnosisCodes.Healthy, StringComparison.OrdinalIgnoreCase))
+            {
+                diagnosis = new Diagnosis
+                {
+                    Code = "melon_log_unreadable",
+                    Title = "Melon 日志正在被占用，诊断包未包含 Latest.log",
+                    Action = "退出游戏后重新导出诊断包。"
+                };
+            }
             var diagnosisJson = JsonSerializer.Serialize(new
             {
                 diagnosis.Code,
@@ -335,9 +345,9 @@ public sealed class DiagnosticsExportService
     {
         var info = new FileInfo(sourcePath);
         if (info.Length <= MaxCopiedBytes)
-            return File.ReadAllText(sourcePath);
+            return DiagnosticsProbeBuilder.ReadTextShared(sourcePath);
 
-        using var stream = File.OpenRead(sourcePath);
+        using var stream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         stream.Seek(-MaxCopiedBytes, SeekOrigin.End);
         using var reader = new StreamReader(stream, Encoding.UTF8);
         return $"[truncated: kept the last {MaxCopiedBytes / (1024 * 1024)} MB of {info.Length} bytes]\n"

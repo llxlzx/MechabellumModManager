@@ -402,8 +402,15 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
 
     /// <summary>Teal/green status accent. False after a launch whose Latest.log never updated.</summary>
+    public bool IsAwaitingGameProcess { get; private set; }
+
     public bool ShowReadyAccent =>
-        IsReady && GameStatus?.LoaderInjected != false;
+        !IsAwaitingGameProcess && IsReady && GameStatus?.LoaderInjected != false;
+
+    public string StatusDetail =>
+        IsAwaitingGameProcess
+            ? LocalizationService.T("LogLaunchStillWaiting")
+            : GameStatus?.Message ?? "";
 
     public bool NeedsMelonLoaderInstall =>
         !IsEnableDualWaitingDownload
@@ -1011,7 +1018,9 @@ public sealed partial class MainViewModel : ObservableObject
     public bool ShowDeployBlockedReason => !string.IsNullOrWhiteSpace(DeployBlockedReason);
 
     public string StatusKindLabel =>
-        IsEnableDualWaitingDownload
+        IsAwaitingGameProcess
+            ? "正在等待游戏进程"
+            : IsEnableDualWaitingDownload
             ? LocalizationService.T("BranchStatusEnabling")
             : GameStatus?.LoaderInjected == false
                 ? "未注入"
@@ -1231,6 +1240,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsReady));
         OnPropertyChanged(nameof(ShowReadyAccent));
         OnPropertyChanged(nameof(StatusKindLabel));
+        OnPropertyChanged(nameof(StatusDetail));
         OnPropertyChanged(nameof(NeedsMelonLoaderInstall));
         InstallMelonLoaderCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanConfirmManualBeta));
@@ -2178,6 +2188,8 @@ public sealed partial class MainViewModel : ObservableObject
     async Task VerifyLaunchProcessThenInjectionAsync(LaunchMode launchedAs)
     {
         CancelLaunchFollowUp();
+        var steam = launchedAs is LaunchMode.SteamOnly or LaunchMode.SteamThenExe;
+        SetAwaitingGameProcess(steam);
         var seen = false;
         var polls = LaunchConfirmPollsOverride ?? LaunchConfirmPolls(launchedAs);
         for (var i = 0; i < polls; i++)
@@ -2196,15 +2208,31 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (!seen)
         {
-            var msg = IsSteamLaunchBlockedByStaleFlag(launchedAs)
-                ? LocalizationService.T("NotifyLaunchSteamStaleRunning")
-                : LocalizationService.T("NotifyLaunchProcessNotSeen");
+            if (IsSteamLaunchBlockedByStaleFlag(launchedAs))
+            {
+                SetAwaitingGameProcess(false);
+                var stale = LocalizationService.T("NotifyLaunchSteamStaleRunning");
+                AppendLog(stale);
+                _notify(stale);
+                return;
+            }
+
+            if (steam)
+            {
+                AppendLog(LocalizationService.T("LogLaunchStillWaiting"));
+                StartLaunchFollowUp(notifyIfStillUnseen: true);
+                return;
+            }
+
+            SetAwaitingGameProcess(false);
+            var msg = LocalizationService.T("NotifyLaunchProcessNotSeen");
             AppendLog(msg);
             _notify(msg);
-            StartLaunchFollowUp();
+            StartLaunchFollowUp(notifyIfStillUnseen: false);
             return;
         }
 
+        SetAwaitingGameProcess(false);
         AppendLog(LocalizationService.T("LogLaunchProcessSeen"));
         WarnIfRunningGamePathMismatch();
         await RecheckLoaderInjectionAfterLaunchAsync().ConfigureAwait(true);
@@ -2221,7 +2249,18 @@ public sealed partial class MainViewModel : ObservableObject
         catch (ObjectDisposedException) { /* already disposed */ }
     }
 
-    void StartLaunchFollowUp()
+    void SetAwaitingGameProcess(bool value)
+    {
+        if (IsAwaitingGameProcess == value)
+            return;
+        IsAwaitingGameProcess = value;
+        OnPropertyChanged(nameof(IsAwaitingGameProcess));
+        OnPropertyChanged(nameof(ShowReadyAccent));
+        OnPropertyChanged(nameof(StatusKindLabel));
+        OnPropertyChanged(nameof(StatusDetail));
+    }
+
+    void StartLaunchFollowUp(bool notifyIfStillUnseen)
     {
         var previous = _launchFollowUpCts;
         var previousTask = LaunchFollowUp;
@@ -2229,7 +2268,7 @@ public sealed partial class MainViewModel : ObservableObject
         var token = _launchFollowUpCts.Token;
         try { previous?.Cancel(); }
         catch (ObjectDisposedException) { /* already disposed */ }
-        LaunchFollowUp = FollowUpLaunchProcessAsync(token);
+        LaunchFollowUp = FollowUpLaunchProcessAsync(token, notifyIfStillUnseen);
         if (previous is not null)
         {
             _ = previousTask.ContinueWith(
@@ -2250,7 +2289,7 @@ public sealed partial class MainViewModel : ObservableObject
         catch (ObjectDisposedException) { return true; }
     }
 
-    async Task FollowUpLaunchProcessAsync(CancellationToken token)
+    async Task FollowUpLaunchProcessAsync(CancellationToken token, bool notifyIfStillUnseen)
     {
         try
         {
@@ -2266,11 +2305,20 @@ public sealed partial class MainViewModel : ObservableObject
                 if (!_processProbe.IsGameRunning())
                     continue;
 
+                SetAwaitingGameProcess(false);
                 AppendLog(LocalizationService.T("LogLaunchProcessSeenLate"));
                 WarnIfRunningGamePathMismatch();
                 await RecheckLoaderInjectionAfterLaunchAsync().ConfigureAwait(true);
                 return;
             }
+
+            if (IsFollowUpCancelled(token) || !notifyIfStillUnseen)
+                return;
+
+            SetAwaitingGameProcess(false);
+            var msg = LocalizationService.T("NotifyLaunchProcessNotSeen");
+            AppendLog(msg);
+            _notify(msg);
         }
         catch (ObjectDisposedException)
         {

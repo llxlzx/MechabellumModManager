@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using MechabellumModManager.Models;
@@ -90,7 +91,7 @@ public static class DiagnosticsProbeBuilder
         }
 
         string text;
-        try { text = File.ReadAllText(melonLogPath); }
+        try { text = ReadTextShared(melonLogPath); }
         catch
         {
             return new Dictionary<string, object?>
@@ -119,6 +120,13 @@ public static class DiagnosticsProbeBuilder
             ["hasLoadingModsSection"] = hasModsSection,
             ["staleOrIncomplete"] = staleOrIncomplete
         };
+    }
+
+    internal static string ReadTextShared(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return reader.ReadToEnd();
     }
 
     static Dictionary<string, object?> InspectBranch(
@@ -223,6 +231,8 @@ public static class DiagnosticsProbeBuilder
 
         if (melon.TryGetValue("exists", out var ex) && ex is false)
             findings.Add("melon_log_missing");
+        else if (melon.TryGetValue("unreadable", out var unread) && unread is true)
+            findings.Add("melon_log_unreadable");
         else if (melon.TryGetValue("staleOrIncomplete", out var stale) && stale is true)
             findings.Add("melon_log_stale_or_incomplete");
 

@@ -406,6 +406,70 @@ public class DiagnosticsExportServiceTests
         diagnosis.Should().Contain("critical_op_interrupted");
     }
 
+    [Fact]
+    public void Export_copies_melon_log_while_another_handle_is_writing()
+    {
+        using var fx = new Fixture();
+        var log = WriteGameLog(fx.Root, "Preferences Loaded\n");
+        using var hold = new FileStream(log, FileMode.Open, FileAccess.Write, FileShare.Read);
+        var zip = Path.Combine(fx.Root, "shared.zip");
+
+        var result = new DiagnosticsExportService().ExportToFile(zip, Request(fx, Path.GetDirectoryName(Path.GetDirectoryName(log))!));
+
+        result.Success.Should().BeTrue();
+        result.Missing.Should().NotContain("melon/Latest.log");
+        using var archive = ZipFile.OpenRead(zip);
+        var copied = new StreamReader(archive.GetEntry("melon/Latest.log")!.Open()).ReadToEnd();
+        copied.Should().Contain("Preferences Loaded");
+    }
+
+    [Fact]
+    public void Export_does_not_call_healthy_when_melon_log_is_exclusively_locked()
+    {
+        using var fx = new Fixture();
+        var log = WriteGameLog(fx.Root, "Preferences Loaded\n");
+        using var hold = new FileStream(log, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var zip = Path.Combine(fx.Root, "locked.zip");
+
+        var result = new DiagnosticsExportService().ExportToFile(zip, Request(fx, Path.GetDirectoryName(Path.GetDirectoryName(log))!));
+
+        result.Success.Should().BeTrue();
+        result.Missing.Should().Contain("melon/Latest.log");
+        using var archive = ZipFile.OpenRead(zip);
+        var summary = new StreamReader(archive.GetEntry("summary.md")!.Open()).ReadToEnd();
+        var diagnosis = new StreamReader(archive.GetEntry("diagnosis.json")!.Open()).ReadToEnd();
+        summary.Should().Contain("melon_log_unreadable");
+        summary.Should().NotContain("`healthy`");
+        summary.Should().NotContain("未发现阻断问题");
+        diagnosis.Should().Contain("melon_log_unreadable");
+        diagnosis.Should().NotContain("\"code\": \"healthy\"");
+    }
+
+    static string WriteGameLog(string root, string text)
+    {
+        var game = Path.Combine(root, "game");
+        Directory.CreateDirectory(Path.Combine(game, "MelonLoader"));
+        var log = Path.Combine(game, "MelonLoader", "Latest.log");
+        File.WriteAllText(log, text);
+        return log;
+    }
+
+    static DiagnosticsExportRequest Request(Fixture fx, string gamePath) => new()
+    {
+        Paths = fx.Paths,
+        GamePath = gamePath,
+        SessionLogText = "[12:00:00] session",
+        AppVersion = "1.3.1",
+        Redaction = DiagnosticsRedactionMode.None,
+        LogWriter = new ManagerLogWriter(fx.Paths.LogsDir),
+        Diagnosis = new Diagnosis
+        {
+            Code = DiagnosisCodes.Healthy,
+            Title = "未发现阻断问题",
+            Action = "按管理器提示操作即可。"
+        }
+    };
+
     sealed class Fixture : IDisposable
     {
         public string Root { get; }

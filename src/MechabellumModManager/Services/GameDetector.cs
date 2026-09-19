@@ -111,12 +111,12 @@ public sealed class GameDetector
         if (now - lastLaunchRequestedAt.Value < LoaderInjectSettle)
             return null;
 
-        // Il2Cpp generation during Apply also writes Latest.log. When the launch stamp is older
-        // than this Apply, only a log written after the Apply started can prove an injection —
-        // and a launch stamp from a previous session must never be the one that proves it.
+        // Il2Cpp generation during Apply also writes Latest.log. A launch stamp from a previous
+        // session must not prove this Apply injected. Before the new launch, with no process,
+        // that is unknown — not a failed injection. A process already up still counts as not injected.
         var since = lastLaunchRequestedAt.Value;
         if (applyStartedAt is { } applyStart && applyStart > since)
-            return false;
+            return gameAlreadyRunning ? false : null;
 
         var logPath = Path.Combine(gamePath, "MelonLoader", "Latest.log");
         if (!File.Exists(logPath))
