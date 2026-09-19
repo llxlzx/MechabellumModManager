@@ -515,6 +515,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>Mod を有効にするには MelonLoader の黒いコンソールが必要です（PowerShell ではありません）。出ない場合は version.dll / MelonLoader を確認し、MelonLoader\Latest.log を送ってください。</value></data>
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>起動を要求しました。ゲームプロセスの起動を確認しています…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>ゲームプロセスを検出しました。</value></data>
+  <data name="LogLaunchProcessSeenLate" xml:space="preserve"><value>ゲームが起動しました。</value></data>
   <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>ゲームプロセスを検出できませんでした。「適用して起動」を再実行するか、Steam のアカウント選択やブロックを確認してください。</value></data>
   <data name="NotifyLaunchSteamStaleRunning" xml:space="preserve"><value>ゲームプロセスは終了しているのに、Steam は「実行中」のままです（クラッシュや強制終了のあとでよく起きます）。そのため起動を拒否しています。Steam クライアントを完全に終了してから開き直し、「適用して起動」を一度だけ押してください。連打しないでください。</value></data>
   <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam が開いたゲームフォルダは管理ツールのパスではありません：{0}。このウィンドウには Melon は入りません。「exe のみ起動」にするか、管理ツールのパスを Steam が実際に開いたライブラリに合わせてください。</value></data>

@@ -86,10 +86,32 @@ public class GameDetectorTests
         {
             var launchedAt = DateTimeOffset.Now.AddMinutes(-5);
             WriteLatestLog(root, "0.7.1", launchedAt.LocalDateTime.AddDays(-8));
-            var s = new GameDetector().Detect(root, lastLaunchRequestedAt: launchedAt);
+            var s = new GameDetector().Detect(
+                root,
+                lastLaunchRequestedAt: launchedAt,
+                gameAlreadyRunning: true);
             s.Kind.Should().Be(GameStatusKind.Ready);
             s.LoaderInjected.Should().BeFalse();
             s.Message.Should().Be("Loader 未在本次启动注入");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void Stale_log_without_process_is_not_a_failed_injection()
+    {
+        var root = CreateTempGame(exe: true, ga: true, melonDir: true, proxy: true, assemblies: true);
+        try
+        {
+            var launchedAt = DateTimeOffset.Now.AddMinutes(-5);
+            WriteLatestLog(root, "0.7.3", launchedAt.LocalDateTime.AddMinutes(-30));
+            var s = new GameDetector().Detect(
+                root,
+                lastLaunchRequestedAt: launchedAt,
+                gameAlreadyRunning: false);
+            s.Kind.Should().Be(GameStatusKind.Ready);
+            s.LoaderInjected.Should().NotBe(false);
+            s.Message.Should().NotContain("未在本次启动注入");
         }
         finally { Directory.Delete(root, true); }
     }

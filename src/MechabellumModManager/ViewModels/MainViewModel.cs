@@ -76,6 +76,13 @@ public sealed partial class MainViewModel : ObservableObject
     readonly TimeSpan _steamExitTimeout;
     readonly TimeSpan _steamExitCooldown;
     readonly TimeSpan _steamRestartCooldown;
+    CancellationTokenSource? _launchFollowUpCts;
+    internal const int SteamLaunchConfirmPolls = 90;
+    internal const int ExeLaunchConfirmPolls = 15;
+    internal const int DefaultLaunchFollowUpPolls = 120;
+    internal int? LaunchConfirmPollsOverride { get; set; }
+    internal int LaunchFollowUpPolls { get; set; } = DefaultLaunchFollowUpPolls;
+    internal Task LaunchFollowUp { get; private set; } = Task.CompletedTask;
     bool _loggedMelonOptimize;
     bool _suppressBranchSwitchSave;
     bool _checkingUpdates;
@@ -2170,8 +2177,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     async Task VerifyLaunchProcessThenInjectionAsync(LaunchMode launchedAs)
     {
+        CancelLaunchFollowUp();
         var seen = false;
-        for (var i = 0; i < 15; i++)
+        var polls = LaunchConfirmPollsOverride ?? LaunchConfirmPolls(launchedAs);
+        for (var i = 0; i < polls; i++)
         {
             if (_processProbe.IsGameRunning())
             {
@@ -2192,12 +2201,85 @@ public sealed partial class MainViewModel : ObservableObject
                 : LocalizationService.T("NotifyLaunchProcessNotSeen");
             AppendLog(msg);
             _notify(msg);
+            StartLaunchFollowUp();
             return;
         }
 
         AppendLog(LocalizationService.T("LogLaunchProcessSeen"));
         WarnIfRunningGamePathMismatch();
         await RecheckLoaderInjectionAfterLaunchAsync().ConfigureAwait(true);
+    }
+
+    internal static int LaunchConfirmPolls(LaunchMode mode) =>
+        mode is LaunchMode.SteamOnly or LaunchMode.SteamThenExe
+            ? SteamLaunchConfirmPolls
+            : ExeLaunchConfirmPolls;
+
+    void CancelLaunchFollowUp()
+    {
+        try { _launchFollowUpCts?.Cancel(); }
+        catch (ObjectDisposedException) { /* already disposed */ }
+    }
+
+    void StartLaunchFollowUp()
+    {
+        var previous = _launchFollowUpCts;
+        var previousTask = LaunchFollowUp;
+        _launchFollowUpCts = new CancellationTokenSource();
+        var token = _launchFollowUpCts.Token;
+        try { previous?.Cancel(); }
+        catch (ObjectDisposedException) { /* already disposed */ }
+        LaunchFollowUp = FollowUpLaunchProcessAsync(token);
+        if (previous is not null)
+        {
+            _ = previousTask.ContinueWith(
+                _ =>
+                {
+                    try { previous.Dispose(); }
+                    catch (ObjectDisposedException) { /* already disposed */ }
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default);
+        }
+    }
+
+    static bool IsFollowUpCancelled(CancellationToken token)
+    {
+        try { return token.IsCancellationRequested; }
+        catch (ObjectDisposedException) { return true; }
+    }
+
+    async Task FollowUpLaunchProcessAsync(CancellationToken token)
+    {
+        try
+        {
+            for (var i = 0; i < LaunchFollowUpPolls; i++)
+            {
+                if (IsFollowUpCancelled(token))
+                    return;
+
+                await _delay(TimeSpan.FromSeconds(1)).ConfigureAwait(true);
+                if (IsFollowUpCancelled(token))
+                    return;
+
+                if (!_processProbe.IsGameRunning())
+                    continue;
+
+                AppendLog(LocalizationService.T("LogLaunchProcessSeenLate"));
+                WarnIfRunningGamePathMismatch();
+                await RecheckLoaderInjectionAfterLaunchAsync().ConfigureAwait(true);
+                return;
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // Cancelled while the previous source was released.
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"确认游戏进程失败：{ex.Message}");
+        }
     }
 
     void WarnIfRunningGamePathMismatch()

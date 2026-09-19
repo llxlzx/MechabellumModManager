@@ -519,6 +519,7 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="LogMelonConsoleHint" xml:space="preserve"><value>For mods to load, MelonLoader should open a black Melon console (not PowerShell). If it does not, check version.dll / MelonLoader under the game folder and send MelonLoader\Latest.log.</value></data>
   <data name="LogLaunchRequestedVerifying" xml:space="preserve"><value>Launch requested; checking whether the game process starts…</value></data>
   <data name="LogLaunchProcessSeen" xml:space="preserve"><value>Game process detected.</value></data>
+  <data name="LogLaunchProcessSeenLate" xml:space="preserve"><value>The game process came up.</value></data>
   <data name="NotifyLaunchProcessNotSeen" xml:space="preserve"><value>Game process was not detected. Try Apply and launch again, or check whether Steam showed an account picker or blocked the start.</value></data>
   <data name="NotifyLaunchSteamStaleRunning" xml:space="preserve"><value>Steam still marks this game as running even though the process is gone (common after a crash or force-close), so it refused to start again. Fully quit the Steam client, reopen it, then click Apply and launch once. Do not click repeatedly.</value></data>
   <data name="NotifyLaunchGamePathMismatch" xml:space="preserve"><value>Steam opened a different game folder than the manager: {0}. Melon will not load in that window. Switch launch mode to Exe only, or set the manager path to the library Steam actually opened.</value></data>

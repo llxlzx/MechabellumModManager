@@ -251,7 +251,7 @@ public sealed class MainViewModelFixture : IDisposable
         var resolvedConfirmHighRisk = preserveNullConfirmHighRisk
             ? confirmHighRisk
             : (confirmHighRisk ?? (_ => true));
-        return new MainViewModel(
+        var vm = new MainViewModel(
             Paths,
             Store,
             _detector,
@@ -296,6 +296,8 @@ public sealed class MainViewModelFixture : IDisposable
             revealInExplorer: revealInExplorer,
             melonAssemblyGenerator: melonAssemblyGenerator,
             steamAppMarkedRunning: steamAppMarkedRunning ?? (() => false));
+        vm.LaunchFollowUpPolls = 0;
+        return vm;
     }
 
     public void WriteBranchConfig(BranchSwitchConfig cfg) =>

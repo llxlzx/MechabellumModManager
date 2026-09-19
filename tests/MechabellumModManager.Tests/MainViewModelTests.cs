@@ -121,6 +121,120 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public async Task Exe_launch_confirm_stays_fifteen_polls()
+    {
+        using var fx = Fixture.CreateReady();
+        var delays = 0;
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            delay: _ =>
+            {
+                delays++;
+                return Task.CompletedTask;
+            });
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        delays.Should().Be(MainViewModel.ExeLaunchConfirmPolls);
+        vm.LogText.Should().Contain(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+    }
+
+    [Fact]
+    public async Task Steam_launch_confirm_waits_ninety_polls()
+    {
+        using var fx = Fixture.CreateReady();
+        var delays = 0;
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            delay: _ =>
+            {
+                delays++;
+                return Task.CompletedTask;
+            });
+        vm.LaunchMode = LaunchMode.SteamThenExe;
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+
+        delays.Should().Be(MainViewModel.SteamLaunchConfirmPolls);
+        MainViewModel.LaunchConfirmPolls(LaunchMode.SteamOnly).Should().Be(MainViewModel.SteamLaunchConfirmPolls);
+        MainViewModel.DefaultLaunchFollowUpPolls.Should().Be(120);
+    }
+
+    [Fact]
+    public async Task Steam_follow_up_logs_when_process_appears_after_timeout()
+    {
+        using var fx = Fixture.CreateReady();
+        string? notified = null;
+        var delays = 0;
+        var vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            notify: m => notified = m,
+            delay: _ =>
+            {
+                delays++;
+                if (delays >= 4)
+                    fx.Probe.GameRunning = true;
+                return Task.CompletedTask;
+            });
+        vm.LaunchMode = LaunchMode.SteamThenExe;
+        vm.LaunchConfirmPollsOverride = 2;
+        vm.LaunchFollowUpPolls = 4;
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+        await vm.LaunchFollowUp;
+
+        notified.Should().Be(LocalizationService.T("NotifyLaunchProcessNotSeen"));
+        vm.LogText.Should().Contain(LocalizationService.T("LogLaunchProcessSeenLate"));
+        vm.LogText.Should().NotContain(LocalizationService.T("LogLaunchProcessSeen"));
+    }
+
+    [Fact]
+    public async Task Late_process_waits_for_recheck_before_calling_injection_failed()
+    {
+        using var fx = Fixture.CreateReady();
+        var logPath = Path.Combine(fx.GameRoot, "MelonLoader", "Latest.log");
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+        File.WriteAllText(logPath, "[14:17:52.025] MelonLoader v0.7.3 Open-Beta\n");
+        File.SetLastWriteTime(logPath, DateTime.Now.AddDays(-8));
+
+        var delays = 0;
+        MainViewModel vm = null!;
+        vm = fx.CreateVm(
+            confirmHighRisk: _ => true,
+            delay: _ =>
+            {
+                delays++;
+                if (delays == 2)
+                {
+                    fx.Probe.GameRunning = true;
+                    // The 90s confirm is already past the 20s settle window in production.
+                    // A fast test must backdate the stamp or Detect still treats injection as unknown.
+                    var cfg = fx.Store.LoadOrDefault(fx.Paths.ConfigPath, () => new AppConfig());
+                    cfg.LastLaunchRequestedAt = DateTimeOffset.Now.AddMinutes(-5);
+                    cfg.LastApplyStartedAt = cfg.LastLaunchRequestedAt.Value.AddSeconds(-1);
+                    fx.Store.Save(fx.Paths.ConfigPath, cfg);
+                }
+                if (delays == 3)
+                {
+                    vm.GameStatus!.LoaderInjected.Should().NotBe(false);
+                    File.SetLastWriteTime(logPath, DateTime.Now.AddMinutes(1));
+                }
+
+                return Task.CompletedTask;
+            });
+        vm.LaunchMode = LaunchMode.SteamThenExe;
+        vm.LaunchConfirmPollsOverride = 1;
+        vm.LaunchFollowUpPolls = 2;
+
+        await vm.ApplyAndLaunchCommand.ExecuteAsync(null);
+        await vm.LaunchFollowUp;
+
+        vm.LogText.Should().Contain(LocalizationService.T("LogLaunchProcessSeenLate"));
+        vm.GameStatus!.LoaderInjected.Should().NotBe(false);
+        vm.LogText.Should().NotContain("未在本次启动注入");
+    }
+
+    [Fact]
     public async Task ApplyAndLaunch_stamps_apply_started_before_launch()
     {
         using var fx = Fixture.CreateReady();
@@ -246,6 +360,7 @@ public class MainViewModelTests
         Directory.CreateDirectory(Path.Combine(fx.GameRoot, "MelonLoader"));
         File.WriteAllText(logPath, "[14:17:52.025] MelonLoader v0.7.3 Open-Beta\n");
         File.SetLastWriteTime(logPath, DateTime.Now.AddDays(-8));
+        fx.Probe.GameRunning = true;
         fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
         {
             GamePath = fx.GameRoot,
@@ -292,6 +407,7 @@ public class MainViewModelTests
         Directory.CreateDirectory(Path.Combine(fx.GameRoot, "MelonLoader"));
         File.WriteAllText(logPath, "[14:17:52.025] MelonLoader v0.7.1 Open-Beta\n");
         File.SetLastWriteTime(logPath, DateTime.Now.AddDays(-8));
+        fx.Probe.GameRunning = true;
         fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
         {
             GamePath = fx.GameRoot,
@@ -318,6 +434,7 @@ public class MainViewModelTests
         Directory.CreateDirectory(Path.Combine(fx.GameRoot, "MelonLoader"));
         File.WriteAllText(logPath, "[14:17:52.025] MelonLoader v0.7.1 Open-Beta\n");
         File.SetLastWriteTime(logPath, DateTime.Now.AddDays(-8));
+        fx.Probe.GameRunning = true;
         fx.Store.Save(fx.Paths.ConfigPath, new AppConfig
         {
             GamePath = fx.GameRoot,

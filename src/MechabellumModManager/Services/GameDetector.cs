@@ -8,8 +8,9 @@ public sealed class GameDetector
     public static readonly TimeSpan LoaderInjectSettle = TimeSpan.FromSeconds(20);
 
     /// <param name="gameAlreadyRunning">
-    /// Deliberately not part of the injection verdict: a game that was already running proves
-    /// nothing about the launch this session requested. Kept so callers can pass what they know.
+    /// A stale Latest.log after the launch stamp is "not injected" only when the process is
+    /// actually up. If the process never appeared, the missing log update is unknown, not a
+    /// failed injection.
     /// </param>
     public GameStatus Detect(
         string gamePath,
@@ -67,7 +68,8 @@ public sealed class GameDetector
             gamePath,
             lastLaunchRequestedAt,
             applyStartedAt,
-            now ?? DateTimeOffset.Now);
+            now ?? DateTimeOffset.Now,
+            gameAlreadyRunning);
         return new GameStatus
         {
             Kind = GameStatusKind.Ready,
@@ -100,7 +102,8 @@ public sealed class GameDetector
         string gamePath,
         DateTimeOffset? lastLaunchRequestedAt,
         DateTimeOffset? applyStartedAt,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        bool gameAlreadyRunning)
     {
         if (lastLaunchRequestedAt is null)
             return null;
@@ -117,12 +120,17 @@ public sealed class GameDetector
 
         var logPath = Path.Combine(gamePath, "MelonLoader", "Latest.log");
         if (!File.Exists(logPath))
-            return false;
+            return gameAlreadyRunning ? false : null;
 
         try
         {
             var write = new DateTimeOffset(File.GetLastWriteTimeUtc(logPath), TimeSpan.Zero);
-            return write >= since;
+            if (write >= since)
+                return true;
+
+            // Steam can take longer than the settle window. No process and no new log means
+            // the launch has not been observed, not that Melon failed to inject.
+            return gameAlreadyRunning ? false : null;
         }
         catch
         {

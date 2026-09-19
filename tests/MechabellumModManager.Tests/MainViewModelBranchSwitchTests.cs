@@ -1214,12 +1214,14 @@ public class MainViewModelBranchSwitchTests
             BetaBranchName = "publicbeta"
         });
 
+        fx.Probe.GameRunning = true;
         var vm = fx.CreateVm(confirm: _ => true);
         vm.GamePath = fx.SteamLink;
         vm.RefreshStatusCommand.Execute(null);
         vm.GameStatus!.LoaderInjected.Should().BeFalse();
         vm.GameStatus.Message.Should().Contain("未在本次启动注入");
 
+        fx.Probe.GameRunning = false;
         await vm.SwitchToBetaCommand.ExecuteAsync(null);
 
         var cfg = fx.Store.LoadOrDefault(fx.Paths.ConfigPath, () => new AppConfig());
