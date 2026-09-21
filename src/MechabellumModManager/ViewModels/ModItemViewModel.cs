@@ -128,7 +128,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         ModPackageType.MelonUserData => LocalizationService.T("PackageTypeMelonUserData"),
         _ => Package.Type.ToString()
     };
-    public bool HighRisk => Package.HighRisk;
+    public bool HighRisk => RiskHeuristic.DetectionEnabled && Package.HighRisk;
     public string HighRiskLabel => HighRisk
         ? LocalizationService.T("HighRiskYes")
         : LocalizationService.T("HighRiskNo");

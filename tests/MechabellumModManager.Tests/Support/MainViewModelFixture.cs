@@ -244,7 +244,9 @@ public sealed class MainViewModelFixture : IDisposable
         MelonLoaderAssemblyGenerator? melonAssemblyGenerator = null,
         Func<bool>? steamAppMarkedRunning = null,
         ManagerSetupDownloader? setupDownloader = null,
-        Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null)
+        Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null,
+        Func<DiagnosticsFollowUp>? promptDiagnosticsMail = null,
+        Func<string, bool>? tryOpenExternal = null)
     {
         var processStarter = starter ?? new RecordingProcessStarter();
         var launcher = new GameLauncher(processStarter, () => false);
@@ -295,7 +297,9 @@ public sealed class MainViewModelFixture : IDisposable
             promptManagerUpdate: promptManagerUpdate,
             revealInExplorer: revealInExplorer,
             melonAssemblyGenerator: melonAssemblyGenerator,
-            steamAppMarkedRunning: steamAppMarkedRunning ?? (() => false));
+            steamAppMarkedRunning: steamAppMarkedRunning ?? (() => false),
+            promptDiagnosticsMail: promptDiagnosticsMail,
+            tryOpenExternal: tryOpenExternal);
         vm.LaunchFollowUpPolls = 0;
         return vm;
     }

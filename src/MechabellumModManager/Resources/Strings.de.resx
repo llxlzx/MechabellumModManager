@@ -81,6 +81,12 @@
   <data name="Language" xml:space="preserve">
     <value>Sprache</value>
   </data>
+  <data name="UiScale" xml:space="preserve">
+    <value>Oberflächengröße</value>
+  </data>
+  <data name="UiScaleAuto" xml:space="preserve">
+    <value>Automatisch</value>
+  </data>
   <data name="LanguageSystem" xml:space="preserve">
     <value>System folgen</value>
   </data>
@@ -91,7 +97,7 @@
     <value>Credits &amp; Hinweis</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
-    <value>Dieser Mod-Manager wurde von „院长大人“ erstellt. Herzlichen Dank an alle Tester, Spieler, die diesen Manager nutzen, und an die Mod-Entwickler von Mechabellum.
+    <value>Dieser Mod-Manager wurde von „llxmod“ erstellt. Herzlichen Dank an alle Tester, Spieler, die diesen Manager nutzen, und an die Mod-Entwickler von Mechabellum.
 
 1. Dies ist ein unabhängiges Fan-Tool und steht in keiner Verbindung zu Mechabellum, dessen Publishern oder Steam.
 2. Gemeinnützig und kostenlos nutzbar; kein Sponsoring-Einstieg und keine Gebühren. Wenn jemand ihn zur Gewinnerzielung nutzt, lehnen Sie das bitte ab.
@@ -99,7 +105,7 @@
 4. Die Software wird „WIE BESEHEN“ (AS IS) ohne jegliche Gewährleistung bereitgestellt. Sie tragen das Risiko (Spielupdates können Mods oder den Manager beeinträchtigen; Backups werden empfohlen). Autor und verbundene Parteien haften nicht für direkte oder indirekte Schäden aus der Nutzung dieses Managers oder aus dem Bezug, der Installation, Aktivierung oder Verwaltung von Drittanbieter-Mods / Plugins / zugehörigen Dateien darüber.
 5. Drittanbieter-Mods stammen von ihren Autoren; Manager- und Katalogbetreuer garantieren weder Sicherheit noch Rechtmäßigkeit noch Qualität. Aktivierung auf eigenes Risiko. Probleme bitte per E-Mail melden.
 6. Katalogeintrag ist keine Empfehlung; der Betreuer kann Einträge ablehnen, verzögern, Metadaten bearbeiten oder entfernen.
-7. Kontakt: E-Mail llxmod@foxmail.com (Mods / Meldungen / Feedback); QQ 319323959 (Betreuer „院长大人“) als sekundärer Kontakt.
+7. Kontakt: E-Mail llxmod@foxmail.com (Mods / Meldungen / Feedback); QQ 319323959 (Betreuer „llxmod“) als sekundärer Kontakt.
 8. Fortgesetzte Nutzung gilt als Annahme dieser Hinweise. Bei Ablehnung Nutzung sofort beenden und deinstallieren.</value>
   </data>
   <data name="Report" xml:space="preserve">
@@ -142,16 +148,31 @@
     <value>Webmail konnte nicht geöffnet oder die Einreichung nicht vorbereitet werden</value>
   </data>
   <data name="DirectUpload" xml:space="preserve">
-    <value>Whitelist upload</value>
+    <value>Whitelist upload (unfertig)</value>
   </data>
   <data name="DirectUploadTitle" xml:space="preserve">
-    <value>Whitelist upload</value>
+    <value>Whitelist upload (unfertig)</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
     <value>Invite code</value>
   </data>
   <data name="DirectUploadSaveCode" xml:space="preserve">
     <value>Save</value>
+  </data>
+  <data name="DirectUploadSecretId" xml:space="preserve">
+    <value>SecretId</value>
+  </data>
+  <data name="DirectUploadSecretKey" xml:space="preserve">
+    <value>SecretKey</value>
+  </data>
+  <data name="DirectUploadSecretHint" xml:space="preserve">
+    <value>Einmal eintragen. Der Manager schreibt sie in die .cos.yaml im Benutzerordner für coscli. Leeres SecretKey behält den gespeicherten Schlüssel.</value>
+  </data>
+  <data name="DirectUploadSecretSaved" xml:space="preserve">
+    <value>Schlüssel in die lokale coscli-Konfiguration geschrieben.</value>
+  </data>
+  <data name="DirectUploadNeedSecret" xml:space="preserve">
+    <value>Bitte SecretId und SecretKey zusammen eintragen.</value>
   </data>
   <data name="DirectUploadModId" xml:space="preserve">
     <value>Mod Id (folder name)</value>
@@ -172,19 +193,46 @@
     <value>Preview</value>
   </data>
   <data name="DirectUploadPublish" xml:space="preserve">
-    <value>Publish</value>
+    <value>Mod-Dateien hochladen</value>
+  </data>
+  <data name="DirectUploadUpdateCatalog" xml:space="preserve">
+    <value>Katalog mit aktualisieren (nur Hauptschlüssel)</value>
+  </data>
+  <data name="DirectUploadUpdateCatalogHint" xml:space="preserve">
+    <value>Standardmäßig aus lassen. Eingeschaltet überschreibt der Upload den Spiegelkatalog, und nur der Hauptschlüssel auf deinem PC kann das. Für einen Unterkonto-Schlüssel nicht einschalten.</value>
+  </data>
+  <data name="DirectUploadMergeCatalog" xml:space="preserve">
+    <value>Katalog schreiben</value>
+  </data>
+  <data name="DirectUploadFilesUploaded" xml:space="preserve">
+    <value>Die Dateien liegen im eigenen Ordner dieses Mods. Der Katalog ist unverändert. Spieler sehen ihn, nachdem der Katalog geschrieben wurde.</value>
+  </data>
+  <data name="DirectUploadCatalogDenied" xml:space="preserve">
+    <value>Dateien wurden hochgeladen, der Katalog aber nicht. Ein Unterkonto-Schlüssel kann den Katalog nicht ändern. Schreibe den Katalog von deinem eigenen PC.</value>
+  </data>
+  <data name="DirectUploadCatalogWriteFailed" xml:space="preserve">
+    <value>Der Katalog wurde nicht geschrieben. Benutze den Hauptschlüssel auf deinem PC. Ein Unterkonto-Schlüssel kann den Katalog nicht ändern.</value>
+  </data>
+  <data name="DirectUploadMergeSuccess" xml:space="preserve">
+    <value>Dieser Mod steht jetzt im Katalog. Spieler können ihn nach dem Aktualisieren laden.</value>
+  </data>
+  <data name="DirectUploadEntryMissing" xml:space="preserve">
+    <value>Auf dem Spiegel gibt es für diesen Mod noch keinen Eintrag. Die Dateien müssen zuerst hochgeladen werden.</value>
+  </data>
+  <data name="DirectUploadNeedModId" xml:space="preserve">
+    <value>Zuerst die Mod-Id eintragen.</value>
   </data>
   <data name="DirectUploadSuccess" xml:space="preserve">
-    <value>Published to GitHub MechabellumMods. Players see it after refreshing the catalog.</value>
+    <value>Katalog aktualisiert. Spieler können ihn nach dem Aktualisieren aus dem Spiegel laden.</value>
   </data>
   <data name="DirectUploadMirrorLagHint" xml:space="preserve">
-    <value>If you use the domestic mirror, cache may lag until synced.</value>
+    <value>Dieselben Dateien zuerst ins GitHub-Repo MechabellumMods legen und erst danach den Spiegel vollständig synchronisieren. Sonst überschreibt die Synchronisierung diesen Upload.</value>
   </data>
   <data name="DirectUploadFailed" xml:space="preserve">
-    <value>Upload failed</value>
+    <value>Upload fehlgeschlagen</value>
   </data>
   <data name="DirectUploadNotConfigured" xml:space="preserve">
-    <value>Direct-upload API URL is not configured. Deploy the Worker, then set DirectUploadApiBaseUrl or update the app default.</value>
+    <value>Dieser PC kann nicht in den Inlandsspiegel schreiben. coscli installieren und mit einem Konto, das den Bucket schreiben darf, coscli config init ausführen.</value>
   </data>
   <data name="DirectUploadNeedInvite" xml:space="preserve">
     <value>Enter an invite code first.</value>
@@ -255,6 +303,11 @@
   <data name="MailProviderGmail" xml:space="preserve">
     <value>Gmail</value>
   </data>
+  <data name="DiagnosticsMailHint" xml:space="preserve"><value>QQ-Mail oder Gmail kopiert den Entwurf und öffnet Webmail. Discord öffnet GODOG Battalion und kopiert keine Mail. Abbrechen behält nur die gespeicherte ZIP.</value></data>
+  <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>Discord (GODOG Battalion) geöffnet. Bitte dort melden und die ZIP manuell anhängen. Der Mail-Entwurf wurde nicht kopiert.</value></data>
+  <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>Discord konnte nicht geöffnet werden. Öffnen Sie https://discord.gg/CQDkCfDTA manuell und hängen Sie die ZIP an.</value></data>
+  <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>Abgebrochen. Die ZIP ist gespeichert. Keine Mail kopiert und Discord nicht geöffnet.</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>Feedback</value>
   </data>
@@ -315,6 +368,75 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="LaunchMode" xml:space="preserve">
     <value>Startmodus</value>
   </data>
+  <data name="BrowseEllipsis" xml:space="preserve"><value>Durchsuchen…</value></data>
+  <data name="PickGameFolderTitle" xml:space="preserve"><value>Mechabellum-Spielordner wählen</value></data>
+  <data name="PickImportFolderTitle" xml:space="preserve"><value>Zu importierenden Ordner wählen</value></data>
+  <data name="DefaultProfileName" xml:space="preserve"><value>Standard</value></data>
+  <data name="LogGamePathNotFound" xml:space="preserve"><value>Spielordner nicht automatisch gefunden. Wählen Sie den Mechabellum-Installationspfad unter Einstellungen.</value></data>
+  <data name="LogGamePathInvalid" xml:space="preserve"><value>Aktueller Spielpfad ist ungültig. Wählen Sie unter Einstellungen einen Ordner mit Mechabellum.exe.</value></data>
+  <data name="ProfileNew" xml:space="preserve"><value>Neu</value></data>
+  <data name="ProfileRename" xml:space="preserve"><value>Umbenennen</value></data>
+  <data name="ProfileDuplicate" xml:space="preserve"><value>Duplizieren</value></data>
+  <data name="LaunchModeSteamThenExe" xml:space="preserve"><value>Steam zuerst, sonst exe</value></data>
+  <data name="LaunchModeSteamOnly" xml:space="preserve"><value>Nur Steam</value></data>
+  <data name="LaunchModeExeOnly" xml:space="preserve"><value>Nur exe</value></data>
+  <data name="DirtyHintDirty" xml:space="preserve"><value>Profil geändert; Spielordner nicht synchron — «Profil anwenden» klicken</value></data>
+  <data name="DirtyHintClean" xml:space="preserve"><value>Mit Spielordner synchron</value></data>
+  <data name="StatusKindReady" xml:space="preserve"><value>Bereit</value></data>
+  <data name="StatusKindAssembliesMissing" xml:space="preserve"><value>Assemblies ausstehend</value></data>
+  <data name="StatusKindLoaderMissing" xml:space="preserve"><value>Loader fehlt</value></data>
+  <data name="StatusKindLoaderPartial" xml:space="preserve"><value>Loader unvollständig</value></data>
+  <data name="StatusKindGameMissing" xml:space="preserve"><value>Spiel nicht gefunden</value></data>
+  <data name="StatusKindWaitingProcess" xml:space="preserve"><value>Warte auf Spielprozess</value></data>
+  <data name="StatusKindNotInjected" xml:space="preserve"><value>Nicht injiziert</value></data>
+  <data name="StatusKindUnknown" xml:space="preserve"><value>Unbekannt</value></data>
+  <data name="StatusDetailGameMissing" xml:space="preserve"><value>Keine gültige Mechabellum-Installation gefunden (benötigt Mechabellum.exe und GameAssembly.dll).</value></data>
+  <data name="StatusDetailLoaderMissing" xml:space="preserve"><value>Spiel gefunden, aber MelonLoader ist nicht installiert. Oben rechts MelonLoader installieren wählen oder das Setup mit MelonLoader erneut ausführen.</value></data>
+  <data name="StatusDetailLoaderPartial" xml:space="preserve"><value>MelonLoader-Installation unvollständig (Ordner MelonLoader sowie version.dll oder winhttp.dll nötig). Mit MelonLoader installieren ergänzen oder Setup erneut ausführen.</value></data>
+  <data name="StatusDetailAssembliesMissing" xml:space="preserve"><value>MelonLoader ist installiert, aber die Il2Cpp-Assemblys fehlen noch (jetzt oder beim Anwenden eines Profils erzeugen; das erste Mal dauert ein bis zwei Minuten).</value></data>
+  <data name="StatusDetailNotInjected" xml:space="preserve"><value>Loader wurde bei diesem Start nicht injiziert</value></data>
+  <data name="StatusDetailReady" xml:space="preserve"><value>Spiel und MelonLoader sind bereit.</value></data>
+  <data name="StatusDetailReadyVersion" xml:space="preserve"><value>Spiel und MelonLoader sind bereit. Melon {0}</value></data>
+  <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0} (älter als mitgelieferte {1})</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>Einsteiger-Tutorial</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>Einsteiger-Tutorial</value></data>
+  <data name="GuideIntro" xml:space="preserve"><value>Die ersten fünf Schritte reichen für eine Runde. Der Rest ist für danach. Sätze mit dem Warnsymbol müssen gelesen werden.</value></data>
+  <data name="GuideLanguageTitle" xml:space="preserve"><value>1. Sprache wählen</value></data>
+  <data name="GuideLanguageBody" xml:space="preserve"><value>Direkt unten wählen. Diese Seite und der ganze Manager wechseln sofort. Systemsprache ist ebenfalls möglich.</value></data>
+  <data name="GuidePathTitle" xml:space="preserve"><value>3. Spielordner prüfen</value></data>
+  <data name="GuidePathBody" xml:space="preserve"><value>Der Pfad in den Einstellungen muss der Ordner mit Mechabellum.exe sein. Hat das Setup ihn schon eingetragen, nur prüfen.</value></data>
+  <data name="GuideLoaderTitle" xml:space="preserve"><value>2. Status oben lesen</value></data>
+  <data name="GuideLoaderBody" xml:space="preserve"><value>Die Mitte der Leiste ist das Prüfergebnis. Weiter nur bei Bereit. Sonst erscheint rechts MelonLoader installieren/aktualisieren. Die Zeile darunter ist die Diagnose: ob gerade etwas das Spiel blockiert.</value></data>
+  <data name="GuideNoteMelon" xml:space="preserve"><value>Spiel vollständig beenden, bevor installiert wird.</value></data>
+  <data name="GuideLaunchTitle" xml:space="preserve"><value>Startart</value></data>
+  <data name="GuideLaunchBody" xml:space="preserve"><value>Vorgabe ist „Steam zuerst, sonst exe“. Ohne Injection in den Einstellungen auf „Nur exe“ wechseln.</value></data>
+  <data name="GuideBrowseTitle" xml:space="preserve"><value>4. Hinzufügen, dann ankreuzen</value></data>
+  <data name="GuideBrowseBody" xml:space="preserve"><value>Oben Werkstatt öffnen, ein Mod wählen und zur Bibliothek hinzufügen. Das aktiviert es noch nicht. Danach unter Installiert die gewünschten ankreuzen.</value></data>
+  <data name="GuideNoteRisk" xml:space="preserve"><value>Ohne Häkchen kommt das Mod nicht ins Spiel.</value></data>
+  <data name="GuideLibraryTitle" xml:space="preserve"><value>Installiert</value></data>
+  <data name="GuideLibraryBody" xml:space="preserve"><value>Unter Installiert die gewünschten Mods ankreuzen.</value></data>
+  <data name="GuideProfilesTitle" xml:space="preserve"><value>Profile</value></data>
+  <data name="GuideProfilesBody" xml:space="preserve"><value>Die Liste oben hat schon ein Profil. Neu anlegen, umbenennen oder duplizieren erst, wenn mehrere Auswahlen gebraucht werden.</value></data>
+  <data name="GuideApplyTitle" xml:space="preserve"><value>5. Ohne Anwenden bleibt das Spiel unverändert</value></data>
+  <data name="GuideApplyBody" xml:space="preserve"><value>Ein Häkchen ändert nur das Profil, nicht sofort den Spielordner. Steht oben „Profil geändert; Spielordner nicht synchron — «Profil anwenden» klicken“, ist noch nichts geschrieben.</value></data>
+  <data name="GuideNoteApply" xml:space="preserve"><value>Oben „Anwenden &amp; starten“ schreibt zuerst den Spielordner und startet dann. Nur schreiben, ohne Start: „Profil anwenden“.</value></data>
+  <data name="GuideLaterTitle" xml:space="preserve"><value>Nach der ersten Runde</value></data>
+  <data name="GuideImportTitle" xml:space="preserve"><value>Import</value></data>
+  <data name="GuideImportBody" xml:space="preserve"><value>Unter Installiert lassen sich dll, zip oder Ordner importieren, oder Mods aus dem Spielordner zurückholen.</value></data>
+  <data name="GuideUpdatesTitle" xml:space="preserve"><value>Updates und Konsole</value></data>
+  <data name="GuideUpdatesBody" xml:space="preserve"><value>In den Einstellungen lassen sich Mod-Updates beim Start prüfen. Die Melon-Konsole auszublenden gilt erst beim nächsten Spielstart.</value></data>
+  <data name="GuideBranchTitle" xml:space="preserve"><value>Release und Beta</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>Unter Einstellungen lassen sich zwei Ordner aktivieren und zwischen Release und Beta wechseln.</value></data>
+  <data name="GuideNoteBranch" xml:space="preserve"><value>Beim ersten Mal nicht einschalten. Zwei Ordner brauchen etwa zwei Spielkopien. Im Zweifel bei einem Ordner bleiben.</value></data>
+  <data name="GuideSupportTitle" xml:space="preserve"><value>Diagnose, Repository und E-Mail</value></data>
+  <data name="GuideSupportBody" xml:space="preserve"><value>Die Zeile unter dem Status ist die aktuelle Diagnose. Reicht das nicht, Diagnose exportieren in den Einstellungen oder neben dem Protokoll unten rechts. ZIP an llxmod@foxmail.com senden oder auf Discord melden (GODOG Battalion, https://discord.gg/CQDkCfDTA). Installer und Quellcode: https://github.com/llxlzx/MechabellumModManager</value></data>
+  <data name="GuideCommunityTitle" xml:space="preserve"><value>Einsenden und melden</value></data>
+  <data name="GuideCommunityBody" xml:space="preserve"><value>Oben gibt es Mod einsenden. Melden steht am einzelnen Eintrag. Direkt-Upload braucht einen Code und ist für die meisten nicht nötig.</value></data>
+  <data name="GuideOpenSettings" xml:space="preserve"><value>Einstellungen öffnen</value></data>
+  <data name="GuideOpenCatalog" xml:space="preserve"><value>Werkstatt öffnen</value></data>
+  <data name="GuideOpenLibrary" xml:space="preserve"><value>Installiert öffnen</value></data>
+  <data name="GuideDismissStartup" xml:space="preserve"><value>Beim Start nicht mehr öffnen</value></data>
+
   <data name="PortableDataRoot" xml:space="preserve">
     <value>Portabler Datenordner (data neben der App; Neustart nach Änderung)</value>
   </data>
@@ -729,6 +851,88 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>Kein blockierendes Problem gefunden</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Den Hinweisen im Manager folgen.</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Die Spiegel-Adresse muss https verwenden; Einstellung ignoriert: {0}</value></data>
+  <data name="LogDualConfigReadFailed" xml:space="preserve"><value>Zweizweig-Konfiguration konnte nicht gelesen werden (ignoriert): {0}</value></data>
+  <data name="LogAutoLocatedGameDir" xml:space="preserve"><value>Spielordner automatisch gefunden: {0}</value></data>
+  <data name="LogEnableDualRollbackError" xml:space="preserve"><value>Rollback nach Aktivierung Zweizweig fehlgeschlagen: {0}</value></data>
+  <data name="LogHideConsoleWriteFailed" xml:space="preserve"><value>Schreiben von hide_console fehlgeschlagen ({0}): {1}</value></data>
+  <data name="LogHollowStoreCheckFailed" xml:space="preserve"><value>Prüfung unvollständiger Stores fehlgeschlagen: {0}</value></data>
+  <data name="LogAskGenerateAssembliesError" xml:space="preserve"><value>Fehler beim Abfragen der Assembly-Generierung: {0}</value></data>
+  <data name="LogAutoImportedFromGame" xml:space="preserve"><value>Automatisch {0} Paket(e) aus dem Spiel importiert ({1} übersprungen).</value></data>
+  <data name="LogAutoImportFromGameFailed" xml:space="preserve"><value>Automatischer Import aus dem Spiel fehlgeschlagen: {0}</value></data>
+  <data name="LogImportFromGameDone" xml:space="preserve"><value>Import aus dem Spiel fertig: {0} importiert, {1} übersprungen.</value></data>
+  <data name="LogImportFromGameFailed" xml:space="preserve"><value>Import aus dem Spiel fehlgeschlagen: {0}</value></data>
+  <data name="LogUnityDepsSeedFailed" xml:space="preserve"><value>Warnung: UnityDependencies-Seed fehlgeschlagen — {0}</value></data>
+  <data name="LogMelonOptimizeConfigFailed" xml:space="preserve"><value>MelonLoader-Optimierungskonfiguration fehlgeschlagen: {0}</value></data>
+  <data name="LogCleanupBepInExDoorstopFailed" xml:space="preserve"><value>Bereinigung von BepInEx Doorstop fehlgeschlagen: {0}</value></data>
+  <data name="LogNoProfileSelected" xml:space="preserve"><value>Kein Profil ausgewählt.</value></data>
+  <data name="LogAssembliesNotReadyDeploy" xml:space="preserve"><value>MelonLoader-Assemblies nicht bereit; bitte zuerst generieren, dann bereitstellen.</value></data>
+  <data name="LogGameStatusNotReadyDeploy" xml:space="preserve"><value>Spielstatus nicht bereit; Bereitstellung nicht möglich.</value></data>
+  <data name="LogConfirmGameProcessFailed" xml:space="preserve"><value>Spielprozess konnte nicht bestätigt werden: {0}</value></data>
+  <data name="LogCheckMelonInjectFailed" xml:space="preserve"><value>Melon-Injektionsstatus konnte nicht geprüft werden: {0}</value></data>
+  <data name="LogMelonRedistUseCacheDir" xml:space="preserve"><value>Installationsordner nicht beschreibbar; lokaler Cache für Melon-Offlinepakete: {0}</value></data>
+  <data name="LogMelonRedistPreparing" xml:space="preserve"><value>Melon-Runtime-Offlinepaket wird vorbereitet (Spiegel bevorzugt)…</value></data>
+  <data name="LogUpdatedCategoryTags" xml:space="preserve"><value>Kategorie/Tags aktualisiert: {0}</value></data>
+  <data name="LogJoiningLibrarySkipCatalogRefresh" xml:space="preserve"><value>Zur lokalen Bibliothek hinzufügen; Katalogaktualisierung übersprungen.</value></data>
+  <data name="LogFetchingModCatalog" xml:space="preserve"><value>Mod-Katalog wird geladen…</value></data>
+  <data name="LogSkippedUpToDateCatalogItems" xml:space="preserve"><value>{0} bereits aktuelle Katalogeinträge übersprungen.</value></data>
+  <data name="LogCatalogItemNoUpdateMatch" xml:space="preserve"><value>「{0}」hat keinen aktualisierbaren Treffer im Katalog.</value></data>
+  <data name="LogAlreadyLatestSkipDownload" xml:space="preserve"><value>「{0}」ist bereits aktuell; Download übersprungen.</value></data>
+  <data name="LogCancelledHighRiskCatalogJoin" xml:space="preserve"><value>Beitritt zu riskantem Katalogeintrag abgebrochen: {0}</value></data>
+  <data name="LogWriteCatalogMetaFailed" xml:space="preserve"><value>Schreiben der Katalog-Metadaten fehlgeschlagen: {0}</value></data>
+  <data name="LogUpdatedToCatalogVersion" xml:space="preserve"><value>Auf Katalogversion aktualisiert: {0} ({1})</value></data>
+  <data name="LogUpdateCancelledBusy" xml:space="preserve"><value>Update von 「{0}」abgebrochen: kritische Operation läuft.</value></data>
+  <data name="LogUpdateCancelledGameRunning" xml:space="preserve"><value>Update von 「{0}」abgebrochen: Spiel läuft.</value></data>
+  <data name="LogCatalogVersionNoKeepableCopy" xml:space="preserve"><value>「{0}」hat eine Katalogversion, aber keine behaltbare Kopie gefunden.</value></data>
+  <data name="LogRemovedDuplicateOldKept" xml:space="preserve"><value>Doppelte alte Version 「{0}」entfernt, behalten {1}.</value></data>
+  <data name="LogProfileRetargetFailed" xml:space="preserve"><value>Profil-Umzielung auf neue Version fehlgeschlagen: {0} → {1} ({2})</value></data>
+  <data name="LogRemovedOldVersion" xml:space="preserve"><value>Alte Version entfernt: {0} ({1})</value></data>
+  <data name="LogOldVersionDisabledNotDeleted" xml:space="preserve"><value>Alte Version deaktiviert, Löschen fehlgeschlagen: {0} ({1})</value></data>
+  <data name="LogAutoCleanedDuplicateMods" xml:space="preserve"><value>Automatisch {0} doppelte alte Mod(s) bereinigt.</value></data>
+  <data name="LogProfileCreated" xml:space="preserve"><value>Profil erstellt: {0}</value></data>
+  <data name="LogProfileCreateFailed" xml:space="preserve"><value>Profil erstellen fehlgeschlagen: {0}</value></data>
+  <data name="LogProfileRenamed" xml:space="preserve"><value>Profil umbenannt: {0}</value></data>
+  <data name="LogProfileRenameFailed" xml:space="preserve"><value>Profil umbenennen fehlgeschlagen: {0}</value></data>
+  <data name="LogProfileDuplicated" xml:space="preserve"><value>Profil dupliziert: {0}</value></data>
+  <data name="LogProfileDuplicateFailed" xml:space="preserve"><value>Profil duplizieren fehlgeschlagen: {0}</value></data>
+  <data name="LogProfileDeleted" xml:space="preserve"><value>Profil gelöscht: {0}</value></data>
+  <data name="LogProfileDeleteFailed" xml:space="preserve"><value>Profil löschen fehlgeschlagen: {0}</value></data>
+  <data name="LogModDeleted" xml:space="preserve"><value>Mod gelöscht: {0}</value></data>
+  <data name="LogModDeleteFailed" xml:space="preserve"><value>Mod löschen fehlgeschlagen: {0}</value></data>
+  <data name="LogHighRiskTempMark" xml:space="preserve"><value>{0} Hochrisiko-Markierung (temporär): {1}; nach Aktualisierung erneut per Namensschlüsselwörtern bewertet.</value></data>
+  <data name="LogUpdateHighRiskMarkFailed" xml:space="preserve"><value>Aktualisieren der Hochrisiko-Markierung fehlgeschlagen: {0}</value></data>
+  <data name="LogImportedHighRiskNotEnabled" xml:space="preserve"><value>Hochrisiko-Mod importiert, aber nicht aktiviert: {0}</value></data>
+  <data name="LogAutoEnableFailed" xml:space="preserve"><value>Automatisches Aktivieren von {0} fehlgeschlagen: {1}</value></data>
+  <data name="LogCancelledEnableHighRisk" xml:space="preserve"><value>Aktivierung des Hochrisiko-Mods abgebrochen.</value></data>
+  <data name="LogEnableDisableAction" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="LogActionDisable" xml:space="preserve"><value>Deaktivieren</value></data>
+  <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>Aktualisieren des Aktivierungsstatus fehlgeschlagen: {0}</value></data>
+  <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>Hochrisiko-Markierung für {0} fehlgeschlagen: {1}</value></data>
+  <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>Lokales Paket &apos;{0}&apos;: ungültige Kategorieüberschreibung &apos;{1}&apos;; als Katalog/unkategorisiert behandelt.</value></data>
+  <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>Sicherstellen von Zweizweig-MelonLoader beim Start fehlgeschlagen: {0}</value></data>
+  <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>Prüfung des Ziel-Stores vor Wechsel fehlgeschlagen: {0}</value></data>
+  <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>ACF-Snapshot für {0} vor Wechsel nicht gespeichert: {1}</value></data>
+  <data name="LogRestoredTargetAcfSnapshot" xml:space="preserve"><value>Steam-Manifest-Snapshot des Zielzweigs wiederhergestellt (erneuter Download vermieden)</value></data>
+  <data name="LogSwitchBranchFailed" xml:space="preserve"><value>Zweigwechsel fehlgeschlagen: {0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardArchive" xml:space="preserve"><value>{0} Steam-Manifest-Snapshot gespeichert (Assistent-Archivfenster) für nächsten Wechsel ohne Download</value></data>
+  <data name="LogWizardArchiveSnapshotMissed" xml:space="preserve"><value>Snapshot für {0} vor Assistent-Archiv nicht gespeichert (nicht blockierend): {1}</value></data>
+  <data name="LogWaitOtherDownloadError" xml:space="preserve"><value>Fehler beim Warten auf Download des anderen Zweigs: {0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardDownload" xml:space="preserve"><value>{0} Steam-Manifest-Snapshot gespeichert (Assistent-Downloadfenster) für nächsten Wechsel ohne Download</value></data>
+  <data name="LogDualLinkedMelonSyncCancelled" xml:space="preserve"><value>Beide Stores verknüpft; Melon-Sync abgebrochen, Settlement fortgesetzt.</value></data>
+  <data name="LogDualLinkedMelonSyncIncomplete" xml:space="preserve"><value>Beide Stores verknüpft; Melon-Sync unvollständig: {0}</value></data>
+  <data name="LogPostLinkSettleFailed" xml:space="preserve"><value>Settlement nach Verknüpfung fehlgeschlagen: {0}</value></data>
+  <data name="LogEnsureDualMelonFailed" xml:space="preserve"><value>Sicherstellen von Zweizweig-MelonLoader fehlgeschlagen: {0}</value></data>
+  <data name="LogGeneratingMelonAssembliesFor" xml:space="preserve"><value>MelonLoader-Assemblies für 「{0}」werden generiert…</value></data>
+  <data name="LogPostSettleAcfSnapshotMissed" xml:space="preserve"><value>ACF-Snapshot nach Settlement nicht gespeichert: {0}</value></data>
+  <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>{0} Steam-Manifest-Snapshot gespeichert für nächsten Wechsel ohne Download</value></data>
+  <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>Steam-Update-Status konnte nicht geprüft werden: {0}</value></data>
+  <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>Katalogeintrag &apos;{0}&apos;: ungültige Kategorie &apos;{1}&apos;; als unkategorisiert behandelt.</value></data>
+  <data name="LogImportedDll" xml:space="preserve"><value>DLL importiert: {0} ({1})</value></data>
+  <data name="LogImportCancelledNoType" xml:space="preserve"><value>Import abgebrochen (kein Typ gewählt)</value></data>
+  <data name="LogImportDllFailed" xml:space="preserve"><value>DLL-Import fehlgeschlagen: {0}</value></data>
+  <data name="LogImportedFolder" xml:space="preserve"><value>Ordner importiert: {0} Paket(e)</value></data>
+  <data name="LogImportFolderFailed" xml:space="preserve"><value>Ordner-Import fehlgeschlagen: {0}</value></data>
+  <data name="LogImportedZip" xml:space="preserve"><value>Zip importiert: {0} Paket(e)</value></data>
+  <data name="LogImportZipFailed" xml:space="preserve"><value>Zip-Import fehlgeschlagen: {0}</value></data>
   <data name="UpdateStatusChecking" xml:space="preserve"><value>Suche nach Updates…</value></data>
   <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>Update-Prüfung fehlgeschlagen: {0}</value></data>
   <data name="UpdateUiFailedNotNetwork" xml:space="preserve"><value>Fehler in der Oberfläche des Update-Dialogs (ignoriert, zählt nicht als Netzwerkfehler). „Updates prüfen“ erneut versuchen oder den Manager neu starten.</value></data>

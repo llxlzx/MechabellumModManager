@@ -27,7 +27,7 @@ public sealed class GameDetector
             {
                 Kind = GameStatusKind.GameMissing,
                 GamePath = gamePath ?? "",
-                Message = "未找到有效的 Mechabellum 安装（需要 Mechabellum.exe 与 GameAssembly.dll）。"
+                Message = FormatMessage(GameStatusKind.GameMissing, null, null)
             };
         }
 
@@ -40,7 +40,7 @@ public sealed class GameDetector
             {
                 Kind = GameStatusKind.GameOkLoaderMissing,
                 GamePath = gamePath,
-                Message = "已找到游戏，但未安装 MelonLoader。可点右上角「安装 MelonLoader」，或重新运行安装包勾选 MelonLoader。"
+                Message = FormatMessage(GameStatusKind.GameOkLoaderMissing, null, null)
             };
 
         if (!(melon && proxy))
@@ -48,7 +48,7 @@ public sealed class GameDetector
             {
                 Kind = GameStatusKind.LoaderPartial,
                 GamePath = gamePath,
-                Message = "MelonLoader 安装不完整（需要 MelonLoader 目录以及 version.dll 或 winhttp.dll）。可点「安装 MelonLoader」补全，或重新运行安装包。"
+                Message = FormatMessage(GameStatusKind.LoaderPartial, null, null)
             };
 
         var version = MelonLoaderVersionGate.TryReadDisplayVersion(gamePath);
@@ -59,7 +59,7 @@ public sealed class GameDetector
             {
                 Kind = GameStatusKind.LoaderPresentAssembliesMissing,
                 GamePath = gamePath,
-                Message = "MelonLoader 框架已安装，但尚未生成 Il2Cpp 程序集（可立即生成，或稍后在应用方案时生成；首次约一两分钟）。",
+                Message = FormatMessage(GameStatusKind.LoaderPresentAssembliesMissing, version, null),
                 MelonLoaderVersion = version,
                 LatestLogAge = logAge
             };
@@ -74,7 +74,7 @@ public sealed class GameDetector
         {
             Kind = GameStatusKind.Ready,
             GamePath = gamePath,
-            Message = FormatReadyMessage(version, injected),
+            Message = FormatMessage(GameStatusKind.Ready, version, injected),
             MelonLoaderVersion = version,
             LatestLogAge = logAge,
             LoaderInjected = injected
@@ -84,18 +84,33 @@ public sealed class GameDetector
     public static bool HasIl2CppAssemblies(string gamePath) =>
         File.Exists(Path.Combine(gamePath, "MelonLoader", "Il2CppAssemblies", "Assembly-CSharp.dll"));
 
+    /// <summary>Status sentence for the current UI language. Safe to call again after a language switch.</summary>
+    public static string FormatMessage(GameStatusKind kind, string? melonVersion, bool? loaderInjected) =>
+        kind switch
+        {
+            GameStatusKind.GameMissing => LocalizationService.T("StatusDetailGameMissing"),
+            GameStatusKind.GameOkLoaderMissing => LocalizationService.T("StatusDetailLoaderMissing"),
+            GameStatusKind.LoaderPartial => LocalizationService.T("StatusDetailLoaderPartial"),
+            GameStatusKind.LoaderPresentAssembliesMissing => LocalizationService.T("StatusDetailAssembliesMissing"),
+            GameStatusKind.Ready => FormatReadyMessage(melonVersion, loaderInjected),
+            _ => LocalizationService.T("StatusKindUnknown")
+        };
+
     static string FormatReadyMessage(string? version, bool? injected)
     {
         if (injected == false)
-            return "Loader 未在本次启动注入";
+            return LocalizationService.T("StatusDetailNotInjected");
 
         if (string.IsNullOrWhiteSpace(version))
-            return "游戏与 MelonLoader 已就绪。";
+            return LocalizationService.T("StatusDetailReady");
 
         if (MelonLoaderVersionGate.ShouldUpgradeInstalled(version))
-            return $"Melon {version}（低于内置 {MelonLoaderVersionGate.FormatBundledMinimum()}）";
+            return string.Format(
+                LocalizationService.T("StatusDetailVersionBelow"),
+                version,
+                MelonLoaderVersionGate.FormatBundledMinimum());
 
-        return $"游戏与 MelonLoader 已就绪。Melon {version}";
+        return string.Format(LocalizationService.T("StatusDetailReadyVersion"), version);
     }
 
     static bool? EvaluateInjection(

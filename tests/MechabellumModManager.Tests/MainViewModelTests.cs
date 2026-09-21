@@ -489,27 +489,16 @@ public class MainViewModelTests
     }
 
     [Fact]
-    public void HighRisk_enable_cancelled_when_confirm_returns_false()
+    public void HighRisk_mark_does_not_block_enable_while_detection_is_paused()
     {
         using var fx = Fixture.CreateReady(highRisk: true);
         var vm = fx.CreateVm(confirmHighRisk: _ => false);
 
         vm.Mods[0].IsEnabled = true;
 
-        vm.Mods[0].IsEnabled.Should().BeFalse();
-        vm.LogText.Should().Contain("已取消启用高风险");
-        vm.IsDirty.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Default_confirmHighRisk_denies_high_risk_enable()
-    {
-        using var fx = Fixture.CreateReady(highRisk: true);
-        var vm = fx.CreateVm(confirmHighRisk: null, preserveNullConfirmHighRisk: true);
-
-        vm.Mods[0].IsEnabled = true;
-
-        vm.Mods[0].IsEnabled.Should().BeFalse();
+        vm.Mods[0].IsEnabled.Should().BeTrue();
+        vm.Mods[0].HighRisk.Should().BeFalse();
+        vm.LogText.Should().NotContain("已取消启用高风险");
     }
 
     [Fact]

@@ -19,7 +19,8 @@ public enum DirectUploadErrorCode
     UpstreamGithub,
     Internal,
     Network,
-    NotConfigured
+    NotConfigured,
+    EntryNotFound
 }
 
 public sealed record DirectUploadAuthResult(bool Ok, string? InviteId, DirectUploadErrorCode Error);

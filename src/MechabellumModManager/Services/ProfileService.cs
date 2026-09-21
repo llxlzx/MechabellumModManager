@@ -19,7 +19,8 @@ public sealed class ProfileService
     {
         Directory.CreateDirectory(_paths.ProfilesDir);
         var path = ProfilePath("default");
-        const string defaultDisplayName = "默认";
+        const string defaultDisplayNameKey = "DefaultProfileName";
+        var defaultDisplayName = LocalizationService.T(defaultDisplayNameKey);
 
         if (File.Exists(path))
         {

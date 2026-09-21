@@ -81,6 +81,12 @@
   <data name="Language" xml:space="preserve">
     <value>Язык</value>
   </data>
+  <data name="UiScale" xml:space="preserve">
+    <value>Масштаб интерфейса</value>
+  </data>
+  <data name="UiScaleAuto" xml:space="preserve">
+    <value>Авто</value>
+  </data>
   <data name="LanguageSystem" xml:space="preserve">
     <value>Как в системе</value>
   </data>
@@ -91,7 +97,7 @@
     <value>Авторы и отказ</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
-    <value>Этот менеджер модов создан «院长大人». Искренняя благодарность всем тестировщикам, игрокам, использующим этот менеджер, и авторам модов Mechabellum.
+    <value>Этот менеджер модов создан «llxmod». Искренняя благодарность всем тестировщикам, игрокам, использующим этот менеджер, и авторам модов Mechabellum.
 
 1. Это независимый фан-инструмент; он не связан с Mechabellum, его издателями или Steam.
 2. Некоммерческий и бесплатный; без спонсорства и платы. Если кто-то использует менеджер ради прибыли, пожалуйста, не поддерживайте это.
@@ -99,7 +105,7 @@
 4. ПО предоставляется «КАК ЕСТЬ» (AS IS) без каких-либо гарантий. Риск несёт пользователь (обновления игры могут сломать моды или менеджер; рекомендуется делать резервные копии). Автор и связанные стороны не отвечают за прямые или косвенные убытки от использования менеджера или от получения, установки, включения или управления сторонними модами / плагинами / связанными файлами через него.
 5. Сторонние моды предоставляют их авторы; сопровождающий менеджера и каталога не гарантирует безопасность, законность или качество. Включение — на ваш риск. О проблемах сообщайте по электронной почте.
 6. Включение в каталог не означает одобрения; сопровождающий может отказать, отложить, изменить метаданные или удалить запись.
-7. Контакт: email llxmod@foxmail.com (моды / жалобы / отзывы); QQ 319323959 (сопровождающий «院长大人») — дополнительно.
+7. Контакт: email llxmod@foxmail.com (моды / жалобы / отзывы); QQ 319323959 (сопровождающий «llxmod») — дополнительно.
 8. Продолжение использования означает принятие этого уведомления. При несогласии немедленно прекратите использование и удалите программу.</value>
   </data>
   <data name="Report" xml:space="preserve">
@@ -142,16 +148,31 @@
     <value>Не удалось открыть веб-почту или подготовить заявку</value>
   </data>
   <data name="DirectUpload" xml:space="preserve">
-    <value>Whitelist upload</value>
+    <value>Whitelist upload (не готово)</value>
   </data>
   <data name="DirectUploadTitle" xml:space="preserve">
-    <value>Whitelist upload</value>
+    <value>Whitelist upload (не готово)</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
     <value>Invite code</value>
   </data>
   <data name="DirectUploadSaveCode" xml:space="preserve">
     <value>Save</value>
+  </data>
+  <data name="DirectUploadSecretId" xml:space="preserve">
+    <value>SecretId</value>
+  </data>
+  <data name="DirectUploadSecretKey" xml:space="preserve">
+    <value>SecretKey</value>
+  </data>
+  <data name="DirectUploadSecretHint" xml:space="preserve">
+    <value>Достаточно ввести один раз. Менеджер запишет их в .cos.yaml в папке пользователя для coscli. Пустой ключ оставляет уже сохранённый.</value>
+  </data>
+  <data name="DirectUploadSecretSaved" xml:space="preserve">
+    <value>Ключ записан в локальную конфигурацию coscli.</value>
+  </data>
+  <data name="DirectUploadNeedSecret" xml:space="preserve">
+    <value>Введите и SecretId, и SecretKey.</value>
   </data>
   <data name="DirectUploadModId" xml:space="preserve">
     <value>Mod Id (folder name)</value>
@@ -172,19 +193,46 @@
     <value>Preview</value>
   </data>
   <data name="DirectUploadPublish" xml:space="preserve">
-    <value>Publish</value>
+    <value>Загрузить файлы мода</value>
+  </data>
+  <data name="DirectUploadUpdateCatalog" xml:space="preserve">
+    <value>Также обновить каталог (только главный ключ)</value>
+  </data>
+  <data name="DirectUploadUpdateCatalogHint" xml:space="preserve">
+    <value>Оставьте выключенным. Включённый пункт перезаписывает каталог зеркала, и это может только главный ключ на вашем компьютере. Для ключа суб-аккаунта не включайте.</value>
+  </data>
+  <data name="DirectUploadMergeCatalog" xml:space="preserve">
+    <value>Записать каталог</value>
+  </data>
+  <data name="DirectUploadFilesUploaded" xml:space="preserve">
+    <value>Файлы лежат в собственной папке этого мода. Каталог не изменён. Игроки увидят его после записи каталога.</value>
+  </data>
+  <data name="DirectUploadCatalogDenied" xml:space="preserve">
+    <value>Файлы загружены, но каталог не записан. Ключ суб-аккаунта не может менять каталог. Запишите каталог со своего компьютера.</value>
+  </data>
+  <data name="DirectUploadCatalogWriteFailed" xml:space="preserve">
+    <value>Каталог не записан. Используйте главный ключ на своём компьютере. Ключ суб-аккаунта не может менять каталог.</value>
+  </data>
+  <data name="DirectUploadMergeSuccess" xml:space="preserve">
+    <value>Этот мод записан в каталог. Игроки смогут скачать его после обновления.</value>
+  </data>
+  <data name="DirectUploadEntryMissing" xml:space="preserve">
+    <value>На зеркале ещё нет записи этого мода. Сначала пусть загрузят файлы.</value>
+  </data>
+  <data name="DirectUploadNeedModId" xml:space="preserve">
+    <value>Сначала укажите Mod Id.</value>
   </data>
   <data name="DirectUploadSuccess" xml:space="preserve">
-    <value>Published to GitHub MechabellumMods. Players see it after refreshing the catalog.</value>
+    <value>Каталог обновлён. Игроки смогут скачать мод из зеркала после обновления.</value>
   </data>
   <data name="DirectUploadMirrorLagHint" xml:space="preserve">
-    <value>If you use the domestic mirror, cache may lag until synced.</value>
+    <value>Сначала положите те же файлы в репозиторий GitHub MechabellumMods и только потом запускайте полную синхронизацию зеркала. Иначе синхронизация затрёт эту загрузку старым каталогом.</value>
   </data>
   <data name="DirectUploadFailed" xml:space="preserve">
-    <value>Upload failed</value>
+    <value>Загрузка не удалась</value>
   </data>
   <data name="DirectUploadNotConfigured" xml:space="preserve">
-    <value>Direct-upload API URL is not configured. Deploy the Worker, then set DirectUploadApiBaseUrl or update the app default.</value>
+    <value>Этот компьютер не может писать во внутреннее зеркало. Установите coscli и выполните coscli config init с учётной записью, которой разрешена запись в бакет.</value>
   </data>
   <data name="DirectUploadNeedInvite" xml:space="preserve">
     <value>Enter an invite code first.</value>
@@ -255,6 +303,11 @@
   <data name="MailProviderGmail" xml:space="preserve">
     <value>Gmail</value>
   </data>
+  <data name="DiagnosticsMailHint" xml:space="preserve"><value>QQ Mail или Gmail копируют черновик и открывают почту. Discord открывает GODOG Battalion и ничего не копирует. Отмена оставляет только сохранённый zip.</value></data>
+  <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>Открыт Discord (GODOG Battalion). Напишите в канале и приложите zip вручную. Черновик письма не копировался.</value></data>
+  <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>Не удалось открыть Discord. Откройте https://discord.gg/CQDkCfDTA вручную и приложите zip.</value></data>
+  <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>Отменено. Zip сохранён. Письмо не копировалось, Discord не открывался.</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>Отзыв</value>
   </data>
@@ -315,6 +368,75 @@
   <data name="LaunchMode" xml:space="preserve">
     <value>Режим запуска</value>
   </data>
+  <data name="BrowseEllipsis" xml:space="preserve"><value>Обзор…</value></data>
+  <data name="PickGameFolderTitle" xml:space="preserve"><value>Выберите папку Mechabellum</value></data>
+  <data name="PickImportFolderTitle" xml:space="preserve"><value>Выберите папку для импорта</value></data>
+  <data name="DefaultProfileName" xml:space="preserve"><value>По умолчанию</value></data>
+  <data name="LogGamePathNotFound" xml:space="preserve"><value>Папка игры не найдена автоматически. Укажите путь к Mechabellum в «Параметрах».</value></data>
+  <data name="LogGamePathInvalid" xml:space="preserve"><value>Текущий путь к игре недействителен. Укажите папку с Mechabellum.exe в «Параметрах».</value></data>
+  <data name="ProfileNew" xml:space="preserve"><value>Создать</value></data>
+  <data name="ProfileRename" xml:space="preserve"><value>Переименовать</value></data>
+  <data name="ProfileDuplicate" xml:space="preserve"><value>Дублировать</value></data>
+  <data name="LaunchModeSteamThenExe" xml:space="preserve"><value>Сначала Steam, иначе exe</value></data>
+  <data name="LaunchModeSteamOnly" xml:space="preserve"><value>Только Steam</value></data>
+  <data name="LaunchModeExeOnly" xml:space="preserve"><value>Только exe</value></data>
+  <data name="DirtyHintDirty" xml:space="preserve"><value>Профиль изменён; папка игры не синхронизирована — нажмите «Применить»</value></data>
+  <data name="DirtyHintClean" xml:space="preserve"><value>Синхронизировано с папкой игры</value></data>
+  <data name="StatusKindReady" xml:space="preserve"><value>Готово</value></data>
+  <data name="StatusKindAssembliesMissing" xml:space="preserve"><value>Сборки не сгенерированы</value></data>
+  <data name="StatusKindLoaderMissing" xml:space="preserve"><value>Нет Loader</value></data>
+  <data name="StatusKindLoaderPartial" xml:space="preserve"><value>Loader неполный</value></data>
+  <data name="StatusKindGameMissing" xml:space="preserve"><value>Игра не найдена</value></data>
+  <data name="StatusKindWaitingProcess" xml:space="preserve"><value>Ожидание процесса игры</value></data>
+  <data name="StatusKindNotInjected" xml:space="preserve"><value>Не внедрено</value></data>
+  <data name="StatusKindUnknown" xml:space="preserve"><value>Неизвестно</value></data>
+  <data name="StatusDetailGameMissing" xml:space="preserve"><value>Не найдена установка Mechabellum (нужны Mechabellum.exe и GameAssembly.dll).</value></data>
+  <data name="StatusDetailLoaderMissing" xml:space="preserve"><value>Игра найдена, но MelonLoader не установлен. Нажмите «Установить MelonLoader» справа сверху или переустановите с галочкой MelonLoader.</value></data>
+  <data name="StatusDetailLoaderPartial" xml:space="preserve"><value>Установка MelonLoader неполная (нужны папка MelonLoader и version.dll или winhttp.dll). Нажмите «Установить MelonLoader» или переустановите.</value></data>
+  <data name="StatusDetailAssembliesMissing" xml:space="preserve"><value>MelonLoader установлен, но сборки Il2Cpp ещё не созданы (можно создать сейчас или при применении профиля; первый раз занимает одну-две минуты).</value></data>
+  <data name="StatusDetailNotInjected" xml:space="preserve"><value>Loader не внедрился при этом запуске</value></data>
+  <data name="StatusDetailReady" xml:space="preserve"><value>Игра и MelonLoader готовы.</value></data>
+  <data name="StatusDetailReadyVersion" xml:space="preserve"><value>Игра и MelonLoader готовы. Melon {0}</value></data>
+  <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0} (ниже встроенной {1})</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>Учебник новичка</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>Учебник новичка</value></data>
+  <data name="GuideIntro" xml:space="preserve"><value>Первых пяти шагов хватит, чтобы начать матч. Остальное — после игры. Строки со значком предупреждения нужно прочитать.</value></data>
+  <data name="GuideLanguageTitle" xml:space="preserve"><value>1. Выберите язык интерфейса</value></data>
+  <data name="GuideLanguageBody" xml:space="preserve"><value>Выберите его ниже. Эта страница и весь менеджер сразу переключатся. Можно и «Как в системе».</value></data>
+  <data name="GuidePathTitle" xml:space="preserve"><value>3. Проверьте папку игры</value></data>
+  <data name="GuidePathBody" xml:space="preserve"><value>Путь в параметрах должен быть папкой с Mechabellum.exe. Если установщик уже заполнил его, только проверьте.</value></data>
+  <data name="GuideLoaderTitle" xml:space="preserve"><value>2. Смотрите проверку сверху</value></data>
+  <data name="GuideLoaderBody" xml:space="preserve"><value>Середина верхней панели — результат проверки. Дальше только при «Готово». Иначе справа появится «Установить/обновить MelonLoader». Строка под ней — диагноз: мешает ли что-то запустить игру.</value></data>
+  <data name="GuideNoteMelon" xml:space="preserve"><value>Перед установкой полностью закройте игру.</value></data>
+  <data name="GuideLaunchTitle" xml:space="preserve"><value>Способ запуска</value></data>
+  <data name="GuideLaunchBody" xml:space="preserve"><value>По умолчанию «Сначала Steam, иначе exe». Если Loader не внедрился, в параметрах выберите «Только exe».</value></data>
+  <data name="GuideBrowseTitle" xml:space="preserve"><value>4. Добавьте, потом отметьте</value></data>
+  <data name="GuideBrowseBody" xml:space="preserve"><value>Сверху откройте «Мастерская», выберите мод и добавьте в библиотеку. Добавление ещё не включает его. Затем в «Установленные» отметьте нужные.</value></data>
+  <data name="GuideNoteRisk" xml:space="preserve"><value>Без галочки мод не попадёт в игру.</value></data>
+  <data name="GuideLibraryTitle" xml:space="preserve"><value>Установленные</value></data>
+  <data name="GuideLibraryBody" xml:space="preserve"><value>В «Установленные» отметьте нужные моды.</value></data>
+  <data name="GuideProfilesTitle" xml:space="preserve"><value>Профили</value></data>
+  <data name="GuideProfilesBody" xml:space="preserve"><value>В списке сверху уже есть один профиль. Создавайте, переименовывайте или копируйте, только когда нужны несколько наборов.</value></data>
+  <data name="GuideApplyTitle" xml:space="preserve"><value>5. Пока не примените, игра не изменится</value></data>
+  <data name="GuideApplyBody" xml:space="preserve"><value>Галочка меняет только профиль, а не сразу папку игры. Если сверху «Профиль изменён; папка игры не синхронизирована — нажмите «Применить»», запись ещё не сделана.</value></data>
+  <data name="GuideNoteApply" xml:space="preserve"><value>«Применить и запустить» сверху сначала пишет папку игры, потом запускает её. Только записать, без запуска: «Применить профиль».</value></data>
+  <data name="GuideLaterTitle" xml:space="preserve"><value>После первой игры</value></data>
+  <data name="GuideImportTitle" xml:space="preserve"><value>Импорт</value></data>
+  <data name="GuideImportBody" xml:space="preserve"><value>В «Установленные» можно импортировать dll, zip или папку, либо забрать моды уже из папки игры.</value></data>
+  <data name="GuideUpdatesTitle" xml:space="preserve"><value>Обновления и консоль</value></data>
+  <data name="GuideUpdatesBody" xml:space="preserve"><value>В параметрах можно проверять обновления модов при запуске. Скрытие консоли Melon действует со следующего запуска игры.</value></data>
+  <data name="GuideBranchTitle" xml:space="preserve"><value>Релиз и бета</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>В параметрах можно включить две папки и переключать релиз и бету.</value></data>
+  <data name="GuideNoteBranch" xml:space="preserve"><value>В первый раз не включайте. Две папки — это около двух копий игры. Если не уверены, оставьте одну папку.</value></data>
+  <data name="GuideSupportTitle" xml:space="preserve"><value>Диагностика, репозиторий и почта</value></data>
+  <data name="GuideSupportBody" xml:space="preserve"><value>Строка под проверкой сверху — текущий диагноз. Если этого мало, нажмите «Экспорт диагностики» в параметрах или рядом с журналом справа внизу. Отправьте zip на llxmod@foxmail.com или в Discord (GODOG Battalion, https://discord.gg/CQDkCfDTA). Установщик и исходники: https://github.com/llxlzx/MechabellumModManager</value></data>
+  <data name="GuideCommunityTitle" xml:space="preserve"><value>Отправка и жалоба</value></data>
+  <data name="GuideCommunityBody" xml:space="preserve"><value>Сверху есть отправка своего мода. Жалоба — на конкретной записи. Прямая загрузка требует код и обычно не нужна.</value></data>
+  <data name="GuideOpenSettings" xml:space="preserve"><value>Открыть параметры</value></data>
+  <data name="GuideOpenCatalog" xml:space="preserve"><value>Открыть мастерскую</value></data>
+  <data name="GuideOpenLibrary" xml:space="preserve"><value>Открыть установленные</value></data>
+  <data name="GuideDismissStartup" xml:space="preserve"><value>Не открывать при запуске</value></data>
+
   <data name="PortableDataRoot" xml:space="preserve">
     <value>Переносные данные (папка data рядом с программой; нужен перезапуск)</value>
   </data>
@@ -729,6 +851,88 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>Блокирующих проблем не найдено</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>Следуйте подсказкам менеджера.</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>Адрес зеркала должен использовать https; настройка проигнорирована: {0}</value></data>
+  <data name="LogDualConfigReadFailed" xml:space="preserve"><value>Не удалось прочитать конфиг двух веток (игнор.): {0}</value></data>
+  <data name="LogAutoLocatedGameDir" xml:space="preserve"><value>Игровая папка найдена автоматически: {0}</value></data>
+  <data name="LogEnableDualRollbackError" xml:space="preserve"><value>Откат включения двух веток не удался: {0}</value></data>
+  <data name="LogHideConsoleWriteFailed" xml:space="preserve"><value>Не удалось записать hide_console ({0}): {1}</value></data>
+  <data name="LogHollowStoreCheckFailed" xml:space="preserve"><value>Проверка пустого склада не удалась: {0}</value></data>
+  <data name="LogAskGenerateAssembliesError" xml:space="preserve"><value>Ошибка при запросе генерации сборок: {0}</value></data>
+  <data name="LogAutoImportedFromGame" xml:space="preserve"><value>Автоимпорт из игры: {0} пакет(ов) (пропущено {1}).</value></data>
+  <data name="LogAutoImportFromGameFailed" xml:space="preserve"><value>Автоимпорт из игры не удался: {0}</value></data>
+  <data name="LogImportFromGameDone" xml:space="preserve"><value>Импорт из игры завершён: импортировано {0}, пропущено {1}.</value></data>
+  <data name="LogImportFromGameFailed" xml:space="preserve"><value>Импорт из игры не удался: {0}</value></data>
+  <data name="LogUnityDepsSeedFailed" xml:space="preserve"><value>Предупреждение: сбой сида UnityDependencies — {0}</value></data>
+  <data name="LogMelonOptimizeConfigFailed" xml:space="preserve"><value>Ошибка оптимизации MelonLoader: {0}</value></data>
+  <data name="LogCleanupBepInExDoorstopFailed" xml:space="preserve"><value>Очистка BepInEx Doorstop не удалась: {0}</value></data>
+  <data name="LogNoProfileSelected" xml:space="preserve"><value>Профиль не выбран.</value></data>
+  <data name="LogAssembliesNotReadyDeploy" xml:space="preserve"><value>Сборки MelonLoader не готовы; сначала сгенерируйте, затем развертывайте.</value></data>
+  <data name="LogGameStatusNotReadyDeploy" xml:space="preserve"><value>Состояние игры не готово; развёртывание невозможно.</value></data>
+  <data name="LogConfirmGameProcessFailed" xml:space="preserve"><value>Не удалось подтвердить процесс игры: {0}</value></data>
+  <data name="LogCheckMelonInjectFailed" xml:space="preserve"><value>Не удалось проверить статус внедрения Melon: {0}</value></data>
+  <data name="LogMelonRedistUseCacheDir" xml:space="preserve"><value>Папка установки недоступна для записи; локальный кэш для офлайн-пакетов Melon: {0}</value></data>
+  <data name="LogMelonRedistPreparing" xml:space="preserve"><value>Подготовка офлайн-пакета Melon runtime (зеркало предпочтительно)…</value></data>
+  <data name="LogUpdatedCategoryTags" xml:space="preserve"><value>Категория/теги обновлены: {0}</value></data>
+  <data name="LogJoiningLibrarySkipCatalogRefresh" xml:space="preserve"><value>Добавление в локальную библиотеку; обновление каталога пропущено.</value></data>
+  <data name="LogFetchingModCatalog" xml:space="preserve"><value>Загрузка каталога модов…</value></data>
+  <data name="LogSkippedUpToDateCatalogItems" xml:space="preserve"><value>Пропущено {0} актуальных позиций каталога.</value></data>
+  <data name="LogCatalogItemNoUpdateMatch" xml:space="preserve"><value>「{0}」: в каталоге нет обновляемого соответствия.</value></data>
+  <data name="LogAlreadyLatestSkipDownload" xml:space="preserve"><value>「{0}」уже актуален; загрузка пропущена.</value></data>
+  <data name="LogCancelledHighRiskCatalogJoin" xml:space="preserve"><value>Отменено добавление рискованного пункта каталога: {0}</value></data>
+  <data name="LogWriteCatalogMetaFailed" xml:space="preserve"><value>Не удалось записать метаданные каталога: {0}</value></data>
+  <data name="LogUpdatedToCatalogVersion" xml:space="preserve"><value>Обновлено до версии каталога: {0} ({1})</value></data>
+  <data name="LogUpdateCancelledBusy" xml:space="preserve"><value>Обновление 「{0}」отменено: выполняется критическая операция.</value></data>
+  <data name="LogUpdateCancelledGameRunning" xml:space="preserve"><value>Обновление 「{0}」отменено: игра запущена.</value></data>
+  <data name="LogCatalogVersionNoKeepableCopy" xml:space="preserve"><value>「{0}」есть в каталоге, но сохраняемая копия не найдена.</value></data>
+  <data name="LogRemovedDuplicateOldKept" xml:space="preserve"><value>Удалён дубликат старой версии 「{0}」, оставлен {1}.</value></data>
+  <data name="LogProfileRetargetFailed" xml:space="preserve"><value>Не удалось переназначить профиль на новую версию: {0} → {1} ({2})</value></data>
+  <data name="LogRemovedOldVersion" xml:space="preserve"><value>Старая версия удалена: {0} ({1})</value></data>
+  <data name="LogOldVersionDisabledNotDeleted" xml:space="preserve"><value>Старая версия отключена, но не удалена: {0} ({1})</value></data>
+  <data name="LogAutoCleanedDuplicateMods" xml:space="preserve"><value>Автоочистка: {0} дубликат(ов) старых модов.</value></data>
+  <data name="LogProfileCreated" xml:space="preserve"><value>Профиль создан: {0}</value></data>
+  <data name="LogProfileCreateFailed" xml:space="preserve"><value>Не удалось создать профиль: {0}</value></data>
+  <data name="LogProfileRenamed" xml:space="preserve"><value>Профиль переименован: {0}</value></data>
+  <data name="LogProfileRenameFailed" xml:space="preserve"><value>Не удалось переименовать профиль: {0}</value></data>
+  <data name="LogProfileDuplicated" xml:space="preserve"><value>Профиль скопирован: {0}</value></data>
+  <data name="LogProfileDuplicateFailed" xml:space="preserve"><value>Не удалось скопировать профиль: {0}</value></data>
+  <data name="LogProfileDeleted" xml:space="preserve"><value>Профиль удалён: {0}</value></data>
+  <data name="LogProfileDeleteFailed" xml:space="preserve"><value>Не удалось удалить профиль: {0}</value></data>
+  <data name="LogModDeleted" xml:space="preserve"><value>Мод удалён: {0}</value></data>
+  <data name="LogModDeleteFailed" xml:space="preserve"><value>Не удалось удалить мод: {0}</value></data>
+  <data name="LogHighRiskTempMark" xml:space="preserve"><value>{0} метка высокого риска (временная): {1}; после обновления переоценка по ключевым словам имени.</value></data>
+  <data name="LogUpdateHighRiskMarkFailed" xml:space="preserve"><value>Не удалось обновить метку высокого риска: {0}</value></data>
+  <data name="LogImportedHighRiskNotEnabled" xml:space="preserve"><value>Импортирован рискованный мод, но не включён: {0}</value></data>
+  <data name="LogAutoEnableFailed" xml:space="preserve"><value>Автоматическое включение {0} не удалось: {1}</value></data>
+  <data name="LogCancelledEnableHighRisk" xml:space="preserve"><value>Включение рискованного мода отменено.</value></data>
+  <data name="LogEnableDisableAction" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="LogActionDisable" xml:space="preserve"><value>Отключить</value></data>
+  <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>Не удалось обновить состояние включения: {0}</value></data>
+  <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>Не удалось обновить метку высокого риска для {0}: {1}</value></data>
+  <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>Локальный пакет &apos;{0}&apos;: неверный override категории &apos;{1}&apos;; как каталог/без категории.</value></data>
+  <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>Не удалось доустановить MelonLoader для двух веток при запуске: {0}</value></data>
+  <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>Проверка целевого склада перед переключением не удалась: {0}</value></data>
+  <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>Не сохранён снимок ACF {0} перед переключением: {1}</value></data>
+  <data name="LogRestoredTargetAcfSnapshot" xml:space="preserve"><value>Восстановлен снимок манифеста Steam целевой ветки (без повторной загрузки)</value></data>
+  <data name="LogSwitchBranchFailed" xml:space="preserve"><value>Переключение ветки не удалось: {0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardArchive" xml:space="preserve"><value>Сохранён снимок манифеста Steam {0} (окно архива мастера) для следующего переключения без загрузки</value></data>
+  <data name="LogWizardArchiveSnapshotMissed" xml:space="preserve"><value>Снимок {0} перед архивом мастера не сохранён (не блокирует): {1}</value></data>
+  <data name="LogWaitOtherDownloadError" xml:space="preserve"><value>Ошибка ожидания загрузки другой ветки: {0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardDownload" xml:space="preserve"><value>Сохранён снимок манифеста Steam {0} (окно загрузки мастера) для следующего переключения без загрузки</value></data>
+  <data name="LogDualLinkedMelonSyncCancelled" xml:space="preserve"><value>Два склада связаны; синхронизация Melon отменена, расчёт продолжается.</value></data>
+  <data name="LogDualLinkedMelonSyncIncomplete" xml:space="preserve"><value>Два склада связаны; синхронизация Melon не завершена: {0}</value></data>
+  <data name="LogPostLinkSettleFailed" xml:space="preserve"><value>Расчёт после связывания не удался: {0}</value></data>
+  <data name="LogEnsureDualMelonFailed" xml:space="preserve"><value>Не удалось доустановить MelonLoader для двух веток: {0}</value></data>
+  <data name="LogGeneratingMelonAssembliesFor" xml:space="preserve"><value>Генерация сборок MelonLoader для 「{0}」…</value></data>
+  <data name="LogPostSettleAcfSnapshotMissed" xml:space="preserve"><value>Снимок ACF после расчёта не сохранён: {0}</value></data>
+  <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>Сохранён снимок манифеста Steam {0} для следующего переключения без загрузки</value></data>
+  <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>Не удалось проверить статус обновления Steam: {0}</value></data>
+  <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>Запись каталога &apos;{0}&apos;: неверная категория &apos;{1}&apos;; без категории.</value></data>
+  <data name="LogImportedDll" xml:space="preserve"><value>Импортирован DLL: {0} ({1})</value></data>
+  <data name="LogImportCancelledNoType" xml:space="preserve"><value>Импорт отменён (тип не выбран)</value></data>
+  <data name="LogImportDllFailed" xml:space="preserve"><value>Импорт DLL не удался: {0}</value></data>
+  <data name="LogImportedFolder" xml:space="preserve"><value>Импортирована папка: {0} пакет(ов)</value></data>
+  <data name="LogImportFolderFailed" xml:space="preserve"><value>Импорт папки не удался: {0}</value></data>
+  <data name="LogImportedZip" xml:space="preserve"><value>Импортирован Zip: {0} пакет(ов)</value></data>
+  <data name="LogImportZipFailed" xml:space="preserve"><value>Импорт Zip не удался: {0}</value></data>
   <data name="UpdateStatusChecking" xml:space="preserve"><value>Проверка обновлений…</value></data>
   <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>Не удалось проверить обновления: {0}</value></data>
   <data name="UpdateUiFailedNotNetwork" xml:space="preserve"><value>Ошибка ресурса интерфейса диалога обновления (проигнорирована, это не сбой сети). Повторите «Проверить обновления» или перезапустите менеджер.</value></data>

@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "1.3.2"
+#define MyAppVersion "1.3.4"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -743,6 +743,29 @@ begin
     Result := StrToIntDef(NumStr, Default);
 end;
 
+function TryExtractJsonBool(const Content, Key: string): Boolean;
+var
+  Marker, SearchKey: string;
+  P: Integer;
+begin
+  Result := False;
+  SearchKey := '"' + Key + '"';
+  P := Pos(SearchKey, Content);
+  if P = 0 then
+    exit;
+  Marker := Copy(Content, P + Length(SearchKey), Length(Content));
+  P := Pos(':', Marker);
+  if P = 0 then
+    exit;
+  Marker := Trim(Copy(Marker, P + 1, Length(Marker)));
+  Result := Copy(LowerCase(Marker), 1, 4) = 'true';
+end;
+
+function IsAllowedUiScale(const Value: string): Boolean;
+begin
+  Result := (Value = '1') or (Value = '1.25') or (Value = '1.5') or (Value = '1.75') or (Value = '2');
+end;
+
 function TryExtractJsonNullOrString(const Content, Key: string; var IsNull: Boolean; var Value: string): Boolean;
 var
   Marker, SearchKey: string;
@@ -816,11 +839,11 @@ end;
 
 function WriteManagerConfigNative(const GamePath: string): Boolean;
 var
-  Root, ConfigPath, ProfilePath, Json, Resolved, Link, ExistingContent, Lang: string;
+  Root, ConfigPath, ProfilePath, Json, Resolved, Link, ExistingContent, Lang, UiScale: string;
   CommonRoot, SeedJson: string;
   LaunchMode: Integer;
   ActiveProfileId, DataRoot: string;
-  DataRootIsNull: Boolean;
+  DataRootIsNull, OnboardingDismissed: Boolean;
 begin
   Result := False;
   Resolved := GamePath;
@@ -846,6 +869,8 @@ begin
   ActiveProfileId := 'default';
   DataRootIsNull := True;
   DataRoot := '';
+  OnboardingDismissed := False;
+  UiScale := '';
 
   if FileExists(ConfigPath) and LoadUtf8TextFile(ConfigPath, ExistingContent) then
   begin
@@ -855,6 +880,10 @@ begin
       ActiveProfileId := 'default';
     if not TryExtractJsonNullOrString(ExistingContent, 'dataRoot', DataRootIsNull, DataRoot) then
       DataRootIsNull := True;
+    OnboardingDismissed := TryExtractJsonBool(ExistingContent, 'onboardingDismissed');
+    UiScale := TryExtractJsonString(ExistingContent, 'uiScale');
+    if not IsAllowedUiScale(UiScale) then
+      UiScale := '';
   end;
 
   Lang := MapInstallerLanguageToUi();
@@ -869,8 +898,12 @@ begin
   else
     Json := Json + '  "dataRoot": "' + EscapeJsonPath(DataRoot) + '",' + #13#10;
   Json := Json +
-    '  "uiLanguage": "' + Lang + '"' + #13#10 +
-    '}' + #13#10;
+    '  "uiLanguage": "' + Lang + '"';
+  if OnboardingDismissed then
+    Json := Json + ',' + #13#10 + '  "onboardingDismissed": true';
+  if UiScale <> '' then
+    Json := Json + ',' + #13#10 + '  "uiScale": "' + UiScale + '"';
+  Json := Json + #13#10 + '}' + #13#10;
   if not SaveUtf8TextFile(ConfigPath, Json) then
     exit;
 

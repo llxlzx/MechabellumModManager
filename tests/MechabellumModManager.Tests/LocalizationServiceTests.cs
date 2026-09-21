@@ -79,4 +79,24 @@ public class LocalizationServiceTests
         s.Should().NotBeNullOrWhiteSpace();
         s.Should().NotBe(key, "missing resx entries fall back to the key itself");
     }
+
+    [Theory]
+    [InlineData("PickGameFolderTitle")]
+    [InlineData("PickImportFolderTitle")]
+    [InlineData("DefaultProfileName")]
+    [InlineData("LogGamePathNotFound")]
+    [InlineData("LogGamePathInvalid")]
+    public void GetString_returns_localized_copy_continuation_keys(string key)
+    {
+        LocalizationService.Apply("en");
+        var en = LocalizationService.GetString(key);
+        en.Should().NotBeNullOrWhiteSpace();
+        en.Should().NotBe(key);
+
+        LocalizationService.Apply("zh-CN");
+        var zh = LocalizationService.GetString(key);
+        zh.Should().NotBeNullOrWhiteSpace();
+        zh.Should().NotBe(key);
+        zh.Should().NotBe(en);
+    }
 }

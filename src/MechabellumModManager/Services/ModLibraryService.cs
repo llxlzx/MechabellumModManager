@@ -601,7 +601,7 @@ public sealed class ModLibraryService
             PackageDirectory = packageDir
         };
 
-        var risk = _riskHeuristic.Evaluate(pkg);
+        var risk = RiskHeuristic.DetectionEnabled ? _riskHeuristic.Evaluate(pkg) : new RiskHeuristicResult();
         pkg.HighRisk = risk.HighRisk;
 
         WritePackageJson(pkg);

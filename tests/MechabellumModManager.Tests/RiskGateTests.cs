@@ -27,24 +27,19 @@ public class RiskGateTests
     }
 
     [Fact]
-    public void CanEnable_high_risk_uses_confirm_and_message()
+    public void CanEnable_does_not_confirm_while_detection_is_paused()
     {
-        string? seen = null;
+        RiskHeuristic.DetectionEnabled.Should().BeFalse();
+        var called = false;
         var gate = new RiskGate();
 
-        var ok = gate.CanEnable(highRisk: true, confirm: msg =>
+        var ok = gate.CanEnable(highRisk: true, confirm: _ =>
         {
-            seen = msg;
-            return true;
+            called = true;
+            return false;
         });
 
         ok.Should().BeTrue();
-        seen.Should().Be("该条目被标记为高风险，确定加入当前方案吗？");
-    }
-
-    [Fact]
-    public void CanEnable_high_risk_respects_confirm_false()
-    {
-        new RiskGate().CanEnable(true, _ => false).Should().BeFalse();
+        called.Should().BeFalse();
     }
 }

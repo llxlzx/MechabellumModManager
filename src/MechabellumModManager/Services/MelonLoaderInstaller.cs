@@ -353,11 +353,12 @@ public sealed class MelonLoaderInstaller
 
     static string Describe(Models.GameStatusKind kind) => kind switch
     {
-        Models.GameStatusKind.Ready => "就绪",
-        Models.GameStatusKind.LoaderPresentAssembliesMissing => "待生成程序集",
-        Models.GameStatusKind.GameOkLoaderMissing => "缺少 Loader",
-        Models.GameStatusKind.LoaderPartial => "Loader 不完整",
-        Models.GameStatusKind.GameMissing => "未找到游戏",
+        Models.GameStatusKind.Ready => LocalizationService.T("StatusKindReady"),
+        Models.GameStatusKind.LoaderPresentAssembliesMissing =>
+            LocalizationService.T("StatusKindAssembliesMissing"),
+        Models.GameStatusKind.GameOkLoaderMissing => LocalizationService.T("StatusKindLoaderMissing"),
+        Models.GameStatusKind.LoaderPartial => LocalizationService.T("StatusKindLoaderPartial"),
+        Models.GameStatusKind.GameMissing => LocalizationService.T("StatusKindGameMissing"),
         _ => kind.ToString()
     };
 }

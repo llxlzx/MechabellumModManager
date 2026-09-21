@@ -133,6 +133,7 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        UiScaleHost.EnsureHooked();
         var window = new MainWindow();
         window.Closing += (_, e) =>
         {
@@ -271,6 +272,9 @@ public partial class App : Application
             processStarter: starter,
             promptExportDiagnostics: () => PromptExportDiagnostics(window),
             promptMailProvider: () => MailProviderDialog.Prompt(window),
+            promptDiagnosticsMail: () => MailProviderDialog.PromptDiagnostics(
+                window,
+                LocalizationService.T("DiagnosticsMailHint")),
             saveZipFile: suggestedName => SaveZipFile(window, suggestedName),
             revealInExplorer: RevealInExplorer,
             beginBusy: (title, msg) => BeginBusy(window, title, msg),
@@ -356,7 +360,7 @@ public partial class App : Application
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "选择 Mechabellum 游戏目录"
+            Title = LocalizationService.T("PickGameFolderTitle")
         };
         return dialog.ShowDialog(owner) == true ? dialog.FolderName : null;
     }
@@ -365,7 +369,7 @@ public partial class App : Application
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "选择要导入的文件夹"
+            Title = LocalizationService.T("PickImportFolderTitle")
         };
         return dialog.ShowDialog(owner) == true ? dialog.FolderName : null;
     }

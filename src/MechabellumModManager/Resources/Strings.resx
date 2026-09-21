@@ -81,6 +81,12 @@
   <data name="Language" xml:space="preserve">
     <value>语言</value>
   </data>
+  <data name="UiScale" xml:space="preserve">
+    <value>界面缩放</value>
+  </data>
+  <data name="UiScaleAuto" xml:space="preserve">
+    <value>自动</value>
+  </data>
   <data name="LanguageSystem" xml:space="preserve">
     <value>跟随系统</value>
   </data>
@@ -91,7 +97,7 @@
     <value>关于与声明</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
-    <value>本 Mod 管理器由「院长大人」制作。衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。
+    <value>本 Mod 管理器由「llxmod」制作。衷心感谢所有测试人员、使用本管理器的玩家，以及钢铁指挥官的 Mod 开发者。
 
 1. 本软件为独立粉丝工具，与 Mechabellum（钢铁指挥官）及其发行商、Steam 无任何从属或官方合作关系。
 2. 本项目为非营利性质，供免费使用；无赞助入口与收费行为。若有人将本管理器用于盈利，请自觉抵制。
@@ -99,7 +105,7 @@
 4. 本软件按「现状」（AS IS）提供，不作任何明示或默示保证。使用者自行承担风险（游戏更新可能导致 Mod 或管理器失效；建议备份存档与重要数据）。作者及关联方不对因使用本管理器，或因通过本管理器获取、安装、启用、管理任何第三方 Mod / 插件 / 相关文件而导致的任何直接或间接损失承担责任。
 5. 第三方 Mod 由其作者提供；管理器与目录维护者不保证其安全性、合法性或质量。启用风险自负。发现问题请发邮件举报。
 6. 目录收录不代表背书；维护者可拒绝、延期处理、编辑元数据或下架条目。
-7. 联系方式：电子邮箱 llxmod@foxmail.com（投稿 / 举报 / 建议）；QQ 319323959（维护者「院长大人」）为次要联系方式。
+7. 联系方式：电子邮箱 llxmod@foxmail.com（投稿 / 举报 / 建议）；QQ 319323959（维护者「llxmod」）为次要联系方式。
 8. 继续使用本管理器，即视为您已阅读并同意本声明。如不同意，请立即停止使用并卸载本软件。</value>
   </data>
   <data name="Report" xml:space="preserve">
@@ -142,16 +148,31 @@
     <value>无法打开网页邮箱或完成投稿准备</value>
   </data>
   <data name="DirectUpload" xml:space="preserve">
-    <value>白名单直传</value>
+    <value>白名单直传（未完成）</value>
   </data>
   <data name="DirectUploadTitle" xml:space="preserve">
-    <value>白名单直传</value>
+    <value>白名单直传（未完成）</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
     <value>邀请码</value>
   </data>
   <data name="DirectUploadSaveCode" xml:space="preserve">
     <value>保存</value>
+  </data>
+  <data name="DirectUploadSecretId" xml:space="preserve">
+    <value>SecretId</value>
+  </data>
+  <data name="DirectUploadSecretKey" xml:space="preserve">
+    <value>SecretKey</value>
+  </data>
+  <data name="DirectUploadSecretHint" xml:space="preserve">
+    <value>填一次即可。管理器会把它写到本机用户目录的 .cos.yaml，供 coscli 使用。密钥留空表示沿用已保存的。</value>
+  </data>
+  <data name="DirectUploadSecretSaved" xml:space="preserve">
+    <value>密钥已写入本机 coscli 配置。</value>
+  </data>
+  <data name="DirectUploadNeedSecret" xml:space="preserve">
+    <value>请同时填写 SecretId 和 SecretKey。</value>
   </data>
   <data name="DirectUploadModId" xml:space="preserve">
     <value>Mod Id（目录文件夹名）</value>
@@ -172,19 +193,46 @@
     <value>预览图</value>
   </data>
   <data name="DirectUploadPublish" xml:space="preserve">
-    <value>发布到目录</value>
+    <value>上传 Mod 文件</value>
+  </data>
+  <data name="DirectUploadUpdateCatalog" xml:space="preserve">
+    <value>同时更新总目录（仅主密钥）</value>
+  </data>
+  <data name="DirectUploadUpdateCatalogHint" xml:space="preserve">
+    <value>默认不要勾。勾选后会覆盖镜像上的总目录，只有你自己电脑上的主密钥可以成功。发给对方的子密钥不要勾。</value>
+  </data>
+  <data name="DirectUploadMergeCatalog" xml:space="preserve">
+    <value>写入总目录</value>
+  </data>
+  <data name="DirectUploadFilesUploaded" xml:space="preserve">
+    <value>文件已上传到该 Mod 自己的目录，总目录没有改。维护者写入总目录后，玩家才能刷到。</value>
+  </data>
+  <data name="DirectUploadCatalogDenied" xml:space="preserve">
+    <value>文件已上传，但总目录没有写上。子密钥不能改总目录，请在你自己的电脑上点「写入总目录」。</value>
+  </data>
+  <data name="DirectUploadCatalogWriteFailed" xml:space="preserve">
+    <value>总目录没有写上。请确认这台电脑用的是主密钥，子密钥不能改总目录。</value>
+  </data>
+  <data name="DirectUploadMergeSuccess" xml:space="preserve">
+    <value>已将该 Mod 写入总目录。玩家刷新目录后即可下载。</value>
+  </data>
+  <data name="DirectUploadEntryMissing" xml:space="preserve">
+    <value>镜像上还没有这个 Mod 的条目。请对方先上传文件。</value>
+  </data>
+  <data name="DirectUploadNeedModId" xml:space="preserve">
+    <value>请先填写 Mod Id。</value>
   </data>
   <data name="DirectUploadSuccess" xml:space="preserve">
-    <value>已发布到 GitHub MechabellumMods。玩家刷新目录后可见。</value>
+    <value>已写入总目录。玩家刷新目录后即可从镜像下载。</value>
   </data>
   <data name="DirectUploadMirrorLagHint" xml:space="preserve">
-    <value>若使用国内镜像，缓存可能尚未同步，属正常现象。</value>
+    <value>请先把同一份文件放进 GitHub 的 MechabellumMods，再做全量镜像同步。否则同步会用旧目录盖掉这次直传。</value>
   </data>
   <data name="DirectUploadFailed" xml:space="preserve">
     <value>直传失败</value>
   </data>
   <data name="DirectUploadNotConfigured" xml:space="preserve">
-    <value>直传服务地址未配置。请部署 Worker 后填写 DirectUploadApiBaseUrl，或更新管理器默认地址。</value>
+    <value>这台电脑还不能写入国内镜像。请安装 coscli，并用能写镜像桶的账号完成 coscli config init。</value>
   </data>
   <data name="DirectUploadNeedInvite" xml:space="preserve">
     <value>请先填写邀请码。</value>
@@ -255,6 +303,11 @@
   <data name="MailProviderGmail" xml:space="preserve">
     <value>Gmail</value>
   </data>
+  <data name="DiagnosticsMailHint" xml:space="preserve"><value>选择 QQ 邮箱或 Gmail 才会复制邮件内容并打开网页邮箱。点 Discord 则打开 GODOG Battalion 反馈，不会复制邮件。取消则只保留已导出的 zip。</value></data>
+  <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>已打开 Discord（GODOG Battalion）。请在频道里反馈，并手动附上刚导出的 zip。未复制邮件内容。</value></data>
+  <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>无法打开 Discord。请手动打开 https://discord.gg/CQDkCfDTA ，并附上刚导出的 zip。</value></data>
+  <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>已取消。诊断包已保存，未复制邮件，也未打开 Discord。</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>建议</value>
   </data>
@@ -315,6 +368,75 @@
   <data name="LaunchMode" xml:space="preserve">
     <value>启动方式</value>
   </data>
+  <data name="BrowseEllipsis" xml:space="preserve"><value>浏览…</value></data>
+  <data name="PickGameFolderTitle" xml:space="preserve"><value>选择 Mechabellum 游戏目录</value></data>
+  <data name="PickImportFolderTitle" xml:space="preserve"><value>选择要导入的文件夹</value></data>
+  <data name="DefaultProfileName" xml:space="preserve"><value>默认</value></data>
+  <data name="LogGamePathNotFound" xml:space="preserve"><value>未自动找到游戏目录。请在「设置」中浏览选择 Mechabellum 安装路径。</value></data>
+  <data name="LogGamePathInvalid" xml:space="preserve"><value>当前游戏路径无效。请在「设置」中浏览选择包含 Mechabellum.exe 的目录。</value></data>
+  <data name="ProfileNew" xml:space="preserve"><value>新建</value></data>
+  <data name="ProfileRename" xml:space="preserve"><value>重命名</value></data>
+  <data name="ProfileDuplicate" xml:space="preserve"><value>复制</value></data>
+  <data name="LaunchModeSteamThenExe" xml:space="preserve"><value>Steam 优先，失败则直启</value></data>
+  <data name="LaunchModeSteamOnly" xml:space="preserve"><value>仅 Steam</value></data>
+  <data name="LaunchModeExeOnly" xml:space="preserve"><value>仅直启 exe</value></data>
+  <data name="DirtyHintDirty" xml:space="preserve"><value>方案已改，游戏目录未同步 — 请点击「应用方案」</value></data>
+  <data name="DirtyHintClean" xml:space="preserve"><value>已与游戏目录同步</value></data>
+  <data name="StatusKindReady" xml:space="preserve"><value>就绪</value></data>
+  <data name="StatusKindAssembliesMissing" xml:space="preserve"><value>待生成程序集</value></data>
+  <data name="StatusKindLoaderMissing" xml:space="preserve"><value>缺少 Loader</value></data>
+  <data name="StatusKindLoaderPartial" xml:space="preserve"><value>Loader 不完整</value></data>
+  <data name="StatusKindGameMissing" xml:space="preserve"><value>未找到游戏</value></data>
+  <data name="StatusKindWaitingProcess" xml:space="preserve"><value>正在等待游戏进程</value></data>
+  <data name="StatusKindNotInjected" xml:space="preserve"><value>未注入</value></data>
+  <data name="StatusKindUnknown" xml:space="preserve"><value>未知</value></data>
+  <data name="StatusDetailGameMissing" xml:space="preserve"><value>未找到有效的 Mechabellum 安装（需要 Mechabellum.exe 与 GameAssembly.dll）。</value></data>
+  <data name="StatusDetailLoaderMissing" xml:space="preserve"><value>已找到游戏，但未安装 MelonLoader。可点右上角「安装 MelonLoader」，或重新运行安装包勾选 MelonLoader。</value></data>
+  <data name="StatusDetailLoaderPartial" xml:space="preserve"><value>MelonLoader 安装不完整（需要 MelonLoader 目录以及 version.dll 或 winhttp.dll）。可点「安装 MelonLoader」补全，或重新运行安装包。</value></data>
+  <data name="StatusDetailAssembliesMissing" xml:space="preserve"><value>MelonLoader 框架已安装，但尚未生成 Il2Cpp 程序集（可立即生成，或稍后在应用方案时生成；首次约一两分钟）。</value></data>
+  <data name="StatusDetailNotInjected" xml:space="preserve"><value>Loader 未在本次启动注入</value></data>
+  <data name="StatusDetailReady" xml:space="preserve"><value>游戏与 MelonLoader 已就绪。</value></data>
+  <data name="StatusDetailReadyVersion" xml:space="preserve"><value>游戏与 MelonLoader 已就绪。Melon {0}</value></data>
+  <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0}（低于内置 {1}）</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>新手教程</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>新手教程</value></data>
+  <data name="GuideIntro" xml:space="preserve"><value>按顺序做完前五步就能开一局。后面是用过之后再看的。带注意图标的句子必须看。</value></data>
+  <data name="GuideLanguageTitle" xml:space="preserve"><value>1. 先选界面语言</value></data>
+  <data name="GuideLanguageBody" xml:space="preserve"><value>在下面直接选。选好后，本页和整个管理器会立刻换成这种语言。也可以选「跟随系统」。</value></data>
+  <data name="GuidePathTitle" xml:space="preserve"><value>3. 确认游戏文件夹</value></data>
+  <data name="GuidePathBody" xml:space="preserve"><value>设置页的路径必须是含 Mechabellum.exe 的文件夹。安装包如果已经填过，核对一下即可。</value></data>
+  <data name="GuideLoaderTitle" xml:space="preserve"><value>2. 看顶栏检测</value></data>
+  <data name="GuideLoaderBody" xml:space="preserve"><value>顶栏中间是检测结果。显示「就绪」再往下做。不是「就绪」时，右侧会出现「安装/升级 MelonLoader」。它下面那一行是诊断结论，说明现在有没有挡住开游戏的问题。</value></data>
+  <data name="GuideNoteMelon" xml:space="preserve"><value>安装前先完全退出游戏。</value></data>
+  <data name="GuideLaunchTitle" xml:space="preserve"><value>启动方式</value></data>
+  <data name="GuideLaunchBody" xml:space="preserve"><value>默认是「Steam 优先，失败则直启」。若提示 Loader 没有注入，到设置改成「仅直启 exe」。</value></data>
+  <data name="GuideBrowseTitle" xml:space="preserve"><value>4. 加入并勾选</value></data>
+  <data name="GuideBrowseBody" xml:space="preserve"><value>顶栏「Mod 工坊」里选 Mod，加入已装库。加入之后还没有启用。再到顶栏「已装 Mod」里勾选要玩的项。</value></data>
+  <data name="GuideNoteRisk" xml:space="preserve"><value>没勾选的不会进游戏。</value></data>
+  <data name="GuideLibraryTitle" xml:space="preserve"><value>已装 Mod</value></data>
+  <data name="GuideLibraryBody" xml:space="preserve"><value>在「已装 Mod」里勾选要启用的项。</value></data>
+  <data name="GuideProfilesTitle" xml:space="preserve"><value>方案</value></data>
+  <data name="GuideProfilesBody" xml:space="preserve"><value>顶栏下拉里默认就有一套。要保存多套勾选组合时，再新建、重命名或复制。</value></data>
+  <data name="GuideApplyTitle" xml:space="preserve"><value>5. 应用后才会进游戏</value></data>
+  <data name="GuideApplyBody" xml:space="preserve"><value>勾选只改方案，不会立刻改游戏目录。顶栏若出现「方案已改，游戏目录未同步 — 请点击应用方案」，就是还没写进去。</value></data>
+  <data name="GuideNoteApply" xml:space="preserve"><value>点顶栏「应用并启动」：先写入游戏目录，再开游戏。只想写入、先不开游戏，用「应用方案」。</value></data>
+  <data name="GuideLaterTitle" xml:space="preserve"><value>用过再看</value></data>
+  <data name="GuideImportTitle" xml:space="preserve"><value>导入</value></data>
+  <data name="GuideImportBody" xml:space="preserve"><value>在「已装 Mod」里可以导入 dll、zip 或文件夹，也可以把游戏目录里已有的 Mod 导回来。</value></data>
+  <data name="GuideUpdatesTitle" xml:space="preserve"><value>更新和控制台</value></data>
+  <data name="GuideUpdatesBody" xml:space="preserve"><value>设置里可以打开「启动时检查 Mod 更新」。隐藏 Melon 控制台要等下次启动游戏才生效。</value></data>
+  <data name="GuideBranchTitle" xml:space="preserve"><value>正式服和测试服</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>设置页可以启用双目录，在正式服和测试服之间切换。</value></data>
+  <data name="GuideNoteBranch" xml:space="preserve"><value>第一次不要开。双目录大约要两份磁盘空间。不确定就保持现在的单目录。</value></data>
+  <data name="GuideSupportTitle" xml:space="preserve"><value>诊断、仓库和邮箱</value></data>
+  <data name="GuideSupportBody" xml:space="preserve"><value>顶栏检测下面那一行就是当前诊断。还解决不了时，可以在设置里，或右下角「运行日志」旁边，点「导出诊断包」。zip 可以发到 llxmod@foxmail.com，也可以到 Discord（GODOG Battalion，https://discord.gg/CQDkCfDTA ）反馈。安装包和源码在 https://github.com/llxlzx/MechabellumModManager 。</value></data>
+  <data name="GuideCommunityTitle" xml:space="preserve"><value>投稿和举报</value></data>
+  <data name="GuideCommunityBody" xml:space="preserve"><value>顶栏有「投稿 Mod」。举报在具体条目上。直传需要邀请码，一般玩家用不到。</value></data>
+  <data name="GuideOpenSettings" xml:space="preserve"><value>打开设置</value></data>
+  <data name="GuideOpenCatalog" xml:space="preserve"><value>打开 Mod 工坊</value></data>
+  <data name="GuideOpenLibrary" xml:space="preserve"><value>打开已装 Mod</value></data>
+  <data name="GuideDismissStartup" xml:space="preserve"><value>下次启动不再打开本页</value></data>
+
   <data name="PortableDataRoot" xml:space="preserve">
     <value>便携数据目录（程序旁的 data 文件夹，更改后需重启）</value>
   </data>
@@ -737,6 +859,88 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>未发现阻断问题</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>按管理器提示操作即可。</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>镜像地址必须使用 https，已忽略该设置：{0}</value></data>
+  <data name="LogDualConfigReadFailed" xml:space="preserve"><value>双服配置读取失败，已忽略：{0}</value></data>
+  <data name="LogAutoLocatedGameDir" xml:space="preserve"><value>已自动定位游戏目录：{0}</value></data>
+  <data name="LogEnableDualRollbackError" xml:space="preserve"><value>启用双服回滚失败：{0}</value></data>
+  <data name="LogHideConsoleWriteFailed" xml:space="preserve"><value>写入 hide_console 失败（{0}）：{1}</value></data>
+  <data name="LogHollowStoreCheckFailed" xml:space="preserve"><value>检查空壳仓失败：{0}</value></data>
+  <data name="LogAskGenerateAssembliesError" xml:space="preserve"><value>询问生成程序集时出错：{0}</value></data>
+  <data name="LogAutoImportedFromGame" xml:space="preserve"><value>已从游戏自动导入 {0} 个包（跳过 {1}）。</value></data>
+  <data name="LogAutoImportFromGameFailed" xml:space="preserve"><value>从游戏自动导入失败：{0}</value></data>
+  <data name="LogImportFromGameDone" xml:space="preserve"><value>从游戏导入完成：导入 {0}，跳过 {1}。</value></data>
+  <data name="LogImportFromGameFailed" xml:space="preserve"><value>从游戏导入失败：{0}</value></data>
+  <data name="LogUnityDepsSeedFailed" xml:space="preserve"><value>警告：UnityDependencies 播种失败 — {0}</value></data>
+  <data name="LogMelonOptimizeConfigFailed" xml:space="preserve"><value>MelonLoader 优化配置失败：{0}</value></data>
+  <data name="LogCleanupBepInExDoorstopFailed" xml:space="preserve"><value>清理 BepInEx Doorstop 失败：{0}</value></data>
+  <data name="LogNoProfileSelected" xml:space="preserve"><value>未选择方案。</value></data>
+  <data name="LogAssembliesNotReadyDeploy" xml:space="preserve"><value>MelonLoader 程序集未就绪，请先生成后再部署。</value></data>
+  <data name="LogGameStatusNotReadyDeploy" xml:space="preserve"><value>游戏状态未就绪，无法部署。</value></data>
+  <data name="LogConfirmGameProcessFailed" xml:space="preserve"><value>确认游戏进程失败：{0}</value></data>
+  <data name="LogCheckMelonInjectFailed" xml:space="preserve"><value>检查 Melon 注入状态失败：{0}</value></data>
+  <data name="LogMelonRedistUseCacheDir" xml:space="preserve"><value>安装目录不可写，改用本地缓存目录存放 Melon 离线包：{0}</value></data>
+  <data name="LogMelonRedistPreparing" xml:space="preserve"><value>正在准备 Melon 运行时离线包（镜像优先）…</value></data>
+  <data name="LogUpdatedCategoryTags" xml:space="preserve"><value>已更新分类/标签：{0}</value></data>
+  <data name="LogJoiningLibrarySkipCatalogRefresh" xml:space="preserve"><value>正在加入本地库，已跳过目录刷新。</value></data>
+  <data name="LogFetchingModCatalog" xml:space="preserve"><value>正在拉取 Mod 目录…</value></data>
+  <data name="LogSkippedUpToDateCatalogItems" xml:space="preserve"><value>已跳过 {0} 个已是最新版本的目录项。</value></data>
+  <data name="LogCatalogItemNoUpdateMatch" xml:space="preserve"><value>「{0}」在目录里找不到可更新的对应项。</value></data>
+  <data name="LogAlreadyLatestSkipDownload" xml:space="preserve"><value>「{0}」已是最新版本，跳过下载。</value></data>
+  <data name="LogCancelledHighRiskCatalogJoin" xml:space="preserve"><value>已取消加入高风险目录项：{0}</value></data>
+  <data name="LogWriteCatalogMetaFailed" xml:space="preserve"><value>写入目录元数据失败：{0}</value></data>
+  <data name="LogUpdatedToCatalogVersion" xml:space="preserve"><value>已更新到目录版本：{0} ({1})</value></data>
+  <data name="LogUpdateCancelledBusy" xml:space="preserve"><value>更新「{0}」已取消：有正在进行的关键操作。</value></data>
+  <data name="LogUpdateCancelledGameRunning" xml:space="preserve"><value>更新「{0}」已取消：游戏正在运行。</value></data>
+  <data name="LogCatalogVersionNoKeepableCopy" xml:space="preserve"><value>「{0}」已有目录版本，但找不到可保留的副本。</value></data>
+  <data name="LogRemovedDuplicateOldKept" xml:space="preserve"><value>已移除重复旧版「{0}」，保留 {1}。</value></data>
+  <data name="LogProfileRetargetFailed" xml:space="preserve"><value>方案改指到新版本失败：{0} → {1}（{2}）</value></data>
+  <data name="LogRemovedOldVersion" xml:space="preserve"><value>已移除旧版本：{0} ({1})</value></data>
+  <data name="LogOldVersionDisabledNotDeleted" xml:space="preserve"><value>旧版本已停用但未能删除：{0}（{1}）</value></data>
+  <data name="LogAutoCleanedDuplicateMods" xml:space="preserve"><value>已自动清理 {0} 个重复旧版 Mod。</value></data>
+  <data name="LogProfileCreated" xml:space="preserve"><value>已创建方案：{0}</value></data>
+  <data name="LogProfileCreateFailed" xml:space="preserve"><value>创建方案失败：{0}</value></data>
+  <data name="LogProfileRenamed" xml:space="preserve"><value>已重命名方案：{0}</value></data>
+  <data name="LogProfileRenameFailed" xml:space="preserve"><value>重命名方案失败：{0}</value></data>
+  <data name="LogProfileDuplicated" xml:space="preserve"><value>已复制方案：{0}</value></data>
+  <data name="LogProfileDuplicateFailed" xml:space="preserve"><value>复制方案失败：{0}</value></data>
+  <data name="LogProfileDeleted" xml:space="preserve"><value>已删除方案：{0}</value></data>
+  <data name="LogProfileDeleteFailed" xml:space="preserve"><value>删除方案失败：{0}</value></data>
+  <data name="LogModDeleted" xml:space="preserve"><value>已删除 Mod：{0}</value></data>
+  <data name="LogModDeleteFailed" xml:space="preserve"><value>删除 Mod 失败：{0}</value></data>
+  <data name="LogHighRiskTempMark" xml:space="preserve"><value>{0} 高风险标记（临时）：{1}；刷新列表后将按名称关键词重新判定。</value></data>
+  <data name="LogUpdateHighRiskMarkFailed" xml:space="preserve"><value>更新高风险标记失败：{0}</value></data>
+  <data name="LogImportedHighRiskNotEnabled" xml:space="preserve"><value>已导入高风险 Mod 但未启用：{0}</value></data>
+  <data name="LogAutoEnableFailed" xml:space="preserve"><value>自动启用 {0} 失败：{1}</value></data>
+  <data name="LogCancelledEnableHighRisk" xml:space="preserve"><value>已取消启用高风险 Mod。</value></data>
+  <data name="LogEnableDisableAction" xml:space="preserve"><value>{0}：{1}</value></data>
+  <data name="LogActionDisable" xml:space="preserve"><value>禁用</value></data>
+  <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>更新启用状态失败：{0}</value></data>
+  <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>更新 {0} 高风险标记失败：{1}</value></data>
+  <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>本地包 &apos;{0}&apos;: 无效分类覆盖 &apos;{1}&apos;，按目录/未分类处理。</value></data>
+  <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>启动时补齐双服 MelonLoader 失败：{0}</value></data>
+  <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>切服前检查目标仓失败：{0}</value></data>
+  <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>切服前未保存 {0} ACF 快照：{1}</value></data>
+  <data name="LogRestoredTargetAcfSnapshot" xml:space="preserve"><value>已恢复目标服 Steam 清单快照（避免重复下载）</value></data>
+  <data name="LogSwitchBranchFailed" xml:space="preserve"><value>切服失败：{0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardArchive" xml:space="preserve"><value>已保存 {0} Steam 清单快照（向导归档窗口），供下次切服免下载</value></data>
+  <data name="LogWizardArchiveSnapshotMissed" xml:space="preserve"><value>向导归档前未保存 {0} 快照（不阻断）：{1}</value></data>
+  <data name="LogWaitOtherDownloadError" xml:space="preserve"><value>等待另一服下载时出错：{0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardDownload" xml:space="preserve"><value>已保存 {0} Steam 清单快照（向导下载窗口），供下次切服免下载</value></data>
+  <data name="LogDualLinkedMelonSyncCancelled" xml:space="preserve"><value>双仓已联接；Melon 同步被取消，继续结算。</value></data>
+  <data name="LogDualLinkedMelonSyncIncomplete" xml:space="preserve"><value>双仓已联接；Melon 同步未完成：{0}</value></data>
+  <data name="LogPostLinkSettleFailed" xml:space="preserve"><value>联接后结算失败：{0}</value></data>
+  <data name="LogEnsureDualMelonFailed" xml:space="preserve"><value>补齐双服 MelonLoader 失败：{0}</value></data>
+  <data name="LogGeneratingMelonAssembliesFor" xml:space="preserve"><value>正在为「{0}」生成 MelonLoader 程序集…</value></data>
+  <data name="LogPostSettleAcfSnapshotMissed" xml:space="preserve"><value>结算后未保存 ACF 快照：{0}</value></data>
+  <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>已保存 {0} Steam 清单快照，供下次切服免下载</value></data>
+  <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>检查 Steam 更新状态失败：{0}</value></data>
+  <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>目录条目 &apos;{0}&apos;: 无效分类 &apos;{1}&apos;，按未分类处理。</value></data>
+  <data name="LogImportedDll" xml:space="preserve"><value>已导入 DLL：{0} ({1})</value></data>
+  <data name="LogImportCancelledNoType" xml:space="preserve"><value>已取消导入（未选择类型）</value></data>
+  <data name="LogImportDllFailed" xml:space="preserve"><value>导入 DLL 失败：{0}</value></data>
+  <data name="LogImportedFolder" xml:space="preserve"><value>已导入文件夹：{0} 个包</value></data>
+  <data name="LogImportFolderFailed" xml:space="preserve"><value>导入文件夹 失败：{0}</value></data>
+  <data name="LogImportedZip" xml:space="preserve"><value>已导入 Zip：{0} 个包</value></data>
+  <data name="LogImportZipFailed" xml:space="preserve"><value>导入 Zip 失败：{0}</value></data>
   <data name="UpdateStatusChecking" xml:space="preserve"><value>正在检查更新…</value></data>
   <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>检查更新失败：{0}</value></data>
   <data name="UpdateUiFailedNotNetwork" xml:space="preserve"><value>更新对话框界面资源异常（已忽略，不记为网络失败）。请重试「检查更新」或重启管理器。</value></data>

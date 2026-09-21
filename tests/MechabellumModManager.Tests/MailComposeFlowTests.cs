@@ -72,6 +72,7 @@ public class MailComposeFlowTests
         string? revealed = null;
         string? copied = null;
         string? notified = null;
+        string? opened = null;
         var mailAskedAfterReveal = false;
         var vm = fx.CreateVm(
             notify: m => notified = m,
@@ -83,6 +84,11 @@ public class MailComposeFlowTests
             {
                 mailAskedAfterReveal = revealed is not null && File.Exists(zipPath);
                 return null;
+            },
+            tryOpenExternal: url =>
+            {
+                opened = url;
+                return true;
             });
 
         try
@@ -92,10 +98,76 @@ public class MailComposeFlowTests
             File.Exists(zipPath).Should().BeTrue();
             revealed.Should().Be(zipPath);
             mailAskedAfterReveal.Should().BeTrue();
-            copied.Should().Contain("[诊断包/Diagnostics]");
-            notified.Should().Contain(vm.Ui.MailCancelled);
+            copied.Should().BeNull();
+            opened.Should().BeNull();
+            notified.Should().Contain(LocalizationService.T("DiagnosticsFollowUpCancelled"));
             notified.Should().Contain(Path.GetFileName(zipPath));
             vm.LogText.Should().NotContain(vm.Ui.MailOpenFailed);
+        }
+        finally
+        {
+            if (File.Exists(zipPath))
+                File.Delete(zipPath);
+        }
+    }
+
+    [Fact]
+    public void ExportDiagnostics_qq_copies_mail_and_does_not_open_discord()
+    {
+        using var fx = Fixture.CreateReady();
+        var zipPath = Path.Combine(Path.GetTempPath(), "mmm-mail-" + Guid.NewGuid().ToString("N") + ".zip");
+        string? copied = null;
+        string? opened = null;
+        var vm = fx.CreateVm(
+            copyText: t => copied = t,
+            promptExportDiagnostics: () => DiagnosticsRedactionMode.None,
+            saveZipFile: _ => zipPath,
+            promptMailProvider: () => MailProvider.Qq,
+            tryOpenExternal: url =>
+            {
+                opened = url;
+                return true;
+            });
+
+        try
+        {
+            vm.ExportDiagnosticsCommand.Execute(null);
+
+            copied.Should().Contain("[诊断包/Diagnostics]");
+            copied.Should().Contain("To: llxmod@foxmail.com");
+            opened.Should().Be(GitHubCommunityLinks.DomesticWebMailUrl);
+        }
+        finally
+        {
+            if (File.Exists(zipPath))
+                File.Delete(zipPath);
+        }
+    }
+
+    [Fact]
+    public void ExportDiagnostics_discord_opens_server_without_copying_mail()
+    {
+        using var fx = Fixture.CreateReady();
+        var zipPath = Path.Combine(Path.GetTempPath(), "mmm-mail-" + Guid.NewGuid().ToString("N") + ".zip");
+        string? copied = null;
+        string? opened = null;
+        var vm = fx.CreateVm(
+            copyText: t => copied = t,
+            promptExportDiagnostics: () => DiagnosticsRedactionMode.None,
+            saveZipFile: _ => zipPath,
+            promptDiagnosticsMail: () => DiagnosticsFollowUp.Discord,
+            tryOpenExternal: url =>
+            {
+                opened = url;
+                return true;
+            });
+
+        try
+        {
+            vm.ExportDiagnosticsCommand.Execute(null);
+
+            copied.Should().BeNull();
+            opened.Should().Be(GitHubCommunityLinks.DiscordFeedbackUrl);
         }
         finally
         {

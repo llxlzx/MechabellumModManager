@@ -18,6 +18,14 @@ public enum MailProvider
     Gmail
 }
 
+public enum DiagnosticsFollowUp
+{
+    Cancel,
+    Discord,
+    Qq,
+    Gmail
+}
+
 public readonly record struct MailComposePayload(string Subject, string Body, string MailtoUrl);
 
 /// <summary>
@@ -28,6 +36,9 @@ public readonly record struct MailComposePayload(string Subject, string Body, st
 public static class GitHubCommunityLinks
 {
     public const string Inbox = "llxmod@foxmail.com";
+
+    /// <summary>GODOG Battalion invite. Cancel on a diagnostics export opens this instead of copying mail.</summary>
+    public const string DiscordFeedbackUrl = "https://discord.gg/CQDkCfDTA";
 
     /// <summary>QQ / Foxmail webmail home (CN-friendly).</summary>
     public static string DomesticWebMailUrl => "https://wx.mail.qq.com/";

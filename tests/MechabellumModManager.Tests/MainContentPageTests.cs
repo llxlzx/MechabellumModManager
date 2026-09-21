@@ -45,6 +45,44 @@ public class MainContentPageTests
         vm.IsLibraryPage.Should().BeTrue();
         vm.IsSettingsPage.Should().BeFalse();
         vm.IsCatalogPage.Should().BeFalse();
+        vm.IsGuidePage.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Fresh_config_opens_guide_until_dismissed()
+    {
+        using var fx = Fixture.CreateReady(onboardingDismissed: false);
+        var vm = fx.CreateVm();
+
+        vm.ActiveContentPage.Should().Be(MainContentPage.Guide);
+        vm.IsGuidePage.Should().BeTrue();
+        vm.IsLibraryPage.Should().BeFalse();
+
+        vm.ShowLibraryPageCommand.Execute(null);
+        vm.IsLibraryPage.Should().BeTrue();
+        vm.IsGuidePage.Should().BeFalse();
+
+        vm.ShowGuidePageCommand.Execute(null);
+        vm.IsGuidePage.Should().BeTrue();
+        vm.SkipGuideOnStartup.Should().BeFalse();
+
+        vm.SkipGuideOnStartup = true;
+        fx.LoadConfig().OnboardingDismissed.Should().BeTrue();
+
+        vm.SkipGuideOnStartup = false;
+        fx.LoadConfig().OnboardingDismissed.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Dismissed_config_stays_off_the_guide_and_checkbox_starts_checked()
+    {
+        using var fx = Fixture.CreateReady(onboardingDismissed: true);
+        var vm = fx.CreateVm();
+
+        vm.ActiveContentPage.Should().Be(MainContentPage.Library);
+        vm.IsGuidePage.Should().BeFalse();
+        vm.SkipGuideOnStartup.Should().BeTrue();
+        fx.LoadConfig().OnboardingDismissed.Should().BeTrue();
     }
 
     sealed class Fixture : IDisposable
@@ -72,7 +110,7 @@ public class MainContentPageTests
             _deploy = new DeployService(_paths, _store, new DeployPlanner(), _detector, new ProcessProbe());
         }
 
-        public static Fixture CreateReady()
+        public static Fixture CreateReady(bool onboardingDismissed = true)
         {
             var dataRoot = Path.Combine(Path.GetTempPath(), "mmm-page-" + Guid.NewGuid().ToString("N"));
             var gameRoot = Path.Combine(Path.GetTempPath(), "mmm-page-game-" + Guid.NewGuid().ToString("N"));
@@ -88,10 +126,13 @@ public class MainContentPageTests
             {
                 GamePath = gameRoot,
                 ActiveProfileId = "default",
-                LaunchMode = LaunchMode.ExeOnly
+                LaunchMode = LaunchMode.ExeOnly,
+                OnboardingDismissed = onboardingDismissed
             });
             return fx;
         }
+
+        public AppConfig LoadConfig() => _store.LoadOrDefault(_paths.ConfigPath, () => new AppConfig());
 
         public MainViewModel CreateVm() =>
             new(

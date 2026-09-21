@@ -81,6 +81,12 @@
   <data name="Language" xml:space="preserve">
     <value>言語</value>
   </data>
+  <data name="UiScale" xml:space="preserve">
+    <value>表示の拡大</value>
+  </data>
+  <data name="UiScaleAuto" xml:space="preserve">
+    <value>自動</value>
+  </data>
   <data name="LanguageSystem" xml:space="preserve">
     <value>システムに合わせる</value>
   </data>
@@ -91,7 +97,7 @@
     <value>クレジットと免責</value>
   </data>
   <data name="CreditsBody" xml:space="preserve">
-    <value>本 Mod マネージャーは「院长大人」が制作しました。テスターの皆さん、本マネージャーをご利用のプレイヤー、および鋼鉄指揮官の Mod 作者に心より感謝します。
+    <value>本 Mod マネージャーは「llxmod」が制作しました。テスターの皆さん、本マネージャーをご利用のプレイヤー、および鋼鉄指揮官の Mod 作者に心より感謝します。
 
 1. 本ソフトは独立したファン向けツールであり、Mechabellum（鋼鉄指揮官）・そのパブリッシャー・Steam とは一切の公式関係・提携関係がありません。
 2. 非営利かつ無料で利用できます。スポンサー入口や課金はありません。営利目的で利用する者がいれば、ご自身の判断でご遠慮ください。
@@ -99,7 +105,7 @@
 4. 本ソフトは現状有姿（AS IS）で提供され、明示・黙示を問わずいかなる保証もありません。利用リスクは利用者に帰属します（ゲーム更新により Mod やマネージャーが動作しなくなる可能性があります。バックアップを推奨します）。作者および関係者は、本マネージャーの利用、または本マネージャー経由での第三者 Mod / プラグイン / 関連ファイルの取得・導入・有効化・管理に起因する直接・間接の損害について責任を負いません。
 5. 第三者 Mod は各作者が提供するものです。マネージャーおよびカタログ管理者は安全性・合法性・品質を保証しません。有効化は自己責任です。問題はメールで報告してください。
 6. カタログ掲載は推奨・保証を意味しません。管理者は掲載拒否・遅延、メタデータ編集、削除を行う場合があります。
-7. 連絡先：メール llxmod@foxmail.com（投稿 / 通報 / フィードバック）；副次的な連絡先として QQ 319323959（管理者「院长大人」）。
+7. 連絡先：メール llxmod@foxmail.com（投稿 / 通報 / フィードバック）；副次的な連絡先として QQ 319323959（管理者「llxmod」）。
 8. 本マネージャーを継続して使用することで、本声明に同意したものとみなします。同意できない場合は直ちに使用を中止し、アンインストールしてください。</value>
   </data>
   <data name="Report" xml:space="preserve">
@@ -142,16 +148,31 @@
     <value>ウェブメールを開けないか、投稿の準備に失敗しました</value>
   </data>
   <data name="DirectUpload" xml:space="preserve">
-    <value>Whitelist upload</value>
+    <value>Whitelist upload（未完成）</value>
   </data>
   <data name="DirectUploadTitle" xml:space="preserve">
-    <value>Whitelist upload</value>
+    <value>Whitelist upload（未完成）</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
     <value>Invite code</value>
   </data>
   <data name="DirectUploadSaveCode" xml:space="preserve">
     <value>Save</value>
+  </data>
+  <data name="DirectUploadSecretId" xml:space="preserve">
+    <value>SecretId</value>
+  </data>
+  <data name="DirectUploadSecretKey" xml:space="preserve">
+    <value>SecretKey</value>
+  </data>
+  <data name="DirectUploadSecretHint" xml:space="preserve">
+    <value>一度入力すれば十分です。マネージャーがユーザーフォルダの .cos.yaml に書き、coscli が読みます。鍵を空にすると保存済みの値を使います。</value>
+  </data>
+  <data name="DirectUploadSecretSaved" xml:space="preserve">
+    <value>鍵をこの PC の coscli 設定に書き込みました。</value>
+  </data>
+  <data name="DirectUploadNeedSecret" xml:space="preserve">
+    <value>SecretId と SecretKey を両方入力してください。</value>
   </data>
   <data name="DirectUploadModId" xml:space="preserve">
     <value>Mod Id (folder name)</value>
@@ -172,19 +193,46 @@
     <value>Preview</value>
   </data>
   <data name="DirectUploadPublish" xml:space="preserve">
-    <value>Publish</value>
+    <value>Mod ファイルをアップロード</value>
+  </data>
+  <data name="DirectUploadUpdateCatalog" xml:space="preserve">
+    <value>カタログも更新する（マスターキーのみ）</value>
+  </data>
+  <data name="DirectUploadUpdateCatalogHint" xml:space="preserve">
+    <value>通常はオフのままにしてください。オンにするとミラーのカタログを上書きし、成功するのは自分の PC のマスターキーだけです。サブアカウントのキーではオンにしないでください。</value>
+  </data>
+  <data name="DirectUploadMergeCatalog" xml:space="preserve">
+    <value>カタログへ書き込む</value>
+  </data>
+  <data name="DirectUploadFilesUploaded" xml:space="preserve">
+    <value>ファイルはこの Mod 自身のフォルダに入りました。カタログは変わっていません。管理者がカタログへ書き込むと、プレイヤーから見えるようになります。</value>
+  </data>
+  <data name="DirectUploadCatalogDenied" xml:space="preserve">
+    <value>ファイルはアップロードされましたが、カタログは更新されていません。サブアカウントのキーではカタログを変更できません。自分の PC で「カタログへ書き込む」を押してください。</value>
+  </data>
+  <data name="DirectUploadCatalogWriteFailed" xml:space="preserve">
+    <value>カタログは書き込まれませんでした。この PC のマスターキーを使ってください。サブアカウントのキーではカタログを変更できません。</value>
+  </data>
+  <data name="DirectUploadMergeSuccess" xml:space="preserve">
+    <value>この Mod をカタログへ書き込みました。プレイヤーはカタログを更新するとダウンロードできます。</value>
+  </data>
+  <data name="DirectUploadEntryMissing" xml:space="preserve">
+    <value>ミラーにこの Mod の項目がまだありません。先にファイルをアップロードしてもらってください。</value>
+  </data>
+  <data name="DirectUploadNeedModId" xml:space="preserve">
+    <value>先に Mod Id を入力してください。</value>
   </data>
   <data name="DirectUploadSuccess" xml:space="preserve">
-    <value>Published to GitHub MechabellumMods. Players see it after refreshing the catalog.</value>
+    <value>カタログを更新しました。プレイヤーは更新後にミラーからダウンロードできます。</value>
   </data>
   <data name="DirectUploadMirrorLagHint" xml:space="preserve">
-    <value>If you use the domestic mirror, cache may lag until synced.</value>
+    <value>同じファイルを GitHub の MechabellumMods に入れてから、ミラーの全量同期をしてください。先に同期すると、今回の送信が古いカタログで上書きされます。</value>
   </data>
   <data name="DirectUploadFailed" xml:space="preserve">
-    <value>Upload failed</value>
+    <value>アップロード失敗</value>
   </data>
   <data name="DirectUploadNotConfigured" xml:space="preserve">
-    <value>Direct-upload API URL is not configured. Deploy the Worker, then set DirectUploadApiBaseUrl or update the app default.</value>
+    <value>この PC からは国内ミラーに書き込めません。coscli を入れ、ミラーバケットへ書き込めるアカウントで coscli config init を済ませてください。</value>
   </data>
   <data name="DirectUploadNeedInvite" xml:space="preserve">
     <value>Enter an invite code first.</value>
@@ -255,6 +303,11 @@
   <data name="MailProviderGmail" xml:space="preserve">
     <value>Gmail</value>
   </data>
+  <data name="DiagnosticsMailHint" xml:space="preserve"><value>QQ メールか Gmail を選ぶと下書きをコピーしてウェブメールを開きます。Discord は GODOG Battalion を開き、メールはコピーしません。キャンセルは保存した zip だけ残します。</value></data>
+  <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>Discord（GODOG Battalion）を開きました。チャンネルで報告し、zip を手動で添付してください。メールはコピーしていません。</value></data>
+  <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>Discord を開けませんでした。https://discord.gg/CQDkCfDTA を手動で開き、zip を添付してください。</value></data>
+  <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>キャンセルしました。診断 zip は保存済みです。メールはコピーせず、Discord も開いていません。</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>フィードバック</value>
   </data>
@@ -315,6 +368,75 @@
   <data name="LaunchMode" xml:space="preserve">
     <value>起動方式</value>
   </data>
+  <data name="BrowseEllipsis" xml:space="preserve"><value>参照…</value></data>
+  <data name="PickGameFolderTitle" xml:space="preserve"><value>Mechabellum のゲームフォルダーを選択</value></data>
+  <data name="PickImportFolderTitle" xml:space="preserve"><value>インポートするフォルダーを選択</value></data>
+  <data name="DefaultProfileName" xml:space="preserve"><value>デフォルト</value></data>
+  <data name="LogGamePathNotFound" xml:space="preserve"><value>ゲームフォルダーを自動検出できませんでした。「設定」で Mechabellum のインストール先を指定してください。</value></data>
+  <data name="LogGamePathInvalid" xml:space="preserve"><value>現在のゲームパスは無効です。「設定」で Mechabellum.exe があるフォルダーを指定してください。</value></data>
+  <data name="ProfileNew" xml:space="preserve"><value>新規</value></data>
+  <data name="ProfileRename" xml:space="preserve"><value>名前変更</value></data>
+  <data name="ProfileDuplicate" xml:space="preserve"><value>複製</value></data>
+  <data name="LaunchModeSteamThenExe" xml:space="preserve"><value>Steam優先、失敗時は直接起動</value></data>
+  <data name="LaunchModeSteamOnly" xml:space="preserve"><value>Steamのみ</value></data>
+  <data name="LaunchModeExeOnly" xml:space="preserve"><value>exe直接起動のみ</value></data>
+  <data name="DirtyHintDirty" xml:space="preserve"><value>構成が変更され、ゲームフォルダー未同期 — 「構成を適用」をクリック</value></data>
+  <data name="DirtyHintClean" xml:space="preserve"><value>ゲームフォルダーと同期済み</value></data>
+  <data name="StatusKindReady" xml:space="preserve"><value>準備完了</value></data>
+  <data name="StatusKindAssembliesMissing" xml:space="preserve"><value>アセンブリ未生成</value></data>
+  <data name="StatusKindLoaderMissing" xml:space="preserve"><value>Loaderなし</value></data>
+  <data name="StatusKindLoaderPartial" xml:space="preserve"><value>Loader不完全</value></data>
+  <data name="StatusKindGameMissing" xml:space="preserve"><value>ゲーム未検出</value></data>
+  <data name="StatusKindWaitingProcess" xml:space="preserve"><value>ゲームプロセス待機中</value></data>
+  <data name="StatusKindNotInjected" xml:space="preserve"><value>未注入</value></data>
+  <data name="StatusKindUnknown" xml:space="preserve"><value>不明</value></data>
+  <data name="StatusDetailGameMissing" xml:space="preserve"><value>有効な Mechabellum のインストールが見つかりません（Mechabellum.exe と GameAssembly.dll が必要です）。</value></data>
+  <data name="StatusDetailLoaderMissing" xml:space="preserve"><value>ゲームは見つかりましたが、MelonLoader が未インストールです。右上の「MelonLoader をインストール」を押すか、セットアップで MelonLoader を選んで再実行してください。</value></data>
+  <data name="StatusDetailLoaderPartial" xml:space="preserve"><value>MelonLoader のインストールが不完全です（MelonLoader フォルダと version.dll または winhttp.dll が必要です）。「MelonLoader をインストール」で補完するか、セットアップを再実行してください。</value></data>
+  <data name="StatusDetailAssembliesMissing" xml:space="preserve"><value>MelonLoader は入っていますが、Il2Cpp アセンブリがまだ生成されていません（今すぐ、またはプロファイル適用時に生成できます。初回は1〜2分ほどかかります）。</value></data>
+  <data name="StatusDetailNotInjected" xml:space="preserve"><value>今回の起動では Loader が注入されていません</value></data>
+  <data name="StatusDetailReady" xml:space="preserve"><value>ゲームと MelonLoader の準備ができています。</value></data>
+  <data name="StatusDetailReadyVersion" xml:space="preserve"><value>ゲームと MelonLoader の準備ができています。Melon {0}</value></data>
+  <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0}（同梱版 {1} より古い）</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>初心者チュートリアル</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>初心者チュートリアル</value></data>
+  <data name="GuideIntro" xml:space="preserve"><value>最初の5手順を終えれば対戦できます。残りは遊んだあとに見てください。注意アイコンの文は必ず読んでください。</value></data>
+  <data name="GuideLanguageTitle" xml:space="preserve"><value>1. 表示言語を選ぶ</value></data>
+  <data name="GuideLanguageBody" xml:space="preserve"><value>下で直接選びます。選ぶと、このページと管理ツール全体がすぐその言語になります。「システムに従う」も選べます。</value></data>
+  <data name="GuidePathTitle" xml:space="preserve"><value>3. ゲームフォルダーを確認</value></data>
+  <data name="GuidePathBody" xml:space="preserve"><value>設定のパスは Mechabellum.exe があるフォルダーでなければなりません。セットアップで入っていれば、合っているか見るだけで十分です。</value></data>
+  <data name="GuideLoaderTitle" xml:space="preserve"><value>2. 上部の検出を見る</value></data>
+  <data name="GuideLoaderBody" xml:space="preserve"><value>上部中央が検出結果です。「準備完了」になってから先へ進みます。そうでないときは右側に「MelonLoaderをインストール/アップグレード」が出ます。その下の一行が診断で、今ゲームを止める問題があるかを示します。</value></data>
+  <data name="GuideNoteMelon" xml:space="preserve"><value>インストールする前に、ゲームを完全に終了してください。</value></data>
+  <data name="GuideLaunchTitle" xml:space="preserve"><value>起動方法</value></data>
+  <data name="GuideLaunchBody" xml:space="preserve"><value>初期値は「Steam優先、失敗時は直接起動」です。Loader が注入されないときは、設定で「exe直接起動のみ」に変えます。</value></data>
+  <data name="GuideBrowseTitle" xml:space="preserve"><value>4. 追加してからチェック</value></data>
+  <data name="GuideBrowseBody" xml:space="preserve"><value>上部の「Mod工房」で Mod を選び、ライブラリに追加します。追加しただけでは有効になりません。次に「導入済み」で使うものにチェックします。</value></data>
+  <data name="GuideNoteRisk" xml:space="preserve"><value>チェックしていない Mod はゲームに入りません。</value></data>
+  <data name="GuideLibraryTitle" xml:space="preserve"><value>導入済み</value></data>
+  <data name="GuideLibraryBody" xml:space="preserve"><value>「導入済み」で有効にする項目にチェックします。</value></data>
+  <data name="GuideProfilesTitle" xml:space="preserve"><value>構成</value></data>
+  <data name="GuideProfilesBody" xml:space="preserve"><value>上部の一覧には最初から一つあります。複数の組み合わせを残すときだけ、新規・名前変更・複製を使います。</value></data>
+  <data name="GuideApplyTitle" xml:space="preserve"><value>5. 適用するまでゲームには入らない</value></data>
+  <data name="GuideApplyBody" xml:space="preserve"><value>チェックは構成を変えるだけで、すぐゲームフォルダーには書きません。上部に「構成が変更され、ゲームフォルダー未同期 — 「構成を適用」をクリック」と出たら、まだ書き込まれていません。</value></data>
+  <data name="GuideNoteApply" xml:space="preserve"><value>上部の「適用して起動」を押すと、先にゲームフォルダーへ書き、それから起動します。起動せず書き込むだけなら「プロファイル適用」です。</value></data>
+  <data name="GuideLaterTitle" xml:space="preserve"><value>遊んでから見る</value></data>
+  <data name="GuideImportTitle" xml:space="preserve"><value>インポート</value></data>
+  <data name="GuideImportBody" xml:space="preserve"><value>「導入済み」では dll、zip、フォルダーを取り込めます。ゲームフォルダーにある Mod を戻すこともできます。</value></data>
+  <data name="GuideUpdatesTitle" xml:space="preserve"><value>更新とコンソール</value></data>
+  <data name="GuideUpdatesBody" xml:space="preserve"><value>設定で起動時の Mod 更新確認をオンにできます。Melon コンソールを隠す設定は、次にゲームを起動したときから効きます。</value></data>
+  <data name="GuideBranchTitle" xml:space="preserve"><value>正式版とテスト版</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>設定で二つのフォルダーを有効にし、正式版とテスト版を切り替えられます。</value></data>
+  <data name="GuideNoteBranch" xml:space="preserve"><value>最初はオンにしないでください。二つのフォルダーにはゲーム約2つ分の容量が要ります。迷うなら単一フォルダーのままにしてください。</value></data>
+  <data name="GuideSupportTitle" xml:space="preserve"><value>診断、リポジトリ、メール</value></data>
+  <data name="GuideSupportBody" xml:space="preserve"><value>上部の検出の下の一行が現在の診断です。それでも足りないときは、設定か右下のログ横にある「診断をエクスポート」で zip を作れます。llxmod@foxmail.com に送るか、Discord（GODOG Battalion、https://discord.gg/CQDkCfDTA）で報告してください。インストーラーとソース: https://github.com/llxlzx/MechabellumModManager</value></data>
+  <data name="GuideCommunityTitle" xml:space="preserve"><value>投稿と通報</value></data>
+  <data name="GuideCommunityBody" xml:space="preserve"><value>上部に Mod 投稿があります。通報は各項目にあります。直接アップロードは招待コードが必要で、通常は使いません。</value></data>
+  <data name="GuideOpenSettings" xml:space="preserve"><value>設定を開く</value></data>
+  <data name="GuideOpenCatalog" xml:space="preserve"><value>Mod工房を開く</value></data>
+  <data name="GuideOpenLibrary" xml:space="preserve"><value>導入済みを開く</value></data>
+  <data name="GuideDismissStartup" xml:space="preserve"><value>次回起動時に開かない</value></data>
+
   <data name="PortableDataRoot" xml:space="preserve">
     <value>ポータブルデータ（アプリ横の data。変更後は再起動）</value>
   </data>
@@ -729,6 +851,88 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="DiagnosisTitle_healthy" xml:space="preserve"><value>阻害する問題は見つかりませんでした</value></data>
   <data name="DiagnosisAction_healthy" xml:space="preserve"><value>管理ツールの案内に従ってください。</value></data>
   <data name="LogMirrorMustBeHttps" xml:space="preserve"><value>ミラーの URL は https である必要があります。この設定を無視しました: {0}</value></data>
+  <data name="LogDualConfigReadFailed" xml:space="preserve"><value>二系統設定の読み取りに失敗（無視）：{0}</value></data>
+  <data name="LogAutoLocatedGameDir" xml:space="preserve"><value>ゲームフォルダーを自動検出：{0}</value></data>
+  <data name="LogEnableDualRollbackError" xml:space="preserve"><value>二系統有効化のロールバック失敗：{0}</value></data>
+  <data name="LogHideConsoleWriteFailed" xml:space="preserve"><value>hide_console の書き込み失敗（{0}）：{1}</value></data>
+  <data name="LogHollowStoreCheckFailed" xml:space="preserve"><value>空ストア検査に失敗：{0}</value></data>
+  <data name="LogAskGenerateAssembliesError" xml:space="preserve"><value>アセンブリ生成の確認中にエラー：{0}</value></data>
+  <data name="LogAutoImportedFromGame" xml:space="preserve"><value>ゲームから自動で {0} 個のパッケージをインポート（{1} 件スキップ）。</value></data>
+  <data name="LogAutoImportFromGameFailed" xml:space="preserve"><value>ゲームからの自動インポート失敗：{0}</value></data>
+  <data name="LogImportFromGameDone" xml:space="preserve"><value>ゲームからのインポート完了：インポート {0}、スキップ {1}。</value></data>
+  <data name="LogImportFromGameFailed" xml:space="preserve"><value>ゲームからのインポート失敗：{0}</value></data>
+  <data name="LogUnityDepsSeedFailed" xml:space="preserve"><value>警告：UnityDependencies のシード失敗 — {0}</value></data>
+  <data name="LogMelonOptimizeConfigFailed" xml:space="preserve"><value>MelonLoader 最適化設定失敗：{0}</value></data>
+  <data name="LogCleanupBepInExDoorstopFailed" xml:space="preserve"><value>BepInEx Doorstop のクリーンアップ失敗：{0}</value></data>
+  <data name="LogNoProfileSelected" xml:space="preserve"><value>構成が選択されていません。</value></data>
+  <data name="LogAssembliesNotReadyDeploy" xml:space="preserve"><value>MelonLoader アセンブリ未準備。先に生成してから配備してください。</value></data>
+  <data name="LogGameStatusNotReadyDeploy" xml:space="preserve"><value>ゲーム状態未準備のため配備できません。</value></data>
+  <data name="LogConfirmGameProcessFailed" xml:space="preserve"><value>ゲームプロセスの確認失敗：{0}</value></data>
+  <data name="LogCheckMelonInjectFailed" xml:space="preserve"><value>Melon 注入状態の確認失敗：{0}</value></data>
+  <data name="LogMelonRedistUseCacheDir" xml:space="preserve"><value>インストール先が書き込み不可のため、Melon オフラインパッケージをローカルキャッシュへ：{0}</value></data>
+  <data name="LogMelonRedistPreparing" xml:space="preserve"><value>Melon ランタイムのオフラインパッケージを準備中（ミラー優先）…</value></data>
+  <data name="LogUpdatedCategoryTags" xml:space="preserve"><value>分類/タグを更新：{0}</value></data>
+  <data name="LogJoiningLibrarySkipCatalogRefresh" xml:space="preserve"><value>ローカルライブラリに追加中。カタログ更新はスキップ。</value></data>
+  <data name="LogFetchingModCatalog" xml:space="preserve"><value>Mod カタログを取得中…</value></data>
+  <data name="LogSkippedUpToDateCatalogItems" xml:space="preserve"><value>最新のカタログ項目を {0} 件スキップ。</value></data>
+  <data name="LogCatalogItemNoUpdateMatch" xml:space="preserve"><value>「{0}」はカタログに更新可能な対応項目がありません。</value></data>
+  <data name="LogAlreadyLatestSkipDownload" xml:space="preserve"><value>「{0}」は最新のためダウンロードをスキップ。</value></data>
+  <data name="LogCancelledHighRiskCatalogJoin" xml:space="preserve"><value>高リスクのカタログ項目への追加をキャンセル：{0}</value></data>
+  <data name="LogWriteCatalogMetaFailed" xml:space="preserve"><value>カタログメタデータの書き込み失敗：{0}</value></data>
+  <data name="LogUpdatedToCatalogVersion" xml:space="preserve"><value>カタログ版に更新：{0} ({1})</value></data>
+  <data name="LogUpdateCancelledBusy" xml:space="preserve"><value>「{0}」の更新をキャンセル：重要な操作の実行中。</value></data>
+  <data name="LogUpdateCancelledGameRunning" xml:space="preserve"><value>「{0}」の更新をキャンセル：ゲーム実行中。</value></data>
+  <data name="LogCatalogVersionNoKeepableCopy" xml:space="preserve"><value>「{0}」はカタログ版があるが保持可能なコピーが見つかりません。</value></data>
+  <data name="LogRemovedDuplicateOldKept" xml:space="preserve"><value>重複した旧版「{0}」を削除し、{1} を保持。</value></data>
+  <data name="LogProfileRetargetFailed" xml:space="preserve"><value>構成の新版への付け替え失敗：{0} → {1}（{2}）</value></data>
+  <data name="LogRemovedOldVersion" xml:space="preserve"><value>旧バージョンを削除：{0} ({1})</value></data>
+  <data name="LogOldVersionDisabledNotDeleted" xml:space="preserve"><value>旧バージョンは無効化したが削除できず：{0}（{1}）</value></data>
+  <data name="LogAutoCleanedDuplicateMods" xml:space="preserve"><value>重複した旧版 Mod を {0} 件自動クリーンアップ。</value></data>
+  <data name="LogProfileCreated" xml:space="preserve"><value>構成を作成：{0}</value></data>
+  <data name="LogProfileCreateFailed" xml:space="preserve"><value>構成の作成失敗：{0}</value></data>
+  <data name="LogProfileRenamed" xml:space="preserve"><value>構成を改名：{0}</value></data>
+  <data name="LogProfileRenameFailed" xml:space="preserve"><value>構成の改名失敗：{0}</value></data>
+  <data name="LogProfileDuplicated" xml:space="preserve"><value>構成を複製：{0}</value></data>
+  <data name="LogProfileDuplicateFailed" xml:space="preserve"><value>構成の複製失敗：{0}</value></data>
+  <data name="LogProfileDeleted" xml:space="preserve"><value>構成を削除：{0}</value></data>
+  <data name="LogProfileDeleteFailed" xml:space="preserve"><value>構成の削除失敗：{0}</value></data>
+  <data name="LogModDeleted" xml:space="preserve"><value>Mod を削除：{0}</value></data>
+  <data name="LogModDeleteFailed" xml:space="preserve"><value>Mod の削除失敗：{0}</value></data>
+  <data name="LogHighRiskTempMark" xml:space="preserve"><value>{0} 高リスクマーク（一時）：{1}；一覧更新後に名前キーワードで再判定。</value></data>
+  <data name="LogUpdateHighRiskMarkFailed" xml:space="preserve"><value>高リスクマークの更新失敗：{0}</value></data>
+  <data name="LogImportedHighRiskNotEnabled" xml:space="preserve"><value>高リスク Mod をインポートしたが未有効：{0}</value></data>
+  <data name="LogAutoEnableFailed" xml:space="preserve"><value>{0} の自動有効化失敗：{1}</value></data>
+  <data name="LogCancelledEnableHighRisk" xml:space="preserve"><value>高リスク Mod の有効化をキャンセル。</value></data>
+  <data name="LogEnableDisableAction" xml:space="preserve"><value>{0}：{1}</value></data>
+  <data name="LogActionDisable" xml:space="preserve"><value>無効</value></data>
+  <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>有効状態の更新失敗：{0}</value></data>
+  <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>{0} の高リスクマーク更新失敗：{1}</value></data>
+  <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>ローカルパッケージ &apos;{0}&apos;: 無効な分類上書き &apos;{1}&apos;。カタログ/未分類として処理。</value></data>
+  <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>起動時の二系統 MelonLoader 補完失敗：{0}</value></data>
+  <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>切替前の目標ストア検査失敗：{0}</value></data>
+  <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>切替前に {0} の ACF スナップショット未保存：{1}</value></data>
+  <data name="LogRestoredTargetAcfSnapshot" xml:space="preserve"><value>目標ブランチの Steam マニフェストスナップショットを復元（再ダウンロード回避）</value></data>
+  <data name="LogSwitchBranchFailed" xml:space="preserve"><value>ブランチ切替失敗：{0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardArchive" xml:space="preserve"><value>{0} の Steam マニフェストスナップショットを保存（ウィザードアーカイブ窓）。次回切替でダウンロード不要</value></data>
+  <data name="LogWizardArchiveSnapshotMissed" xml:space="preserve"><value>ウィザードアーカイブ前に {0} スナップショット未保存（ブロックしない）：{1}</value></data>
+  <data name="LogWaitOtherDownloadError" xml:space="preserve"><value>もう一方のブランチダウンロード待機中エラー：{0}</value></data>
+  <data name="LogSavedAcfSnapshotWizardDownload" xml:space="preserve"><value>{0} の Steam マニフェストスナップショットを保存（ウィザードダウンロード窓）。次回切替でダウンロード不要</value></data>
+  <data name="LogDualLinkedMelonSyncCancelled" xml:space="preserve"><value>二ストア連携済み；Melon 同期はキャンセル、決済を継続。</value></data>
+  <data name="LogDualLinkedMelonSyncIncomplete" xml:space="preserve"><value>二ストア連携済み；Melon 同期未完了：{0}</value></data>
+  <data name="LogPostLinkSettleFailed" xml:space="preserve"><value>連携後の決済失敗：{0}</value></data>
+  <data name="LogEnsureDualMelonFailed" xml:space="preserve"><value>二系統 MelonLoader の補完失敗：{0}</value></data>
+  <data name="LogGeneratingMelonAssembliesFor" xml:space="preserve"><value>「{0}」の MelonLoader アセンブリを生成中…</value></data>
+  <data name="LogPostSettleAcfSnapshotMissed" xml:space="preserve"><value>決済後に ACF スナップショット未保存：{0}</value></data>
+  <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>{0} の Steam マニフェストスナップショットを保存。次回切替でダウンロード不要</value></data>
+  <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>Steam 更新状態の確認失敗：{0}</value></data>
+  <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>カタログ項目 &apos;{0}&apos;: 無効な分類 &apos;{1}&apos;。未分類として処理。</value></data>
+  <data name="LogImportedDll" xml:space="preserve"><value>DLL をインポート：{0} ({1})</value></data>
+  <data name="LogImportCancelledNoType" xml:space="preserve"><value>インポートをキャンセル（タイプ未選択）</value></data>
+  <data name="LogImportDllFailed" xml:space="preserve"><value>DLL のインポート失敗：{0}</value></data>
+  <data name="LogImportedFolder" xml:space="preserve"><value>フォルダーをインポート：{0} 個のパッケージ</value></data>
+  <data name="LogImportFolderFailed" xml:space="preserve"><value>フォルダーのインポート失敗：{0}</value></data>
+  <data name="LogImportedZip" xml:space="preserve"><value>Zip をインポート：{0} 個のパッケージ</value></data>
+  <data name="LogImportZipFailed" xml:space="preserve"><value>Zip のインポート失敗：{0}</value></data>
   <data name="UpdateStatusChecking" xml:space="preserve"><value>更新を確認しています…</value></data>
   <data name="UpdateStatusCheckFailed" xml:space="preserve"><value>更新の確認に失敗しました: {0}</value></data>
   <data name="UpdateUiFailedNotNetwork" xml:space="preserve"><value>更新ダイアログの画面リソースに異常がありました（無視しました。ネットワーク失敗にはしません）。「更新を確認」を再試行するか、マネージャーを再起動してください。</value></data>

@@ -7,7 +7,7 @@ The in-app **Credits & Disclaimer** (`CreditsBody`, shown under 关于与声明)
 应用内「关于与声明」中的 **CreditsBody** 为管理器面向最终用户的权威免责声明文本。
 
 Contact for mods / reports / feedback: **llxmod@foxmail.com**  
-Secondary: QQ **319323959**（维护者「院长大人」）
+Secondary: QQ **319323959**（维护者「llxmod」）
 
 ---
 

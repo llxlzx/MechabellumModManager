@@ -61,6 +61,50 @@ public class UiLanguageSwitchTests
             vm.LogText.Should().Contain("跟随系统");
     }
 
+    [Fact]
+    public void Switching_language_refreshes_launch_mode_labels()
+    {
+        using var fx = Fixture.CreateReady(uiLanguage: "zh-CN");
+        var vm = fx.CreateVm();
+        LocalizationService.Apply("zh-CN");
+        vm.LaunchModeOptions.Single(o => o.Mode == LaunchMode.SteamOnly).Label
+            .Should().Be("仅 Steam");
+
+        vm.SelectedUiLanguageCode = "en";
+
+        vm.LaunchModeOptions.Single(o => o.Mode == LaunchMode.SteamOnly).Label
+            .Should().Be("Steam only");
+        vm.LaunchModeOptions.Single(o => o.Mode == LaunchMode.ExeOnly).Label
+            .Should().Be("Exe only");
+        vm.LaunchModeOptions.Single(o => o.Mode == LaunchMode.SteamThenExe).Label
+            .Should().Be("Steam first, then exe");
+    }
+
+    [Fact]
+    public void Switching_language_refreshes_dirty_and_status_labels()
+    {
+        using var fx = Fixture.CreateReady(uiLanguage: "zh-CN");
+        var vm = fx.CreateVm();
+        LocalizationService.Apply("zh-CN");
+        vm.DirtyHint.Should().Be("已与游戏目录同步");
+        vm.StatusKindLabel.Should().Be("就绪");
+        vm.StatusDetail.Should().Be("游戏与 MelonLoader 已就绪。");
+        vm.DiagnosisTitle.Should().Be("未发现阻断问题");
+        vm.Ui.GuideNav.Should().Be("新手教程");
+        vm.Ui.GuideTitle.Should().Be("新手教程");
+
+        vm.SelectedUiLanguageCode = "en";
+
+        vm.DirtyHint.Should().Be("Synced with game folder");
+        vm.StatusKindLabel.Should().Be("Ready");
+        vm.StatusDetail.Should().Be("Game and MelonLoader are ready.");
+        vm.DiagnosisTitle.Should().Be("No blocking issue found");
+        vm.Ui.GuideNav.Should().Be("Newcomer tutorial");
+        vm.Ui.GuideSupportBody.Should().Contain("llxmod@foxmail.com");
+        vm.Ui.GuideSupportBody.Should().Contain("https://github.com/llxlzx/MechabellumModManager");
+        vm.Ui.GuideSupportBody.Should().Contain("https://discord.gg/CQDkCfDTA");
+    }
+
     sealed class Fixture : IDisposable
     {
         public string DataRoot { get; }

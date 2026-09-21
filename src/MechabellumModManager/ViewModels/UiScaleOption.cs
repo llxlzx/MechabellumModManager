@@ -3,17 +3,17 @@ using System.Runtime.CompilerServices;
 
 namespace MechabellumModManager.ViewModels;
 
-public sealed class LaunchModeOption : INotifyPropertyChanged
+public sealed class UiScaleOption : INotifyPropertyChanged
 {
     string _label;
 
-    public LaunchModeOption(Models.LaunchMode mode, string label)
+    public UiScaleOption(string code, string label)
     {
-        Mode = mode;
+        Code = code;
         _label = label;
     }
 
-    public Models.LaunchMode Mode { get; }
+    public string Code { get; }
 
     public string Label
     {
@@ -30,6 +30,4 @@ public sealed class LaunchModeOption : INotifyPropertyChanged
 
     void OnPropertyChanged([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-    public override string ToString() => Label;
 }

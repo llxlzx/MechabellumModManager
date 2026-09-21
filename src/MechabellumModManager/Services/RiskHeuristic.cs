@@ -11,6 +11,12 @@ public sealed class RiskHeuristicResult
 
 public sealed class RiskHeuristic
 {
+    /// <summary>
+    /// Keyword detection is paused. The library column stays as a UI preset and does not
+    /// mark, confirm, or block mods until this is turned back on.
+    /// </summary>
+    public static readonly bool DetectionEnabled = false;
+
     public static readonly IReadOnlyList<string> Keywords = new[]
     {
         "cheat", "hack", "unlock", "damage", "economy", "godmode", "trainer",

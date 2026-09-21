@@ -7,6 +7,7 @@ public class ProfileServiceTests
     [Fact]
     public void EnsureDefaults_creates_default_profile_named_默认()
     {
+        LocalizationService.Apply("zh-CN");
         var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
         var paths = new PathsService(data);
         paths.EnsureCreated();
@@ -18,7 +19,7 @@ public class ProfileServiceTests
             var list = svc.List();
             list.Should().ContainSingle();
             list[0].Id.Should().Be("default");
-            list[0].Name.Should().Be("默认");
+            list[0].Name.Should().Be(LocalizationService.T("DefaultProfileName"));
             list[0].EnabledPackageIds.Should().BeEmpty();
 
             // Idempotent
@@ -28,6 +29,7 @@ public class ProfileServiceTests
         finally
         {
             Directory.Delete(data, true);
+            LocalizationService.Apply("zh-CN");
         }
     }
 
@@ -106,6 +108,7 @@ public class ProfileServiceTests
     [Fact]
     public void EnsureDefaults_repairs_default_profile_name()
     {
+        LocalizationService.Apply("zh-CN");
         var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
         var paths = new PathsService(data);
         paths.EnsureCreated();
@@ -123,18 +126,20 @@ public class ProfileServiceTests
             svc.EnsureDefaults();
 
             var p = svc.Get("default");
-            p.Name.Should().Be("默认");
+            p.Name.Should().Be(LocalizationService.T("DefaultProfileName"));
             p.EnabledPackageIds.Should().Contain("keep-me");
         }
         finally
         {
             Directory.Delete(data, true);
+            LocalizationService.Apply("zh-CN");
         }
     }
 
     [Fact]
     public void EnsureDefaults_recreates_corrupt_default_profile()
     {
+        LocalizationService.Apply("zh-CN");
         var data = Path.Combine(Path.GetTempPath(), "mmm-prof-" + Guid.NewGuid().ToString("N"));
         var paths = new PathsService(data);
         paths.EnsureCreated();
@@ -147,11 +152,12 @@ public class ProfileServiceTests
 
             var list = svc.List();
             list.Should().ContainSingle(p => p.Id == "default");
-            list[0].Name.Should().Be("默认");
+            list[0].Name.Should().Be(LocalizationService.T("DefaultProfileName"));
         }
         finally
         {
             Directory.Delete(data, true);
+            LocalizationService.Apply("zh-CN");
         }
     }
 

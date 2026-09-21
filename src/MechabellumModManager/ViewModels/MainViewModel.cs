@@ -59,6 +59,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Action? _unselectCatalog;
     readonly Func<DiagnosticsRedactionMode?>? _promptExportDiagnostics;
     readonly Func<MailProvider?>? _promptMailProvider;
+    readonly Func<DiagnosticsFollowUp>? _promptDiagnosticsMail;
+    readonly Func<string, bool>? _tryOpenExternal;
     readonly Func<string, string?, (bool ok, bool option)?>? _promptConfirmOption;
     readonly Func<string, string?>? _saveZipFile;
     readonly Action<string>? _revealInExplorer;
@@ -175,7 +177,9 @@ public sealed partial class MainViewModel : ObservableObject
         Func<string, string?, (bool ok, bool option)?>? promptConfirmOption = null,
         Func<bool>? steamAppMarkedRunning = null,
         ManagerSetupDownloader? setupDownloader = null,
-        Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null)
+        Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null,
+        Func<DiagnosticsFollowUp>? promptDiagnosticsMail = null,
+        Func<string, bool>? tryOpenExternal = null)
     {
         _paths = paths;
         _store = store;
@@ -220,6 +224,8 @@ public sealed partial class MainViewModel : ObservableObject
         _unselectCatalog = unselectCatalog;
         _promptExportDiagnostics = promptExportDiagnostics;
         _promptMailProvider = promptMailProvider;
+        _promptDiagnosticsMail = promptDiagnosticsMail;
+        _tryOpenExternal = tryOpenExternal;
         _promptConfirmOption = promptConfirmOption;
         _saveZipFile = saveZipFile;
         _revealInExplorer = revealInExplorer;
@@ -274,9 +280,18 @@ public sealed partial class MainViewModel : ObservableObject
         RiskBanner = RiskGate.BannerText;
         LaunchModeOptions = new[]
         {
-            new LaunchModeOption(LaunchMode.SteamThenExe, "Steam 优先，失败则直启"),
-            new LaunchModeOption(LaunchMode.SteamOnly, "仅 Steam"),
-            new LaunchModeOption(LaunchMode.ExeOnly, "仅直启 exe")
+            new LaunchModeOption(LaunchMode.SteamThenExe, LocalizationService.T("LaunchModeSteamThenExe")),
+            new LaunchModeOption(LaunchMode.SteamOnly, LocalizationService.T("LaunchModeSteamOnly")),
+            new LaunchModeOption(LaunchMode.ExeOnly, LocalizationService.T("LaunchModeExeOnly"))
+        };
+        UiScaleOptions = new[]
+        {
+            new UiScaleOption(UiScalePolicy.Auto, LocalizationService.T("UiScaleAuto")),
+            new UiScaleOption("1", "100%"),
+            new UiScaleOption("1.25", "125%"),
+            new UiScaleOption("1.5", "150%"),
+            new UiScaleOption("1.75", "175%"),
+            new UiScaleOption("2", "200%")
         };
         LanguageOptions = new[]
         {
@@ -299,6 +314,7 @@ public sealed partial class MainViewModel : ObservableObject
         else
             ApplyMirrorBaseUrl(config.MirrorBaseUrl, save: false);
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
+        ApplyUiScale(config.UiScale, save: false);
 
         try
         {
@@ -306,7 +322,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"双服配置读取失败，已忽略：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogDualConfigReadFailed"), ex.Message));
         }
 
         _gamePath = ResolveInitialGamePath(config.GamePath);
@@ -314,6 +330,7 @@ public sealed partial class MainViewModel : ObservableObject
         _usePortableDataRoot = IsPortableRoot(config.DataRoot);
         _checkModUpdatesOnStartup = config.CheckModUpdatesOnStartup;
         _hideMelonConsole = config.HideMelonConsole;
+        _skipGuideOnStartup = config.OnboardingDismissed;
         _melonDualSync.PreferHideConsole = config.HideMelonConsole;
         SilentCatalogRefreshInterval = TimeSpan.FromMinutes(
             Math.Clamp(config.CatalogHotCacheMinutes, 1, 24 * 60));
@@ -349,9 +366,12 @@ public sealed partial class MainViewModel : ObservableObject
         TryAutoImportFromGame();
 
         if (string.IsNullOrWhiteSpace(_gamePath))
-            AppendLog("未自动找到游戏目录。请在「设置」中浏览选择 Mechabellum 安装路径。");
+            AppendLog(LocalizationService.T("LogGamePathNotFound"));
         else if (!SteamGameLocator.LooksLikeGameRoot(_gamePath))
-            AppendLog("当前游戏路径无效。请在「设置」中重新选择包含 Mechabellum.exe 的目录。");
+            AppendLog(LocalizationService.T("LogGamePathInvalid"));
+
+        if (!LoadConfig().OnboardingDismissed)
+            ActiveContentPage = MainContentPage.Guide;
     }
 
     string ResolveInitialGamePath(string? configured)
@@ -375,7 +395,7 @@ public sealed partial class MainViewModel : ObservableObject
             var found = _steamLocator.TryFind();
             if (!string.IsNullOrWhiteSpace(found))
             {
-                AppendLog($"已自动定位游戏目录：{found}");
+                AppendLog(string.Format(LocalizationService.T("LogAutoLocatedGameDir"), found));
                 return found;
             }
         }
@@ -397,6 +417,7 @@ public sealed partial class MainViewModel : ObservableObject
     public IReadOnlyList<SortModeOption> SortModeOptions { get; private set; } = Array.Empty<SortModeOption>();
     public IReadOnlyList<LaunchModeOption> LaunchModeOptions { get; }
     public IReadOnlyList<LanguageOption> LanguageOptions { get; }
+    public IReadOnlyList<UiScaleOption> UiScaleOptions { get; }
     public UiStrings Ui { get; }
 
     public bool IsReady => GameStatus?.Kind == GameStatusKind.Ready;
@@ -410,7 +431,9 @@ public sealed partial class MainViewModel : ObservableObject
     public string StatusDetail =>
         IsAwaitingGameProcess
             ? LocalizationService.T("LogLaunchStillWaiting")
-            : GameStatus?.Message ?? "";
+            : GameStatus is { } status
+                ? GameDetector.FormatMessage(status.Kind, status.MelonLoaderVersion, status.LoaderInjected)
+                : "";
 
     public bool NeedsMelonLoaderInstall =>
         !IsEnableDualWaitingDownload
@@ -787,7 +810,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog("启用双服回滚失败：" + ex.Message);
+            AppendLog(string.Format(LocalizationService.T("LogEnableDualRollbackError"), ex.Message));
             _taskProgress.Clear();
             NotifyTaskProgress();
             ClearRecoveryGate();
@@ -997,9 +1020,10 @@ public sealed partial class MainViewModel : ObservableObject
                         LocalizationService.T("DeployBlockedLoaderMissing"),
                     GameStatusKind.LoaderPartial =>
                         LocalizationService.T("DeployBlockedLoaderPartial"),
-                    _ => string.IsNullOrWhiteSpace(GameStatus?.Message)
+                    _ => GameStatus is null
                         ? LocalizationService.T("DeployBlockedNotReady")
-                        : GameStatus.Message
+                        : GameDetector.FormatMessage(
+                            GameStatus.Kind, GameStatus.MelonLoaderVersion, GameStatus.LoaderInjected)
                 };
             }
 
@@ -1019,22 +1043,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     public string StatusKindLabel =>
         IsAwaitingGameProcess
-            ? "正在等待游戏进程"
+            ? LocalizationService.T("StatusKindWaitingProcess")
             : IsEnableDualWaitingDownload
             ? LocalizationService.T("BranchStatusEnabling")
             : GameStatus?.LoaderInjected == false
-                ? "未注入"
+                ? LocalizationService.T("StatusKindNotInjected")
                 : GameStatus?.Kind switch
             {
-                GameStatusKind.Ready => "就绪",
-                GameStatusKind.LoaderPresentAssembliesMissing => "待生成程序集",
-                GameStatusKind.GameOkLoaderMissing => "缺少 Loader",
-                GameStatusKind.LoaderPartial => "Loader 不完整",
-                GameStatusKind.GameMissing => "未找到游戏",
-                _ => "未知"
+                GameStatusKind.Ready => LocalizationService.T("StatusKindReady"),
+                GameStatusKind.LoaderPresentAssembliesMissing =>
+                    LocalizationService.T("StatusKindAssembliesMissing"),
+                GameStatusKind.GameOkLoaderMissing => LocalizationService.T("StatusKindLoaderMissing"),
+                GameStatusKind.LoaderPartial => LocalizationService.T("StatusKindLoaderPartial"),
+                GameStatusKind.GameMissing => LocalizationService.T("StatusKindGameMissing"),
+                _ => LocalizationService.T("StatusKindUnknown")
             };
 
-    public string DirtyHint => IsDirty ? "方案已改，游戏目录未同步 — 请点击「应用方案」" : "已与游戏目录同步";
+    public string DirtyHint => IsDirty
+        ? LocalizationService.T("DirtyHintDirty")
+        : LocalizationService.T("DirtyHintClean");
 
     public string DiagnosisTitle => CurrentDiagnosis?.Title ?? "";
 
@@ -1062,6 +1089,9 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isLogExpanded;
     [ObservableProperty] private bool _isDirty;
     [ObservableProperty] private string _riskBanner = "";
+
+    /// <summary>False while keyword high-risk detection is paused. The column stays visible.</summary>
+    public bool HighRiskDetectionEnabled => RiskHeuristic.DetectionEnabled;
     [ObservableProperty] private string _loaderVersionWarning = "";
     [ObservableProperty] private string _firstAssemblyWarning = "";
     [ObservableProperty] private string _missingEnabledPackagesWarning = "";
@@ -1070,17 +1100,21 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _usePortableDataRoot;
     [ObservableProperty] private bool _checkModUpdatesOnStartup;
     [ObservableProperty] private bool _hideMelonConsole;
+    /// <summary>When checked, the next launch opens the library instead of the newcomer tutorial.</summary>
+    [ObservableProperty] private bool _skipGuideOnStartup;
     [ObservableProperty] private MainContentPage _activeContentPage = MainContentPage.Library;
 
     public bool IsLibraryPage => ActiveContentPage == MainContentPage.Library;
     public bool IsCatalogPage => ActiveContentPage == MainContentPage.Catalog;
     public bool IsSettingsPage => ActiveContentPage == MainContentPage.Settings;
+    public bool IsGuidePage => ActiveContentPage == MainContentPage.Guide;
 
     partial void OnActiveContentPageChanged(MainContentPage value)
     {
         OnPropertyChanged(nameof(IsLibraryPage));
         OnPropertyChanged(nameof(IsCatalogPage));
         OnPropertyChanged(nameof(IsSettingsPage));
+        OnPropertyChanged(nameof(IsGuidePage));
 
         if (value == MainContentPage.Library)
             _ = SilentRefreshCatalogForLibraryAsync();
@@ -1101,6 +1135,8 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _mirrorBaseUrl = "";
     bool _suppressMirrorSave;
     [ObservableProperty] private string _selectedUiLanguageCode = "system";
+    bool _suppressUiScaleSave;
+    [ObservableProperty] private string _selectedUiScaleCode = UiScalePolicy.Auto;
     [ObservableProperty] private string _catalogSearchText = "";
     [ObservableProperty] private CategoryFilterOption? _selectedCatalogCategoryFilter;
     [ObservableProperty] private TagFilterOption? _selectedCatalogTagFilter;
@@ -1157,6 +1193,44 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (_suppressLanguageSave) return;
         ApplyUiLanguage(newValue, save: true, refreshUi: true, previousConfiguredOverride: oldValue);
+    }
+
+    partial void OnSelectedUiScaleCodeChanged(string? oldValue, string newValue)
+    {
+        if (_suppressUiScaleSave) return;
+        ApplyUiScale(newValue, save: true);
+    }
+
+    void ApplyUiScale(string? code, bool save)
+    {
+        var normalized = UiScalePolicy.Normalize(code);
+        _suppressUiScaleSave = true;
+        try
+        {
+            SelectedUiScaleCode = normalized;
+        }
+        finally
+        {
+            _suppressUiScaleSave = false;
+        }
+
+        UiScaleHost.SetConfigured(normalized);
+        if (!save)
+            return;
+
+        var stored = normalized == UiScalePolicy.Auto ? null : normalized;
+        var config = LoadConfig();
+        if (string.Equals(config.UiScale, stored, StringComparison.Ordinal))
+            return;
+        config.UiScale = stored;
+        SaveConfig(config);
+    }
+
+    void RefreshUiScaleLabels()
+    {
+        var auto = UiScaleOptions.FirstOrDefault(o => o.Code == UiScalePolicy.Auto);
+        if (auto is not null)
+            auto.Label = LocalizationService.T("UiScaleAuto");
     }
 
     void ApplyUiLanguage(string? code, bool save, bool refreshUi, string? previousConfiguredOverride = null)
@@ -1217,6 +1291,14 @@ public sealed partial class MainViewModel : ObservableObject
         if (refreshUi)
         {
             Ui.Refresh();
+            RefreshLaunchModeLabels();
+            RefreshUiScaleLabels();
+            OnPropertyChanged(nameof(DirtyHint));
+            OnPropertyChanged(nameof(StatusKindLabel));
+            OnPropertyChanged(nameof(StatusDetail));
+            OnPropertyChanged(nameof(DeployBlockedReason));
+            OnPropertyChanged(nameof(ShowDeployBlockedReason));
+            RecalculateDiagnosis();
             RebuildFilterOptionLabels();
             RefreshBranchStatusText();
             RefreshMirrorSummary();
@@ -1226,6 +1308,20 @@ public sealed partial class MainViewModel : ObservableObject
                 mod.NotifyDisplayChanged();
             RefreshCatalogView();
             RefreshLibraryView();
+        }
+    }
+
+    void RefreshLaunchModeLabels()
+    {
+        foreach (var option in LaunchModeOptions)
+        {
+            option.Label = option.Mode switch
+            {
+                LaunchMode.SteamThenExe => LocalizationService.T("LaunchModeSteamThenExe"),
+                LaunchMode.SteamOnly => LocalizationService.T("LaunchModeSteamOnly"),
+                LaunchMode.ExeOnly => LocalizationService.T("LaunchModeExeOnly"),
+                _ => option.Label
+            };
         }
     }
 
@@ -1352,6 +1448,15 @@ public sealed partial class MainViewModel : ObservableObject
         SaveConfig(config);
     }
 
+    partial void OnSkipGuideOnStartupChanged(bool value)
+    {
+        var config = LoadConfig();
+        if (config.OnboardingDismissed == value)
+            return;
+        config.OnboardingDismissed = value;
+        SaveConfig(config);
+    }
+
     partial void OnHideMelonConsoleChanged(bool value)
     {
         var config = LoadConfig();
@@ -1376,7 +1481,7 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                AppendLog($"写入 hide_console 失败（{root}）：{ex.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogHideConsoleWriteFailed"), root, ex.Message));
             }
         }
 
@@ -1645,7 +1750,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"检查空壳仓失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogHollowStoreCheckFailed"), ex.Message));
         }
     }
 
@@ -1690,7 +1795,7 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                AppendLog($"询问生成程序集时出错：{ex.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogAskGenerateAssembliesError"), ex.Message));
             }
         }
 
@@ -1725,7 +1830,7 @@ public sealed partial class MainViewModel : ObservableObject
 
             foreach (var msg in result.Messages)
                 AppendLog(msg);
-            AppendLog($"已从游戏自动导入 {result.Imported} 个包（跳过 {result.Skipped}）。");
+            AppendLog(string.Format(LocalizationService.T("LogAutoImportedFromGame"), result.Imported, result.Skipped));
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -1733,7 +1838,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"从游戏自动导入失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogAutoImportFromGameFailed"), ex.Message));
         }
     }
 
@@ -1745,7 +1850,7 @@ public sealed partial class MainViewModel : ObservableObject
             var result = _library.ImportFromGame(GamePath);
             foreach (var msg in result.Messages)
                 AppendLog(msg);
-            AppendLog($"从游戏导入完成：导入 {result.Imported}，跳过 {result.Skipped}。");
+            AppendLog(string.Format(LocalizationService.T("LogImportFromGameDone"), result.Imported, result.Skipped));
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -1753,7 +1858,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"从游戏导入失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogImportFromGameFailed"), ex.Message));
         }
     }
 
@@ -1780,7 +1885,7 @@ public sealed partial class MainViewModel : ObservableObject
                 if (seed.Copied)
                     AppendLog(seed.Message);
                 else if (!seed.Success)
-                    AppendLog("警告：UnityDependencies 播种失败 — " + seed.Message);
+                    AppendLog(string.Format(LocalizationService.T("LogUnityDepsSeedFailed"), seed.Message));
 
                 var result = seed.Success && seed.Version != null
                     ? _melonOptimizer.ApplyRecommendedSettings(GamePath, seed.Version, HideMelonConsole)
@@ -1803,7 +1908,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"MelonLoader 优化配置失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogMelonOptimizeConfigFailed"), ex.Message));
         }
     }
 
@@ -1817,7 +1922,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"清理 BepInEx Doorstop 失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogCleanupBepInExDoorstopFailed"), ex.Message));
         }
     }
 
@@ -1843,7 +1948,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var pkg = _library.ImportDll(path);
-            AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
+            AppendLog(string.Format(LocalizationService.T("LogImportedDll"), pkg.DisplayName, pkg.Id));
             TryEnableImportedPackages(pkg);
             ReloadMods();
             UpdateLoaderVersionWarning();
@@ -1856,14 +1961,14 @@ public sealed partial class MainViewModel : ObservableObject
             if (picked is null)
             {
                 _library.DiscardStaging(ex.StagingPath);
-                AppendLog("\u5df2\u53d6\u6d88\u5bfc\u5165\uff08\u672a\u9009\u62e9\u7c7b\u578b\uff09");
+                AppendLog(LocalizationService.T("LogImportCancelledNoType"));
                 return;
             }
 
             try
             {
                 var pkg = _library.CommitStaging(ex.StagingPath, picked.Value);
-                AppendLog($"\u5df2\u5bfc\u5165 DLL\uff1a{pkg.DisplayName} ({pkg.Id})");
+                AppendLog(string.Format(LocalizationService.T("LogImportedDll"), pkg.DisplayName, pkg.Id));
                 TryEnableImportedPackages(pkg);
                 ReloadMods();
                 UpdateLoaderVersionWarning();
@@ -1873,12 +1978,12 @@ public sealed partial class MainViewModel : ObservableObject
             catch (Exception commitEx)
             {
                 _library.DiscardStaging(ex.StagingPath);
-                AppendLog($"\u5bfc\u5165 DLL \u5931\u8d25\uff1a{commitEx.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogImportDllFailed"), commitEx.Message));
             }
         }
         catch (Exception ex)
         {
-            AppendLog($"\u5bfc\u5165 DLL \u5931\u8d25\uff1a{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogImportDllFailed"), ex.Message));
         }
     }
 
@@ -1898,7 +2003,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var pkgs = _library.ImportFolder(path);
-            AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
+            AppendLog(string.Format(LocalizationService.T("LogImportedFolder"), pkgs.Count));
             TryEnableImportedPackages(pkgs);
             ReloadMods();
             UpdateLoaderVersionWarning();
@@ -1911,7 +2016,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (picked is null)
             {
                 _library.DiscardStaging(ex.StagingPath);
-                AppendLog("\u5df2\u53d6\u6d88\u5bfc\u5165\uff08\u672a\u9009\u62e9\u7c7b\u578b\uff09");
+                AppendLog(LocalizationService.T("LogImportCancelledNoType"));
                 return;
             }
 
@@ -1919,7 +2024,7 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 _library.DiscardStaging(ex.StagingPath);
                 var pkgs = _library.ImportFolder(path, picked.Value);
-                AppendLog($"\u5df2\u5bfc\u5165\u6587\u4ef6\u5939\uff1a{pkgs.Count} \u4e2a\u5305");
+                AppendLog(string.Format(LocalizationService.T("LogImportedFolder"), pkgs.Count));
                 TryEnableImportedPackages(pkgs);
                 ReloadMods();
                 UpdateLoaderVersionWarning();
@@ -1928,12 +2033,12 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (Exception retryEx)
             {
-                AppendLog($"\u5bfc\u5165\u6587\u4ef6\u5939 \u5931\u8d25\uff1a{retryEx.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogImportFolderFailed"), retryEx.Message));
             }
         }
         catch (Exception ex)
         {
-            AppendLog($"\u5bfc\u5165\u6587\u4ef6\u5939 \u5931\u8d25\uff1a{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogImportFolderFailed"), ex.Message));
         }
     }
 
@@ -1942,7 +2047,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var pkgs = _library.ImportZip(path, forceType);
-            AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
+            AppendLog(string.Format(LocalizationService.T("LogImportedZip"), pkgs.Count));
             TryEnableImportedPackages(pkgs);
             ReloadMods();
             UpdateLoaderVersionWarning();
@@ -1955,7 +2060,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (picked is null)
             {
                 _library.DiscardStaging(ex.StagingPath);
-                AppendLog("\u5df2\u53d6\u6d88\u5bfc\u5165\uff08\u672a\u9009\u62e9\u7c7b\u578b\uff09");
+                AppendLog(LocalizationService.T("LogImportCancelledNoType"));
                 return;
             }
 
@@ -1963,7 +2068,7 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 _library.DiscardStaging(ex.StagingPath);
                 var pkgs = _library.ImportZip(path, picked.Value);
-                AppendLog($"\u5df2\u5bfc\u5165 Zip\uff1a{pkgs.Count} \u4e2a\u5305");
+                AppendLog(string.Format(LocalizationService.T("LogImportedZip"), pkgs.Count));
                 TryEnableImportedPackages(pkgs);
                 ReloadMods();
                 UpdateLoaderVersionWarning();
@@ -1972,12 +2077,12 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (Exception retryEx)
             {
-                AppendLog($"\u5bfc\u5165 Zip \u5931\u8d25\uff1a{retryEx.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogImportZipFailed"), retryEx.Message));
             }
         }
         catch (Exception ex)
         {
-            AppendLog($"\u5bfc\u5165 Zip \u5931\u8d25\uff1a{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogImportZipFailed"), ex.Message));
         }
     }
 
@@ -2004,20 +2109,20 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (SelectedProfile is null)
         {
-            AppendLog("未选择方案。");
+            AppendLog(LocalizationService.T("LogNoProfileSelected"));
             return false;
         }
 
         RefreshStatusCore(offerAssemblyGeneratePrompt: false);
         if (GameStatus?.Kind == GameStatusKind.LoaderPresentAssembliesMissing)
         {
-            AppendLog(GameStatus?.Message ?? "MelonLoader 程序集未就绪，请先生成后再部署。");
+            AppendLog(GameStatus?.Message ?? LocalizationService.T("LogAssembliesNotReadyDeploy"));
             return false;
         }
 
         if (GameStatus?.Kind != GameStatusKind.Ready)
         {
-            AppendLog(GameStatus?.Message ?? "游戏状态未就绪，无法部署。");
+            AppendLog(GameStatus?.Message ?? LocalizationService.T("LogGameStatusNotReadyDeploy"));
             return false;
         }
 
@@ -2083,7 +2188,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"部署失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("NotifyDeployFailed"), ex.Message));
             _notify(string.Format(LocalizationService.T("NotifyDeployFailed"), ex.Message));
             return false;
         }
@@ -2326,7 +2431,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"确认游戏进程失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogConfirmGameProcessFailed"), ex.Message));
         }
     }
 
@@ -2362,7 +2467,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"检查 Melon 注入状态失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogCheckMelonInjectFailed"), ex.Message));
         }
     }
 
@@ -2438,7 +2543,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"双服向导失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("NotifyBranchWizardFailed"), ex.Message));
             _notify(string.Format(LocalizationService.T("NotifyBranchWizardFailed"), ex.Message));
             RollbackEnableDualToSingle(notify: false);
         }
@@ -2614,6 +2719,9 @@ public sealed partial class MainViewModel : ObservableObject
     void ShowLibraryPage() => ActiveContentPage = MainContentPage.Library;
 
     [RelayCommand]
+    void ShowGuidePage() => ActiveContentPage = MainContentPage.Guide;
+
+    [RelayCommand]
     void ToggleLogPanel() => IsLogExpanded = !IsLogExpanded;
 
     public bool CanInstallMelonLoader =>
@@ -2656,10 +2764,10 @@ public sealed partial class MainViewModel : ObservableObject
                 MelonLoaderInstallResult result;
                 var redistDir = RedistDirectoryResolver.Resolve(out var usedRedistFallback);
                 if (usedRedistFallback)
-                    AppendLog("安装目录不可写，改用本地缓存目录存放 Melon 离线包：" + redistDir);
+                    AppendLog(string.Format(LocalizationService.T("LogMelonRedistUseCacheDir"), redistDir));
                 // MirrorBaseUrl "" = opt-out (origin only). Null should not happen after factory fill.
                 var mirror = MirrorBaseUrl;
-                AppendLog("正在准备 Melon 运行时离线包（镜像优先）…");
+                AppendLog(LocalizationService.T("LogMelonRedistPreparing"));
                 var ensure = await new RedistEnsureService()
                     .EnsureAsync(
                         redistDir,
@@ -2759,7 +2867,7 @@ public sealed partial class MainViewModel : ObservableObject
         PersistPackageMeta(mod.Package);
         mod.NotifyDetailChanged();
         RefreshLibraryView();
-        AppendLog($"已更新分类/标签：{mod.DisplayName}");
+        AppendLog(string.Format(LocalizationService.T("LogUpdatedCategoryTags"), mod.DisplayName));
     }
 
     Task ReportAsync(string modId, string modName, string source)
@@ -2786,7 +2894,7 @@ public sealed partial class MainViewModel : ObservableObject
             };
             if (!ReportRequest.TryValidate(request, out var error))
             {
-                AppendLog($"{Ui.ReportFailed}：{error}");
+                AppendLog($"{Ui.ReportFailed}: {error}");
                 _notify(Ui.ReportFailed);
                 return Task.CompletedTask;
             }
@@ -2803,7 +2911,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"{Ui.ReportFailed}：{ex.Message}");
+            AppendLog($"{Ui.ReportFailed}: {ex.Message}");
             _notify(Ui.ReportFailed);
         }
         finally
@@ -2843,6 +2951,34 @@ public sealed partial class MainViewModel : ObservableObject
         var compose = GitHubCommunityLinks.BuildFeedbackCompose();
         NotifyComposeResult(OpenCompose(compose.Subject, compose.Body));
     }
+
+    string DescribeDiagnosticsFollowUp(string subject, string body)
+    {
+        var choice = _promptDiagnosticsMail?.Invoke()
+            ?? MapMailProvider(_promptMailProvider?.Invoke());
+
+        switch (choice)
+        {
+            case DiagnosticsFollowUp.Discord:
+                var opened = TryOpenUrl(GitHubCommunityLinks.DiscordFeedbackUrl);
+                return LocalizationService.T(opened ? "DiagnosticsDiscordOpened" : "DiagnosticsDiscordOpenFailed");
+            case DiagnosticsFollowUp.Qq:
+            case DiagnosticsFollowUp.Gmail:
+                var provider = choice == DiagnosticsFollowUp.Qq ? MailProvider.Qq : MailProvider.Gmail;
+                var (openedMail, _) = GitHubCommunityLinks.TryOpenCompose(
+                    subject, body, TryCopyText, provider, tryOpen: _tryOpenExternal);
+                return DescribeCompose((openedMail, provider));
+            default:
+                return LocalizationService.T("DiagnosticsFollowUpCancelled");
+        }
+    }
+
+    static DiagnosticsFollowUp MapMailProvider(MailProvider? provider) => provider switch
+    {
+        MailProvider.Qq => DiagnosticsFollowUp.Qq,
+        MailProvider.Gmail => DiagnosticsFollowUp.Gmail,
+        _ => DiagnosticsFollowUp.Cancel
+    };
 
     (bool opened, MailProvider? provider) OpenCompose(string subject, string body)
     {
@@ -3022,13 +3158,13 @@ public sealed partial class MainViewModel : ObservableObject
             AppendLog(summaryHint);
 
             var compose = GitHubCommunityLinks.BuildDiagnosticsCompose(AppVersion, mode.Value);
-            var mailMsg = DescribeCompose(OpenCompose(compose.Subject, compose.Body));
+            var mailMsg = DescribeDiagnosticsFollowUp(compose.Subject, compose.Body);
             AppendLog(mailMsg);
             _notify($"{saved}\n{summaryHint}\n{mailMsg}");
         }
         catch (Exception ex)
         {
-            AppendLog($"{Ui.ExportDiagnosticsFailed}：{ex.Message}");
+            AppendLog($"{Ui.ExportDiagnosticsFailed}: {ex.Message}");
             _notify(Ui.ExportDiagnosticsFailed);
         }
         finally
@@ -3065,13 +3201,13 @@ public sealed partial class MainViewModel : ObservableObject
         }
         if (_addingCatalogMod)
         {
-            AppendLog("正在加入本地库，已跳过目录刷新。");
+            AppendLog(LocalizationService.T("LogJoiningLibrarySkipCatalogRefresh"));
             CatalogStatus = "加入本地库进行中，暂不刷新目录。";
             return;
         }
         _checkingCatalog = true;
         CatalogStatus = "正在拉取目录…";
-        AppendLog("正在拉取 Mod 目录…");
+        AppendLog(LocalizationService.T("LogFetchingModCatalog"));
         _taskProgress.Begin(
             ManagerTaskKind.CatalogRefresh,
             LocalizationService.T("TaskTitleCatalogRefresh"),
@@ -3152,7 +3288,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         var skippedInLibrary = _catalogSelection.Count - targets.Count;
         if (skippedInLibrary > 0)
-            AppendLog($"已跳过 {skippedInLibrary} 个已是最新版本的目录项。");
+            AppendLog(string.Format(LocalizationService.T("LogSkippedUpToDateCatalogItems"), skippedInLibrary));
 
         await RunCatalogDownloadAsync(async () =>
         {
@@ -3175,7 +3311,7 @@ public sealed partial class MainViewModel : ObservableObject
         var match = FindCatalogMatch(item);
         if (match is null)
         {
-            AppendLog($"「{item.DisplayName}」在目录里找不到可更新的对应项。");
+            AppendLog(string.Format(LocalizationService.T("LogCatalogItemNoUpdateMatch"), item.DisplayName));
             return;
         }
 
@@ -3231,7 +3367,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             if (item.IsInLibrary && !item.HasUpdate)
             {
-                AppendLog($"「{item.Name}」已是最新版本，跳过下载。");
+                AppendLog(string.Format(LocalizationService.T("LogAlreadyLatestSkipDownload"), item.Name));
                 CatalogStatus = $"已在本地库：{item.Name}";
                 return;
             }
@@ -3254,12 +3390,14 @@ public sealed partial class MainViewModel : ObservableObject
                     }
                 }
             };
-            var risk = _riskHeuristic.Evaluate(probe);
+            var risk = RiskHeuristic.DetectionEnabled
+                ? _riskHeuristic.Evaluate(probe)
+                : new RiskHeuristicResult();
             if (risk.HighRisk &&
                 !_confirmHighRisk(
                     $"「{item.Name}」命中高风险关键词「{risk.MatchedKeyword}」。确定仅加入本地库（不会自动启用）？"))
             {
-                AppendLog($"已取消加入高风险目录项：{item.Name}");
+                AppendLog(string.Format(LocalizationService.T("LogCancelledHighRiskCatalogJoin"), item.Name));
                 return;
             }
 
@@ -3316,13 +3454,13 @@ public sealed partial class MainViewModel : ObservableObject
                 }
                 catch (Exception metaEx)
                 {
-                    AppendLog($"写入目录元数据失败：{metaEx.Message}");
+                    AppendLog(string.Format(LocalizationService.T("LogWriteCatalogMetaFailed"), metaEx.Message));
                 }
 
                 if (isUpdate)
                 {
                     RetireSupersededPackages(supersededPackages, pkg);
-                    AppendLog($"已更新到目录版本：{pkg.DisplayName} ({pkg.Id})");
+                    AppendLog(string.Format(LocalizationService.T("LogUpdatedToCatalogVersion"), pkg.DisplayName, pkg.Id));
                     CatalogStatus = $"已更新：{pkg.DisplayName}，请重新应用方案使其生效。";
                 }
                 else
@@ -3376,14 +3514,14 @@ public sealed partial class MainViewModel : ObservableObject
         if (IsSessionLocked || _taskProgress.Kind == ManagerTaskKind.Deploy)
         {
             _notify(LocalizationService.T("NotifyModUpdateBusy"));
-            AppendLog($"更新「{modName}」已取消：有正在进行的关键操作。");
+            AppendLog(string.Format(LocalizationService.T("LogUpdateCancelledBusy"), modName));
             return false;
         }
 
         if (_processProbe.IsGameRunning())
         {
             _notify(LocalizationService.T("NotifyModUpdateCloseGame"));
-            AppendLog($"更新「{modName}」已取消：游戏正在运行。");
+            AppendLog(string.Format(LocalizationService.T("LogUpdateCancelledGameRunning"), modName));
             return false;
         }
 
@@ -3399,7 +3537,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (current is null)
         {
-            AppendLog($"「{item.DisplayName}」已有目录版本，但找不到可保留的副本。");
+            AppendLog(string.Format(LocalizationService.T("LogCatalogVersionNoKeepableCopy"), item.DisplayName));
             return;
         }
 
@@ -3410,7 +3548,7 @@ public sealed partial class MainViewModel : ObservableObject
         ReloadMods();
         RefreshCatalogInLibraryFlags();
         EnrichModsFromCatalog();
-        AppendLog($"已移除重复旧版「{item.DisplayName}」，保留 {current.Version ?? current.Id}。");
+        AppendLog(string.Format(LocalizationService.T("LogRemovedDuplicateOldKept"), item.DisplayName, current.Version ?? current.Id));
     }
 
     /// <summary>
@@ -3430,7 +3568,7 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                AppendLog($"方案改指到新版本失败：{old.Id} → {replacement.Id}（{ex.Message}）");
+                AppendLog(string.Format(LocalizationService.T("LogProfileRetargetFailed"), old.Id, replacement.Id, ex.Message));
                 continue;
             }
 
@@ -3439,11 +3577,11 @@ public sealed partial class MainViewModel : ObservableObject
                 if (!string.IsNullOrWhiteSpace(GamePath))
                     _library.TryRemoveDeployedPrimaryDll(GamePath, old);
                 _library.Delete(old.Id);
-                AppendLog($"已移除旧版本：{old.DisplayName} ({old.Id})");
+                AppendLog(string.Format(LocalizationService.T("LogRemovedOldVersion"), old.DisplayName, old.Id));
             }
             catch (Exception ex)
             {
-                AppendLog($"旧版本已停用但未能删除：{old.Id}（{ex.Message}）");
+                AppendLog(string.Format(LocalizationService.T("LogOldVersionDisabledNotDeleted"), old.Id, ex.Message));
             }
         }
     }
@@ -3777,7 +3915,7 @@ public sealed partial class MainViewModel : ObservableObject
 
             ReloadMods();
             RefreshCatalogInLibraryFlags();
-            AppendLog($"已自动清理 {pairs.Count} 个重复旧版 Mod。");
+            AppendLog(string.Format(LocalizationService.T("LogAutoCleanedDuplicateMods"), pairs.Count));
         }
         finally
         {
@@ -3986,6 +4124,9 @@ public sealed partial class MainViewModel : ObservableObject
             return false;
         }
 
+        if (_tryOpenExternal is not null)
+            return _tryOpenExternal(safe.AbsoluteUri);
+
         try
         {
             Process.Start(new ProcessStartInfo { FileName = safe.AbsoluteUri, UseShellExecute = true });
@@ -4024,11 +4165,11 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var created = _profiles.Create(name);
             ReloadProfiles(selectId: created.Id);
-            AppendLog($"已创建方案：{created.Name}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileCreated"), created.Name));
         }
         catch (Exception ex)
         {
-            AppendLog($"创建方案失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileCreateFailed"), ex.Message));
         }
     }
 
@@ -4042,11 +4183,11 @@ public sealed partial class MainViewModel : ObservableObject
         {
             _profiles.Rename(SelectedProfile.Id, name);
             ReloadProfiles(selectId: SelectedProfile.Id);
-            AppendLog($"已重命名方案：{name.Trim()}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileRenamed"), name.Trim()));
         }
         catch (Exception ex)
         {
-            AppendLog($"重命名方案失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileRenameFailed"), ex.Message));
         }
     }
 
@@ -4060,11 +4201,11 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var copy = _profiles.Duplicate(SelectedProfile.Id, name);
             ReloadProfiles(selectId: copy.Id);
-            AppendLog($"已复制方案：{copy.Name}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileDuplicated"), copy.Name));
         }
         catch (Exception ex)
         {
-            AppendLog($"复制方案失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileDuplicateFailed"), ex.Message));
         }
     }
 
@@ -4081,11 +4222,11 @@ public sealed partial class MainViewModel : ObservableObject
             _profiles.Delete(id);
             var config = LoadConfig();
             ReloadProfiles(selectId: config.ActiveProfileId);
-            AppendLog($"已删除方案：{name}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileDeleted"), name));
         }
         catch (Exception ex)
         {
-            AppendLog($"删除方案失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogProfileDeleteFailed"), ex.Message));
         }
     }
 
@@ -4104,11 +4245,11 @@ public sealed partial class MainViewModel : ObservableObject
             RecomputeDirty();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
-            AppendLog($"已删除 Mod：{mod.DisplayName}");
+            AppendLog(string.Format(LocalizationService.T("LogModDeleted"), mod.DisplayName));
         }
         catch (Exception ex)
         {
-            AppendLog($"删除 Mod 失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogModDeleteFailed"), ex.Message));
         }
     }
 
@@ -4122,17 +4263,19 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     void ToggleHighRisk(ModItemViewModel? mod)
     {
+        if (!RiskHeuristic.DetectionEnabled)
+            return;
         if (mod is null || mod.IsMissing) return;
         mod.Package.HighRisk = !mod.Package.HighRisk;
         try
         {
             PersistPackageMeta(mod.Package);
             mod.NotifyRiskChanged();
-            AppendLog($"{mod.DisplayName} 高风险标记（临时）：{(mod.Package.HighRisk ? "是" : "否")}；刷新列表后将按名称关键词重新判定。");
+            AppendLog(string.Format(LocalizationService.T("LogHighRiskTempMark"), mod.DisplayName, LocalizationService.T(mod.Package.HighRisk ? "DialogYes" : "DialogNo")));
         }
         catch (Exception ex)
         {
-            AppendLog($"更新高风险标记失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogUpdateHighRiskMarkFailed"), ex.Message));
         }
     }
 
@@ -4152,7 +4295,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (pkg is null || string.IsNullOrWhiteSpace(pkg.Id)) continue;
             if (!_riskGate.CanEnable(pkg.HighRisk, _confirmHighRisk))
             {
-                AppendLog($"已导入高风险 Mod 但未启用：{pkg.DisplayName}");
+                AppendLog(string.Format(LocalizationService.T("LogImportedHighRiskNotEnabled"), pkg.DisplayName));
                 continue;
             }
 
@@ -4163,7 +4306,7 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                AppendLog($"自动启用 {pkg.DisplayName} 失败：{ex.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogAutoEnableFailed"), pkg.DisplayName, ex.Message));
             }
         }
 
@@ -4177,7 +4320,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (enabled && !_riskGate.CanEnable(item.Package.HighRisk, _confirmHighRisk))
         {
             item.SetEnabledSilent(false);
-            AppendLog("已取消启用高风险 Mod。");
+            AppendLog(LocalizationService.T("LogCancelledEnableHighRisk"));
             return;
         }
 
@@ -4188,12 +4331,12 @@ public sealed partial class MainViewModel : ObservableObject
             RecomputeDirty();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
-            AppendLog($"{(enabled ? "启用" : "禁用")}：{item.DisplayName}");
+            AppendLog(string.Format(LocalizationService.T("LogEnableDisableAction"), LocalizationService.T(enabled ? "ColumnEnabled" : "LogActionDisable"), item.DisplayName));
         }
         catch (Exception ex)
         {
             item.SetEnabledSilent(!enabled);
-            AppendLog($"更新启用状态失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogUpdateEnableStateFailed"), ex.Message));
         }
     }
 
@@ -4246,6 +4389,8 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var library = _library.List().ToList();
+        if (RiskHeuristic.DetectionEnabled)
+        {
         foreach (var pkg in library)
         {
             var risk = _riskHeuristic.Evaluate(pkg);
@@ -4261,8 +4406,9 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                AppendLog($"更新 {pkg.DisplayName} 高风险标记失败：{ex.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogUpdatePkgHighRiskFailed"), pkg.DisplayName, ex.Message));
             }
+        }
         }
 
         var libraryIds = new HashSet<string>(library.Select(p => p.Id), StringComparer.OrdinalIgnoreCase);
@@ -4274,7 +4420,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (!string.IsNullOrWhiteSpace(pkg.CategoryOverride) &&
                 !ModTaxonomy.TryParseCategory(pkg.CategoryOverride, out _))
             {
-                AppendLog($"本地包 '{pkg.Id}': 无效分类覆盖 '{pkg.CategoryOverride}'，按目录/未分类处理。");
+                AppendLog(string.Format(LocalizationService.T("LogInvalidCategoryOverride"), pkg.Id, pkg.CategoryOverride));
             }
             Mods.Add(new ModItemViewModel(this, pkg, enabled.Contains(pkg.Id)));
         }
@@ -4767,7 +4913,7 @@ public sealed partial class MainViewModel : ObservableObject
                 }
                 catch (Exception ex)
                 {
-                    AppendLog($"启动时补齐双服 MelonLoader 失败：{ex.Message}");
+                    AppendLog(string.Format(LocalizationService.T("LogStartupEnsureDualMelonFailed"), ex.Message));
                 }
             }
             RecomputeDirty();
@@ -4921,7 +5067,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"切服前检查目标仓失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogPreSwitchTargetStoreCheckFailed"), ex.Message));
             return;
         }
 
@@ -4966,7 +5112,7 @@ public sealed partial class MainViewModel : ObservableObject
                     var leaveBranch = ActiveGameBranch;
                     var snap = _branchSwitch.TrySnapshotSettledAcf(leaveBranch);
                     if (!snap.Success && !string.IsNullOrWhiteSpace(snap.Message))
-                        AppendLog($"切服前未保存 {leaveBranch} ACF 快照：{snap.Message}");
+                        AppendLog(string.Format(LocalizationService.T("LogPreSwitchAcfSnapshotMissed"), leaveBranch, snap.Message));
 
                     var swap = await Task.Run(() => _branchSwitch.TrySwapJunction(target)).ConfigureAwait(true);
                     if (!swap.Success)
@@ -4994,7 +5140,7 @@ public sealed partial class MainViewModel : ObservableObject
                     if (silentResult.Success
                         && string.Equals(silentResult.Message, "restored-acf-snapshot", StringComparison.Ordinal))
                     {
-                        AppendLog("已恢复目标服 Steam 清单快照（避免重复下载）");
+                        AppendLog(LocalizationService.T("LogRestoredTargetAcfSnapshot"));
                     }
                 }).ConfigureAwait(true);
             }).ConfigureAwait(true);
@@ -5009,7 +5155,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"切服失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogSwitchBranchFailed"), ex.Message));
         }
         finally
         {
@@ -5152,9 +5298,9 @@ public sealed partial class MainViewModel : ObservableObject
                 var liveSnap = await Task.Run(() => _branchSwitch.TrySnapshotLiveAcfForWizardBranch(current))
                     .ConfigureAwait(true);
                 if (liveSnap.Success)
-                    AppendLog($"已保存 {current} Steam 清单快照（向导归档窗口），供下次切服免下载");
+                    AppendLog(string.Format(LocalizationService.T("LogSavedAcfSnapshotWizardArchive"), current));
                 else if (!string.IsNullOrWhiteSpace(liveSnap.Message))
-                    AppendLog($"向导归档前未保存 {current} 快照（不阻断）：{liveSnap.Message}");
+                    AppendLog(string.Format(LocalizationService.T("LogWizardArchiveSnapshotMissed"), current, liveSnap.Message));
 
                 BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
                 var archiveA = await Task.Run(() => _branchSwitch.ArchiveCurrentAs(current)).ConfigureAwait(true);
@@ -5309,7 +5455,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"等待另一服下载时出错：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogWaitOtherDownloadError"), ex.Message));
         }
     }
 
@@ -5397,9 +5543,9 @@ public sealed partial class MainViewModel : ObservableObject
                     var liveSnap = await Task.Run(() => _branchSwitch.TrySnapshotLiveAcfForWizardBranch(other))
                         .ConfigureAwait(true);
                     if (liveSnap.Success)
-                        AppendLog($"已保存 {other} Steam 清单快照（向导下载窗口），供下次切服免下载");
+                        AppendLog(string.Format(LocalizationService.T("LogSavedAcfSnapshotWizardDownload"), other));
                     else if (!string.IsNullOrWhiteSpace(liveSnap.Message))
-                        AppendLog($"向导归档前未保存 {other} 快照（不阻断）：{liveSnap.Message}");
+                        AppendLog(string.Format(LocalizationService.T("LogWizardArchiveSnapshotMissed"), other, liveSnap.Message));
 
                     BusyMessage(LocalizationService.T("BusyMovingGameFolder"));
                     var archiveB = await Task.Run(() => _branchSwitch.ArchiveDownloadedAs(other)).ConfigureAwait(true);
@@ -5450,11 +5596,11 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (OperationCanceledException)
             {
-                AppendLog("双仓已联接；Melon 同步被取消，继续结算。");
+                AppendLog(LocalizationService.T("LogDualLinkedMelonSyncCancelled"));
             }
             catch (Exception melonEx)
             {
-                AppendLog($"双仓已联接；Melon 同步未完成：{melonEx.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogDualLinkedMelonSyncIncomplete"), melonEx.Message));
             }
 
             var silent = _branchSwitch.TryPrepareSteamBranchMetadata(current);
@@ -5472,7 +5618,7 @@ public sealed partial class MainViewModel : ObservableObject
                 }
                 catch (Exception settleEx)
                 {
-                    AppendLog($"联接后结算失败：{settleEx.Message}");
+                    AppendLog(string.Format(LocalizationService.T("LogPostLinkSettleFailed"), settleEx.Message));
                 }
             }
             else
@@ -5538,11 +5684,11 @@ public sealed partial class MainViewModel : ObservableObject
             }
             catch (OperationCanceledException)
             {
-                AppendLog("双仓已联接；Melon 同步被取消，继续结算。");
+                AppendLog(LocalizationService.T("LogDualLinkedMelonSyncCancelled"));
             }
             catch (Exception melonEx)
             {
-                AppendLog($"双仓已联接；Melon 同步未完成：{melonEx.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogDualLinkedMelonSyncIncomplete"), melonEx.Message));
             }
         }
 
@@ -5609,7 +5755,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"补齐双服 MelonLoader 失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogEnsureDualMelonFailed"), ex.Message));
         }
     }
 
@@ -5620,7 +5766,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (_detector.Detect(storePath).Kind is not GameStatusKind.LoaderPresentAssembliesMissing)
             return;
 
-        AppendLog($"正在为「{Path.GetFileName(storePath)}」生成 MelonLoader 程序集…");
+        AppendLog(string.Format(LocalizationService.T("LogGeneratingMelonAssembliesFor"), Path.GetFileName(storePath)));
 
         var dispatcher = Application.Current?.Dispatcher;
         void Progress(string msg)
@@ -5873,7 +6019,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!snap.Success)
         {
             if (!string.IsNullOrWhiteSpace(snap.Message))
-                AppendLog($"结算后未保存 ACF 快照：{snap.Message}");
+                AppendLog(string.Format(LocalizationService.T("LogPostSettleAcfSnapshotMissed"), snap.Message));
 
             if (snap.IsGameRunningBlock)
             {
@@ -5902,7 +6048,7 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        AppendLog($"已保存 {ActiveGameBranch} Steam 清单快照，供下次切服免下载");
+        AppendLog(string.Format(LocalizationService.T("LogSavedAcfSnapshotForSwitch"), ActiveGameBranch));
         ClearSteamSettle();
     }
 
@@ -5935,7 +6081,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"检查 Steam 更新状态失败：{ex.Message}");
+            AppendLog(string.Format(LocalizationService.T("LogCheckSteamUpdateFailed"), ex.Message));
             return false;
         }
     }
@@ -6213,7 +6359,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (!string.IsNullOrWhiteSpace(mod.Category) &&
             !ModTaxonomy.TryParseCategory(mod.Category, out _))
         {
-            AppendLog($"目录条目 '{mod.Id}': 无效分类 '{mod.Category}'，按未分类处理。");
+            AppendLog(string.Format(LocalizationService.T("LogInvalidCatalogCategory"), mod.Id, mod.Category));
         }
     }
 

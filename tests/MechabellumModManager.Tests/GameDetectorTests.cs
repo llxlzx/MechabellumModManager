@@ -67,6 +67,7 @@ public class GameDetectorTests
         try
         {
             WriteLatestLog(root, "0.7.1", DateTime.Now.AddDays(-8));
+            LocalizationService.Apply("zh-CN");
             var s = new GameDetector().Detect(root);
             s.Kind.Should().Be(GameStatusKind.Ready);
             s.MelonLoaderVersion.Should().Be("0.7.1");
@@ -86,6 +87,7 @@ public class GameDetectorTests
         {
             var launchedAt = DateTimeOffset.Now.AddMinutes(-5);
             WriteLatestLog(root, "0.7.1", launchedAt.LocalDateTime.AddDays(-8));
+            LocalizationService.Apply("zh-CN");
             var s = new GameDetector().Detect(
                 root,
                 lastLaunchRequestedAt: launchedAt,
@@ -105,6 +107,7 @@ public class GameDetectorTests
         {
             var launchedAt = DateTimeOffset.Now.AddMinutes(-5);
             WriteLatestLog(root, "0.7.3", launchedAt.LocalDateTime.AddMinutes(-30));
+            LocalizationService.Apply("zh-CN");
             var s = new GameDetector().Detect(
                 root,
                 lastLaunchRequestedAt: launchedAt,

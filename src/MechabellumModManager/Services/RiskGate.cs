@@ -7,7 +7,8 @@ public sealed class RiskGate
 
     public bool CanEnable(bool highRisk, Func<string, bool> confirm)
     {
-        if (!highRisk) return true;
+        if (!RiskHeuristic.DetectionEnabled || !highRisk)
+            return true;
         return confirm("该条目被标记为高风险，确定加入当前方案吗？");
     }
 }

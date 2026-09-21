@@ -78,7 +78,7 @@ public static class InstallConfigSeeder
             store.Save(profilePath, new Profile
             {
                 Id = "default",
-                Name = "默认",
+                Name = LocalizationService.T("DefaultProfileName"),
                 EnabledPackageIds = []
             });
         }
