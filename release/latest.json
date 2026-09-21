@@ -1,10 +1,10 @@
 {
-  "version": "1.3.3",
-  "notes": "新手教程改版：第一步用中英双语选语言，顶部可勾选下次不再打开，更新后仍记住这个选择。顶栏检测说明会跟着界面语言切换。高风险关键词检测先关闭，列表里的列还在，但不会标记或拦截。导出诊断包后可选 QQ 邮箱、Gmail、Discord（GODOG Battalion）或取消；只有选邮箱才会复制邮件。\nNewcomer tutorial: bilingual language step, and a checkbox to skip it next launch (kept across updates). The top status line follows the UI language. Keyword high-risk detection is paused; the column stays but does not mark or block mods. After exporting diagnostics, choose QQ Mail, Gmail, Discord (GODOG Battalion), or Cancel. Only an email choice copies the draft.",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.3/MechabellumModManager_Setup_v1.3.3.exe",
-  "setupSha256": "136d200028980d70619e4d8eb8d261fad5370c1f1b79fb3a16a40916836f78a9",
-  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.3/MechabellumModManager_portable_v1.3.3.zip",
-  "portableSha256": "fd7b33e828919a0d855a2d8c4708f27e85a0cd03e49abc0232ed9e8eea5a51a6",
-  "publishedAt": "2026-09-21T05:55:00Z",
-  "build": "v1.3.3-guide-diagnostics-discord"
+    "version":  "1.3.4",
+    "notes":  "界面缩放：设置里可选自动，或 100%、125%、150%、175%、200%。对话框会跟着放大，窗口一并变大，按钮和文字不再被裁切。覆盖安装会保留界面缩放，以及教程里「下次不再打开」的选择。白名单直传标为未完成。\nInterface scale: Settings can stay on Auto or use 100% to 200%. Dialogs scale with the manager and the window grows with them, so buttons and text stay fully visible. An upgrade keeps the chosen scale and the tutorial choice to not show again. Whitelist upload is marked unfinished.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.4/MechabellumModManager_Setup_v1.3.4.exe",
+    "setupSha256":  "736ac8ddd98856b5d17469997e1a6c670e3cb2cbdaf8f4370e8c3fef02c025d9",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.4/MechabellumModManager_portable_v1.3.4.zip",
+    "portableSha256":  "d4adde4b9183ef4dc9e6b1092ed1d7ccc2010c0aaf624d143f39502259bcfaaa",
+    "publishedAt":  "2026-09-21T12:29:22Z",
+    "build":  "v1.3.4-ui-scale"
 }
