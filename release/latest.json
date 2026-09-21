@@ -1,10 +1,10 @@
 {
-    "version":  "1.3.2",
-    "notes":  "Steam 慢启动不再在约 90 秒就弹出失败，会继续等待；只有仍没有进程才提示失败。游戏没在跑时，应用不再误报 Loader 未注入。诊断包在游戏占用 Latest.log 时也能读入。\nA slow Steam start is no longer a failure at about 90 seconds; the manager keeps waiting and only reports failure if the process never appears. Applying no longer reports Loader not injected while the game is not running. Diagnostic packs can still read Latest.log while the game has it open.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.2/MechabellumModManager_Setup_v1.3.2.exe",
-    "setupSha256":  "399b4aa13d0bc39da8957d11b4aff873b6d32e2019f97b54fa8fd218b35d3e78",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.2/MechabellumModManager_portable_v1.3.2.zip",
-    "portableSha256":  "85296f22c56f04f5bed0869f372981e74853cd82e631581b649456cd1e520016",
-    "publishedAt":  "2026-09-19T15:18:30Z",
-    "build":  "v1.3.2-steam-wait-diagnostics"
+  "version": "1.3.3",
+  "notes": "新手教程改版：第一步用中英双语选语言，顶部可勾选下次不再打开，更新后仍记住这个选择。顶栏检测说明会跟着界面语言切换。高风险关键词检测先关闭，列表里的列还在，但不会标记或拦截。导出诊断包后可选 QQ 邮箱、Gmail、Discord（GODOG Battalion）或取消；只有选邮箱才会复制邮件。\nNewcomer tutorial: bilingual language step, and a checkbox to skip it next launch (kept across updates). The top status line follows the UI language. Keyword high-risk detection is paused; the column stays but does not mark or block mods. After exporting diagnostics, choose QQ Mail, Gmail, Discord (GODOG Battalion), or Cancel. Only an email choice copies the draft.",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.3/MechabellumModManager_Setup_v1.3.3.exe",
+  "setupSha256": "136d200028980d70619e4d8eb8d261fad5370c1f1b79fb3a16a40916836f78a9",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.3/MechabellumModManager_portable_v1.3.3.zip",
+  "portableSha256": "fd7b33e828919a0d855a2d8c4708f27e85a0cd03e49abc0232ed9e8eea5a51a6",
+  "publishedAt": "2026-09-21T05:55:00Z",
+  "build": "v1.3.3-guide-diagnostics-discord"
 }
