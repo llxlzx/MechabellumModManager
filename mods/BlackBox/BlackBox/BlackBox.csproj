@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>BlackBox</AssemblyName>
+    <Version>0.1.0</Version>
+    <GameRoot Condition="'$(GameRoot)' == ''">D:\steam\steamapps\common\Mechabellum</GameRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BlackBox.Core\BlackBox.Core.csproj" />
+    <Reference Include="MelonLoader">
+      <HintPath>$(GameRoot)\MelonLoader\net6\MelonLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\native\BlackBoxDump.exe" LogicalName="BlackBoxDump.exe"
+                      Condition="Exists('..\native\BlackBoxDump.exe')" />
+  </ItemGroup>
+</Project>
