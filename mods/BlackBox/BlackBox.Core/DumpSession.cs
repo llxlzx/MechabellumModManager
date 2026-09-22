@@ -44,8 +44,9 @@ public static class DumpSession
         }
 
         if (File.Exists(finalPath))
-            File.Delete(finalPath);
-        File.Move(tmpPath, finalPath);
+            File.Replace(tmpPath, finalPath, destinationBackupFileName: null);
+        else
+            File.Move(tmpPath, finalPath);
         return new DumpOutcome("written", "");
     }
 

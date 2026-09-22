@@ -74,6 +74,27 @@ public class BlackBoxDumpSessionTests
         Directory.Delete(dir, true);
     }
 
+    [Fact]
+    public void Zero_exit_and_nonempty_tmp_replaces_existing_dump()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bb-dump-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var helper = Path.Combine(dir, "helper.exe");
+        var tmp = Path.Combine(dir, "blackbox.dmp.tmp");
+        var finalPath = Path.Combine(dir, "blackbox.dmp");
+        File.WriteAllText(helper, "x");
+        File.WriteAllBytes(finalPath, new byte[] { 1, 2 });
+        File.WriteAllBytes(tmp, new byte[] { 9, 8 });
+
+        var outcome = DumpSession.Complete(helper, "--pid 1", tmp, finalPath,
+            new Fake(new DumpRunResult(false, 0, false)));
+
+        outcome.Status.Should().Be("written");
+        outcome.Error.Should().BeEmpty();
+        File.ReadAllBytes(finalPath).Should().Equal(9, 8);
+        Directory.Delete(dir, true);
+    }
+
     sealed class Fake : IDumpRunner
     {
         readonly DumpRunResult _result;
