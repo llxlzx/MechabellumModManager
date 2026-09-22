@@ -26,12 +26,14 @@ public class BlackBoxIncidentWriterTests
         var scene = "old";
         var published = 0L;
         const long now = 2_000_0000;
+        long seen = 0;
         var next = HeartbeatPulse.Apply(now, 0, 10_000_000, () =>
         {
-            Volatile.Read(ref published).Should().Be(now);
+            seen = Volatile.Read(ref published);
             throw new InvalidOperationException("scene");
         }, ref scene, ref published);
 
+        seen.Should().Be(now);
         next.Should().Be(now);
         scene.Should().Be("old");
     }
