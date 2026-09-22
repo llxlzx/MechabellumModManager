@@ -279,32 +279,19 @@ if (Test-MelonLoaderInstalled -Root $GamePath) {
     }
 }
 
-$zipUrl = "https://github.com/LavaGang/MelonLoader/releases/latest/download/MelonLoader.x64.zip"
+# Thin Setup downloads the pinned zip in --ensure-redist (domestic mirror, then origin).
+# Do not fall back to GitHub releases/latest here: that call runs before the zip exists,
+# hangs the elevated PowerShell window, and can install an unpinned build.
 $localZip = Join-Path $RedistDir "melonloader\MelonLoader.x64.zip"
 $zipPath = $null
 
-if (Test-Path $localZip) {
+if (Test-Path -LiteralPath $localZip) {
     $zipPath = $localZip
     Write-Host "Using local MelonLoader zip: $zipPath"
 } else {
-    $destDir = Join-Path $WorkDir "mmm-melon-redist"
-    New-Item -ItemType Directory -Force -Path $destDir | Out-Null
-    $zipPath = Join-Path $destDir "MelonLoader.x64.zip"
-    Write-Host "Local MelonLoader zip not found; downloading from GitHub..."
-    Write-Host "Note: GitHub may be unreachable without a proxy in some regions. If this hangs or fails, use a proxy or install MelonLoader manually."
-    Write-Host "URL: $zipUrl"
-    try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
-    } catch {
-        Write-Error @"
-Failed to download MelonLoader from GitHub (often blocked without a proxy).
-Place MelonLoader.x64.zip under installer-redist\melonloader\ (or rebuild Setup with redist embedded), or install manually from:
-  https://github.com/LavaGang/MelonLoader/releases
-$($_.Exception.Message)
-"@
-        exit 2
-    }
+    Write-Host "Local MelonLoader.x64.zip was not found under: $localZip"
+    Write-Host "This step does not download from GitHub. Re-run Setup so the offline package can be fetched, or install MelonLoader from the manager."
+    exit 2
 }
 
 $extract = Join-Path $WorkDir ("mmm-melon-extract-" + [guid]::NewGuid().ToString("N"))

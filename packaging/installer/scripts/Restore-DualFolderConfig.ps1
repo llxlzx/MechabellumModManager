@@ -206,6 +206,13 @@ function Ensure-Melon([string] $Target, [string] $Why) {
         Write-Host "Skip Melon ensure ($Why): installer script/redist unavailable for $Target"
         return
     }
+    # This script runs before --ensure-redist. The zip is not on disk yet on a thin Setup.
+    # Calling Install-MelonLoader here used to download GitHub releases/latest and block Setup.
+    $localZip = Join-Path $RedistDir "melonloader\MelonLoader.x64.zip"
+    if (-not (Test-Path -LiteralPath $localZip)) {
+        Write-Host "Skip Melon ensure ($Why): local MelonLoader.x64.zip is not ready yet. A later setup step installs it after the offline package is downloaded. Target: $Target"
+        return
+    }
     Write-Host "Ensuring MelonLoader ($Why): $Target"
     & $installScript -GamePath $Target -RedistDir $RedistDir
     if ($LASTEXITCODE -ne 0) {

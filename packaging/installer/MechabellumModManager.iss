@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "1.3.4"
+#define MyAppVersion "1.3.5"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
@@ -92,7 +92,7 @@ chinesesimplified.StatusSteamBusyMelon=检测到 Steam 正在下载本游戏，�
 chinesesimplified.WarnSteamBusyMelon=检测到 Steam 正在下载本游戏，安装程序已跳过 MelonLoader。%n%n请等下载完成后再运行本安装包（勾选 MelonLoader），否则管理器会提示「缺少 Loader」，且「应用并启动」不可用。
 chinesesimplified.StatusMelon=正在检测/安装 MelonLoader（≥0.7.3 则跳过；优先使用已下载的离线包）…
 chinesesimplified.StatusNoPsMelon=无法启动 PowerShell；将改用管理器内嵌方式安装 MelonLoader。
-chinesesimplified.ErrMelon=MelonLoader 安装未成功（exit %1）。%n%nexit 1：路径无效或文件被占用；exit 2：多为 GitHub 下载失败；exit 3：安装不完整；exit 5：游戏正在运行；exit 6：Melon 已写入但离线依赖播种失败。%n%n也可打开管理器点击「安装 MelonLoader」，或手动安装：%nhttps://github.com/LavaGang/MelonLoader/releases%n（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）
+chinesesimplified.ErrMelon=MelonLoader 安装未成功（exit %1）。%n%nexit 1：路径无效或文件被占用；exit 2：未找到本地 MelonLoader.x64.zip（安装器不会再从 GitHub 现下）；exit 3：安装不完整；exit 5：游戏正在运行；exit 6：Melon 已写入但离线依赖播种失败。%n%n也可打开管理器点击「安装 MelonLoader」，或手动安装：%nhttps://github.com/LavaGang/MelonLoader/releases%n（下载 MelonLoader.x64.zip 后按官方说明解压到游戏目录）
 chinesesimplified.StatusMelonDone=MelonLoader 已完成（或已跳过）。
 chinesesimplified.StatusMelonAlready=检测到 MelonLoader ≥0.7.3 已就绪，跳过安装。
 chinesesimplified.ErrMelonVerify=MelonLoader 未能正确写入游戏目录。%n%n请关闭游戏后：打开管理器点「安装 MelonLoader」，或重新运行本安装包并勾选 MelonLoader。%n若杀软拦截 version.dll，请允许后再试。
@@ -139,7 +139,7 @@ english.WarnSteamBusyMelon=Steam is downloading this game, so Setup skipped Melo
 english.StatusMelon=Checking/installing MelonLoader (skip if ≥0.7.3; prefer downloaded offline package)…
 english.StatusNoPsMelon=Could not start PowerShell; falling back to the manager’s built-in MelonLoader installer.
 english.WarnNoPsMelon=Could not start PowerShell; already using the manager's built-in MelonLoader installer. If it still fails, open the manager and click Install MelonLoader.
-english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: often GitHub download failure; exit 3: incomplete install; exit 5: game running.%n%nOr open the manager and click Install MelonLoader, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
+english.ErrMelon=MelonLoader install failed (exit %1).%n%nexit 1: invalid path or files locked; exit 2: local MelonLoader.x64.zip missing (Setup does not download it from GitHub); exit 3: incomplete install; exit 5: game running.%n%nOr open the manager and click Install MelonLoader, or install manually:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Download MelonLoader.x64.zip and extract into the game folder per upstream docs.)
 english.StatusMelonDone=MelonLoader finished (or skipped).
 english.StatusMelonAlready=MelonLoader ≥0.7.3 already present; skipping install.
 english.ErrMelonVerify=MelonLoader was not written correctly into the game folder.%n%nClose the game, then open the manager and click Install MelonLoader — or re-run this Setup with MelonLoader checked.%nIf antivirus quarantined version.dll, allow it and retry.
@@ -186,7 +186,7 @@ russian.WarnSteamBusyMelon=Steam загружает эту игру, поэто�
 russian.StatusMelon=Проверка/установка MelonLoader (пропуск при ≥0.7.3; предпочтение офлайн-пакету)…
 russian.StatusNoPsMelon=Не удалось запустить PowerShell; автоматическая установка MelonLoader пропущена (можно установить позже).
 russian.WarnNoPsMelon=Не удалось запустить PowerShell; используется встроенный установщик MelonLoader. Если ошибка повторится, откройте менеджер и нажмите «Установить MelonLoader».
-russian.ErrMelon=Установка MelonLoader не удалась (код %1).%n%nкод 1: неверный путь или файлы заняты; код 2: часто сбой загрузки с GitHub; код 3: неполная установка.%n%nМожно снять MelonLoader и переустановить менеджер, или установить вручную:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Скачайте MelonLoader.x64.zip и распакуйте в папку игры по инструкции.)
+russian.ErrMelon=Установка MelonLoader не удалась (код %1).%n%nкод 1: неверный путь или файлы заняты; код 2: нет локального MelonLoader.x64.zip (без загрузки с GitHub); код 3: неполная установка.%n%nМожно снять MelonLoader и переустановить менеджер, или установить вручную:%nhttps://github.com/LavaGang/MelonLoader/releases%n(Скачайте MelonLoader.x64.zip и распакуйте в папку игры по инструкции.)
 russian.StatusMelonDone=MelonLoader завершён (или пропущен).
 russian.StatusMelonAlready=MelonLoader ≥0.7.3 уже установлен; установка пропущена.
 russian.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
@@ -232,7 +232,7 @@ japanese.WarnSteamBusyMelon=Steam が本ゲームをダウンロード中のた�
 japanese.StatusMelon=MelonLoader を確認/インストール中（≥0.7.3 ならスキップ；同梱オフラインパッケージを優先）…
 japanese.StatusNoPsMelon=PowerShell を起動できませんでした；MelonLoader の自動インストールをスキップしました（後でインストール可能）。
 japanese.WarnNoPsMelon=PowerShell を起動できませんでした。マネージャー内蔵の MelonLoader インストーラに切り替えました。失敗する場合はマネージャーで「MelonLoader をインストール」を押してください。
-japanese.ErrMelon=MelonLoader のインストールに失敗しました（終了コード %1）。%n%n終了コード 1：無効なパスまたはファイルロック；2：多くは GitHub ダウンロード失敗；3：不完全なインストール。%n%nMelonLoader のチェックを外してマネージャーを再インストールするか、手動でインストールしてください：%nhttps://github.com/LavaGang/MelonLoader/releases%n（MelonLoader.x64.zip をダウンロードし、公式手順に従いゲームフォルダに展開）
+japanese.ErrMelon=MelonLoader のインストールに失敗しました（終了コード %1）。%n%n終了コード 1：無効なパスまたはファイルロック；2：ローカルの MelonLoader.x64.zip が無い（GitHub からは取得しない）；3：不完全なインストール。%n%nMelonLoader のチェックを外してマネージャーを再インストールするか、手動でインストールしてください：%nhttps://github.com/LavaGang/MelonLoader/releases%n（MelonLoader.x64.zip をダウンロードし、公式手順に従いゲームフォルダに展開）
 japanese.StatusMelonDone=MelonLoader が完了しました（またはスキップ）。
 japanese.StatusMelonAlready=MelonLoader ≥0.7.3 が既にあります。インストールをスキップします。
 japanese.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
@@ -279,7 +279,7 @@ german.WarnSteamBusyMelon=Steam lädt dieses Spiel, daher wurde MelonLoader übe
 german.StatusMelon=MelonLoader prüfen/installieren (überspringen ab ≥0.7.3; Offline-Paket bevorzugt)…
 german.StatusNoPsMelon=PowerShell konnte nicht gestartet werden; automatische MelonLoader-Installation übersprungen (später möglich).
 german.WarnNoPsMelon=PowerShell konnte nicht gestartet werden; es wird der eingebaute MelonLoader-Installer des Managers verwendet. Bei weiterem Fehler öffnen Sie den Manager und klicken Sie auf MelonLoader installieren.
-german.ErrMelon=MelonLoader-Installation fehlgeschlagen (Exit %1).%n%nExit 1: ungültiger Pfad oder Dateien gesperrt; Exit 2: oft GitHub-Download-Fehler; Exit 3: unvollständige Installation.%n%nMelonLoader abwählen und Manager neu installieren, oder manuell installieren:%nhttps://github.com/LavaGang/MelonLoader/releases%n(MelonLoader.x64.zip herunterladen und gemäß Anleitung in Spielordner entpacken)
+german.ErrMelon=MelonLoader-Installation fehlgeschlagen (Exit %1).%n%nExit 1: ungültiger Pfad oder Dateien gesperrt; Exit 2: lokale MelonLoader.x64.zip fehlt (kein GitHub-Download); Exit 3: unvollständige Installation.%n%nMelonLoader abwählen und Manager neu installieren, oder manuell installieren:%nhttps://github.com/LavaGang/MelonLoader/releases%n(MelonLoader.x64.zip herunterladen und gemäß Anleitung in Spielordner entpacken)
 german.StatusMelonDone=MelonLoader abgeschlossen (oder übersprungen).
 german.StatusMelonAlready=MelonLoader ≥0.7.3 bereits vorhanden; Installation übersprungen.
 german.ErrMelonVerify=MelonLoader was not written correctly. Open the manager and click Install MelonLoader, or re-run Setup.
@@ -763,7 +763,8 @@ end;
 
 function IsAllowedUiScale(const Value: string): Boolean;
 begin
-  Result := (Value = '1') or (Value = '1.25') or (Value = '1.5') or (Value = '1.75') or (Value = '2');
+  Result := (Value = '0.8') or (Value = '1') or (Value = '1.1') or (Value = '1.25')
+    or (Value = '1.5') or (Value = '1.75') or (Value = '2') or (Value = '2.25') or (Value = '2.5');
 end;
 
 function TryExtractJsonNullOrString(const Content, Key: string; var IsNull: Boolean; var Value: string): Boolean;
