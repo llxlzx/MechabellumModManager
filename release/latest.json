@@ -1,10 +1,10 @@
 {
-    "version":  "1.3.4",
-    "notes":  "界面缩放：设置里可选自动，或 100%、125%、150%、175%、200%。对话框会跟着放大，窗口一并变大，按钮和文字不再被裁切。覆盖安装会保留界面缩放，以及教程里「下次不再打开」的选择。白名单直传标为未完成。\nInterface scale: Settings can stay on Auto or use 100% to 200%. Dialogs scale with the manager and the window grows with them, so buttons and text stay fully visible. An upgrade keeps the chosen scale and the tutorial choice to not show again. Whitelist upload is marked unfinished.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.4/MechabellumModManager_Setup_v1.3.4.exe",
-    "setupSha256":  "736ac8ddd98856b5d17469997e1a6c670e3cb2cbdaf8f4370e8c3fef02c025d9",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.4/MechabellumModManager_portable_v1.3.4.zip",
-    "portableSha256":  "d4adde4b9183ef4dc9e6b1092ed1d7ccc2010c0aaf624d143f39502259bcfaaa",
-    "publishedAt":  "2026-09-21T12:29:22Z",
-    "build":  "v1.3.4-ui-scale"
+    "version":  "1.3.5",
+    "notes":  "安装时不再从 GitHub 的 latest 现下 MelonLoader。瘦安装包会先从国内镜像取得固定的 0.7.3 压缩包，再写入游戏目录，避免安装窗口停在 PowerShell 下载进度上。\nSetup no longer downloads MelonLoader from GitHub latest. The thin installer fetches the pinned 0.7.3 package from the domestic mirror first, then writes it into the game folder.",
+    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.5/MechabellumModManager_Setup_v1.3.5.exe",
+    "setupSha256":  "c890516a6f27fcec6f88c937fee09ed866e74a057c557c209a5f014b00d63b86",
+    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.5/MechabellumModManager_portable_v1.3.5.zip",
+    "portableSha256":  "87b769b753791c1d5415712d5f794716b6208cef480e69be112a6bd7e5d6ac03",
+    "publishedAt":  "2026-09-22T12:51:32Z",
+    "build":  "v1.3.5-offline-melon"
 }
