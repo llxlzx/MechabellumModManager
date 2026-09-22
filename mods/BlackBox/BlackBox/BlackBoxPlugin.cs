@@ -221,19 +221,40 @@ public class BlackBoxPlugin : MelonPlugin
 
     void Record(string trigger, long silentSeconds)
     {
+        if (_quit.DefiniteQuit)
+            return;
+
         if (!IncidentGate.TryBegin(ref _phase))
             return;
 
-        if (trigger == "hang")
-            silentSeconds = (Stopwatch.GetTimestamp() - _lastBeat) / Frequency();
+        try
+        {
+            if (trigger == "hang")
+                silentSeconds = (Stopwatch.GetTimestamp() - _lastBeat) / Frequency();
 
-        var pending = Summary(trigger, silentSeconds, "pending", "");
-        IncidentWriter.WriteSummary(_recordDir, IncidentWriter.FormatSummary(pending));
-        var outcome = Dump();
-        _dumpFinished = true;
-        var done = Summary(trigger, silentSeconds, outcome.Status, outcome.Error);
-        IncidentWriter.WriteSummary(_recordDir, IncidentWriter.FormatSummary(done));
-        MelonLogger.Msg("trigger: " + trigger + " dump: " + outcome.Status);
+            var pending = Summary(trigger, silentSeconds, "pending", "");
+            IncidentWriter.WriteSummary(_recordDir, IncidentWriter.FormatSummary(pending));
+            var outcome = Dump();
+            var done = Summary(trigger, silentSeconds, outcome.Status, outcome.Error);
+            IncidentWriter.WriteSummary(_recordDir, IncidentWriter.FormatSummary(done));
+            MelonLogger.Msg("trigger: " + trigger + " dump: " + outcome.Status);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var failed = Summary(trigger, silentSeconds, "failed", ex.Message);
+                IncidentWriter.WriteSummary(_recordDir, IncidentWriter.FormatSummary(failed));
+            }
+            catch
+            {
+                // Do not let the failure summary escape Record.
+            }
+        }
+        finally
+        {
+            _dumpFinished = true;
+        }
     }
 
     DumpOutcome Dump()
