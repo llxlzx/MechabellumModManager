@@ -28,3 +28,5 @@ release/_release_notes/
 !release/README.md
 
 .worktrees/
+
+mods/BlackBox/**/BlackBoxDump.exe
