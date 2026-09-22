@@ -9,7 +9,7 @@ if (-not $cl) {
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $out = Join-Path $here "BlackBoxDump.exe"
 Push-Location $here
-& $cl.FullName /nologo /O2 /W3 /DUNICODE /D_UNICODE BlackBoxDump.c /Fe:$out /link dbghelp.lib
+& $cl.FullName /nologo /O2 /W3 /DUNICODE /D_UNICODE BlackBoxDump.c /Fe:$out /link dbghelp.lib shell32.lib /ENTRY:wmainCRTStartup
 $code = $LASTEXITCODE
 Pop-Location
 if ($code -ne 0) { exit $code }

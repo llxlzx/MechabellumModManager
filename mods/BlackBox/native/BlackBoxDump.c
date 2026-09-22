@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <shellapi.h>
 #include <dbghelp.h>
 
 #pragma comment(lib, "dbghelp.lib")
@@ -31,6 +32,10 @@ int wmain(void)
     if (pid == 0 || started == 0 || outPath == NULL || outPath[0] == 0)
         return fail(1, NULL, NULL, argv);
 
+    wchar_t outCopy[1024];
+    wcsncpy(outCopy, outPath, 1023);
+    outCopy[1023] = L'\0';
+
     HANDLE process = OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_DUP_HANDLE, FALSE, pid);
     if (!process) return fail(2, NULL, NULL, argv);
@@ -53,7 +58,7 @@ int wmain(void)
     LocalFree(argv);
     if (!ok)
     {
-        DeleteFileW(outPath);
+        DeleteFileW(outCopy);
         return 3;
     }
     return 0;
