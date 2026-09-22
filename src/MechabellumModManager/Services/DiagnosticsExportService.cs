@@ -111,6 +111,8 @@ public sealed class DiagnosticsExportService
                     redact: false);
             }
 
+            var blackbox = BlackBoxExport.Collect(staging, request.GamePath, missing, redact);
+
             var dataRootValue = request.Paths.DataRoot;
             var gamePathValue = request.GamePath;
             if (redact)
@@ -136,6 +138,7 @@ public sealed class DiagnosticsExportService
                 ["branchWizardStep"] = request.BranchWizardStep,
                 ["activeGameBranch"] = request.ActiveGameBranch,
                 ["redaction"] = redact ? "strong" : "none",
+                ["blackbox"] = blackbox.Status,
                 ["missing"] = missing
             };
 
@@ -230,7 +233,9 @@ public sealed class DiagnosticsExportService
                 sessionText,
                 managerTail,
                 authoritativeGameStatusKind: summaryStatusKind,
-                diagnosis: diagnosis);
+                diagnosis: diagnosis,
+                blackboxStatus: blackbox.Status,
+                blackboxDumpIncluded: blackbox.DumpIncluded);
             WriteText(staging, "summary.md", redact ? Redact(summary) : summary, redact: false);
 
             var timeline = DiagnosticsTimelineBuilder.MergeEventsAndLogs(eventsText, sessionText, managerTail);
@@ -244,6 +249,8 @@ public sealed class DiagnosticsExportService
                 "mailto cannot attach local files automatically.\n";
             if (missing.Count > 0)
                 readme += "Missing:\n- " + string.Join("\n- ", missing) + "\n";
+            if (blackbox.DumpIncluded)
+                readme += BlackBoxExport.DumpWarningText + "\n";
             WriteText(staging, "README.txt", readme, redact: false);
 
             var zipDir = Path.GetDirectoryName(zipPath);
@@ -341,7 +348,7 @@ public sealed class DiagnosticsExportService
     /// <summary>A runaway MelonLoader log can reach gigabytes; keep only the tail.</summary>
     const long MaxCopiedBytes = 8L * 1024 * 1024;
 
-    static string ReadTextCapped(string sourcePath)
+    internal static string ReadTextCapped(string sourcePath)
     {
         var info = new FileInfo(sourcePath);
         if (info.Length <= MaxCopiedBytes)

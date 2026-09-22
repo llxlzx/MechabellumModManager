@@ -34,7 +34,9 @@ public static class DiagnosticsSummaryBuilder
         string? sessionTail,
         string? managerTail,
         string? authoritativeGameStatusKind = null,
-        Diagnosis? diagnosis = null)
+        Diagnosis? diagnosis = null,
+        string? blackboxStatus = null,
+        bool blackboxDumpIncluded = false)
     {
         var sb = new StringBuilder();
         if (diagnosis is not null)
@@ -81,6 +83,12 @@ public static class DiagnosticsSummaryBuilder
             }
         }
 
+        sb.AppendLine();
+        sb.AppendLine("## BlackBox");
+        sb.AppendLine("- 状态：" + (string.IsNullOrEmpty(blackboxStatus) ? "absent" : blackboxStatus));
+        sb.AppendLine("- 转储已收入：" + (blackboxDumpIncluded ? "是" : "否"));
+        if (blackboxDumpIncluded)
+            sb.AppendLine("- " + BlackBoxExport.DumpWarningText);
         sb.AppendLine();
         sb.AppendLine("## 建议下一步");
         foreach (var tip in BuildTips(findings, request))
