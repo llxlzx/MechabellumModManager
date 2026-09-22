@@ -1,6 +1,6 @@
 namespace BlackBox.Core;
 
-public readonly record struct DumpRunResult(bool ExeMissing, int? ExitCode, bool TimedOut);
+public readonly record struct DumpRunResult(bool ExeMissing, int? ExitCode, bool TimedOut, bool ProcessStarted = false);
 
 public interface IDumpRunner
 {
@@ -30,7 +30,18 @@ public static class DumpSession
 
         var run = runner.Run(helperPath, arguments, timeoutMs);
         if (run.TimedOut)
+        {
+            DeleteIfEmpty(tmpPath);
             return new DumpOutcome("timed-out", "timed out");
+        }
+
+        if (run.ExitCode == null)
+        {
+            DeleteIfEmpty(tmpPath);
+            var error = run.ProcessStarted ? "exit code unavailable" : "create process failed";
+            return new DumpOutcome("failed", error);
+        }
+
         if (run.ExitCode != 0)
         {
             DeleteIfEmpty(tmpPath);

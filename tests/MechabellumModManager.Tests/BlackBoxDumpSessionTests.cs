@@ -34,6 +34,59 @@ public class BlackBoxDumpSessionTests
     }
 
     [Fact]
+    public void Timeout_deletes_empty_tmp_and_leaves_existing_dump()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bb-dump-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var helper = Path.Combine(dir, "helper.exe");
+        var tmp = Path.Combine(dir, "blackbox.dmp.tmp");
+        var finalPath = Path.Combine(dir, "blackbox.dmp");
+        File.WriteAllText(helper, "x");
+        File.WriteAllBytes(tmp, Array.Empty<byte>());
+        File.WriteAllBytes(finalPath, new byte[] { 1, 2 });
+
+        var outcome = DumpSession.Complete(helper, "--pid 1", tmp, finalPath,
+            new Fake(new DumpRunResult(false, null, true, true)));
+
+        outcome.Status.Should().Be("timed-out");
+        File.Exists(tmp).Should().BeFalse();
+        File.ReadAllBytes(finalPath).Should().Equal(1, 2);
+        Directory.Delete(dir, true);
+    }
+
+    [Fact]
+    public void Null_exit_without_process_started_is_create_process_failed()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bb-dump-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var helper = Path.Combine(dir, "helper.exe");
+        File.WriteAllText(helper, "x");
+
+        var outcome = DumpSession.Complete(helper, "--pid 1", "a.tmp", "a.dmp",
+            new Fake(new DumpRunResult(false, null, false, false)));
+
+        outcome.Status.Should().Be("failed");
+        outcome.Error.Should().Be("create process failed");
+        Directory.Delete(dir, true);
+    }
+
+    [Fact]
+    public void Null_exit_after_process_started_is_exit_code_unavailable()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bb-dump-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var helper = Path.Combine(dir, "helper.exe");
+        File.WriteAllText(helper, "x");
+
+        var outcome = DumpSession.Complete(helper, "--pid 1", "a.tmp", "a.dmp",
+            new Fake(new DumpRunResult(false, null, false, true)));
+
+        outcome.Status.Should().Be("failed");
+        outcome.Error.Should().Be("exit code unavailable");
+        Directory.Delete(dir, true);
+    }
+
+    [Fact]
     public void Nonzero_exit_deletes_empty_tmp_and_does_not_replace_dump()
     {
         var dir = Path.Combine(Path.GetTempPath(), "bb-dump-" + Guid.NewGuid().ToString("N"));

@@ -250,6 +250,15 @@ public class BlackBoxPlugin : MelonPlugin
             {
                 // Do not let the failure summary escape Record.
             }
+
+            try
+            {
+                MelonLogger.Msg("trigger: " + trigger + " dump: failed");
+            }
+            catch
+            {
+                // Do not let the log itself throw out of Record.
+            }
         }
         finally
         {
@@ -438,20 +447,20 @@ public class BlackBoxPlugin : MelonPlugin
             var commandLine = new StringBuilder(command, command.Length + 1);
             var startup = new StartupInfo { cb = Marshal.SizeOf<StartupInfo>() };
             if (!CreateProcess(null, commandLine, IntPtr.Zero, IntPtr.Zero, false, CreateNoWindow, IntPtr.Zero, null, ref startup, out var process))
-                return new DumpRunResult(false, null, false);
+                return new DumpRunResult(false, null, false, false);
 
             try
             {
                 var wait = WaitForSingleObject(process.hProcess, (uint)timeoutMs);
-                if (wait == WaitTimeout)
+                if (wait != 0)
                 {
                     TerminateProcess(process.hProcess, 1);
-                    return new DumpRunResult(false, null, true);
+                    return new DumpRunResult(false, null, true, true);
                 }
 
                 if (!GetExitCodeProcess(process.hProcess, out var code))
-                    return new DumpRunResult(false, null, false);
-                return new DumpRunResult(false, code, false);
+                    return new DumpRunResult(false, null, false, true);
+                return new DumpRunResult(false, code, false, true);
             }
             finally
             {
