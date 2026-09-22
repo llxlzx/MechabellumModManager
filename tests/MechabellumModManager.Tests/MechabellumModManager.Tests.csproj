@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MechabellumModManager\MechabellumModManager.csproj" />
+    <ProjectReference Include="..\..\mods\BlackBox\BlackBox.Core\BlackBox.Core.csproj" />
   </ItemGroup>
 
 </Project>
