@@ -20,19 +20,19 @@
                         Margin="0,18,0,0">
                 <Button x:Name="CancelButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         IsCancel="True"
                         Click="Cancel_Click" />
                 <Button x:Name="OfficialButton"
                         MinWidth="110"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         Style="{StaticResource AccentButtonStyle}"
                         Click="Official_Click" />
                 <Button x:Name="BetaButton"
                         MinWidth="110"
-                        MinHeight="32"
+                        MinHeight="36"
                         Click="Beta_Click" />
             </StackPanel>
             <TextBlock x:Name="MessageText"

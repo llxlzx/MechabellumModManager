@@ -20,23 +20,23 @@
                         Margin="0,18,0,0">
                 <Button x:Name="QqButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         Click="Qq_Click" />
                 <Button x:Name="GmailButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         Click="Gmail_Click" />
                 <Button x:Name="DiscordButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         Visibility="Collapsed"
                         Click="Discord_Click" />
                 <Button x:Name="CancelButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         IsCancel="True"
                         Click="Cancel_Click" />
             </StackPanel>

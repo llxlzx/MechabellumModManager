@@ -61,9 +61,10 @@ public sealed class AppConfig
     public bool OnboardingDismissed { get; set; }
 
     /// <summary>
-    /// Extra interface scale on top of Windows DPI. Null or "auto" follows the screen: 125% from 1440p,
-    /// 150% for 1800p and 4K, 175% for 5K, 200% above that, when Windows itself is still near 100%.
-    /// Explicit values: "1", "1.25", "1.5", "1.75", "2". The installer must keep this field.
+    /// Extra interface scale on top of Windows DPI. Null or "auto" snaps the logical short side
+    /// (physical pixels divided by the Windows scale) to a step against a 1080p baseline.
+    /// Explicit values: "0.8", "1", "1.1", "1.25", "1.5", "1.75", "2", "2.25", "2.5".
+    /// The installer must keep this field.
     /// </summary>
     public string? UiScale { get; set; }
 }

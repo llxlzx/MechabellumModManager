@@ -235,7 +235,9 @@ public sealed class DiagnosticsExportService
                 authoritativeGameStatusKind: summaryStatusKind,
                 diagnosis: diagnosis,
                 blackboxStatus: blackbox.Status,
-                blackboxDumpIncluded: blackbox.DumpIncluded);
+                blackboxDumpIncluded: blackbox.DumpIncluded,
+                blackboxSummaryText: ReadStagingOptional(staging, "blackbox/summary.txt"),
+                melonLogText: ReadStagingOptional(staging, "melon/Latest.log"));
             WriteText(staging, "summary.md", redact ? Redact(summary) : summary, redact: false);
 
             var timeline = DiagnosticsTimelineBuilder.MergeEventsAndLogs(eventsText, sessionText, managerTail);
@@ -318,6 +320,21 @@ public sealed class DiagnosticsExportService
 
     static DiagnosticsExportResult Fail(string message) =>
         new() { Success = false, Message = message };
+
+    static string? ReadStagingOptional(string staging, string relative)
+    {
+        var path = Path.Combine(staging, relative.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(path))
+            return null;
+        try
+        {
+            return File.ReadAllText(path);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     static void TryCopyText(
         string staging,

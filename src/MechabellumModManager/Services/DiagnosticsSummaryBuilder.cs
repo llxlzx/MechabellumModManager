@@ -36,7 +36,9 @@ public static class DiagnosticsSummaryBuilder
         string? authoritativeGameStatusKind = null,
         Diagnosis? diagnosis = null,
         string? blackboxStatus = null,
-        bool blackboxDumpIncluded = false)
+        bool blackboxDumpIncluded = false,
+        string? blackboxSummaryText = null,
+        string? melonLogText = null)
     {
         var sb = new StringBuilder();
         if (diagnosis is not null)
@@ -89,6 +91,12 @@ public static class DiagnosticsSummaryBuilder
         sb.AppendLine("- 转储已收入：" + (blackboxDumpIncluded ? "是" : "否"));
         if (blackboxDumpIncluded)
             sb.AppendLine("- " + BlackBoxExport.DumpWarningText);
+        sb.AppendLine();
+        var separation = IncidentSeparation.Evaluate(blackboxSummaryText, melonLogText);
+        sb.AppendLine("## 卡死与逻辑帧");
+        sb.AppendLine("- 窗口：" + separation.Window);
+        sb.AppendLine("- 日志：" + separation.LogRate);
+        sb.AppendLine("- 逻辑帧：" + separation.LogicFrame);
         sb.AppendLine();
         sb.AppendLine("## 建议下一步");
         foreach (var tip in BuildTips(findings, request))

@@ -20,12 +20,12 @@
                         Margin="0,18,0,0">
                 <Button x:Name="YesButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         Click="Yes_Click" />
                 <Button x:Name="NoButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         Click="No_Click" />
             </StackPanel>
             <StackPanel>

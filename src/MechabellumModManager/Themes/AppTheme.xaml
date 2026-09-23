@@ -98,14 +98,14 @@
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="Margin" Value="0,0,6,0" />
                 <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontSize" Value="13" />
             </Style>
 
             <Style TargetType="Window">
                 <Setter Property="Background" Value="{StaticResource WindowBackgroundBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                 <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="15" />
             </Style>
 
             <Style x:Key="ShellTitleStyle" TargetType="TextBlock">
@@ -117,13 +117,13 @@
 
             <Style x:Key="ShellSubtitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontSize" Value="13" />
                 <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
             </Style>
 
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource AppDisplayFontFamily}" />
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontSize" Value="13" />
                 <Setter Property="FontWeight" Value="SemiBold" />
                 <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
                 <Setter Property="Margin" Value="0,0,0,8" />
@@ -152,7 +152,7 @@
 
             <Style x:Key="EmptyStateStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="15" />
                 <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
                 <Setter Property="TextAlignment" Value="Center" />
                 <Setter Property="TextWrapping" Value="Wrap" />
@@ -170,9 +170,9 @@
                 <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="Padding" Value="12,8" />
-                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="MinHeight" Value="36" />
                 <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontSize" Value="13" />
                 <Setter Property="Cursor" Value="Hand" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
                 <Setter Property="Template">
@@ -487,7 +487,7 @@
                 <Setter Property="Background" Value="{StaticResource BgDeepBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
                 <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontSize" Value="12" />
                 <Setter Property="Padding" Value="10,8" />
                 <Setter Property="BorderBrush" Value="{StaticResource SteelEdgeBrush}" />
                 <Setter Property="BorderThickness" Value="0,0,0,1" />
@@ -541,7 +541,7 @@
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
-                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontSize" Value="15" />
                 <Setter Property="Padding" Value="6,2,0,2" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
                 <Setter Property="Cursor" Value="Hand" />

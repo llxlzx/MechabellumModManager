@@ -16,6 +16,8 @@ public sealed class ModPackage
     public string? Author { get; set; }
     public ModPackageType Type { get; set; }
     public bool HighRisk { get; set; }
+    public string LogicFrameGrade { get; set; } = nameof(MechabellumModManager.Services.LogicFrameGrade.Unchecked);
+    public string LogicFrameReason { get; set; } = "unreadable";
     public string? RequiredMelonLoaderVersion { get; set; }
     public string? Summary { get; set; }
     public string? CatalogUpdatedAt { get; set; }

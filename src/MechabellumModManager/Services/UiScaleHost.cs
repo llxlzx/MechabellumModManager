@@ -15,6 +15,12 @@ public static class UiScaleHost
 
     static string _configured = UiScalePolicy.Auto;
     static bool _hooked;
+    static bool _publishedAuto;
+    static double _recommendedAutoScale = 1;
+
+    public static double RecommendedAutoScale => _recommendedAutoScale;
+
+    public static event Action? AutoRecommendationChanged;
     static readonly ConditionalWeakTable<Window, AuthoredWidth> AuthoredWidths = new();
 
     public static void EnsureHooked()
@@ -54,6 +60,7 @@ public static class UiScaleHost
             return;
 
         var (dpiScale, width, height) = ReadMonitor(window);
+        PublishAuto(UiScalePolicy.Resolve(UiScalePolicy.Auto, dpiScale, height, width));
         var scale = UiScalePolicy.Resolve(_configured, dpiScale, height, width);
         // Capture before mutating. SizeToContent.Height dialogs keep a fixed design width;
         // LayoutTransform would otherwise measure that width divided by the scale and clip
@@ -193,6 +200,15 @@ public static class UiScaleHost
         public double MinWidth { get; } = minWidth;
         public double MaxWidth { get; } = maxWidth;
         public SizeToContent SizeToContent { get; } = sizeToContent;
+    }
+
+    static void PublishAuto(double scale)
+    {
+        if (_publishedAuto && Math.Abs(_recommendedAutoScale - scale) < 0.001)
+            return;
+        _publishedAuto = true;
+        _recommendedAutoScale = scale;
+        AutoRecommendationChanged?.Invoke();
     }
 
     static void OnWindowLoaded(object sender, RoutedEventArgs e)

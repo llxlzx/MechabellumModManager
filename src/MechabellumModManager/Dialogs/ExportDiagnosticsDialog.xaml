@@ -20,14 +20,14 @@
                         Margin="0,18,0,0">
                 <Button x:Name="OkButton"
                         MinWidth="108"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         IsDefault="True"
                         Style="{StaticResource AccentButtonStyle}"
                         Click="Ok_Click" />
                 <Button x:Name="CancelButton"
                         MinWidth="96"
-                        MinHeight="32"
+                        MinHeight="36"
                         IsCancel="True"
                         Click="Cancel_Click" />
             </StackPanel>
@@ -39,7 +39,7 @@
                            TextWrapping="Wrap" />
                 <TextBlock x:Name="ConsentText"
                            TextWrapping="Wrap"
-                           FontSize="13"
+                           FontSize="15"
                            LineHeight="20"
                            Foreground="{StaticResource TextMutedBrush}"
                            Margin="0,0,0,14" />

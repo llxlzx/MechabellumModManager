@@ -132,6 +132,14 @@ public sealed partial class ModItemViewModel : ObservableObject
     public string HighRiskLabel => HighRisk
         ? LocalizationService.T("HighRiskYes")
         : LocalizationService.T("HighRiskNo");
+
+    public string LogicFrameGradeLabel => Package.LogicFrameGrade switch
+    {
+        nameof(LogicFrameGrade.Medium) => LocalizationService.T("LogicFrameMedium"),
+        nameof(LogicFrameGrade.High) => LocalizationService.T("LogicFrameHigh"),
+        nameof(LogicFrameGrade.Unchecked) => LocalizationService.T("LogicFrameUnchecked"),
+        _ => LocalizationService.T("LogicFrameLow")
+    };
     public string? RequiredMelonLoaderVersion => Package.RequiredMelonLoaderVersion;
     public string VersionWarningHint =>
         string.IsNullOrWhiteSpace(RequiredMelonLoaderVersion)
@@ -144,6 +152,7 @@ public sealed partial class ModItemViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(HighRisk));
         OnPropertyChanged(nameof(HighRiskLabel));
+        OnPropertyChanged(nameof(LogicFrameGradeLabel));
     }
 
     public void NotifyDetailChanged()
@@ -161,6 +170,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(EffectiveTagsText));
         OnPropertyChanged(nameof(TypeLabel));
         OnPropertyChanged(nameof(HighRiskLabel));
+        OnPropertyChanged(nameof(LogicFrameGradeLabel));
         OnPropertyChanged(nameof(VersionWarningHint));
         OnPropertyChanged(nameof(LatestVersion));
         OnPropertyChanged(nameof(CatalogMatched));

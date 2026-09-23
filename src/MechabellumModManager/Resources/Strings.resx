@@ -87,6 +87,9 @@
   <data name="UiScaleAuto" xml:space="preserve">
     <value>自动</value>
   </data>
+  <data name="UiScaleAutoResolved" xml:space="preserve">
+    <value>自动（{0}%）</value>
+  </data>
   <data name="LanguageSystem" xml:space="preserve">
     <value>跟随系统</value>
   </data>
@@ -957,4 +960,10 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="NotifyManagerUpdateMissingSetup" xml:space="preserve"><value>未找到安装包路径，无法启动安装程序。</value></data>
   <data name="NotifyManagerUpdateStartFailed" xml:space="preserve"><value>无法启动安装程序：{0}</value></data>
   <data name="ConfirmCloseWhileManagerUpdating" xml:space="preserve"><value>正在下载或处理管理器更新。关闭将取消下载。确定关闭？</value></data>
+  <data name="LogicFrameLow" xml:space="preserve"><value>低</value></data>
+  <data name="LogicFrameMedium" xml:space="preserve"><value>中</value></data>
+  <data name="LogicFrameHigh" xml:space="preserve"><value>高</value></data>
+  <data name="LogicFrameUnchecked" xml:space="preserve"><value>未检测</value></data>
+  <data name="ConfirmLogicFrameMedium" xml:space="preserve"><value>「{0}」挂在扣血、补给或战斗结束上。挂钩出错时，原来的函数可能不再执行，这一回合的战斗结果会和服务器不一致。确定加入当前方案吗？</value></data>
+  <data name="ConfirmLogicFrameHigh" xml:space="preserve"><value>「{0}」会跳过原来的演算函数，或改写它的返回值。静态查看不能证明这只发生在回放里。确定加入当前方案吗？</value></data>
 </root>

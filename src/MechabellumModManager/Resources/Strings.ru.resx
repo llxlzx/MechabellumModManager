@@ -87,6 +87,9 @@
   <data name="UiScaleAuto" xml:space="preserve">
     <value>Авто</value>
   </data>
+  <data name="UiScaleAutoResolved" xml:space="preserve">
+    <value>Авто ({0}%)</value>
+  </data>
   <data name="LanguageSystem" xml:space="preserve">
     <value>Как в системе</value>
   </data>
@@ -949,4 +952,10 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NotifyManagerUpdateMissingSetup" xml:space="preserve"><value>Путь к установщику не найден.</value></data>
   <data name="NotifyManagerUpdateStartFailed" xml:space="preserve"><value>Не удалось запустить установщик: {0}</value></data>
   <data name="ConfirmCloseWhileManagerUpdating" xml:space="preserve"><value>Идёт загрузка обновления менеджера. Закрытие отменит её. Закрыть?</value></data>
+  <data name="LogicFrameLow" xml:space="preserve"><value>Low</value></data>
+  <data name="LogicFrameMedium" xml:space="preserve"><value>Medium</value></data>
+  <data name="LogicFrameHigh" xml:space="preserve"><value>High</value></data>
+  <data name="LogicFrameUnchecked" xml:space="preserve"><value>Not checked</value></data>
+  <data name="ConfirmLogicFrameMedium" xml:space="preserve"><value>"{0}" hooks health, supply, or fight-end. If the hook throws, the original method may not run, and this round's battle result can disagree with the server. Add it to the current profile?</value></data>
+  <data name="ConfirmLogicFrameHigh" xml:space="preserve"><value>"{0}" can skip a simulation method or replace its return value. This check cannot prove the change is replay-only. Add it to the current profile?</value></data>
 </root>

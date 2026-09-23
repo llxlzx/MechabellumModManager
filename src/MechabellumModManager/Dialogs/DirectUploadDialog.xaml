@@ -17,45 +17,45 @@
             <DockPanel Margin="0,0,0,8">
                 <Button DockPanel.Dock="Right"
                         MinWidth="88"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="8,0,0,0"
                         Content="{Binding SaveCodeLabel}"
                         Click="SaveCode_Click" />
-                <TextBox x:Name="InviteBox" MinHeight="32" VerticalContentAlignment="Center" />
+                <TextBox x:Name="InviteBox" MinHeight="36" VerticalContentAlignment="Center" />
             </DockPanel>
 
             <TextBlock Text="{Binding SecretIdLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
-            <TextBox x:Name="SecretIdBox" MinHeight="32" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+            <TextBox x:Name="SecretIdBox" MinHeight="36" Margin="0,0,0,8" VerticalContentAlignment="Center" />
 
             <TextBlock Text="{Binding SecretKeyLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
-            <PasswordBox x:Name="SecretKeyBox" MinHeight="32" Margin="0,0,0,4" />
+            <PasswordBox x:Name="SecretKeyBox" MinHeight="36" Margin="0,0,0,4" />
             <TextBlock Text="{Binding SecretHint}"
                        TextWrapping="Wrap"
                        Margin="0,0,0,12"
-                       FontSize="11"
+                       FontSize="12"
                        Foreground="{StaticResource TextMutedBrush}" />
 
             <TextBlock Text="{Binding ModIdLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
-            <TextBox x:Name="IdBox" MinHeight="32" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+            <TextBox x:Name="IdBox" MinHeight="36" Margin="0,0,0,8" VerticalContentAlignment="Center" />
 
             <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
-            <TextBox x:Name="NameBox" MinHeight="32" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+            <TextBox x:Name="NameBox" MinHeight="36" Margin="0,0,0,8" VerticalContentAlignment="Center" />
 
             <TextBlock Text="{Binding SummaryLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
             <TextBox x:Name="SummaryBox" MinHeight="56" Margin="0,0,0,8" TextWrapping="Wrap" AcceptsReturn="True" />
 
             <TextBlock Text="{Binding VersionLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
-            <TextBox x:Name="VersionBox" MinHeight="32" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+            <TextBox x:Name="VersionBox" MinHeight="36" Margin="0,0,0,8" VerticalContentAlignment="Center" />
 
             <DockPanel Margin="0,0,0,8">
                 <Button DockPanel.Dock="Right"
                         MinWidth="100"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="8,0,0,0"
                         Content="{Binding PickDllLabel}"
                         Click="PickDll_Click" />
                 <TextBox x:Name="DllPathBox"
-                         MinHeight="32"
+                         MinHeight="36"
                          IsReadOnly="True"
                          VerticalContentAlignment="Center" />
             </DockPanel>
@@ -63,12 +63,12 @@
             <DockPanel Margin="0,0,0,12">
                 <Button DockPanel.Dock="Right"
                         MinWidth="100"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="8,0,0,0"
                         Content="{Binding PickPreviewLabel}"
                         Click="PickPreview_Click" />
                 <TextBox x:Name="PreviewPathBox"
-                         MinHeight="32"
+                         MinHeight="36"
                          IsReadOnly="True"
                          VerticalContentAlignment="Center" />
             </DockPanel>
@@ -79,7 +79,7 @@
             <TextBlock Text="{Binding UpdateCatalogHint}"
                        TextWrapping="Wrap"
                        Margin="0,0,0,12"
-                       FontSize="11"
+                       FontSize="12"
                        Foreground="{StaticResource TextMutedBrush}" />
 
             <TextBlock x:Name="StatusText"
@@ -89,21 +89,21 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Width="88"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         IsCancel="True"
                         Content="{Binding CancelLabel}"
                         Click="Cancel_Click" />
                 <Button x:Name="MergeButton"
                         MinWidth="120"
-                        MinHeight="32"
+                        MinHeight="36"
                         Margin="0,0,8,0"
                         Padding="12,8"
                         Content="{Binding MergeCatalogLabel}"
                         Click="MergeCatalog_Click" />
                 <Button x:Name="PublishButton"
                         MinWidth="140"
-                        MinHeight="32"
+                        MinHeight="36"
                         Padding="12,8"
                         IsDefault="True"
                         Style="{StaticResource AccentButtonStyle}"

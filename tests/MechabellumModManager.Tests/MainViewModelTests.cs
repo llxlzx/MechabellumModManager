@@ -3,6 +3,8 @@ using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 using MechabellumModManager.ViewModels;
 using MechabellumModManager.Tests.Support;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Fixture = MechabellumModManager.Tests.Support.MainViewModelFixture;
 
 public class MainViewModelTests
@@ -733,6 +735,185 @@ public class MainViewModelTests
             try { Directory.Delete(unityDeps, true); } catch { /* ignore */ }
             try { Directory.Delete(redistRoot, true); } catch { /* ignore */ }
         }
+    }
+
+    [Fact]
+    public void LogicFrameGradeLabel_unknown_string_is_low_and_refresh_raises_it()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm(confirmHighRisk: _ => true);
+        var item = vm.Mods.Single(m => m.Package.Id == "cam-aaaaaaaa");
+
+        item.Package.LogicFrameGrade = nameof(LogicFrameGrade.Medium);
+        item.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameMedium"));
+        item.Package.LogicFrameGrade = nameof(LogicFrameGrade.High);
+        item.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameHigh"));
+        item.Package.LogicFrameGrade = nameof(LogicFrameGrade.Unchecked);
+        item.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameUnchecked"));
+        item.Package.LogicFrameGrade = nameof(LogicFrameGrade.Low);
+        item.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameLow"));
+        item.Package.LogicFrameGrade = "not-a-grade";
+        item.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameLow"));
+
+        var raised = new List<string?>();
+        item.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+        item.NotifyDetailChanged();
+        item.NotifyRiskChanged();
+        raised.Count(name => name == nameof(ModItemViewModel.LogicFrameGradeLabel)).Should().Be(2);
+    }
+
+    [Fact]
+    public void OnModEnabledChanged_low_package_does_not_confirm_and_profile_contains_id()
+    {
+        using var fx = Fixture.CreateReady();
+        var dll = Path.Combine(fx.Paths.LibraryRoot, "mods", "cam-aaaaaaaa", "Cam.dll");
+        File.Delete(dll);
+
+        var confirms = 0;
+        var vm = fx.CreateVm(confirmHighRisk: _ =>
+        {
+            confirms++;
+            return false;
+        });
+        confirms.Should().Be(0);
+
+        var item = vm.Mods.Single(m => m.Package.Id == "cam-aaaaaaaa");
+        item.Package.LogicFrameGrade = nameof(LogicFrameGrade.High);
+        item.Package.LogicFrameReason = "sim-replace";
+
+        vm.OnModEnabledChanged(item, true);
+
+        confirms.Should().Be(0);
+        fx.Profiles.Get("default").EnabledPackageIds.Should().Contain("cam-aaaaaaaa");
+        item.Package.LogicFrameGrade.Should().Be(nameof(LogicFrameGrade.Low));
+        item.Package.LogicFrameReason.Should().Be("none");
+        item.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameLow"));
+    }
+
+    [Fact]
+    public void Checkbox_enable_medium_void_ReduceLife_prefix_cancel_stays_off()
+    {
+        using var fx = Fixture.CreateReady();
+        var dll = Path.Combine(fx.Paths.LibraryRoot, "mods", "cam-aaaaaaaa", "Cam.dll");
+        WriteVoidReduceLifePrefix(dll);
+
+        var confirms = 0;
+        string? seen = null;
+        var vm = fx.CreateVm(confirmHighRisk: message =>
+        {
+            confirms++;
+            seen = message;
+            return false;
+        });
+        confirms.Should().Be(0);
+
+        var item = vm.Mods.Single(m => m.Package.Id == "cam-aaaaaaaa");
+        item.Package.LogicFrameGrade = nameof(LogicFrameGrade.Low);
+        item.Package.LogicFrameReason = "none";
+
+        var raisedLabel = false;
+        item.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ModItemViewModel.LogicFrameGradeLabel))
+                raisedLabel = true;
+        };
+
+        item.IsEnabled = true;
+
+        confirms.Should().Be(1);
+        seen.Should().Be(LocalizationService.T("ConfirmLogicFrameMedium").Replace("{0}", item.DisplayName));
+        fx.Profiles.Get("default").EnabledPackageIds.Should().NotContain("cam-aaaaaaaa");
+        item.IsEnabled.Should().BeFalse();
+        item.Package.LogicFrameGrade.Should().Be(nameof(LogicFrameGrade.Medium));
+        item.Package.LogicFrameReason.Should().Be("sim-observe");
+        raisedLabel.Should().BeTrue();
+        item.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameMedium"));
+
+        var disableLine = string.Format(
+            LocalizationService.T("LogEnableDisableAction"),
+            LocalizationService.T("LogActionDisable"),
+            item.DisplayName);
+        vm.LogText.Should().Contain(LocalizationService.T("LogCancelledEnableHighRisk"));
+        vm.LogText.Should().NotContain(disableLine);
+    }
+
+    [Fact]
+    public void Rechecking_a_missing_row_stays_unchecked_and_does_not_write_package_json()
+    {
+        using var fx = Fixture.CreateReady();
+        fx.Profiles.SetEnabled("default", "gone-missing01", true);
+        var cwdJson = Path.Combine(Directory.GetCurrentDirectory(), "package.json");
+        var existed = File.Exists(cwdJson);
+        var confirms = 0;
+        try
+        {
+            var vm = fx.CreateVm(confirmHighRisk: _ =>
+            {
+                confirms++;
+                return false;
+            });
+            var missing = vm.Mods.Should().ContainSingle(m => m.IsMissing && m.Package.Id == "gone-missing01").Subject;
+            missing.LogicFrameGradeLabel.Should().Be(LocalizationService.T("LogicFrameUnchecked"));
+            missing.SetEnabledSilent(false);
+            missing.IsEnabled = true;
+
+            confirms.Should().Be(0);
+            missing.IsEnabled.Should().BeTrue();
+            missing.Package.LogicFrameGrade.Should().Be(nameof(LogicFrameGrade.Unchecked));
+            missing.Package.LogicFrameReason.Should().Be("unreadable");
+            fx.Profiles.Get("default").EnabledPackageIds.Should().Contain("gone-missing01");
+            File.Exists(cwdJson).Should().Be(existed);
+        }
+        finally
+        {
+            if (!existed && File.Exists(cwdJson))
+                File.Delete(cwdJson);
+        }
+    }
+
+    static void WriteVoidReduceLifePrefix(string path)
+    {
+        using var module = ModuleDefinition.CreateModule("LogicFrameFixture", ModuleKind.Dll);
+        var target = new TypeDefinition(
+            "Sim",
+            "FightActor",
+            TypeAttributes.Public | TypeAttributes.Class,
+            module.TypeSystem.Object);
+        var gameMethod = new MethodDefinition("ReduceLife", MethodAttributes.Public, module.TypeSystem.Void);
+        gameMethod.Body.GetILProcessor().Emit(OpCodes.Ret);
+        target.Methods.Add(gameMethod);
+        module.Types.Add(target);
+
+        var hook = new MethodDefinition(
+            "Prefix",
+            MethodAttributes.Public | MethodAttributes.Static,
+            module.TypeSystem.Void);
+        hook.Body.GetILProcessor().Emit(OpCodes.Ret);
+
+        var attr = new TypeDefinition(
+            "",
+            "HarmonyPatchAttribute",
+            TypeAttributes.Public | TypeAttributes.Class,
+            module.TypeSystem.Object);
+        var ctor = new MethodDefinition(
+            ".ctor",
+            MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+            module.TypeSystem.Void);
+        ctor.Parameters.Add(new ParameterDefinition(module.ImportReference(typeof(Type))));
+        ctor.Parameters.Add(new ParameterDefinition(module.TypeSystem.String));
+        ctor.Body.GetILProcessor().Emit(OpCodes.Ret);
+        attr.Methods.Add(ctor);
+        module.Types.Add(attr);
+
+        var attribute = new CustomAttribute(ctor);
+        attribute.ConstructorArguments.Add(new CustomAttributeArgument(module.ImportReference(typeof(Type)), target));
+        attribute.ConstructorArguments.Add(new CustomAttributeArgument(module.TypeSystem.String, "ReduceLife"));
+        hook.CustomAttributes.Add(attribute);
+
+        var outer = new TypeDefinition("", "Mod", TypeAttributes.Public | TypeAttributes.Class, module.TypeSystem.Object);
+        outer.Methods.Add(hook);
+        module.Types.Add(outer);
+        module.Write(path);
     }
 
     static void WriteFakeGlobalgamemanagers(string game, string unityVersion)

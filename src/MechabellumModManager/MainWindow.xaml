@@ -157,14 +157,14 @@
                                        TextTrimming="CharacterEllipsis"
                                        TextWrapping="NoWrap"
                                        Margin="0,4,0,0"
-                                       FontSize="11"
+                                       FontSize="12"
                                        Visibility="{Binding DiagnosisTitle, Converter={StaticResource NonEmptyVis}}" />
                             <TextBlock Text="{Binding DeployBlockedReason}"
                                        Visibility="{Binding ShowDeployBlockedReason, Converter={StaticResource BoolToVis}}"
                                        Foreground="{StaticResource WarnBrush}"
                                        TextWrapping="Wrap"
                                        Margin="0,6,0,0"
-                                       FontSize="11" />
+                                       FontSize="12" />
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding HasCurrentTask, Converter={StaticResource BoolToVis}}">
                                 <Grid Margin="0,0,0,4">
@@ -174,18 +174,18 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding TaskTitle}"
                                                FontWeight="SemiBold"
-                                               FontSize="12"
+                                               FontSize="13"
                                                Foreground="{StaticResource TextPrimaryBrush}"
                                                TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding TaskPercentLabel}"
-                                               FontSize="11"
+                                               FontSize="12"
                                                Margin="8,0,0,0"
                                                Visibility="{Binding ShowTaskPercent, Converter={StaticResource BoolToVis}}"
                                                Foreground="{StaticResource AccentAmberHotBrush}" />
                                 </Grid>
                                 <TextBlock Text="{Binding TaskMessage}"
-                                           FontSize="11"
+                                           FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="NoWrap"
@@ -263,7 +263,7 @@
                                                 Visibility="{Binding HasOutdatedMods, Converter={StaticResource BoolToVis}}">
                                             <TextBlock Text="{Binding OutdatedCount}"
                                                        Foreground="{StaticResource TextPrimaryBrush}"
-                                                       FontSize="11"
+                                                       FontSize="12"
                                                        FontWeight="SemiBold"
                                                        VerticalAlignment="Center" />
                                         </Border>
@@ -413,18 +413,18 @@
                                     Background="{StaticResource AccentAmberBrush}"
                                     Margin="0,1,8,0" VerticalAlignment="Top">
                                 <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           FontWeight="SemiBold" FontSize="12" Foreground="#FF1A1208" />
+                                           FontWeight="SemiBold" FontSize="13" Foreground="#FF1A1208" />
                             </Border>
                             <StackPanel>
                                 <TextBlock Text="先选界面语言" FontWeight="SemiBold" />
-                                <TextBlock Text="Choose the interface language" FontSize="12"
+                                <TextBlock Text="Choose the interface language" FontSize="13"
                                            Foreground="{StaticResource TextMutedBrush}" Margin="0,1,0,0" />
                             </StackPanel>
                         </StackPanel>
                         <TextBlock Text="在下面直接选。选好后，本页和整个管理器会立刻换成这种语言。也可以选「跟随系统」。"
                                    TextWrapping="Wrap" Margin="30,0,0,2" />
                         <TextBlock Text="Pick it below. This page and the whole manager switch immediately. You can also choose Follow system."
-                                   TextWrapping="Wrap" FontSize="12"
+                                   TextWrapping="Wrap" FontSize="13"
                                    Foreground="{StaticResource TextMutedBrush}" Margin="30,0,0,8" />
                         <DockPanel Margin="30,0,0,12">
                             <TextBlock Text="语言 / Language"
@@ -604,7 +604,7 @@
                                    Style="{StaticResource SectionLabelStyle}"
                                    Margin="0,0,0,6" />
                         <TextBlock Text="{Binding Ui.BranchSwitchHint}"
-                                   FontSize="12"
+                                   FontSize="13"
                                    TextWrapping="Wrap"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,0,0,8" />
@@ -716,7 +716,7 @@
                                 <TextBlock Text="{Binding Ui.SettingsAdvanced}"
                                            FontWeight="SemiBold" />
                                 <TextBlock Text="{Binding MirrorSummaryText}"
-                                           FontSize="11"
+                                           FontSize="12"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            TextWrapping="Wrap"
                                            Margin="0,2,0,0" />
@@ -735,7 +735,7 @@
                             </DockPanel>
                             <TextBlock Text="{Binding Ui.MirrorBaseUrlHint}"
                                        Foreground="{StaticResource TextMutedBrush}"
-                                       FontSize="11"
+                                       FontSize="12"
                                        TextWrapping="Wrap"
                                        Margin="0,6,0,0" />
                         </StackPanel>
@@ -791,7 +791,7 @@
                                    Foreground="{StaticResource TextMutedBrush}"
                                    DockPanel.Dock="Left"
                                    Margin="0,0,8,0" />
-                        <ComboBox Width="110"
+                        <ComboBox Width="188"
                                   ItemsSource="{Binding UiScaleOptions}"
                                   SelectedValue="{Binding SelectedUiScaleCode}"
                                   SelectedValuePath="Code"
@@ -818,7 +818,7 @@
                         </DockPanel>
                         <TextBox Text="{Binding Ui.CreditsBody, Mode=OneWay}"
                                  Style="{StaticResource SelectableReadOnlyTextStyle}"
-                                 FontSize="12"
+                                 FontSize="13"
                                  Foreground="{StaticResource TextMutedBrush}" />
                     </StackPanel>
                 </Grid>
@@ -866,7 +866,7 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
-                        <DockPanel Width="180" MinHeight="32" Margin="0,0,8,0" LastChildFill="True">
+                        <DockPanel Width="180" MinHeight="36" Margin="0,0,8,0" LastChildFill="True">
                             <Path Width="14" Height="14" Margin="0,0,6,0"
                                   Stretch="Uniform"
                                   VerticalAlignment="Center"
@@ -880,7 +880,7 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Ui.FilterCategory}"
                                        Style="{StaticResource FilterFieldLabelStyle}" />
-                            <ComboBox Width="140" MinHeight="32"
+                            <ComboBox Width="140" MinHeight="36"
                                       ToolTip="{Binding Ui.FilterCategory}"
                                       ItemsSource="{Binding CatalogCategoryFilterOptions}"
                                       SelectedItem="{Binding SelectedCatalogCategoryFilter}"
@@ -889,7 +889,7 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Ui.FilterTag}"
                                        Style="{StaticResource FilterFieldLabelStyle}" />
-                            <ComboBox Width="120" MinHeight="32"
+                            <ComboBox Width="120" MinHeight="36"
                                       ToolTip="{Binding Ui.FilterTag}"
                                       ItemsSource="{Binding CatalogAvailableTagOptions}"
                                       SelectedItem="{Binding SelectedCatalogTagFilter}"
@@ -898,7 +898,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Ui.FilterSort}"
                                        Style="{StaticResource FilterFieldLabelStyle}" />
-                            <ComboBox Width="140" MinHeight="32"
+                            <ComboBox Width="140" MinHeight="36"
                                       ToolTip="{Binding Ui.FilterSort}"
                                       ItemsSource="{Binding SortModeOptions}"
                                       SelectedItem="{Binding SelectedCatalogSortMode}"
@@ -978,7 +978,7 @@
                                         MinWidth="72"
                                         Padding="10,6"
                                         MinHeight="30"
-                                        FontSize="12"
+                                        FontSize="13"
                                         Margin="0,0,0,6"
                                         Style="{StaticResource GhostButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
@@ -994,7 +994,7 @@
                                         MinWidth="72"
                                         Padding="10,6"
                                         MinHeight="30"
-                                        FontSize="12"
+                                        FontSize="13"
                                         Style="{StaticResource GhostButtonStyle}" />
                             </StackPanel>
                             <DockPanel>
@@ -1017,7 +1017,7 @@
                                                    Foreground="{StaticResource TextPrimaryBrush}" />
                                         <TextBlock Margin="0,4,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"
-                                                   FontSize="12"
+                                                   FontSize="13"
                                                    TextWrapping="Wrap">
                                             <Run Text="{Binding Ui.LabelAuthor, Mode=OneWay}" />
                                             <Run Text="：" />
@@ -1035,10 +1035,10 @@
                                                    Text="{Binding SelectedCatalogMod.Summary}"
                                                    Foreground="{StaticResource TextPrimaryBrush}"
                                                    TextWrapping="Wrap"
-                                                   FontSize="12" />
+                                                   FontSize="13" />
                                         <TextBlock Margin="0,6,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"
-                                                   FontSize="12"
+                                                   FontSize="13"
                                                    TextWrapping="Wrap"
                                                    Visibility="{Binding SelectedCatalogMod.EffectiveTagsText, Converter={StaticResource NonEmptyVis}}">
                                             <Run Text="{Binding Ui.TagsLabel, Mode=OneWay}" />
@@ -1065,7 +1065,7 @@
                         <TextBlock Text="{Binding CatalogStatus}"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    TextWrapping="Wrap"
-                                   FontSize="12" />
+                                   FontSize="13" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -1194,7 +1194,7 @@
                         </DockPanel>
 
                         <DockPanel Grid.Row="1" Margin="0,0,0,8" LastChildFill="False">
-                            <DockPanel Width="160" MinHeight="32" Margin="0,0,8,0" LastChildFill="True">
+                            <DockPanel Width="160" MinHeight="36" Margin="0,0,8,0" LastChildFill="True">
                                 <Path Width="14" Height="14" Margin="0,0,6,0"
                                       Stretch="Uniform"
                                       VerticalAlignment="Center"
@@ -1208,7 +1208,7 @@
                             <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Ui.FilterCategory}"
                                            Style="{StaticResource FilterFieldLabelStyle}" />
-                                <ComboBox Width="140" MinHeight="32"
+                                <ComboBox Width="140" MinHeight="36"
                                           ToolTip="{Binding Ui.FilterCategory}"
                                           ItemsSource="{Binding LibraryCategoryFilterOptions}"
                                           SelectedItem="{Binding SelectedLibraryCategoryFilter}"
@@ -1217,7 +1217,7 @@
                             <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Ui.FilterTag}"
                                            Style="{StaticResource FilterFieldLabelStyle}" />
-                                <ComboBox Width="120" MinHeight="32"
+                                <ComboBox Width="120" MinHeight="36"
                                           ToolTip="{Binding Ui.FilterTag}"
                                           ItemsSource="{Binding LibraryAvailableTagOptions}"
                                           SelectedItem="{Binding SelectedLibraryTagFilter}"
@@ -1226,7 +1226,7 @@
                             <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Ui.FilterSort}"
                                            Style="{StaticResource FilterFieldLabelStyle}" />
-                                <ComboBox Width="140" MinHeight="32"
+                                <ComboBox Width="140" MinHeight="36"
                                           ToolTip="{Binding Ui.FilterSort}"
                                           ItemsSource="{Binding SortModeOptions}"
                                           SelectedItem="{Binding SelectedLibrarySortMode}"
@@ -1234,12 +1234,12 @@
                             </StackPanel>
                             <Button Content="{Binding Ui.EditModTaxonomy}"
                                     Command="{Binding EditLibraryModTaxonomyCommand}"
-                                    MinHeight="32"
+                                    MinHeight="36"
                                     MinWidth="120"
                                     Padding="12,8"
                                     Style="{StaticResource GhostButtonStyle}" />
                             <Button Command="{Binding ApplyProfileCommand}"
-                                    MinHeight="32"
+                                    MinHeight="36"
                                     MinWidth="96"
                                     Margin="8,0,0,0"
                                     Padding="12,8"
@@ -1341,21 +1341,15 @@
                                                     MinWidth="72"
                                                     MinHeight="28"
                                                     HorizontalAlignment="Left"
-                                                    FontSize="12" />
+                                                    FontSize="13" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="{Binding Data.Ui.ColumnRisk, Source={StaticResource Proxy}}" Width="88">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="{Binding HighRiskLabel}"
-                                                    Command="{Binding DataContext.ToggleHighRiskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    IsEnabled="{Binding DataContext.HighRiskDetectionEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    Padding="10,6"
-                                                    MinHeight="30"
-                                                    FontSize="12"
-                                                    ToolTip="{Binding DataContext.Ui.TipToggleHighRisk, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <TextBlock Text="{Binding LogicFrameGradeLabel}"
+                                                       VerticalAlignment="Center" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -1377,7 +1371,7 @@
                                                     CommandParameter="{Binding}"
                                                     Padding="10,6"
                                                     MinHeight="30"
-                                                    FontSize="12"
+                                                    FontSize="13"
                                                     ToolTip="{Binding DataContext.Ui.TipDeleteFromLibrary, RelativeSource={RelativeSource AncestorType=Window}}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -1406,7 +1400,7 @@
                                                     MinWidth="72"
                                                     Padding="10,6"
                                                     MinHeight="30"
-                                                    FontSize="12"
+                                                    FontSize="13"
                                                     Margin="0,0,0,6"
                                                     Style="{StaticResource GhostButtonStyle}">
                                                 <StackPanel Orientation="Horizontal">
@@ -1422,7 +1416,7 @@
                                                     MinWidth="72"
                                                     Padding="10,6"
                                                     MinHeight="30"
-                                                    FontSize="12"
+                                                    FontSize="13"
                                                     Style="{StaticResource GhostButtonStyle}" />
                                         </StackPanel>
                                         <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -1450,7 +1444,7 @@
                                                     </TextBlock>
                                                     <TextBlock Margin="0,4,0,0"
                                                                Foreground="{StaticResource TextMutedBrush}"
-                                                               FontSize="12"
+                                                               FontSize="13"
                                                                TextWrapping="Wrap">
                                                         <Run Text="{Binding Ui.LabelAuthor, Mode=OneWay}" />
                                                         <Run Text="：" />
@@ -1466,7 +1460,7 @@
                                                     </TextBlock>
                                                     <TextBlock Margin="0,6,0,0"
                                                                Foreground="{StaticResource TextPrimaryBrush}"
-                                                               FontSize="12"
+                                                               FontSize="13"
                                                                TextWrapping="Wrap">
                                                         <Run Text="{Binding Ui.LabelSummary, Mode=OneWay}" />
                                                         <Run Text="：" />
@@ -1474,7 +1468,7 @@
                                                     </TextBlock>
                                                     <TextBlock Margin="0,6,0,0"
                                                                Foreground="{StaticResource TextMutedBrush}"
-                                                               FontSize="12"
+                                                               FontSize="13"
                                                                TextWrapping="Wrap"
                                                                Visibility="{Binding SelectedLibraryMod.EffectiveTagsText, Converter={StaticResource NonEmptyVis}}">
                                                         <Run Text="{Binding Ui.TagsLabel, Mode=OneWay}" />
@@ -1488,7 +1482,7 @@
                                 </Border>
                                 <TextBlock Text="{Binding DirtyHint}"
                                            Foreground="{StaticResource AccentTealBrush}"
-                                           FontSize="12" />
+                                           FontSize="13" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -1508,7 +1502,7 @@
                     <TextBlock Text="{Binding MissingEnabledPackagesWarning}"
                                Foreground="{StaticResource AccentAmberHotBrush}"
                                TextWrapping="Wrap"
-                               FontSize="12" />
+                               FontSize="13" />
                 </Border>
                 <Border Background="#FF241C12"
                         BorderBrush="{StaticResource WarnBrush}"
@@ -1519,7 +1513,7 @@
                     <TextBlock Text="{Binding LoaderVersionWarning}"
                                Foreground="{StaticResource AccentAmberHotBrush}"
                                TextWrapping="Wrap"
-                               FontSize="12" />
+                               FontSize="13" />
                 </Border>
                 <Border Background="#FF241C12"
                         BorderBrush="{StaticResource WarnBrush}"
@@ -1531,7 +1525,7 @@
                     <TextBlock Text="{Binding FirstAssemblyWarning}"
                                Foreground="{StaticResource AccentAmberHotBrush}"
                                TextWrapping="Wrap"
-                               FontSize="12" />
+                               FontSize="13" />
                 </Border>
             </StackPanel>
 
@@ -1552,7 +1546,7 @@
                     <TextBlock Text="{Binding RiskBanner}"
                                TextWrapping="Wrap"
                                Foreground="#FFE8C8C0"
-                               FontSize="12"
+                               FontSize="13"
                                VerticalAlignment="Center" />
                 </DockPanel>
             </Border>
@@ -1595,7 +1589,7 @@
                                 <Grid DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Ui.LogExpand}"
                                                Foreground="{StaticResource AccentAmberHotBrush}"
-                                               FontSize="12">
+                                               FontSize="13">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible" />
@@ -1609,7 +1603,7 @@
                                     </TextBlock>
                                     <TextBlock Text="{Binding Ui.LogCollapse}"
                                                Foreground="{StaticResource AccentAmberHotBrush}"
-                                               FontSize="12"
+                                               FontSize="13"
                                                Visibility="{Binding IsLogExpanded, Converter={StaticResource BoolToVis}}" />
                                 </Grid>
                                 <TextBlock Text="{Binding Ui.SyncLog}"
@@ -1623,7 +1617,7 @@
                     <!-- Collapsed: one-line preview -->
                         <TextBlock Margin="11,6,0,0"
                                FontFamily="Consolas, Cascadia Mono, Microsoft YaHei UI"
-                               FontSize="12"
+                               FontSize="13"
                                Foreground="{StaticResource TextMutedBrush}"
                                Text="{Binding LatestLogLine}"
                                TextTrimming="CharacterEllipsis"
@@ -1662,7 +1656,7 @@
                                  BorderThickness="0"
                                  Padding="0"
                                  FontFamily="Consolas, Cascadia Mono, Microsoft YaHei UI"
-                                 FontSize="12"
+                                 FontSize="13"
                                  VerticalContentAlignment="Top"
                                  Foreground="{StaticResource TextMutedBrush}" />
                     </Border>

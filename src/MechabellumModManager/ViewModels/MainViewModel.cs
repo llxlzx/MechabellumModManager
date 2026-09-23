@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
@@ -15,12 +15,6 @@ namespace MechabellumModManager.ViewModels;
 
 public sealed partial class MainViewModel : ObservableObject
 {
-    static readonly JsonSerializerOptions PackageJsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     readonly PathsService _paths;
     readonly JsonStore _store;
     readonly GameDetector _detector;
@@ -284,15 +278,18 @@ public sealed partial class MainViewModel : ObservableObject
             new LaunchModeOption(LaunchMode.SteamOnly, LocalizationService.T("LaunchModeSteamOnly")),
             new LaunchModeOption(LaunchMode.ExeOnly, LocalizationService.T("LaunchModeExeOnly"))
         };
-        UiScaleOptions = new[]
+        var scaleOptions = new List<UiScaleOption>
         {
-            new UiScaleOption(UiScalePolicy.Auto, LocalizationService.T("UiScaleAuto")),
-            new UiScaleOption("1", "100%"),
-            new UiScaleOption("1.25", "125%"),
-            new UiScaleOption("1.5", "150%"),
-            new UiScaleOption("1.75", "175%"),
-            new UiScaleOption("2", "200%")
+            new(UiScalePolicy.Auto, LocalizationService.T("UiScaleAuto"))
         };
+        foreach (var code in UiScalePolicy.ExplicitCodes)
+        {
+            var scale = double.Parse(code, CultureInfo.InvariantCulture);
+            scaleOptions.Add(new UiScaleOption(code, UiScalePolicy.PercentText(scale) + "%"));
+        }
+
+        UiScaleOptions = scaleOptions;
+        UiScaleHost.AutoRecommendationChanged += OnAutoScaleRecommendationChanged;
         LanguageOptions = new[]
         {
             new LanguageOption("system", "System"),
@@ -1226,11 +1223,22 @@ public sealed partial class MainViewModel : ObservableObject
         SaveConfig(config);
     }
 
+    void OnAutoScaleRecommendationChanged()
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is not null && !dispatcher.CheckAccess())
+            _ = dispatcher.BeginInvoke(RefreshUiScaleLabels);
+        else
+            RefreshUiScaleLabels();
+    }
+
     void RefreshUiScaleLabels()
     {
         var auto = UiScaleOptions.FirstOrDefault(o => o.Code == UiScalePolicy.Auto);
-        if (auto is not null)
-            auto.Label = LocalizationService.T("UiScaleAuto");
+        if (auto is null)
+            return;
+        var percent = UiScalePolicy.PercentText(UiScaleHost.RecommendedAutoScale);
+        auto.Label = string.Format(CultureInfo.CurrentCulture, LocalizationService.T("UiScaleAutoResolved"), percent);
     }
 
     void ApplyUiLanguage(string? code, bool save, bool refreshUi, string? previousConfiguredOverride = null)
@@ -3459,9 +3467,16 @@ public sealed partial class MainViewModel : ObservableObject
 
                 if (isUpdate)
                 {
-                    RetireSupersededPackages(supersededPackages, pkg);
-                    AppendLog(string.Format(LocalizationService.T("LogUpdatedToCatalogVersion"), pkg.DisplayName, pkg.Id));
-                    CatalogStatus = $"已更新：{pkg.DisplayName}，请重新应用方案使其生效。";
+                    if (RetireSupersededPackages(supersededPackages, pkg, interactiveConfirm: true))
+                    {
+                        AppendLog(string.Format(LocalizationService.T("LogUpdatedToCatalogVersion"), pkg.DisplayName, pkg.Id));
+                        CatalogStatus = $"已更新：{pkg.DisplayName}，请重新应用方案使其生效。";
+                    }
+                    else
+                    {
+                        CatalogStatus = $"未替换：{pkg.DisplayName} 已在本地库，当前方案仍使用原来的版本。";
+                        AppendLog(CatalogStatus);
+                    }
                 }
                 else
                 {
@@ -3544,19 +3559,47 @@ public sealed partial class MainViewModel : ObservableObject
         if (!CanReplaceInstalledMod(item.DisplayName))
             return;
 
-        RetireSupersededPackages([item.Package], current);
+        var swapped = RetireSupersededPackages([item.Package], current, interactiveConfirm: true);
         ReloadMods();
         RefreshCatalogInLibraryFlags();
         EnrichModsFromCatalog();
-        AppendLog(string.Format(LocalizationService.T("LogRemovedDuplicateOldKept"), item.DisplayName, current.Version ?? current.Id));
+        if (swapped)
+            AppendLog(string.Format(LocalizationService.T("LogRemovedDuplicateOldKept"), item.DisplayName, current.Version ?? current.Id));
     }
 
     /// <summary>
     /// Points the profiles at the freshly imported package before dropping the old one, so a failure
     /// mid-way leaves the player with a working mod rather than an empty slot.
+    /// A profile that had the old id enabled is an enable transition for the replacement.
+    /// Medium and High must confirm there. Automatic cleanup does not open a dialog; it leaves
+    /// that pair in place instead of enabling the new id quietly.
     /// </summary>
-    void RetireSupersededPackages(IReadOnlyList<ModPackage> superseded, ModPackage replacement)
+    bool RetireSupersededPackages(
+        IReadOnlyList<ModPackage> superseded,
+        ModPackage replacement,
+        bool interactiveConfirm = true)
     {
+        if (WouldNewlyEnable(superseded, replacement))
+        {
+            var grade = ScanLogicFrame(replacement);
+            if (LogicFrameGate.NeedsConfirm(grade))
+            {
+                if (!interactiveConfirm)
+                    return false;
+
+                var allow = LogicFrameGate.CanEnable(
+                    grade,
+                    replacement.DisplayName,
+                    LocalizationService.T,
+                    _confirmHighRisk);
+                if (!allow)
+                {
+                    AppendLog(LocalizationService.T("LogCancelledEnableHighRisk"));
+                    return false;
+                }
+            }
+        }
+
         foreach (var old in superseded)
         {
             if (string.Equals(old.Id, replacement.Id, StringComparison.OrdinalIgnoreCase))
@@ -3584,6 +3627,8 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog(string.Format(LocalizationService.T("LogOldVersionDisabledNotDeleted"), old.Id, ex.Message));
             }
         }
+
+        return true;
     }
 
     bool CanAddCatalogMod() =>
@@ -3906,16 +3951,21 @@ public sealed partial class MainViewModel : ObservableObject
         _autoRetiringStale = true;
         try
         {
+            var cleaned = 0;
             foreach (var group in pairs.GroupBy(p => p.Current.Id, StringComparer.OrdinalIgnoreCase))
             {
                 var current = group.First().Current;
                 var superseded = group.Select(g => g.Old).ToList();
-                RetireSupersededPackages(superseded, current);
+                if (RetireSupersededPackages(superseded, current, interactiveConfirm: false))
+                    cleaned += superseded.Count;
             }
+
+            if (cleaned == 0)
+                return;
 
             ReloadMods();
             RefreshCatalogInLibraryFlags();
-            AppendLog(string.Format(LocalizationService.T("LogAutoCleanedDuplicateMods"), pairs.Count));
+            AppendLog(string.Format(LocalizationService.T("LogAutoCleanedDuplicateMods"), cleaned));
         }
         finally
         {
@@ -4299,6 +4349,12 @@ public sealed partial class MainViewModel : ObservableObject
                 continue;
             }
 
+            if (!ConfirmLogicFrame(pkg))
+            {
+                AppendLog(string.Format(LocalizationService.T("LogImportedHighRiskNotEnabled"), pkg.DisplayName));
+                continue;
+            }
+
             try
             {
                 _profiles.SetEnabled(SelectedProfile.Id, pkg.Id, true);
@@ -4313,6 +4369,63 @@ public sealed partial class MainViewModel : ObservableObject
         return any;
     }
 
+    bool ConfirmLogicFrame(ModPackage pkg) =>
+        LogicFrameGate.CanEnable(ScanLogicFrame(pkg), pkg.DisplayName, LocalizationService.T, _confirmHighRisk);
+
+    /// <summary>
+    /// Grades the DLLs already in the package directory. A missing directory stays Unchecked and is not written,
+    /// so a profile row whose files are gone cannot create package.json in the working directory or display 低.
+    /// </summary>
+    LogicFrameGrade ScanLogicFrame(ModPackage pkg)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(pkg.PackageDirectory) || !Directory.Exists(pkg.PackageDirectory))
+                return LogicFrameGrade.Unchecked;
+
+            var dlls = Directory.GetFiles(pkg.PackageDirectory, "*.dll", SearchOption.AllDirectories);
+            var frame = LogicFrameRiskScanner.ScanPaths(dlls);
+            var grade = frame.Grade.ToString();
+            var reason = frame.ReasonCode;
+            if (pkg.LogicFrameGrade != grade || pkg.LogicFrameReason != reason)
+            {
+                pkg.LogicFrameGrade = grade;
+                pkg.LogicFrameReason = reason;
+                try
+                {
+                    PersistPackageMeta(pkg);
+                }
+                catch (Exception ex)
+                {
+                    AppendLog(string.Format(LocalizationService.T("LogUpdatePkgHighRiskFailed"), pkg.DisplayName, ex.Message));
+                }
+            }
+
+            return frame.Grade;
+        }
+        catch (Exception ex)
+        {
+            AppendLog(string.Format(LocalizationService.T("LogUpdatePkgHighRiskFailed"), pkg.DisplayName, ex.Message));
+            return LogicFrameGrade.Unchecked;
+        }
+    }
+
+    bool WouldNewlyEnable(IReadOnlyList<ModPackage> superseded, ModPackage replacement)
+    {
+        foreach (var profile in _profiles.List())
+        {
+            var ids = profile.EnabledPackageIds;
+            if (ids.Any(id => string.Equals(id, replacement.Id, StringComparison.OrdinalIgnoreCase)))
+                continue;
+            if (superseded.Any(old =>
+                    !string.Equals(old.Id, replacement.Id, StringComparison.OrdinalIgnoreCase) &&
+                    ids.Any(id => string.Equals(id, old.Id, StringComparison.OrdinalIgnoreCase))))
+                return true;
+        }
+
+        return false;
+    }
+
     public void OnModEnabledChanged(ModItemViewModel item, bool enabled)
     {
         if (SelectedProfile is null) return;
@@ -4322,6 +4435,18 @@ public sealed partial class MainViewModel : ObservableObject
             item.SetEnabledSilent(false);
             AppendLog(LocalizationService.T("LogCancelledEnableHighRisk"));
             return;
+        }
+
+        if (enabled)
+        {
+            var allow = ConfirmLogicFrame(item.Package);
+            item.NotifyRiskChanged();
+            if (!allow)
+            {
+                item.SetEnabledSilent(false);
+                AppendLog(LocalizationService.T("LogCancelledEnableHighRisk"));
+                return;
+            }
         }
 
         try
@@ -4409,6 +4534,30 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog(string.Format(LocalizationService.T("LogUpdatePkgHighRiskFailed"), pkg.DisplayName, ex.Message));
             }
         }
+        }
+
+        foreach (var pkg in library)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(pkg.PackageDirectory) || !Directory.Exists(pkg.PackageDirectory))
+                    continue;
+
+                var dlls = Directory.GetFiles(pkg.PackageDirectory, "*.dll", SearchOption.AllDirectories);
+                var frame = LogicFrameRiskScanner.ScanPaths(dlls);
+                var grade = frame.Grade.ToString();
+                var reason = frame.ReasonCode;
+                if (pkg.LogicFrameGrade == grade && pkg.LogicFrameReason == reason)
+                    continue;
+
+                pkg.LogicFrameGrade = grade;
+                pkg.LogicFrameReason = reason;
+                PersistPackageMeta(pkg);
+            }
+            catch (Exception ex)
+            {
+                AppendLog(string.Format(LocalizationService.T("LogUpdatePkgHighRiskFailed"), pkg.DisplayName, ex.Message));
+            }
         }
 
         var libraryIds = new HashSet<string>(library.Select(p => p.Id), StringComparer.OrdinalIgnoreCase);
@@ -4561,6 +4710,8 @@ public sealed partial class MainViewModel : ObservableObject
     void RefreshCatalogView()
     {
         if (_suppressFilterRefresh) return;
+        if (CatalogModsView is DispatcherObject catalogView && !catalogView.Dispatcher.CheckAccess())
+            return;
         _suppressFilterRefresh = true;
         try
         {
@@ -4577,6 +4728,8 @@ public sealed partial class MainViewModel : ObservableObject
     void RefreshLibraryView()
     {
         if (_suppressFilterRefresh) return;
+        if (LibraryModsView is DispatcherObject libraryView && !libraryView.Dispatcher.CheckAccess())
+            return;
         _suppressFilterRefresh = true;
         try
         {
@@ -4593,6 +4746,10 @@ public sealed partial class MainViewModel : ObservableObject
     static void ApplySort(ICollectionView view, ModSortMode mode, bool catalog)
     {
         if (view is not ListCollectionView lcv) return;
+        // Catalog download resumes on the thread pool. CustomSort must run on the view's
+        // dispatcher; skipping here avoids failing the import after the files are already in place.
+        if (!lcv.Dispatcher.CheckAccess())
+            return;
         lcv.CustomSort = mode switch
         {
             ModSortMode.UpdatedAtDesc when catalog =>
@@ -4810,31 +4967,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     void PersistPackageMeta(ModPackage pkg)
     {
-        var meta = new
-        {
-            id = pkg.Id,
-            displayName = pkg.DisplayName,
-            version = pkg.Version,
-            author = pkg.Author,
-            type = pkg.Type switch
-            {
-                ModPackageType.MelonMod => "melon_mod",
-                ModPackageType.MelonPlugin => "melon_plugin",
-                ModPackageType.MelonUserLibs => "melon_userlibs",
-                ModPackageType.MelonUserData => "melon_userdata",
-                _ => "melon_mod"
-            },
-            highRisk = pkg.HighRisk,
-            requiredMelonLoaderVersion = pkg.RequiredMelonLoaderVersion,
-            summary = pkg.Summary,
-            catalogUpdatedAt = pkg.CatalogUpdatedAt,
-            preview = pkg.Preview,
-            categoryOverride = pkg.CategoryOverride,
-            extraTags = pkg.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(pkg.ExtraTags).ToList(),
-            files = pkg.Files
-        };
-        var json = JsonSerializer.Serialize(meta, PackageJsonOptions);
-        File.WriteAllText(Path.Combine(pkg.PackageDirectory, "package.json"), json);
+        _library.SavePackageMeta(pkg);
     }
 
     void LoadBranchSwitchState()

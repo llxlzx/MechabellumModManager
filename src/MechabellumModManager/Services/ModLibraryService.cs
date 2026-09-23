@@ -604,6 +604,11 @@ public sealed class ModLibraryService
         var risk = RiskHeuristic.DetectionEnabled ? _riskHeuristic.Evaluate(pkg) : new RiskHeuristicResult();
         pkg.HighRisk = risk.HighRisk;
 
+        var copiedDlls = Directory.GetFiles(packageDir, "*.dll", SearchOption.AllDirectories);
+        var frame = LogicFrameRiskScanner.ScanPaths(copiedDlls);
+        pkg.LogicFrameGrade = frame.Grade.ToString();
+        pkg.LogicFrameReason = frame.ReasonCode;
+
         WritePackageJson(pkg);
         var index = LoadIndex();
         if (!index.PackageIds.Contains(id, StringComparer.OrdinalIgnoreCase))
@@ -616,6 +621,9 @@ public sealed class ModLibraryService
 
     void WritePackageJson(ModPackage pkg)
     {
+        if (string.IsNullOrWhiteSpace(pkg.PackageDirectory) || !Directory.Exists(pkg.PackageDirectory))
+            throw new InvalidOperationException("package directory is missing");
+
         var meta = new PackageMeta
         {
             Id = pkg.Id,
@@ -624,6 +632,8 @@ public sealed class ModLibraryService
             Author = pkg.Author,
             Type = pkg.Type,
             HighRisk = pkg.HighRisk,
+            LogicFrameGrade = pkg.LogicFrameGrade,
+            LogicFrameReason = pkg.LogicFrameReason,
             RequiredMelonLoaderVersion = pkg.RequiredMelonLoaderVersion,
             Summary = pkg.Summary,
             CatalogUpdatedAt = pkg.CatalogUpdatedAt,
@@ -658,6 +668,8 @@ public sealed class ModLibraryService
                 Author = meta.Author,
                 Type = meta.Type.Value,
                 HighRisk = meta.HighRisk,
+                LogicFrameGrade = meta.LogicFrameGrade,
+                LogicFrameReason = meta.LogicFrameReason,
                 RequiredMelonLoaderVersion = meta.RequiredMelonLoaderVersion,
                 Summary = meta.Summary,
                 CatalogUpdatedAt = meta.CatalogUpdatedAt,
@@ -927,6 +939,8 @@ public sealed class ModLibraryService
         /// <summary>Null when package.json omits type — must not default to MelonMod.</summary>
         public ModPackageType? Type { get; set; }
         public bool HighRisk { get; set; }
+        public string LogicFrameGrade { get; set; } = nameof(MechabellumModManager.Services.LogicFrameGrade.Unchecked);
+        public string LogicFrameReason { get; set; } = "unreadable";
         public string? RequiredMelonLoaderVersion { get; set; }
         public string? Summary { get; set; }
         public string? CatalogUpdatedAt { get; set; }

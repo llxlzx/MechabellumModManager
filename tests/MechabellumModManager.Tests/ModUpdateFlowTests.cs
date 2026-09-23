@@ -6,6 +6,8 @@ using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 using MechabellumModManager.Tests.Support;
 using MechabellumModManager.ViewModels;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 /// <summary>
 /// End-to-end cover for updating an already-installed catalog mod: the gates that let it through,
@@ -46,6 +48,63 @@ public class ModUpdateFlowTests
         fx.Profiles.Get("default").EnabledPackageIds
             .Should().Equal("cam-aaaaaaaa", replacement.Id);
         vm.IsDirty.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Updating_an_enabled_mod_to_medium_asks_before_repointing_the_profile()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+        fx.Profiles.SetEnabled("default", oldId, true);
+        var medium = WriteVoidReduceLifePrefixBytes();
+
+        var confirms = 0;
+        var vm = fx.CreateVm(
+            catalog: CatalogServing(version: "1.2.0", medium),
+            confirmHighRisk: _ =>
+            {
+                confirms++;
+                return false;
+            });
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+        vm.SetCatalogSelection([vm.CatalogMods.Should().ContainSingle().Subject]);
+        await vm.AddCatalogModToLibraryCommand.ExecuteAsync(null);
+
+        confirms.Should().Be(1);
+        vm.CatalogStatus.Should().StartWith("未替换：");
+        vm.LogText.Should().NotContain("已更新到目录版本");
+        fx.Library.List().Should().Contain(p => p.Id == oldId);
+        fx.Profiles.Get("default").EnabledPackageIds.Should().Contain(oldId);
+        var imported = fx.Library.List().Should().Contain(p => p.CatalogId == "show-grid" && p.Id != oldId).Subject;
+        fx.Profiles.Get("default").EnabledPackageIds.Should().NotContain(imported.Id);
+        imported.LogicFrameGrade.Should().Be(nameof(LogicFrameGrade.Medium));
+    }
+
+    [Fact]
+    public async Task Updating_an_enabled_mod_to_medium_repoints_when_the_player_confirms()
+    {
+        using var fx = MainViewModelFixture.CreateReady();
+        var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+        fx.Profiles.SetEnabled("default", oldId, true);
+        var medium = WriteVoidReduceLifePrefixBytes();
+
+        var confirms = 0;
+        var vm = fx.CreateVm(
+            catalog: CatalogServing("1.2.0", medium),
+            confirmHighRisk: _ =>
+            {
+                confirms++;
+                return true;
+            });
+        await vm.RefreshCatalogCommand.ExecuteAsync(null);
+        vm.SetCatalogSelection([vm.CatalogMods.Should().ContainSingle().Subject]);
+        await vm.AddCatalogModToLibraryCommand.ExecuteAsync(null);
+
+        confirms.Should().Be(1);
+        fx.Library.List().Should().NotContain(p => p.Id == oldId);
+        var replacement = fx.Library.List().Should().ContainSingle(p => p.CatalogId == "show-grid").Subject;
+        fx.Profiles.Get("default").EnabledPackageIds.Should().Contain(replacement.Id);
+        replacement.LogicFrameGrade.Should().Be(nameof(LogicFrameGrade.Medium));
     }
 
     [Fact]
@@ -423,17 +482,87 @@ public class ModUpdateFlowTests
         }
         """;
 
-    static ModCatalogService CatalogServing(string version) => CatalogServing(version, out _);
+    static ModCatalogService CatalogServing(string version) => CatalogServing(version, NewBytes);
 
-    static ModCatalogService CatalogServing(string version, out ScriptedHttpHandler handler)
+    static ModCatalogService CatalogServing(string version, byte[] payload) =>
+        CatalogServing(version, payload, out _);
+
+    static ModCatalogService CatalogServing(string version, out ScriptedHttpHandler handler) =>
+        CatalogServing(version, NewBytes, out handler);
+
+    static ModCatalogService CatalogServing(string version, byte[] payload, out ScriptedHttpHandler handler)
     {
-        var catalogJson = CatalogJson(version);
+        var catalogJson = CatalogJson(version, payload);
         handler = new ScriptedHttpHandler(req =>
             req.RequestUri!.AbsolutePath.EndsWith("catalog.json", StringComparison.Ordinal)
                 ? ScriptedHttpHandler.Json(HttpStatusCode.OK, catalogJson)
-                : ScriptedHttpHandler.Bytes(HttpStatusCode.OK, NewBytes));
+                : ScriptedHttpHandler.Bytes(HttpStatusCode.OK, payload));
 
         return new ModCatalogService(new HttpClient(handler));
+    }
+
+    static string CatalogJson(string version, byte[] payload, string updatedAt = "2026-09-06") =>
+        $$"""
+        {
+          "updatedAt": "{{updatedAt}}",
+          "mods": [
+            {
+              "id": "show-grid",
+              "name": "Show Grid",
+              "author": "巴巴",
+              "version": "{{version}}",
+              "updatedAt": "{{updatedAt}}",
+              "summary": "格线",
+              "file": "mods/show-grid/ShowGrid.dll",
+              "sha256": "{{Hex(payload)}}",
+              "size": {{payload.Length}},
+              "type": "melon_mod"
+            }
+          ]
+        }
+        """;
+
+    static byte[] WriteVoidReduceLifePrefixBytes()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "mmm-medium-" + Guid.NewGuid().ToString("N") + ".dll");
+        try
+        {
+            using var module = ModuleDefinition.CreateModule("LogicFrameFixture", ModuleKind.Dll);
+            var target = new TypeDefinition(
+                "Sim", "FightActor", TypeAttributes.Public | TypeAttributes.Class, module.TypeSystem.Object);
+            var gameMethod = new MethodDefinition("ReduceLife", MethodAttributes.Public, module.TypeSystem.Void);
+            gameMethod.Body.GetILProcessor().Emit(OpCodes.Ret);
+            target.Methods.Add(gameMethod);
+            module.Types.Add(target);
+
+            var hook = new MethodDefinition(
+                "Prefix", MethodAttributes.Public | MethodAttributes.Static, module.TypeSystem.Void);
+            hook.Body.GetILProcessor().Emit(OpCodes.Ret);
+            var attr = new TypeDefinition(
+                "", "HarmonyPatchAttribute", TypeAttributes.Public | TypeAttributes.Class, module.TypeSystem.Object);
+            var ctor = new MethodDefinition(
+                ".ctor",
+                MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+                module.TypeSystem.Void);
+            ctor.Parameters.Add(new ParameterDefinition(module.ImportReference(typeof(Type))));
+            ctor.Parameters.Add(new ParameterDefinition(module.TypeSystem.String));
+            ctor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            attr.Methods.Add(ctor);
+            module.Types.Add(attr);
+            var attribute = new CustomAttribute(ctor);
+            attribute.ConstructorArguments.Add(new CustomAttributeArgument(module.ImportReference(typeof(Type)), target));
+            attribute.ConstructorArguments.Add(new CustomAttributeArgument(module.TypeSystem.String, "ReduceLife"));
+            hook.CustomAttributes.Add(attribute);
+            var outer = new TypeDefinition("", "Mod", TypeAttributes.Public | TypeAttributes.Class, module.TypeSystem.Object);
+            outer.Methods.Add(hook);
+            module.Types.Add(outer);
+            module.Write(path);
+            return File.ReadAllBytes(path);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
     }
 
     static string Hex(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
