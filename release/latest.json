@@ -1,10 +1,10 @@
 {
-    "version":  "1.3.6",
-    "notes":  "启用本地模组前，会标出它是否挂在战斗演算相关函数上（低 / 中 / 高 / 未检测）。标为中或高时，加入当前方案前会再确认一次。诊断摘要会分开说明窗口是否有一段时间没有处理消息、日志相邻间隔，以及日志里是否同时出现异常和战斗演算相关名称；这三行不改变原来的判定。游戏目录里已有黑盒记录时，诊断包会一并收入；没有记录时会标明缺失，导出仍然成功。界面缩放改为按屏幕逻辑短边相对 1080p 自动取档，并可手动选择 80% 到 250%。\nBefore a local mod is enabled, the manager marks whether it hooks battle-simulation methods (Low, Medium, High, or Unchecked). Medium and High ask for confirmation before joining the active profile. The diagnostics summary now separates a window that stopped processing messages, gaps between log lines, and an exception beside battle-simulation names; these lines do not change the existing diagnosis. BlackBox records are included when that folder already exists, and a missing folder is noted without failing the export. Interface scale snaps from the logical short side against 1080p, with manual steps from 80% to 250%.",
-    "setupUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.6/MechabellumModManager_Setup_v1.3.6.exe",
-    "setupSha256":  "abcf6aa50d00a899242df1e17eb1282785f1bc28966a60527916b4350db7ef84",
-    "portableUrl":  "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.6/MechabellumModManager_portable_v1.3.6.zip",
-    "portableSha256":  "f22093d030fb7db78ab17d621c7100275b5552c67c683fb17757801fb9fce57b",
-    "publishedAt":  "2026-09-23T11:19:04Z",
-    "build":  "v1.3.6-logic-frame-scale"
+    "version": "1.3.7",
+    "notes": "界面改为深色机械风格：正式服用金色，测试服用冰蓝。已装列表用列表标题排序。管理器教程与已装 Mod、Mod 工坊、双服切换并列，双服切换单独成页。Melon 控制台默认隐藏。Mod 工坊增加优质推荐。\nThe manager uses a darker mechanical layout: gold for the official branch and ice blue for beta. The installed list sorts from column headers. The manager guide sits with the main pages, and dual-branch switching has its own page. The Melon console is hidden by default. The workshop adds a featured row.",
+    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.7/MechabellumModManager_Setup_v1.3.7.exe",
+    "setupSha256": "e3d3ca38d820b4a42525e43a13646187a7c558ddbbf3c034513f7759c1964820",
+    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.7/MechabellumModManager_portable_v1.3.7.zip",
+    "portableSha256": "89ef4eb9b7bccec240ed6f32d8a6d6a6b2906542da4ccf5965050640c53ea981",
+    "publishedAt": "2026-09-26T13:33:43Z",
+    "build": "v1.3.7-workshop-featured"
 }
