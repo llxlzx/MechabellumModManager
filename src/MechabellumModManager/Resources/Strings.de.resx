@@ -24,6 +24,13 @@
 <data name="NavLibraryTip" xml:space="preserve">
     <value>Bereits installierte Mods und Profile verwalten</value>
   </data>
+  <data name="NavNoteLibrary" xml:space="preserve"><value>Aktivieren und Profile</value></data>
+  <data name="NavNoteWorkshop" xml:space="preserve"><value>Durchsuchen und hinzufügen</value></data>
+  <data name="NavNoteGuide" xml:space="preserve"><value>Installation und Start</value></data>
+  <data name="NavBranch" xml:space="preserve"><value>Serverwechsel</value></data>
+  <data name="NavNoteBranch" xml:space="preserve"><value>Release und Test</value></data>
+  <data name="NavBranchTip" xml:space="preserve"><value>Zwischen Release und Test wechseln und jedem ein Mod-Profil zuweisen</value></data>
+  <data name="GuideOpenBranch" xml:space="preserve"><value>Serverwechsel öffnen</value></data>
 <data name="CatalogEmptyHint" xml:space="preserve">
     <value>Werkstatt ist leer. Zuerst DLL/Zip oder Gruppendatei importieren. Katalog aktualisieren braucht Mirror oder Systemproxy.</value>
   </data>
@@ -401,8 +408,8 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="StatusDetailReady" xml:space="preserve"><value>Spiel und MelonLoader sind bereit.</value></data>
   <data name="StatusDetailReadyVersion" xml:space="preserve"><value>Spiel und MelonLoader sind bereit. Melon {0}</value></data>
   <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0} (älter als mitgelieferte {1})</value></data>
-  <data name="GuideNav" xml:space="preserve"><value>Einsteiger-Tutorial</value></data>
-  <data name="GuideTitle" xml:space="preserve"><value>Einsteiger-Tutorial</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>Manager-Anleitung</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>Manager-Anleitung</value></data>
   <data name="GuideIntro" xml:space="preserve"><value>Die ersten fünf Schritte reichen für eine Runde. Der Rest ist für danach. Sätze mit dem Warnsymbol müssen gelesen werden.</value></data>
   <data name="GuideLanguageTitle" xml:space="preserve"><value>1. Sprache wählen</value></data>
   <data name="GuideLanguageBody" xml:space="preserve"><value>Direkt unten wählen. Diese Seite und der ganze Manager wechseln sofort. Systemsprache ist ebenfalls möglich.</value></data>
@@ -429,7 +436,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="GuideUpdatesTitle" xml:space="preserve"><value>Updates und Konsole</value></data>
   <data name="GuideUpdatesBody" xml:space="preserve"><value>In den Einstellungen lassen sich Mod-Updates beim Start prüfen. Die Melon-Konsole auszublenden gilt erst beim nächsten Spielstart.</value></data>
   <data name="GuideBranchTitle" xml:space="preserve"><value>Release und Beta</value></data>
-  <data name="GuideBranchBody" xml:space="preserve"><value>Unter Einstellungen lassen sich zwei Ordner aktivieren und zwischen Release und Beta wechseln.</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>Auf der Seite Serverwechsel lassen sich zwei Ordner aktivieren und zwischen Release und Beta wechseln.</value></data>
   <data name="GuideNoteBranch" xml:space="preserve"><value>Beim ersten Mal nicht einschalten. Zwei Ordner brauchen etwa zwei Spielkopien. Im Zweifel bei einem Ordner bleiben.</value></data>
   <data name="GuideSupportTitle" xml:space="preserve"><value>Diagnose, Repository und E-Mail</value></data>
   <data name="GuideSupportBody" xml:space="preserve"><value>Die Zeile unter dem Status ist die aktuelle Diagnose. Reicht das nicht, Diagnose exportieren in den Einstellungen oder neben dem Protokoll unten rechts. ZIP an llxmod@foxmail.com senden oder auf Discord melden (GODOG Battalion, https://discord.gg/CQDkCfDTA). Installer und Quellcode: https://github.com/llxlzx/MechabellumModManager</value></data>
@@ -497,6 +504,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Der Maintainer prüft und bearbeitet Ihre Nachricht innerhalb angemessener Zeit. Die Bearbeitung kann aufgrund des Alltags und persönlicher Termine kurzzeitig verzögert sein; vielen Dank für Ihre Geduld. Bitte senden Sie dieselbe Anfrage nicht erneut.</value></data>
   <data name="FilterSearch" xml:space="preserve"><value>Suche</value></data>
+  <data name="SearchModName" xml:space="preserve"><value>Mod-Namen suchen</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>Kategorie</value></data>
   <data name="FilterTag" xml:space="preserve"><value>Stichwort</value></data>
   <data name="FilterSort" xml:space="preserve"><value>Sortierung</value></data>
@@ -650,6 +658,8 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Profil auf den Spieleordner angewendet</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam-Testzweig konnte nicht automatisch ausgerichtet werden. Zweig zuerst manuell in Steam wählen; Steam bis dahin nicht starten.</value></data>
   <data name="ColumnName" xml:space="preserve"><value>Name</value></data>
+  <data name="FeaturedModsTitle" xml:space="preserve"><value>Empfehlungen</value></data>
+  <data name="FeaturedModsHint" xml:space="preserve"><value>Karte wählen, um den Mod in der Liste zu sehen, und dann zur Bibliothek hinzufügen</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>Autor</value></data>
   <data name="ColumnVersion" xml:space="preserve"><value>Version</value></data>
   <data name="ColumnUpdated" xml:space="preserve"><value>Aktualisiert</value></data>

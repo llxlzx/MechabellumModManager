@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
+using MechabellumModManager.Themes;
 
 namespace MechabellumModManager.ViewModels;
 
@@ -267,6 +268,8 @@ public sealed partial class MainViewModel : ObservableObject
         CatalogModsView.Filter = FilterCatalogItem;
         LibraryModsView = CollectionViewSource.GetDefaultView(Mods);
         LibraryModsView.Filter = FilterLibraryItem;
+        LibraryModsView.SortDescriptions.Add(
+            new SortDescription(nameof(ModItemViewModel.DisplayName), ListSortDirection.Ascending));
         CatalogMods.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsCatalogEmpty));
         Mods.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsLibraryEmpty));
         CatalogAvailableTagOptions = new ObservableCollection<TagFilterOption>();
@@ -403,6 +406,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<ProfileItemViewModel> Profiles { get; }
     public ObservableCollection<ModItemViewModel> Mods { get; }
     public ObservableCollection<CatalogModItemViewModel> CatalogMods { get; }
+    public ObservableCollection<CatalogModItemViewModel> FeaturedCatalogMods { get; } = new();
+    public bool HasFeaturedCatalogMods => FeaturedCatalogMods.Count > 0;
     public ICollectionView CatalogModsView { get; }
     public ICollectionView LibraryModsView { get; }
     public bool IsCatalogEmpty => CatalogMods.Count == 0;
@@ -536,7 +541,7 @@ public sealed partial class MainViewModel : ObservableObject
             // Isolation: recovery must still route or clear.
         }
 
-        ActiveContentPage = MainContentPage.Settings;
+        ActiveContentPage = MainContentPage.Branch;
 
         if (IsAwaitingSteamSettle || IsBranchWizardInProgress)
         {
@@ -563,7 +568,7 @@ public sealed partial class MainViewModel : ObservableObject
             // Isolation: recovery must still route or clear.
         }
 
-        ActiveContentPage = MainContentPage.Settings;
+        ActiveContentPage = MainContentPage.Branch;
         try
         {
             await TryRunOrphanRepairIfAvailableAsync().ConfigureAwait(true);
@@ -831,7 +836,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     public void ApplyRecoveryAbandon()
     {
-        ActiveContentPage = MainContentPage.Settings;
+        ActiveContentPage = MainContentPage.Branch;
         AbandonUserCancelledWork();
         ClearRecoveryGate();
         _notify(LocalizationService.T("NotifyRecoveryAbandoned"));
@@ -1105,6 +1110,7 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsCatalogPage => ActiveContentPage == MainContentPage.Catalog;
     public bool IsSettingsPage => ActiveContentPage == MainContentPage.Settings;
     public bool IsGuidePage => ActiveContentPage == MainContentPage.Guide;
+    public bool IsBranchPage => ActiveContentPage == MainContentPage.Branch;
 
     partial void OnActiveContentPageChanged(MainContentPage value)
     {
@@ -1112,6 +1118,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCatalogPage));
         OnPropertyChanged(nameof(IsSettingsPage));
         OnPropertyChanged(nameof(IsGuidePage));
+        OnPropertyChanged(nameof(IsBranchPage));
 
         if (value == MainContentPage.Library)
             _ = SilentRefreshCatalogForLibraryAsync();
@@ -2724,6 +2731,9 @@ public sealed partial class MainViewModel : ObservableObject
     void ShowSettingsPage() => ActiveContentPage = MainContentPage.Settings;
 
     [RelayCommand]
+    void ShowBranchPage() => ActiveContentPage = MainContentPage.Branch;
+
+    [RelayCommand]
     void ShowLibraryPage() => ActiveContentPage = MainContentPage.Library;
 
     [RelayCommand]
@@ -3652,6 +3662,15 @@ public sealed partial class MainViewModel : ObservableObject
         _ = value?.LoadPreviewImageAsync();
     }
 
+    [RelayCommand]
+    void SelectFeaturedCatalogMod(CatalogModItemViewModel? item)
+    {
+        if (item is null)
+            return;
+        SelectedCatalogMod = item;
+        SetCatalogSelection(new[] { item });
+    }
+
     partial void OnSelectedLibraryModChanged(ModItemViewModel? value)
     {
         EditLibraryModTaxonomyCommand.NotifyCanExecuteChanged();
@@ -3813,13 +3832,27 @@ public sealed partial class MainViewModel : ObservableObject
     void ApplyCatalogRootCore(CatalogRoot root)
     {
         var packages = _library.List();
-        CatalogMods.Clear();
+        var built = new List<CatalogModItemViewModel>(root.Mods.Count);
         foreach (var mod in root.Mods)
         {
             LogInvalidCatalogCategory(mod);
             var state = ModCatalogService.GetEntryState(packages, mod);
-            CatalogMods.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
+            built.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
         }
+
+        CatalogMods.Clear();
+        foreach (var item in built)
+            CatalogMods.Add(item);
+
+        FeaturedCatalogMods.Clear();
+        foreach (var item in FeaturedCatalog.Pick(built, m => m.Id))
+        {
+            item.IsFeaturedLead = FeaturedCatalogMods.Count == 0;
+            FeaturedCatalogMods.Add(item);
+            _ = item.LoadPreviewImageAsync();
+        }
+
+        OnPropertyChanged(nameof(HasFeaturedCatalogMods));
 
         // Every row the player had selected was just discarded, and a selection pointing at detached
         // view models keeps the add/update buttons enabled against the previous catalog's state.
@@ -4734,7 +4767,6 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             RebuildLibraryTagOptions();
-            ApplySort(LibraryModsView, SelectedLibrarySortMode?.Mode ?? ModSortMode.NameAsc, catalog: false);
         }
         finally
         {
@@ -6409,6 +6441,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnActiveGameBranchChanged(GameBranch value)
     {
+        ThemeAccent.Apply(value);
         if (!_suppressBranchSwitchSave)
             TryUpdateBranchConfig(cfg => cfg.ActiveBranch = value);
         OnPropertyChanged(nameof(SettleConfirmButtonText));

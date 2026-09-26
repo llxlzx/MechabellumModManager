@@ -5,6 +5,26 @@ using MechabellumModManager.Services;
 public class JsonStoreTests
 {
     [Fact]
+    public void HideMelonConsole_defaults_to_checked_unless_the_player_saved_off()
+    {
+        new AppConfig().HideMelonConsole.Should().BeTrue();
+
+        var dir = NewDir();
+        try
+        {
+            var path = Path.Combine(dir, "config.json");
+            var store = new JsonStore();
+
+            File.WriteAllText(path, """{"gamePath":"D:\\steam\\Mechabellum"}""");
+            store.LoadOrDefault(path, () => new AppConfig()).HideMelonConsole.Should().BeTrue();
+
+            File.WriteAllText(path, """{"hideMelonConsole":false}""");
+            store.LoadOrDefault(path, () => new AppConfig()).HideMelonConsole.Should().BeFalse();
+        }
+        finally { Cleanup(dir); }
+    }
+
+    [Fact]
     public void Save_then_Load_roundtrips_AppConfig()
     {
         var dir = NewDir();

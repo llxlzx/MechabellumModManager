@@ -24,6 +24,13 @@
 <data name="NavLibraryTip" xml:space="preserve">
     <value>管理本机已安装的 Mod 与配置方案（启用/应用）</value>
   </data>
+  <data name="NavNoteLibrary" xml:space="preserve"><value>启用与方案</value></data>
+  <data name="NavNoteWorkshop" xml:space="preserve"><value>浏览并加入</value></data>
+  <data name="NavNoteGuide" xml:space="preserve"><value>安装与启动</value></data>
+  <data name="NavBranch" xml:space="preserve"><value>双服切换</value></data>
+  <data name="NavNoteBranch" xml:space="preserve"><value>正式与测试</value></data>
+  <data name="NavBranchTip" xml:space="preserve"><value>在正式服和测试服之间切换，并绑定各自的 Mod 方案</value></data>
+  <data name="GuideOpenBranch" xml:space="preserve"><value>打开双服切换</value></data>
 <data name="CatalogEmptyHint" xml:space="preserve">
     <value>工坊为空。请先导入 DLL / Zip 或使用群文件；也可点「刷新」拉取目录（需镜像或系统代理）。</value>
   </data>
@@ -401,8 +408,8 @@
   <data name="StatusDetailReady" xml:space="preserve"><value>游戏与 MelonLoader 已就绪。</value></data>
   <data name="StatusDetailReadyVersion" xml:space="preserve"><value>游戏与 MelonLoader 已就绪。Melon {0}</value></data>
   <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0}（低于内置 {1}）</value></data>
-  <data name="GuideNav" xml:space="preserve"><value>新手教程</value></data>
-  <data name="GuideTitle" xml:space="preserve"><value>新手教程</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>管理器教程</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>管理器教程</value></data>
   <data name="GuideIntro" xml:space="preserve"><value>按顺序做完前五步就能开一局。后面是用过之后再看的。带注意图标的句子必须看。</value></data>
   <data name="GuideLanguageTitle" xml:space="preserve"><value>1. 先选界面语言</value></data>
   <data name="GuideLanguageBody" xml:space="preserve"><value>在下面直接选。选好后，本页和整个管理器会立刻换成这种语言。也可以选「跟随系统」。</value></data>
@@ -429,7 +436,7 @@
   <data name="GuideUpdatesTitle" xml:space="preserve"><value>更新和控制台</value></data>
   <data name="GuideUpdatesBody" xml:space="preserve"><value>设置里可以打开「启动时检查 Mod 更新」。隐藏 Melon 控制台要等下次启动游戏才生效。</value></data>
   <data name="GuideBranchTitle" xml:space="preserve"><value>正式服和测试服</value></data>
-  <data name="GuideBranchBody" xml:space="preserve"><value>设置页可以启用双目录，在正式服和测试服之间切换。</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>「双服切换」页可以启用双目录，在正式服和测试服之间切换。</value></data>
   <data name="GuideNoteBranch" xml:space="preserve"><value>第一次不要开。双目录大约要两份磁盘空间。不确定就保持现在的单目录。</value></data>
   <data name="GuideSupportTitle" xml:space="preserve"><value>诊断、仓库和邮箱</value></data>
   <data name="GuideSupportBody" xml:space="preserve"><value>顶栏检测下面那一行就是当前诊断。还解决不了时，可以在设置里，或右下角「运行日志」旁边，点「导出诊断包」。zip 可以发到 llxmod@foxmail.com，也可以到 Discord（GODOG Battalion，https://discord.gg/CQDkCfDTA ）反馈。安装包和源码在 https://github.com/llxlzx/MechabellumModManager 。</value></data>
@@ -498,6 +505,7 @@
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>维护者将在合理时间内审阅并处理您的来信。受日常生活与个人事务安排影响，处理进度或有短暂延误，敬请谅解并耐心等待。请勿重复发送同一内容。</value></data>
 
   <data name="FilterSearch" xml:space="preserve"><value>搜索</value></data>
+  <data name="SearchModName" xml:space="preserve"><value>搜索 MOD 名称</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>分类</value></data>
   <data name="FilterTag" xml:space="preserve"><value>标签</value></data>
   <data name="FilterSort" xml:space="preserve"><value>排序</value></data>
@@ -656,6 +664,8 @@
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>方案已应用到游戏目录</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>未能自动对齐 Steam 测试分支。请先在 Steam 中手动选好分支；对齐完成前请勿启动 Steam。</value></data>
   <data name="ColumnName" xml:space="preserve"><value>名称</value></data>
+  <data name="FeaturedModsTitle" xml:space="preserve"><value>优质推荐</value></data>
+  <data name="FeaturedModsHint" xml:space="preserve"><value>点卡片可在下方列表中查看，再用「加入已装库」安装</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>作者</value></data>
   <data name="ColumnVersion" xml:space="preserve"><value>版本</value></data>
   <data name="ColumnUpdated" xml:space="preserve"><value>更新</value></data>

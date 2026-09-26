@@ -246,7 +246,7 @@ public class MainViewModelCriticalOpTests
         vm.CanDeployOrLaunch.Should().BeFalse();
         File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
         fx.Guard.TryLoadInterrupted(out _).Should().BeFalse();
-        vm.ActiveContentPage.Should().Be(MainContentPage.Settings);
+        vm.ActiveContentPage.Should().Be(MainContentPage.Branch);
         vm.ShowConfirmManualBeta.Should().BeTrue();
         vm.EvaluateCloseOrUpdateGate(busyDialogOpen: false).Should().Be(CriticalOpGateLevel.SoftConfirm);
     }
@@ -288,7 +288,7 @@ public class MainViewModelCriticalOpTests
         vm.CanDeployOrLaunch.Should().BeFalse();
         File.Exists(fx.Paths.CriticalOpMarkerPath).Should().BeFalse();
         fx.Guard.TryLoadInterrupted(out _).Should().BeFalse();
-        vm.ActiveContentPage.Should().Be(MainContentPage.Settings);
+        vm.ActiveContentPage.Should().Be(MainContentPage.Branch);
         vm.ShowConfirmManualBeta.Should().BeTrue();
         vm.EvaluateCloseOrUpdateGate(busyDialogOpen: false).Should().Be(CriticalOpGateLevel.SoftConfirm);
     }

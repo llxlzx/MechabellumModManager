@@ -6,4 +6,5 @@ public enum MainContentPage
     Catalog = 1,
     Settings = 2,
     Guide = 3,
+    Branch = 4,
 }

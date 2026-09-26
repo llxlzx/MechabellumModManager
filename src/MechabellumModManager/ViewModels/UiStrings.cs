@@ -54,6 +54,14 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string LibraryEmptyHint => T("LibraryEmptyHint");
     public string NavLibraryTip => T("NavLibraryTip");
     public string NavWorkshopTip => T("NavWorkshopTip");
+    public string NavNoteLibrary => T("NavNoteLibrary");
+    public string NavNoteWorkshop => T("NavNoteWorkshop");
+    public string NavNoteGuide => T("NavNoteGuide");
+    public string NavBranch => T("NavBranch");
+    public string NavNoteBranch => T("NavNoteBranch");
+    public string NavBranchTip => T("NavBranchTip");
+    public string GuideOpenBranch => T("GuideOpenBranch");
+    public string SearchModName => T("SearchModName");
     public string CollapseBrowse => T("CollapseBrowse");
     public string ExpandBrowse => T("ExpandBrowse");
     public string ImportDll => T("ImportDll");
@@ -193,6 +201,8 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string FilterAll => T("FilterAll");
     public string SortByName => T("SortByName");
     public string SortByUpdatedAtDesc => T("SortByUpdatedAtDesc");
+    public string FeaturedModsTitle => T("FeaturedModsTitle");
+    public string FeaturedModsHint => T("FeaturedModsHint");
     public string ColumnCategory => T("ColumnCategory");
     public string ColumnTag => T("ColumnTag");
     public string ColumnName => T("ColumnName");

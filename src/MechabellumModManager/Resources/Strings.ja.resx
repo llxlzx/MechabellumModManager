@@ -24,6 +24,13 @@
 <data name="NavLibraryTip" xml:space="preserve">
     <value>このPCに導入済みのModと構成を管理</value>
   </data>
+  <data name="NavNoteLibrary" xml:space="preserve"><value>有効化と構成</value></data>
+  <data name="NavNoteWorkshop" xml:space="preserve"><value>閲覧して追加</value></data>
+  <data name="NavNoteGuide" xml:space="preserve"><value>導入と起動</value></data>
+  <data name="NavBranch" xml:space="preserve"><value>サーバー切替</value></data>
+  <data name="NavNoteBranch" xml:space="preserve"><value>正式とテスト</value></data>
+  <data name="NavBranchTip" xml:space="preserve"><value>正式版とテスト版を切り替え、それぞれの Mod 構成を割り当てます</value></data>
+  <data name="GuideOpenBranch" xml:space="preserve"><value>サーバー切替を開く</value></data>
 <data name="CatalogEmptyHint" xml:space="preserve">
     <value>工房は空です。先に DLL/Zip または配布ファイルを取り込み、「更新」はミラーかシステムプロキシが必要です。</value>
   </data>
@@ -401,8 +408,8 @@
   <data name="StatusDetailReady" xml:space="preserve"><value>ゲームと MelonLoader の準備ができています。</value></data>
   <data name="StatusDetailReadyVersion" xml:space="preserve"><value>ゲームと MelonLoader の準備ができています。Melon {0}</value></data>
   <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0}（同梱版 {1} より古い）</value></data>
-  <data name="GuideNav" xml:space="preserve"><value>初心者チュートリアル</value></data>
-  <data name="GuideTitle" xml:space="preserve"><value>初心者チュートリアル</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>管理ツール入門</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>管理ツール入門</value></data>
   <data name="GuideIntro" xml:space="preserve"><value>最初の5手順を終えれば対戦できます。残りは遊んだあとに見てください。注意アイコンの文は必ず読んでください。</value></data>
   <data name="GuideLanguageTitle" xml:space="preserve"><value>1. 表示言語を選ぶ</value></data>
   <data name="GuideLanguageBody" xml:space="preserve"><value>下で直接選びます。選ぶと、このページと管理ツール全体がすぐその言語になります。「システムに従う」も選べます。</value></data>
@@ -429,7 +436,7 @@
   <data name="GuideUpdatesTitle" xml:space="preserve"><value>更新とコンソール</value></data>
   <data name="GuideUpdatesBody" xml:space="preserve"><value>設定で起動時の Mod 更新確認をオンにできます。Melon コンソールを隠す設定は、次にゲームを起動したときから効きます。</value></data>
   <data name="GuideBranchTitle" xml:space="preserve"><value>正式版とテスト版</value></data>
-  <data name="GuideBranchBody" xml:space="preserve"><value>設定で二つのフォルダーを有効にし、正式版とテスト版を切り替えられます。</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>「サーバー切替」で二つのフォルダーを有効にし、正式版とテスト版を切り替えられます。</value></data>
   <data name="GuideNoteBranch" xml:space="preserve"><value>最初はオンにしないでください。二つのフォルダーにはゲーム約2つ分の容量が要ります。迷うなら単一フォルダーのままにしてください。</value></data>
   <data name="GuideSupportTitle" xml:space="preserve"><value>診断、リポジトリ、メール</value></data>
   <data name="GuideSupportBody" xml:space="preserve"><value>上部の検出の下の一行が現在の診断です。それでも足りないときは、設定か右下のログ横にある「診断をエクスポート」で zip を作れます。llxmod@foxmail.com に送るか、Discord（GODOG Battalion、https://discord.gg/CQDkCfDTA）で報告してください。インストーラーとソース: https://github.com/llxlzx/MechabellumModManager</value></data>
@@ -497,6 +504,7 @@
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>メンテナーは合理的な期間内にご連絡を確認・対応します。日常生活や個人の都合により対応が一時的に遅れる場合があります。ご理解とご待機をお願いします。同一内容の再送はご遠慮ください。</value></data>
   <data name="FilterSearch" xml:space="preserve"><value>検索</value></data>
+  <data name="SearchModName" xml:space="preserve"><value>MOD名を検索</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>カテゴリ</value></data>
   <data name="FilterTag" xml:space="preserve"><value>タグ</value></data>
   <data name="FilterSort" xml:space="preserve"><value>並び替え</value></data>
@@ -650,6 +658,8 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>プロファイルをゲームフォルダに適用しました</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Steam テストブランチを自動整合できませんでした。先に Steam で手動選択し、整合完了まで Steam を起動しないでください。</value></data>
   <data name="ColumnName" xml:space="preserve"><value>名前</value></data>
+  <data name="FeaturedModsTitle" xml:space="preserve"><value>おすすめ</value></data>
+  <data name="FeaturedModsHint" xml:space="preserve"><value>カードを選ぶと下の一覧で確認でき、ライブラリに追加できます</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>作者</value></data>
   <data name="ColumnVersion" xml:space="preserve"><value>バージョン</value></data>
   <data name="ColumnUpdated" xml:space="preserve"><value>更新</value></data>

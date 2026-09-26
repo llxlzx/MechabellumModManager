@@ -42,8 +42,10 @@ public sealed class AppConfig
     /// <summary>
     /// When true, write MelonLoader <c>[console] hide_console = true</c> for the current
     /// game path (and dual stores when enabled). Takes effect on the next game launch.
+    /// On by default. A config file that omits this key gets the default; an explicit
+    /// <c>false</c> already saved by the player is kept.
     /// </summary>
-    public bool HideMelonConsole { get; set; }
+    public bool HideMelonConsole { get; set; } = true;
 
     /// <summary>Whitelist invite code for in-app direct publish (plaintext in config.json).</summary>
     public string AuthorInviteCode { get; set; } = "";

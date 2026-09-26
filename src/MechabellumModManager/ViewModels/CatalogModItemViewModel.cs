@@ -25,6 +25,10 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public string? Author => Mod.Author;
     public string? Version => Mod.Version;
     public string? UpdatedAt => Mod.UpdatedAt;
+
+    /// <summary>True for the first card in the curated workshop strip.</summary>
+    public bool IsFeaturedLead { get; set; }
+
     public string? Summary => CatalogLocaleResolver.ResolveSummary(Mod);
     public string File => Mod.File;
     public string? Type => Mod.Type;

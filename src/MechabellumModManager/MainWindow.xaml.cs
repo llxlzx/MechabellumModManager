@@ -51,6 +51,37 @@ public partial class MainWindow : Window
             vm.LibrarySelectionCount = grid.SelectedItems.Count;
     }
 
+    /// <summary>
+    /// Star columns only share the viewport when horizontal scrolling is off. Keep it off
+    /// while the grid is wider than the column minimums, and turn it on when a narrow
+    /// window would otherwise crush those minimums.
+    /// </summary>
+    void ModsGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is DataGrid grid)
+            FitDataGridColumns(grid);
+    }
+
+    static void FitDataGridColumns(DataGrid grid)
+    {
+        if (grid.ActualWidth <= 0 || grid.Columns.Count == 0)
+            return;
+
+        var minimum = 0d;
+        foreach (var column in grid.Columns)
+            minimum += column.MinWidth > 0 ? column.MinWidth : 0;
+        if (minimum <= 0)
+            return;
+
+        var current = ScrollViewer.GetHorizontalScrollBarVisibility(grid);
+        var fits = current == ScrollBarVisibility.Disabled
+            ? grid.ActualWidth + 18 >= minimum
+            : grid.ActualWidth >= minimum + 18;
+        var next = fits ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
+        if (current != next)
+            ScrollViewer.SetHorizontalScrollBarVisibility(grid, next);
+    }
+
     void CatalogModsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;

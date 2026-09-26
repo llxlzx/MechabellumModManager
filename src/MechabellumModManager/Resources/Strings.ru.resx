@@ -24,6 +24,13 @@
 <data name="NavLibraryTip" xml:space="preserve">
     <value>Управление уже установленными модами и профилями</value>
   </data>
+  <data name="NavNoteLibrary" xml:space="preserve"><value>Включение и профили</value></data>
+  <data name="NavNoteWorkshop" xml:space="preserve"><value>Обзор и добавление</value></data>
+  <data name="NavNoteGuide" xml:space="preserve"><value>Установка и запуск</value></data>
+  <data name="NavBranch" xml:space="preserve"><value>Серверы</value></data>
+  <data name="NavNoteBranch" xml:space="preserve"><value>Релиз и бета</value></data>
+  <data name="NavBranchTip" xml:space="preserve"><value>Переключение между релизом и бетой и привязка профиля модов к каждому</value></data>
+  <data name="GuideOpenBranch" xml:space="preserve"><value>Открыть серверы</value></data>
 <data name="CatalogEmptyHint" xml:space="preserve">
     <value>Мастерская пуста. Сначала импортируйте DLL/Zip или файл из группы. Обновление каталога требует зеркало или системный прокси.</value>
   </data>
@@ -401,8 +408,8 @@
   <data name="StatusDetailReady" xml:space="preserve"><value>Игра и MelonLoader готовы.</value></data>
   <data name="StatusDetailReadyVersion" xml:space="preserve"><value>Игра и MelonLoader готовы. Melon {0}</value></data>
   <data name="StatusDetailVersionBelow" xml:space="preserve"><value>Melon {0} (ниже встроенной {1})</value></data>
-  <data name="GuideNav" xml:space="preserve"><value>Учебник новичка</value></data>
-  <data name="GuideTitle" xml:space="preserve"><value>Учебник новичка</value></data>
+  <data name="GuideNav" xml:space="preserve"><value>Гид менеджера</value></data>
+  <data name="GuideTitle" xml:space="preserve"><value>Гид менеджера</value></data>
   <data name="GuideIntro" xml:space="preserve"><value>Первых пяти шагов хватит, чтобы начать матч. Остальное — после игры. Строки со значком предупреждения нужно прочитать.</value></data>
   <data name="GuideLanguageTitle" xml:space="preserve"><value>1. Выберите язык интерфейса</value></data>
   <data name="GuideLanguageBody" xml:space="preserve"><value>Выберите его ниже. Эта страница и весь менеджер сразу переключатся. Можно и «Как в системе».</value></data>
@@ -429,7 +436,7 @@
   <data name="GuideUpdatesTitle" xml:space="preserve"><value>Обновления и консоль</value></data>
   <data name="GuideUpdatesBody" xml:space="preserve"><value>В параметрах можно проверять обновления модов при запуске. Скрытие консоли Melon действует со следующего запуска игры.</value></data>
   <data name="GuideBranchTitle" xml:space="preserve"><value>Релиз и бета</value></data>
-  <data name="GuideBranchBody" xml:space="preserve"><value>В параметрах можно включить две папки и переключать релиз и бету.</value></data>
+  <data name="GuideBranchBody" xml:space="preserve"><value>На странице «Серверы» можно включить две папки и переключать релиз и бету.</value></data>
   <data name="GuideNoteBranch" xml:space="preserve"><value>В первый раз не включайте. Две папки — это около двух копий игры. Если не уверены, оставьте одну папку.</value></data>
   <data name="GuideSupportTitle" xml:space="preserve"><value>Диагностика, репозиторий и почта</value></data>
   <data name="GuideSupportBody" xml:space="preserve"><value>Строка под проверкой сверху — текущий диагноз. Если этого мало, нажмите «Экспорт диагностики» в параметрах или рядом с журналом справа внизу. Отправьте zip на llxmod@foxmail.com или в Discord (GODOG Battalion, https://discord.gg/CQDkCfDTA). Установщик и исходники: https://github.com/llxlzx/MechabellumModManager</value></data>
@@ -497,6 +504,7 @@
 
   <data name="SubmitGuideWaitNotice" xml:space="preserve"><value>Сопровождающий рассмотрит и обработает ваше сообщение в разумный срок. Обработка может кратко задержаться из‑за повседневных дел и личного расписания; благодарим за терпение. Пожалуйста, не отправляйте повторно одно и то же обращение.</value></data>
   <data name="FilterSearch" xml:space="preserve"><value>Поиск</value></data>
+  <data name="SearchModName" xml:space="preserve"><value>Поиск по названию</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>Категория</value></data>
   <data name="FilterTag" xml:space="preserve"><value>Тег</value></data>
   <data name="FilterSort" xml:space="preserve"><value>Сортировка</value></data>
@@ -650,6 +658,8 @@
   <data name="NotifyApplySucceeded" xml:space="preserve"><value>Профиль применён к каталогу игры</value></data>
   <data name="NotifySilentBetaNoStart" xml:space="preserve"><value>Не удалось автоматически выровнять тестовую ветку Steam. Сначала выберите ветку вручную; не запускайте Steam до выравнивания.</value></data>
   <data name="ColumnName" xml:space="preserve"><value>Имя</value></data>
+  <data name="FeaturedModsTitle" xml:space="preserve"><value>Рекомендации</value></data>
+  <data name="FeaturedModsHint" xml:space="preserve"><value>Выберите карточку, чтобы увидеть мод в списке, затем добавьте его в библиотеку</value></data>
   <data name="ColumnAuthor" xml:space="preserve"><value>Автор</value></data>
   <data name="ColumnVersion" xml:space="preserve"><value>Версия</value></data>
   <data name="ColumnUpdated" xml:space="preserve"><value>Обновлено</value></data>
