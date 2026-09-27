@@ -37,6 +37,23 @@ public static class CatalogLocaleResolver
         return defaultSummary;
     }
 
+    public static string? ResolvePreview(CatalogMod mod, string? culture = null)
+    {
+        ArgumentNullException.ThrowIfNull(mod);
+        return ResolvePreview(mod.Preview, mod.Locales, culture);
+    }
+
+    public static string? ResolvePreview(
+        string? defaultPreview,
+        IReadOnlyDictionary<string, CatalogModLocale>? locales,
+        string? culture = null)
+    {
+        var localized = Lookup(locales, culture)?.Preview;
+        if (!string.IsNullOrWhiteSpace(localized))
+            return localized.Trim();
+        return string.IsNullOrWhiteSpace(defaultPreview) ? null : defaultPreview.Trim();
+    }
+
     static CatalogModLocale? Lookup(
         IReadOnlyDictionary<string, CatalogModLocale>? locales,
         string? culture)

@@ -175,11 +175,17 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(LatestVersion));
         OnPropertyChanged(nameof(CatalogMatched));
         OnPropertyChanged(nameof(UpdateStatusText));
+        var nextPreview = ModCatalogService.TryGetRawUrl(
+            CatalogLocaleResolver.ResolvePreview(Package.Preview, Package.CatalogLocales));
+        if (!string.Equals(nextPreview, PreviewUrl, StringComparison.Ordinal))
+        {
+            PreviewUrl = nextPreview;
+            _ = LoadPreviewImageAsync();
+        }
     }
 
     public void RefreshCatalogFieldsFromPackage()
     {
-        PreviewUrl = ModCatalogService.TryGetRawUrl(Package.Preview);
         NotifyDetailChanged();
     }
 
@@ -229,7 +235,8 @@ public sealed partial class ModItemViewModel : ObservableObject
             copy[key] = new CatalogModLocale
             {
                 Name = value?.Name,
-                Summary = value?.Summary
+                Summary = value?.Summary,
+                Preview = value?.Preview
             };
         }
         return copy;

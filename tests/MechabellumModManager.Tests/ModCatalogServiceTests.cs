@@ -549,4 +549,27 @@ public class ModCatalogServiceTests
         urls[1].Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
         ModCatalogService.PreviewUrl(cam, "https://mirror.example/m").Should().Be(urls[0]);
     }
+
+    [Fact]
+    public void PreviewUrl_uses_the_locale_preview_for_the_active_language()
+    {
+        var cam = new CatalogMod
+        {
+            Preview = "mods/cam/preview.png",
+            Locales = new Dictionary<string, CatalogModLocale>
+            {
+                ["en"] = new CatalogModLocale { Preview = "mods/cam/preview.en.png" }
+            }
+        };
+        LocalizationService.Apply("en");
+        try
+        {
+            ModCatalogService.PreviewUrl(cam, "https://mirror.example/m")
+                .Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.en.png");
+        }
+        finally
+        {
+            LocalizationService.Apply("zh-CN");
+        }
+    }
 }

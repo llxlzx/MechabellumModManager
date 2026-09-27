@@ -248,12 +248,13 @@ public sealed class ModCatalogService
 
     public static IReadOnlyList<string> GetPreviewCandidateUrls(CatalogMod? mod, string? mirrorBaseUrl = null)
     {
-        if (mod is null || string.IsNullOrWhiteSpace(mod.Preview))
+        var preview = mod is null ? null : CatalogLocaleResolver.ResolvePreview(mod);
+        if (string.IsNullOrWhiteSpace(preview))
             return Array.Empty<string>();
 
         try
         {
-            var relative = NormalizeCatalogRelativePath(mod.Preview);
+            var relative = NormalizeCatalogRelativePath(preview);
             return RemoteFetch.BuildCandidates(
                     mirrorBaseUrl,
                     $"MechabellumMods/{relative}",

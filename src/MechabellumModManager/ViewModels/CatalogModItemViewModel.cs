@@ -7,6 +7,7 @@ namespace MechabellumModManager.ViewModels;
 
 public sealed partial class CatalogModItemViewModel : ObservableObject
 {
+    readonly string? _mirrorBaseUrl;
     CancellationTokenSource? _previewCts;
     string? _previewLoadUrl;
 
@@ -16,6 +17,7 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     {
         Mod = mod ?? throw new ArgumentNullException(nameof(mod));
         _state = state;
+        _mirrorBaseUrl = mirrorBaseUrl;
         PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(mod, mirrorBaseUrl);
         PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
     }
@@ -53,8 +55,8 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 
     public string EffectiveTagsText => ModTaxonomy.FormatTagsDisplay(EffectiveTags);
 
-    public string? PreviewUrl { get; }
-    public IReadOnlyList<string> PreviewCandidateUrls { get; }
+    public string? PreviewUrl { get; private set; }
+    public IReadOnlyList<string> PreviewCandidateUrls { get; private set; }
 
     [ObservableProperty]
     private BitmapImage? _previewImage;
@@ -84,10 +86,13 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(EffectiveCategoryDisplay));
         OnPropertyChanged(nameof(EffectiveTagsText));
         OnPropertyChanged(nameof(StatusText));
+        _ = LoadPreviewImageAsync();
     }
 
     public async Task LoadPreviewImageAsync()
     {
+        PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(Mod, _mirrorBaseUrl);
+        PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
         var urls = PreviewCandidateUrls;
         var url = urls.Count == 0 ? PreviewUrl : string.Join('\n', urls);
         _previewCts?.Cancel();

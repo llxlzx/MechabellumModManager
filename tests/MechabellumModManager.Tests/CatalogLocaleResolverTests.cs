@@ -78,6 +78,18 @@ public class CatalogLocaleResolverTests
     }
 
     [Fact]
+    public void ResolvePreview_uses_the_locale_image_and_falls_back_for_chinese()
+    {
+        var mod = ModWithLocales();
+        mod.Preview = "mods/feature-test/preview.png";
+        mod.Locales!["en"].Preview = "mods/feature-test/preview.en.png";
+
+        CatalogLocaleResolver.ResolvePreview(mod, "zh-CN").Should().Be("mods/feature-test/preview.png");
+        CatalogLocaleResolver.ResolvePreview(mod, "en").Should().Be("mods/feature-test/preview.en.png");
+        CatalogLocaleResolver.ResolvePreview(mod, "de").Should().Be("mods/feature-test/preview.png");
+    }
+
+    [Fact]
     public void Resolve_overloads_work_for_package_defaults()
     {
         var locales = ModWithLocales().Locales!;
