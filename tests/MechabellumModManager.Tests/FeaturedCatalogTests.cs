@@ -8,6 +8,7 @@ public class FeaturedCatalogTests
     {
         FeaturedCatalog.Ids.Should().Equal(
             "battle-suite",
+            "cut-guide",
             "friend-overlay",
             "replay-reset",
             "sales-calculation",

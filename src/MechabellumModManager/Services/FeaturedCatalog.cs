@@ -9,6 +9,7 @@ public static class FeaturedCatalog
     public static readonly string[] Ids =
     [
         "battle-suite",
+        "cut-guide",
         "friend-overlay",
         "replay-reset",
         "sales-calculation",
