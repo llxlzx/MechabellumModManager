@@ -1,10 +1,10 @@
 {
-    "version": "1.3.8",
-    "notes": "优质推荐增加 CUT 单位指南，排在钢铁战局助手后面。悬停单位文字或卡牌时会展开科技说明，并播放内嵌演示。安装包约 344 MB。\nThe featured row now includes CUT Guide, after BattleSuite. Hovering a unit's text or card opens a tech guide and plays an embedded clip. The mod is about 344 MB.",
-    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.8/MechabellumModManager_Setup_v1.3.8.exe",
-    "setupSha256": "2a9d8640bf2e47a66fc4fc2c82510b2a67c51a6de5b7c1cc1b313f512dfd0445",
-    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.8/MechabellumModManager_portable_v1.3.8.zip",
-    "portableSha256": "b7ed54b212288270d3dbd1b5c438458960b4684aaf204fd00dd71b913b137d79",
-    "publishedAt": "2026-09-27T11:16:00Z",
-    "build": "v1.3.8-cut-guide"
+    "version": "1.3.9",
+    "notes": "中文界面显示「CUT 新手指南」和中文头像。英文、德文、日文、俄文显示「CUT Guide」和英文头像。\nChinese shows CUT 新手指南 with the Chinese poster. English, German, Japanese, and Russian show CUT Guide with the English poster.",
+    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.9/MechabellumModManager_Setup_v1.3.9.exe",
+    "setupSha256": "40ea99902f0c26ef741ac0ff55ad33bedc3e4866286603f0e131cb303905a659",
+    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.9/MechabellumModManager_portable_v1.3.9.zip",
+    "portableSha256": "ec804fde8fb6459f63680a17ef3d98a411e139f7702dd23f5ef16392da6ddaf4",
+    "publishedAt": "2026-09-27T11:47:00Z",
+    "build": "v1.3.9-cut-guide-posters"
 }
