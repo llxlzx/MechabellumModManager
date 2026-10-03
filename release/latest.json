@@ -1,10 +1,10 @@
 {
-    "version": "1.3.9",
-    "notes": "中文界面显示「CUT 新手指南」和中文头像。英文、德文、日文、俄文显示「CUT Guide」和英文头像。\nChinese shows CUT 新手指南 with the Chinese poster. English, German, Japanese, and Russian show CUT Guide with the English poster.",
-    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.9/MechabellumModManager_Setup_v1.3.9.exe",
-    "setupSha256": "40ea99902f0c26ef741ac0ff55ad33bedc3e4866286603f0e131cb303905a659",
-    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.9/MechabellumModManager_portable_v1.3.9.zip",
-    "portableSha256": "ec804fde8fb6459f63680a17ef3d98a411e139f7702dd23f5ef16392da6ddaf4",
-    "publishedAt": "2026-09-27T11:47:00Z",
-    "build": "v1.3.9-cut-guide-posters"
+    "version": "1.3.10",
+    "notes": "预览图随安装包附带。安装包里已有的图不再下载；换海报或新图时，每个玩家只下载一次。互相冲突的 Mod 不能一起安装。\nPreview images ship with the manager. Images already in the install are not downloaded again. A changed poster or a new image is downloaded once per player. Mods that conflict with each other cannot be installed together.",
+    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.10/MechabellumModManager_Setup_v1.3.10.exe",
+    "setupSha256": "b93060ec7118c5a59b9821473682515ac867d2f8ccd1c235fdf01e299f9a39f7",
+    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.10/MechabellumModManager_portable_v1.3.10.zip",
+    "portableSha256": "7330db6e0dcb4e9a97d5b01889abec743cf232394e9c6871220c487a130e27f3",
+    "publishedAt": "2026-10-03T15:13:47Z",
+    "build": "v1.3.10-bundled-previews"
 }
