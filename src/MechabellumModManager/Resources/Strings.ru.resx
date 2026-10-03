@@ -968,4 +968,9 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogicFrameUnchecked" xml:space="preserve"><value>Not checked</value></data>
   <data name="ConfirmLogicFrameMedium" xml:space="preserve"><value>"{0}" hooks health, supply, or fight-end. If the hook throws, the original method may not run, and this round's battle result can disagree with the server. Add it to the current profile?</value></data>
   <data name="ConfirmLogicFrameHigh" xml:space="preserve"><value>"{0}" can skip a simulation method or replace its return value. This check cannot prove the change is replay-only. Add it to the current profile?</value></data>
+  <data name="ConflictInstallInstalledReason" xml:space="preserve"><value>Нельзя установить «{0}». Установленный «{1}» с ним конфликтует. {2}Сначала удалите «{1}».</value></data>
+  <data name="ConflictInstallInstalledGeneric" xml:space="preserve"><value>Нельзя установить «{0}». Установленный «{1}» с ним конфликтует, вместе их ставить нельзя. Сначала удалите «{1}».</value></data>
+  <data name="ConflictInstallSelectionReason" xml:space="preserve"><value>«{0}» и «{1}» нельзя установить вместе. {2}Выберите только один. В этот раз не установлен ни один.</value></data>
+  <data name="ConflictInstallSelectionGeneric" xml:space="preserve"><value>«{0}» и «{1}» нельзя установить вместе. Выберите только один. В этот раз не установлен ни один.</value></data>
+  <data name="LogConflictInstallDeleteFailed" xml:space="preserve"><value>Не удалось удалить конфликтующий мод «{0}» из библиотеки: {1}</value></data>
 </root>

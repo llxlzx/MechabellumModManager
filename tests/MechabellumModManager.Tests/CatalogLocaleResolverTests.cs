@@ -90,6 +90,29 @@ public class CatalogLocaleResolverTests
     }
 
     [Fact]
+    public void ResolvePreviewIdentity_pairs_a_locale_poster_with_its_own_hash()
+    {
+        var mod = ModWithLocales();
+        mod.Preview = "mods/feature-test/preview.png";
+        mod.PreviewSha256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        mod.Locales!["en"].Preview = "mods/feature-test/preview.en.png";
+        mod.Locales!["en"].PreviewSha256 = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+        var chinese = CatalogLocaleResolver.ResolvePreviewIdentity(mod, "zh-CN");
+        chinese.RelativePath.Should().Be("mods/feature-test/preview.png");
+        chinese.Sha256.Should().Be(mod.PreviewSha256);
+
+        var english = CatalogLocaleResolver.ResolvePreviewIdentity(mod, "en");
+        english.RelativePath.Should().Be("mods/feature-test/preview.en.png");
+        english.Sha256.Should().Be(mod.Locales["en"].PreviewSha256);
+
+        mod.Locales["en"].PreviewSha256 = null;
+        var englishWithoutHash = CatalogLocaleResolver.ResolvePreviewIdentity(mod, "en");
+        englishWithoutHash.RelativePath.Should().Be("mods/feature-test/preview.en.png");
+        englishWithoutHash.Sha256.Should().BeNull();
+    }
+
+    [Fact]
     public void Resolve_overloads_work_for_package_defaults()
     {
         var locales = ModWithLocales().Locales!;

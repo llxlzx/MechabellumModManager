@@ -40,8 +40,39 @@ internal static class PreviewImageLoader
         }
     }
 
+    public static string BundleRoot =>
+        Path.Combine(AppContext.BaseDirectory, "Assets", "previews");
+
     public static Task<BitmapImage?> TryLoadAsync(string? url, CancellationToken ct = default) =>
         TryLoadCandidatesAsync(string.IsNullOrWhiteSpace(url) ? Array.Empty<string>() : new[] { url! }, ct);
+
+    public static async Task<BitmapImage?> LoadResolvedAsync(
+        string? relativePath,
+        string? sha256,
+        IReadOnlyList<string> urls,
+        string? cacheRoot,
+        CancellationToken ct = default)
+    {
+        var bytes = await PreviewAcquisition.AcquireAsync(
+            Http, BundleRoot, cacheRoot, relativePath, sha256, urls, ct).ConfigureAwait(false);
+        if (bytes is null)
+            return null;
+        ct.ThrowIfCancellationRequested();
+        return await Task.Run(() => Decode(bytes), ct).ConfigureAwait(false);
+    }
+
+    static BitmapImage Decode(byte[] bytes)
+    {
+        using var ms = new MemoryStream(bytes);
+        var bmp = new BitmapImage();
+        bmp.BeginInit();
+        bmp.StreamSource = ms;
+        bmp.CacheOption = BitmapCacheOption.OnLoad;
+        bmp.EndInit();
+        if (bmp.CanFreeze)
+            bmp.Freeze();
+        return bmp;
+    }
 
     public static async Task<BitmapImage?> TryLoadCandidatesAsync(IReadOnlyList<string> urls, CancellationToken ct = default)
     {

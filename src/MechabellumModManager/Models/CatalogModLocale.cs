@@ -14,4 +14,8 @@ public sealed class CatalogModLocale
     /// <summary>Catalog-relative preview. Empty falls back to the mod's default preview.</summary>
     [JsonPropertyName("preview")]
     public string? Preview { get; set; }
+
+    /// <summary>SHA-256 of <see cref="Preview"/>. Absent on catalogs published before the field.</summary>
+    [JsonPropertyName("previewSha256")]
+    public string? PreviewSha256 { get; set; }
 }

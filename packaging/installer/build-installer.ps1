@@ -18,7 +18,7 @@ if (-not (Test-Path -LiteralPath $exe)) { throw "missing $exe" }
 
 $assetsOut = Join-Path (Get-Location) "publish\Assets"
 New-Item -ItemType Directory -Force -Path $assetsOut | Out-Null
-Copy-Item "src\MechabellumModManager\Assets\*" $assetsOut -Force
+Copy-Item "src\MechabellumModManager\Assets\*" $assetsOut -Force -Recurse
 
 @(
   "packaging\installer\redist\dotnet8",

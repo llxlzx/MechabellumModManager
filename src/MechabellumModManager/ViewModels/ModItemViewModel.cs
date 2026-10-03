@@ -11,6 +11,7 @@ public sealed partial class ModItemViewModel : ObservableObject
     bool _suppressEnabledCallback;
     CancellationTokenSource? _previewCts;
     string? _previewLoadUrl;
+    CatalogMod? _boundCatalog;
 
     public ModPackage Package { get; }
     public bool IsMissing { get; }
@@ -210,6 +211,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         Package.CatalogTags = catalog.Tags is null ? null : new List<string>(catalog.Tags);
         Package.CatalogDisplayName = string.IsNullOrWhiteSpace(catalog.Name) ? null : catalog.Name;
         Package.CatalogLocales = CloneLocales(catalog.Locales);
+        _boundCatalog = catalog;
         if (!string.IsNullOrWhiteSpace(catalog.Category) &&
             !ModTaxonomy.TryParseCategory(catalog.Category, out _))
         {
@@ -236,7 +238,8 @@ public sealed partial class ModItemViewModel : ObservableObject
             {
                 Name = value?.Name,
                 Summary = value?.Summary,
-                Preview = value?.Preview
+                Preview = value?.Preview,
+                PreviewSha256 = value?.PreviewSha256
             };
         }
         return copy;
@@ -257,7 +260,24 @@ public sealed partial class ModItemViewModel : ObservableObject
             return;
         }
 
-        var bmp = await PreviewImageLoader.TryLoadAsync(url, ct).ConfigureAwait(true);
+        BitmapImage? bmp;
+        if (_boundCatalog is not null)
+        {
+            var identity = CatalogLocaleResolver.ResolvePreviewIdentity(_boundCatalog);
+            var urls = ModCatalogService.GetPreviewCandidateUrls(_boundCatalog, _owner.MirrorBaseUrl);
+            bmp = await PreviewImageLoader.LoadResolvedAsync(
+                identity.RelativePath, identity.Sha256, urls, _owner.PreviewCacheRoot, ct).ConfigureAwait(true);
+        }
+        else
+        {
+            var relative = Package.Preview;
+            var path = !string.IsNullOrWhiteSpace(relative) && !relative.Contains("://", StringComparison.Ordinal)
+                ? relative
+                : null;
+            var urls = string.IsNullOrWhiteSpace(url) ? Array.Empty<string>() : new[] { url };
+            bmp = await PreviewImageLoader.LoadResolvedAsync(
+                path, sha256: null, urls, _owner.PreviewCacheRoot, ct).ConfigureAwait(true);
+        }
         if (ct.IsCancellationRequested)
             return;
         if (!string.Equals(_previewLoadUrl, url, StringComparison.Ordinal))

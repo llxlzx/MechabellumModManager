@@ -1137,6 +1137,8 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _appVersion = UpdateChecker.ReadLocalVersion();
     [ObservableProperty] private string _updateStatus = "";
     [ObservableProperty] private string _mirrorBaseUrl = "";
+
+    internal string PreviewCacheRoot => _paths.DataRoot;
     bool _suppressMirrorSave;
     [ObservableProperty] private string _selectedUiLanguageCode = "system";
     bool _suppressUiScaleSave;
@@ -1963,8 +1965,12 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var pkg = _library.ImportDll(path);
-            AppendLog(string.Format(LocalizationService.T("LogImportedDll"), pkg.DisplayName, pkg.Id));
-            TryEnableImportedPackages(pkg);
+            var kept = DropConflictingImports([pkg]);
+            if (kept.Count > 0)
+            {
+                AppendLog(string.Format(LocalizationService.T("LogImportedDll"), kept[0].DisplayName, kept[0].Id));
+                TryEnableImportedPackages(kept);
+            }
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -1983,8 +1989,12 @@ public sealed partial class MainViewModel : ObservableObject
             try
             {
                 var pkg = _library.CommitStaging(ex.StagingPath, picked.Value);
-                AppendLog(string.Format(LocalizationService.T("LogImportedDll"), pkg.DisplayName, pkg.Id));
-                TryEnableImportedPackages(pkg);
+                var kept = DropConflictingImports([pkg]);
+                if (kept.Count > 0)
+                {
+                    AppendLog(string.Format(LocalizationService.T("LogImportedDll"), kept[0].DisplayName, kept[0].Id));
+                    TryEnableImportedPackages(kept);
+                }
                 ReloadMods();
                 UpdateLoaderVersionWarning();
                 UpdateFirstAssemblyWarning();
@@ -2017,7 +2027,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(path)) return;
         try
         {
-            var pkgs = _library.ImportFolder(path);
+            var pkgs = DropConflictingImports(_library.ImportFolder(path));
             AppendLog(string.Format(LocalizationService.T("LogImportedFolder"), pkgs.Count));
             TryEnableImportedPackages(pkgs);
             ReloadMods();
@@ -2038,7 +2048,7 @@ public sealed partial class MainViewModel : ObservableObject
             try
             {
                 _library.DiscardStaging(ex.StagingPath);
-                var pkgs = _library.ImportFolder(path, picked.Value);
+                var pkgs = DropConflictingImports(_library.ImportFolder(path, picked.Value));
                 AppendLog(string.Format(LocalizationService.T("LogImportedFolder"), pkgs.Count));
                 TryEnableImportedPackages(pkgs);
                 ReloadMods();
@@ -2061,7 +2071,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            var pkgs = _library.ImportZip(path, forceType);
+            var pkgs = DropConflictingImports(_library.ImportZip(path, forceType));
             AppendLog(string.Format(LocalizationService.T("LogImportedZip"), pkgs.Count));
             TryEnableImportedPackages(pkgs);
             ReloadMods();
@@ -2082,7 +2092,7 @@ public sealed partial class MainViewModel : ObservableObject
             try
             {
                 _library.DiscardStaging(ex.StagingPath);
-                var pkgs = _library.ImportZip(path, picked.Value);
+                var pkgs = DropConflictingImports(_library.ImportZip(path, picked.Value));
                 AppendLog(string.Format(LocalizationService.T("LogImportedZip"), pkgs.Count));
                 TryEnableImportedPackages(pkgs);
                 ReloadMods();
@@ -3297,6 +3307,72 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    List<CatalogMod> CurrentCatalogMods()
+    {
+        lock (_catalogModsSync)
+            return CatalogMods.Select(item => item.Mod).ToList();
+    }
+
+    static ModConflictText ConflictText() => new(
+        LocalizationService.T("ConflictInstallInstalledReason"),
+        LocalizationService.T("ConflictInstallInstalledGeneric"),
+        LocalizationService.T("ConflictInstallSelectionReason"),
+        LocalizationService.T("ConflictInstallSelectionGeneric"));
+
+    void ReportConflict(ModConflictDecision decision)
+    {
+        var message = ModConflictGate.Format(decision.Blocks, ConflictText());
+        if (string.IsNullOrWhiteSpace(message))
+            return;
+        _notify(message);
+        AppendLog(message);
+    }
+
+    IReadOnlyList<ModPackage> DropConflictingImports(IReadOnlyList<ModPackage> imported)
+    {
+        if (imported.Count == 0)
+            return imported;
+
+        var catalog = CurrentCatalogMods();
+        if (catalog.Count == 0)
+            return imported;
+
+        var importedIds = imported.Select(pkg => pkg.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var before = _library.List().Where(pkg => !importedIds.Contains(pkg.Id)).ToList();
+        var requested = imported
+            .SelectMany(pkg => catalog.Where(mod => ModCatalogService.Matches(pkg, mod)).Select(mod => mod.Id))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var decision = ModConflictGate.Evaluate(
+            catalog,
+            before,
+            requested,
+            CultureInfo.CurrentUICulture.Name);
+        var keep = ModConflictGate.PackagesToKeep(imported, catalog, decision);
+        if (decision.Blocks.Count > 0)
+            ReportConflict(decision);
+
+        var keepIds = keep.Select(pkg => pkg.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var pkg in imported)
+        {
+            if (keepIds.Contains(pkg.Id))
+                continue;
+            try
+            {
+                _library.Delete(pkg.Id);
+            }
+            catch (Exception ex)
+            {
+                AppendLog(string.Format(
+                    LocalizationService.T("LogConflictInstallDeleteFailed"),
+                    pkg.DisplayName,
+                    ex.Message));
+            }
+        }
+
+        return keep;
+    }
+
     [RelayCommand(CanExecute = nameof(CanAddCatalogMod))]
     async Task AddCatalogModToLibraryAsync()
     {
@@ -3307,6 +3383,18 @@ public sealed partial class MainViewModel : ObservableObject
         var skippedInLibrary = _catalogSelection.Count - targets.Count;
         if (skippedInLibrary > 0)
             AppendLog(string.Format(LocalizationService.T("LogSkippedUpToDateCatalogItems"), skippedInLibrary));
+
+        var batch = ModConflictGate.Evaluate(
+            CurrentCatalogMods(),
+            _library.List(),
+            targets.Select(item => item.Id).ToList(),
+            CultureInfo.CurrentUICulture.Name);
+        if (batch.Blocks.Count > 0)
+            ReportConflict(batch);
+        var allowedIds = batch.AllowedIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        targets = targets.Where(item => allowedIds.Contains(item.Id)).ToList();
+        if (targets.Count == 0)
+            return;
 
         await RunCatalogDownloadAsync(async () =>
         {
@@ -3388,6 +3476,20 @@ public sealed partial class MainViewModel : ObservableObject
                 AppendLog(string.Format(LocalizationService.T("LogAlreadyLatestSkipDownload"), item.Name));
                 CatalogStatus = $"已在本地库：{item.Name}";
                 return;
+            }
+
+            if (!item.IsInLibrary)
+            {
+                var alone = ModConflictGate.Evaluate(
+                    CurrentCatalogMods(),
+                    _library.List(),
+                    [item.Id],
+                    CultureInfo.CurrentUICulture.Name);
+                if (alone.Blocks.Count > 0)
+                {
+                    ReportConflict(alone);
+                    return;
+                }
             }
 
             var isUpdate = item.HasUpdate;
@@ -3837,7 +3939,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             LogInvalidCatalogCategory(mod);
             var state = ModCatalogService.GetEntryState(packages, mod);
-            built.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl));
+            built.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl, _paths.DataRoot));
         }
 
         CatalogMods.Clear();

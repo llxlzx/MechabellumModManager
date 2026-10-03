@@ -973,4 +973,9 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="LogicFrameUnchecked" xml:space="preserve"><value>Not checked</value></data>
   <data name="ConfirmLogicFrameMedium" xml:space="preserve"><value>"{0}" hooks health, supply, or fight-end. If the hook throws, the original method may not run, and this round's battle result can disagree with the server. Add it to the current profile?</value></data>
   <data name="ConfirmLogicFrameHigh" xml:space="preserve"><value>"{0}" can skip a simulation method or replace its return value. This check cannot prove the change is replay-only. Add it to the current profile?</value></data>
+  <data name="ConflictInstallInstalledReason" xml:space="preserve"><value>Cannot install "{0}". Installed "{1}" conflicts with it. {2}Uninstall "{1}" first.</value></data>
+  <data name="ConflictInstallInstalledGeneric" xml:space="preserve"><value>Cannot install "{0}". Installed "{1}" conflicts with it, so they cannot be installed together. Uninstall "{1}" first.</value></data>
+  <data name="ConflictInstallSelectionReason" xml:space="preserve"><value>"{0}" and "{1}" cannot be installed together. {2}Choose only one. Neither was installed this time.</value></data>
+  <data name="ConflictInstallSelectionGeneric" xml:space="preserve"><value>"{0}" and "{1}" cannot be installed together. Choose only one. Neither was installed this time.</value></data>
+  <data name="LogConflictInstallDeleteFailed" xml:space="preserve"><value>Could not remove conflicting mod "{0}" from the library: {1}</value></data>
 </root>

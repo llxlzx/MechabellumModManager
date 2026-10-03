@@ -112,10 +112,39 @@ public class CatalogFreshnessTests
         mode = "probe";
         svc.HotCacheTtl = TimeSpan.Zero;
 
+        var before = handler.Requests.Count;
         var result = await svc.FetchCatalogSmartAsync(false);
         result.Kind.Should().Be(CatalogFetchKind.ColdApplied);
         result.Root!.UpdatedAt.Should().Be("2026-09-13");
         svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+        handler.Requests.Skip(before).Count(uri =>
+            uri.Host.Contains("mirror.example", StringComparison.Ordinal)).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Smart_fetch_fingerprint_mismatch_prefers_github_without_a_second_mirror_get()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-fp-miss-" + Guid.NewGuid().ToString("N"));
+        CatalogCache.Write(data, CatalogJson("2026-09-01"));
+        var handler = new ScriptedHttpHandler(req =>
+        {
+            var mirror = req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal);
+            return ScriptedHttpHandler.Json(
+                HttpStatusCode.OK,
+                CatalogJson(mirror ? "2026-09-10" : "2026-09-13"));
+        });
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http, "https://mirror.example/m", data)
+        {
+            HotCacheTtl = TimeSpan.Zero
+        };
+
+        var result = await svc.FetchCatalogSmartAsync(false);
+
+        result.Kind.Should().Be(CatalogFetchKind.ColdApplied);
+        result.Root!.UpdatedAt.Should().Be("2026-09-13");
+        handler.Requests.Count(uri => uri.Host.Contains("mirror.example", StringComparison.Ordinal))
+            .Should().Be(1);
     }
 
     [Fact]

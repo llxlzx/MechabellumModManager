@@ -976,4 +976,9 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="LogicFrameUnchecked" xml:space="preserve"><value>未检测</value></data>
   <data name="ConfirmLogicFrameMedium" xml:space="preserve"><value>「{0}」挂在扣血、补给或战斗结束上。挂钩出错时，原来的函数可能不再执行，这一回合的战斗结果会和服务器不一致。确定加入当前方案吗？</value></data>
   <data name="ConfirmLogicFrameHigh" xml:space="preserve"><value>「{0}」会跳过原来的演算函数，或改写它的返回值。静态查看不能证明这只发生在回放里。确定加入当前方案吗？</value></data>
+  <data name="ConflictInstallInstalledReason" xml:space="preserve"><value>不能安装「{0}」。已安装的「{1}」与它冲突。{2}请先卸载「{1}」。</value></data>
+  <data name="ConflictInstallInstalledGeneric" xml:space="preserve"><value>不能安装「{0}」。已安装的「{1}」与它冲突，不能同时安装。请先卸载「{1}」。</value></data>
+  <data name="ConflictInstallSelectionReason" xml:space="preserve"><value>「{0}」和「{1}」不能同时安装。{2}请只选择其中一个。这次都没有安装。</value></data>
+  <data name="ConflictInstallSelectionGeneric" xml:space="preserve"><value>「{0}」和「{1}」不能同时安装。请只选择其中一个。这次都没有安装。</value></data>
+  <data name="LogConflictInstallDeleteFailed" xml:space="preserve"><value>未能从本地库移除冲突的 Mod「{0}」：{1}</value></data>
 </root>

@@ -3,6 +3,8 @@ using MechabellumModManager.Models;
 
 namespace MechabellumModManager.Services;
 
+public readonly record struct ResolvedPreview(string? RelativePath, string? Sha256);
+
 public static class CatalogLocaleResolver
 {
     public static string ResolveName(CatalogMod mod, string? culture = null)
@@ -41,6 +43,25 @@ public static class CatalogLocaleResolver
     {
         ArgumentNullException.ThrowIfNull(mod);
         return ResolvePreview(mod.Preview, mod.Locales, culture);
+    }
+
+    /// <summary>
+    /// Path and hash from the same object. A locale poster with no hash does not inherit the
+    /// default preview's hash, or the English bytes would be checked against the Chinese file.
+    /// </summary>
+    public static ResolvedPreview ResolvePreviewIdentity(CatalogMod mod, string? culture = null)
+    {
+        ArgumentNullException.ThrowIfNull(mod);
+        var localized = Lookup(mod.Locales, culture);
+        if (!string.IsNullOrWhiteSpace(localized?.Preview))
+        {
+            return new ResolvedPreview(
+                localized!.Preview!.Trim(),
+                PreviewStore.NormalizeHash(localized.PreviewSha256));
+        }
+
+        var path = string.IsNullOrWhiteSpace(mod.Preview) ? null : mod.Preview.Trim();
+        return new ResolvedPreview(path, PreviewStore.NormalizeHash(mod.PreviewSha256));
     }
 
     public static string? ResolvePreview(

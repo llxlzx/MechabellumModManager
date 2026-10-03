@@ -8,16 +8,22 @@ namespace MechabellumModManager.ViewModels;
 public sealed partial class CatalogModItemViewModel : ObservableObject
 {
     readonly string? _mirrorBaseUrl;
+    readonly string? _cacheRoot;
     CancellationTokenSource? _previewCts;
     string? _previewLoadUrl;
 
     public CatalogMod Mod { get; }
 
-    public CatalogModItemViewModel(CatalogMod mod, CatalogEntryState state, string? mirrorBaseUrl = null)
+    public CatalogModItemViewModel(
+        CatalogMod mod,
+        CatalogEntryState state,
+        string? mirrorBaseUrl = null,
+        string? cacheRoot = null)
     {
         Mod = mod ?? throw new ArgumentNullException(nameof(mod));
         _state = state;
         _mirrorBaseUrl = mirrorBaseUrl;
+        _cacheRoot = cacheRoot;
         PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(mod, mirrorBaseUrl);
         PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
     }
@@ -101,13 +107,15 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
         var ct = _previewCts.Token;
         _previewLoadUrl = url;
 
-        if (urls.Count == 0)
+        if (urls.Count == 0 && string.IsNullOrWhiteSpace(CatalogLocaleResolver.ResolvePreviewIdentity(Mod).RelativePath))
         {
             PreviewImage = null;
             return;
         }
 
-        var bmp = await PreviewImageLoader.TryLoadCandidatesAsync(urls, ct).ConfigureAwait(true);
+        var identity = CatalogLocaleResolver.ResolvePreviewIdentity(Mod);
+        var bmp = await PreviewImageLoader.LoadResolvedAsync(
+            identity.RelativePath, identity.Sha256, urls, _cacheRoot, ct).ConfigureAwait(true);
         if (ct.IsCancellationRequested)
             return;
         if (!string.Equals(_previewLoadUrl, url, StringComparison.Ordinal))

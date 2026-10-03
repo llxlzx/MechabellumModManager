@@ -82,6 +82,10 @@ public sealed class CatalogMod
     [JsonPropertyName("preview")]
     public string? Preview { get; set; }
 
+    /// <summary>SHA-256 of <see cref="Preview"/>. Absent on catalogs published before the field.</summary>
+    [JsonPropertyName("previewSha256")]
+    public string? PreviewSha256 { get; set; }
+
     [JsonPropertyName("type")]
     public string? Type { get; set; }
 
@@ -90,6 +94,13 @@ public sealed class CatalogMod
 
     [JsonPropertyName("tags")]
     public List<string>? Tags { get; set; }
+
+    /// <summary>
+    /// Other catalog mods that must not be in the library at the same time.
+    /// A one-sided entry still blocks both directions.
+    /// </summary>
+    [JsonPropertyName("conflicts")]
+    public List<CatalogConflict>? Conflicts { get; set; }
 
     /// <summary>
     /// Optional per-language name/summary. Keys: zh-CN, en, de, ja, ru.
@@ -421,8 +432,12 @@ public sealed class ModCatalogService
                             LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
                             return new CatalogFetchResult(CatalogFetchKind.WarmNotModified, cached, "warm-304");
                         }
-                        // 200 → Cold (GetAllAsync path via existing FetchCatalogAsync)
-                        return await ColdAsync(ct).ConfigureAwait(false);
+
+                        // 200 already has the mirror body. Ask the other origins, but do not GET
+                        // the mirror again. A newer GitHub copy must still be able to win.
+                        var mirrorJson = await probe.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                        var mirrorTag = probe.Response.Headers.ETag?.Tag;
+                        return await MergeMirrorBodyAsync(mirrorUri, mirrorJson, mirrorTag, ct).ConfigureAwait(false);
                     }
 
                     // No etag: mirror-only GET + fingerprint
@@ -439,6 +454,9 @@ public sealed class ModCatalogService
                         LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
                         return new CatalogFetchResult(CatalogFetchKind.WarmNotModified, cachedRoot, "warm-fingerprint");
                     }
+
+                    return await MergeMirrorBodyAsync(
+                        mirrorUri, json, mirrorOnly.Response.Headers.ETag?.Tag, ct).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
@@ -459,6 +477,100 @@ public sealed class ModCatalogService
         var root = await FetchCatalogAsync(ct).ConfigureAwait(false);
         LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
         return new CatalogFetchResult(CatalogFetchKind.ColdApplied, root, "cold");
+    }
+
+    /// <summary>
+    /// The mirror body is already in hand. Other candidates are still fetched so a stale mirror
+    /// cannot hide a newer GitHub catalog, and the mirror URL is not requested again.
+    /// </summary>
+    async Task<CatalogFetchResult> MergeMirrorBodyAsync(
+        Uri mirrorUri, string json, string? etag, CancellationToken ct)
+    {
+        CatalogRoot mirrorRoot;
+        try
+        {
+            mirrorRoot = DeserializeCatalog(json);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return await ColdAsync(ct).ConfigureAwait(false);
+        }
+
+        var copies = new List<CatalogCopy>
+        {
+            new(mirrorUri, json, mirrorRoot, etag)
+        };
+
+        var others = BuildCatalogCandidates().Where(uri => uri != mirrorUri).ToList();
+        if (others.Count > 0)
+        {
+            try
+            {
+                var fetched = await RemoteFetch.GetAllAsync(_http, others, ct).ConfigureAwait(false);
+                try
+                {
+                    foreach (var result in fetched)
+                    {
+                        try
+                        {
+                            var body = await result.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                            copies.Add(new CatalogCopy(
+                                result.Used,
+                                body,
+                                DeserializeCatalog(body),
+                                result.Response.Headers.ETag?.Tag));
+                        }
+                        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                        {
+                            throw;
+                        }
+                        catch
+                        {
+                            // An unparsable GitHub copy loses to the mirror body we already hold.
+                        }
+                    }
+                }
+                finally
+                {
+                    foreach (var result in fetched)
+                        result.Dispose();
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch
+            {
+                // GitHub unreachable. The mirror body remains a candidate.
+            }
+        }
+
+        return StoreWinner(copies);
+    }
+
+    CatalogFetchResult StoreWinner(List<CatalogCopy> copies)
+    {
+        if (copies.Count == 0)
+            throw new HttpRequestException("Catalog reached but no candidate returned parsable JSON.");
+
+        var winner = PickFreshestIndex(copies);
+        LastStaleSource = winner == 0 ? null : RemoteFetch.ClassifySource(copies[0].Used);
+        var chosen = copies[winner];
+        LastFetchSource = RemoteFetch.ClassifySource(chosen.Used);
+        LastCatalogEtag = chosen.ETag;
+        if (!string.IsNullOrWhiteSpace(DataRoot))
+        {
+            CatalogCache.Write(DataRoot, chosen.Json);
+            CatalogCache.WriteEtag(DataRoot, chosen.ETag);
+        }
+
+        LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
+        return new CatalogFetchResult(CatalogFetchKind.ColdApplied, chosen.Root, "cold");
     }
 
     readonly record struct CatalogCopy(Uri Used, string Json, CatalogRoot Root, string? ETag);
