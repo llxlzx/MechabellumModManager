@@ -132,6 +132,7 @@ public partial class App : Application
         }
 
         base.OnStartup(e);
+        SteamOverlayLatch.EnsureDisabledWhileSteamIsClosed();
 
         UiScaleHost.EnsureHooked();
         var window = new MainWindow();

@@ -1,10 +1,10 @@
 {
-    "version": "1.3.10",
-    "notes": "预览图随安装包附带。安装包里已有的图不再下载；换海报或新图时，每个玩家只下载一次。互相冲突的 Mod 不能一起安装。\nPreview images ship with the manager. Images already in the install are not downloaded again. A changed poster or a new image is downloaded once per player. Mods that conflict with each other cannot be installed together.",
-    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.10/MechabellumModManager_Setup_v1.3.10.exe",
-    "setupSha256": "b93060ec7118c5a59b9821473682515ac867d2f8ccd1c235fdf01e299f9a39f7",
-    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.10/MechabellumModManager_portable_v1.3.10.zip",
-    "portableSha256": "7330db6e0dcb4e9a97d5b01889abec743cf232394e9c6871220c487a130e27f3",
-    "publishedAt": "2026-10-03T15:13:47Z",
-    "build": "v1.3.10-bundled-previews"
+    "version": "1.3.11",
+    "notes": "关闭 Steam 自带的游戏内覆盖层。请先完全退出 Steam，再打开管理器，然后再开 Steam。之后从游戏内退出，库里的停止按钮会回到开始游戏。Shift+Tab 会关掉，好友叠加不受影响。\nTurns off the Steam in-game overlay. Fully quit Steam, open the manager, then start Steam again. Quitting the game then returns the library button from Stop to Play. Shift+Tab is off. The friend-list mod is unaffected.",
+    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.11/MechabellumModManager_Setup_v1.3.11.exe",
+    "setupSha256": "2e77a4738b113aa8a9961dc2215c3267d8bef2c133b86f0fb734f41c01536547",
+    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.11/MechabellumModManager_portable_v1.3.11.zip",
+    "portableSha256": "ff34bfe09315a9589895099466e4002af2b0a015643b9c36f4d5a007de2b8b29",
+    "publishedAt": "2026-10-04T04:35:00Z",
+    "build": "v1.3.11-steam-overlay-off"
 }
