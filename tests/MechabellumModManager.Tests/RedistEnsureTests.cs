@@ -202,6 +202,33 @@ public class RedistEnsureTests
     }
 
     [Fact]
+    public async Task Ensure_with_a_bundled_manifest_does_not_request_the_mirror_manifest()
+    {
+        var originZip = new Uri("https://github.com/LavaGang/MelonLoader/releases/download/v0.7.3/MelonLoader.x64.zip");
+        var handler = new ScriptedHttpHandler(req =>
+        {
+            if (req.RequestUri!.AbsolutePath.EndsWith("manifest.json", StringComparison.Ordinal))
+                throw new InvalidOperationException("bundled manifest must be used");
+            if (req.RequestUri == originZip)
+                return Bytes(HttpStatusCode.OK, FooBytes);
+            return ScriptedHttpHandler.Json(HttpStatusCode.NotFound, "miss");
+        });
+        using var http = new HttpClient(handler);
+        using var dir = new TempDir();
+        var svc = new RedistEnsureService(http);
+
+        var result = await svc.EnsureAsync(
+            dir.Path,
+            mirrorBaseUrl: "https://cdn.example",
+            ids: ["melonloader-x64"],
+            bundledManifestJson: SampleManifest);
+
+        result.Success.Should().BeTrue();
+        result.SourceById["melonloader-x64"].Should().Be(RedistEnsureService.OriginSource);
+        handler.Requests.Should().NotContain(u => u.AbsolutePath.EndsWith("manifest.json", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Ensure_reports_monotonic_progress_to_100()
     {
         // Larger payload so Content-Length progress reports more than one tick.

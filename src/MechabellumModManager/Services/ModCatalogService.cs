@@ -20,6 +20,22 @@ public readonly record struct DownloadProgress(long BytesDownloaded, long TotalB
         TotalBytes > 0 ? Math.Clamp((double)BytesDownloaded / TotalBytes, 0, 1) : null;
 }
 
+/// <summary>
+/// One slice of a mod that is too large for a single git blob. The assembled file is still
+/// <see cref="CatalogMod.File"/>; these pieces are downloaded and concatenated in order.
+/// </summary>
+public sealed class CatalogPart
+{
+    [JsonPropertyName("file")]
+    public string? File { get; set; }
+
+    [JsonPropertyName("sha256")]
+    public string? Sha256 { get; set; }
+
+    [JsonPropertyName("size")]
+    public long Size { get; set; }
+}
+
 /// <summary>Whether a catalog entry is missing locally, current, or superseded by a newer catalog copy.</summary>
 public enum CatalogEntryState
 {
@@ -78,6 +94,14 @@ public sealed class CatalogMod
     /// </summary>
     [JsonPropertyName("originUrl")]
     public string? OriginUrl { get; set; }
+
+    /// <summary>
+    /// Ordered slices of <see cref="File"/>, each small enough to live in the git repo.
+    /// When present, the client downloads these and concatenates them. It does not request
+    /// <see cref="File"/> itself. Older clients ignore the field and still download the whole file.
+    /// </summary>
+    [JsonPropertyName("parts")]
+    public List<CatalogPart>? Parts { get; set; }
 
     [JsonPropertyName("preview")]
     public string? Preview { get; set; }
@@ -170,10 +194,16 @@ public sealed partial class ModCatalogService
     public const long AbsoluteMaxDownloadBytes = 8L * 1024 * 1024 * 1024;
 
     /// <summary>
-    /// GitHub rejects a git push over 100 MiB per file. A catalog entry larger than this cannot
-    /// come from the repo, so a configured mirror is the only download candidate.
+    /// GitHub rejects a git push over 100 MiB per file. A single blob over this cannot come from
+    /// the repo. Split it into <see cref="CatalogPart"/> entries instead of sending players to the mirror.
     /// </summary>
     public const long GitRepoMaxBytes = 100L * 1024 * 1024;
+
+    /// <summary>
+    /// How long a catalog already written to disk is trusted across process restarts.
+    /// Inside this window a launch does not contact GitHub or the mirror.
+    /// </summary>
+    public static readonly TimeSpan DiskQuietPeriod = TimeSpan.FromHours(12);
 
     /// <summary>
     /// Longest gap tolerated between two received chunks, and the only liveness guard the
@@ -299,12 +329,12 @@ public sealed partial class ModCatalogService
 
     /// <summary>
     /// GitHub first (release <c>originUrl</c> when present, then the repo path), mirror last.
-    /// A file over <see cref="GitRepoMaxBytes"/> cannot live in git; when a mirror is configured
-    /// it is the only candidate, so those downloads never wait on GitHub.
+    /// A file over <see cref="GitRepoMaxBytes"/> cannot live in git, so the raw repo path is
+    /// skipped: <c>originUrl</c> is tried, then the mirror. Parts use <see cref="BuildPartCandidates"/>
+    /// instead, and those stay under the git limit.
     ///
     /// The repo path stays on the list for a normal mod so that a mis-stamped <c>originUrl</c>
-    /// degrades to another GitHub request rather than making the mod uninstallable. With no
-    /// mirror, an oversized mod still uses its release URL.
+    /// degrades to another GitHub request rather than making the mod uninstallable.
     /// </summary>
     public IReadOnlyList<Uri> BuildFileCandidates(CatalogMod mod)
     {
@@ -314,8 +344,17 @@ public sealed partial class ModCatalogService
         var origin = TryParseOriginUrl(mod.OriginUrl);
         var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, $"MechabellumMods/{relative}");
 
-        if (mod.Size > GitRepoMaxBytes && mirror is not null)
-            return new[] { mirror };
+        if (mod.Size > GitRepoMaxBytes)
+        {
+            var oversized = new List<Uri>(2);
+            if (origin is not null)
+                oversized.Add(origin);
+            if (mirror is not null)
+                oversized.Add(mirror);
+            if (oversized.Count == 0)
+                oversized.Add(rawUrl);
+            return oversized;
+        }
 
         var candidates = new List<Uri>(3);
         if (origin is not null)
@@ -325,6 +364,20 @@ public sealed partial class ModCatalogService
         if (mirror is not null)
             candidates.Add(mirror);
         return candidates;
+    }
+
+    /// <summary>
+    /// Repo path first, mirror last. A part is small enough for git, so it never uses the
+    /// whole-file <c>originUrl</c>.
+    /// </summary>
+    public IReadOnlyList<Uri> BuildPartCandidates(CatalogPart part)
+    {
+        ArgumentNullException.ThrowIfNull(part);
+        var relative = NormalizeCatalogRelativePath(part.File);
+        return RemoteFetch.BuildCandidates(
+            MirrorBaseUrl,
+            $"MechabellumMods/{relative}",
+            new Uri(GetRawUrl(relative)));
     }
 
     /// <summary>
@@ -375,9 +428,9 @@ public sealed partial class ModCatalogService
     /// <summary>
     /// Downloads a catalog mod to <paramref name="destPath"/>. GitHub is tried first. A candidate
     /// that cannot be reached is abandoned and the mirror is tried next, with no prompt in between.
-    /// A file over <see cref="GitRepoMaxBytes"/> goes straight to the mirror when one is configured.
-    /// The destination only appears once the bytes match the catalog's sha256; until then the
-    /// transfer lives in a sibling <c>.part</c> file.
+    /// When <see cref="CatalogMod.Parts"/> is set, those slices are downloaded and concatenated;
+    /// the whole file URL is not requested. The destination only appears once the bytes match the
+    /// catalog's sha256; until then the transfer lives in a sibling <c>.part</c> file.
     /// </summary>
     public async Task DownloadModAsync(
         CatalogMod mod,
@@ -402,11 +455,140 @@ public sealed partial class ModCatalogService
         if (!string.IsNullOrWhiteSpace(dir))
             Directory.CreateDirectory(dir);
 
+        if (mod.Parts is { Count: > 0 })
+        {
+            await DownloadPartsAsync(mod, destPath, expectedHash, expectedSize, progress, ct)
+                .ConfigureAwait(false);
+            return;
+        }
+
         var partPath = destPath + ".part";
+        var candidates = BuildFileCandidates(mod);
+        var used = await DownloadVerifiedAsync(
+            candidates, partPath, expectedHash, expectedSize, ceiling, progress, ct).ConfigureAwait(false);
+
+        LastDownloadSource = RemoteFetch.ClassifySource(used);
+        File.Move(partPath, destPath, overwrite: true);
+    }
+
+    async Task DownloadPartsAsync(
+        CatalogMod mod,
+        string destPath,
+        string expectedHash,
+        long expectedSize,
+        IProgress<DownloadProgress>? progress,
+        CancellationToken ct)
+    {
+        var parts = mod.Parts ?? throw new InvalidOperationException("分块目录为空，已拒绝下载。");
+        long sum = 0;
+        foreach (var part in parts)
+        {
+            if (part is null || string.IsNullOrWhiteSpace(part.File))
+                throw new InvalidOperationException("分块缺少文件路径，已拒绝下载。");
+            if (NormalizeHash(part.Sha256) is null)
+                throw new InvalidOperationException(MissingHashMessage);
+            if (part.Size <= 0 || part.Size >= GitRepoMaxBytes)
+                throw new InvalidOperationException(
+                    "目录里的分块达到或超过 100MB，无法放进 git 仓库，已拒绝下载。请联系目录维护者把分块切小。");
+            sum += part.Size;
+        }
+
+        if (expectedSize > 0 && sum != expectedSize)
+            throw new InvalidOperationException(
+                $"分块大小之和（{sum}）与目录声明的文件大小（{expectedSize}）不一致，已拒绝下载。");
+
+        var staging = destPath + ".parts";
+        Directory.CreateDirectory(staging);
+        var chunkPaths = new List<string>(parts.Count);
+        var partPath = destPath + ".part";
+        try
+        {
+            long done = 0;
+            var source = RemoteFetch.GithubSource;
+            var total = expectedSize > 0 ? expectedSize : sum;
+            for (var i = 0; i < parts.Count; i++)
+            {
+                var part = parts[i];
+                var chunkPath = Path.Combine(staging, i.ToString("D4"));
+                chunkPaths.Add(chunkPath);
+                var partHash = NormalizeHash(part.Sha256)!;
+                var slice = progress is null ? null : new OffsetDownloadProgress(progress, done, total);
+                var used = await DownloadVerifiedAsync(
+                    BuildPartCandidates(part),
+                    chunkPath,
+                    partHash,
+                    part.Size,
+                    part.Size,
+                    slice,
+                    ct).ConfigureAwait(false);
+                if (RemoteFetch.ClassifySource(used) == RemoteFetch.MirrorSource)
+                    source = RemoteFetch.MirrorSource;
+                done += part.Size;
+            }
+
+            TryDeleteFile(partPath);
+            await using (var output = new FileStream(
+                partPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, useAsync: true))
+            {
+                foreach (var chunkPath in chunkPaths)
+                {
+                    await using var input = new FileStream(
+                        chunkPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
+                    await input.CopyToAsync(output, ct).ConfigureAwait(false);
+                }
+            }
+
+            var actualHash = await ComputeFileHashAsync(partPath, ct).ConfigureAwait(false);
+            if (!string.Equals(actualHash, expectedHash, StringComparison.Ordinal))
+            {
+                TryDeleteFile(partPath);
+                throw new InvalidOperationException(HashMismatchMessage(expectedHash, actualHash));
+            }
+
+            progress?.Report(new DownloadProgress(expectedSize > 0 ? expectedSize : sum, expectedSize > 0 ? expectedSize : sum));
+            LastDownloadSource = source;
+            File.Move(partPath, destPath, overwrite: true);
+        }
+        finally
+        {
+            TryDeleteFile(partPath);
+            try { Directory.Delete(staging, recursive: true); } catch { /* best effort */ }
+        }
+    }
+
+    sealed class OffsetDownloadProgress : IProgress<DownloadProgress>
+    {
+        readonly IProgress<DownloadProgress> _inner;
+        readonly long _done;
+        readonly long _total;
+
+        public OffsetDownloadProgress(IProgress<DownloadProgress> inner, long done, long total)
+        {
+            _inner = inner;
+            _done = done;
+            _total = total;
+        }
+
+        public void Report(DownloadProgress value) =>
+            _inner.Report(new DownloadProgress(_done + value.BytesDownloaded, _total));
+    }
+
+    /// <summary>
+    /// Tries each candidate until one matches <paramref name="expectedHash"/>. Throws the same
+    /// errors the single-file download always has when every candidate is refused.
+    /// </summary>
+    async Task<Uri> DownloadVerifiedAsync(
+        IReadOnlyList<Uri> candidates,
+        string partPath,
+        string expectedHash,
+        long expectedSize,
+        long ceiling,
+        IProgress<DownloadProgress>? progress,
+        CancellationToken ct)
+    {
         var failures = new List<string>();
         string? contentFailure = null;
         Uri? used = null;
-        var candidates = BuildFileCandidates(mod);
 
         for (var index = 0; index < candidates.Count; index++)
         {
@@ -447,9 +629,6 @@ public sealed partial class ModCatalogService
                 }
                 catch (ContentContractException ex)
                 {
-                    // This source disagrees with the catalog about the file itself. Retrying it is
-                    // pointless, but another source may well be serving the right bytes, and the
-                    // partial written so far is untrustworthy.
                     TryDeleteFile(partPath);
                     contentFailure ??= ex.Message;
                     failures.Add($"{uri.Host}: {ex.Message}");
@@ -457,8 +636,6 @@ public sealed partial class ModCatalogService
                 }
                 catch (PermanentFetchException ex)
                 {
-                    // 404/403 moves on. A mirror 404 is expected for a mod outside the hot subset;
-                    // a GitHub 404 is expected for a file that only exists on the mirror.
                     failures.Add($"{uri.Host}: {ex.Message}");
                     moveOn = true;
                 }
@@ -494,8 +671,7 @@ public sealed partial class ModCatalogService
                     $"下载内容与目录声明不符，已全部拒绝：{contentFailure}（{detail}）。请联系目录维护者核对。");
         }
 
-        LastDownloadSource = RemoteFetch.ClassifySource(used);
-        File.Move(partPath, destPath, overwrite: true);
+        return used;
     }
 
     static string HashMismatchMessage(string expectedHash, string actualHash) =>

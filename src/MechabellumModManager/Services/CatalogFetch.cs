@@ -20,6 +20,18 @@ public sealed partial class ModCatalogService
 
     public async Task<CatalogFetchResult> FetchCatalogSmartAsync(bool forceCold, CancellationToken ct = default)
     {
+        // A catalog written recently is reused as-is, including after a restart and when the
+        // library page asks again. A launch does not ask GitHub or the mirror just to look.
+        if (!forceCold && DiskCacheIsQuiet())
+        {
+            var cached = TryLoadCachedCatalog();
+            if (cached is not null)
+            {
+                LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
+                return new CatalogFetchResult(CatalogFetchKind.HotSkip, cached, "disk");
+            }
+        }
+
         if (!forceCold &&
             LastCatalogAppliedUtc is { } applied &&
             DateTimeOffset.UtcNow - applied < HotCacheTtl)
@@ -32,10 +44,17 @@ public sealed partial class ModCatalogService
         return result;
     }
 
+    bool DiskCacheIsQuiet()
+    {
+        if (string.IsNullOrWhiteSpace(DataRoot))
+            return false;
+        return CatalogCache.IsYoungerThan(DataRoot, DiskQuietPeriod);
+    }
+
     /// <summary>
-    /// Sequential catalog read. An etag is sent only to the first candidate, and only when this
-    /// session already accepted a catalog from that same source, so a mirror etag is never offered
-    /// to GitHub (or the reverse).
+    /// Sequential catalog read. An etag is sent only to the candidate whose host matches the
+    /// source that produced the stored etag, so a mirror etag is never offered to GitHub
+    /// (or the reverse). A mirror that is actually contacted does get its own etag.
     /// </summary>
     async Task<CatalogFetchResult> FetchInOrderAsync(bool conditional, CancellationToken ct)
     {
@@ -49,7 +68,7 @@ public sealed partial class ModCatalogService
             var budget = i == candidates.Count - 1
                 ? RemoteFetch.AllCandidatesTimeout
                 : RemoteFetch.ConnectBudget;
-            var etag = conditional && i == 0 ? EtagForSource(RemoteFetch.ClassifySource(uri)) : null;
+            var etag = conditional ? EtagForSource(RemoteFetch.ClassifySource(uri)) : null;
 
             RemoteFetchResult fetched;
             try
@@ -79,6 +98,12 @@ public sealed partial class ModCatalogService
                     }
 
                     LastFetchSource = RemoteFetch.ClassifySource(uri);
+                    if (!string.IsNullOrWhiteSpace(DataRoot))
+                    {
+                        CatalogCache.Touch(DataRoot);
+                        CatalogCache.WriteSource(DataRoot, LastFetchSource);
+                    }
+
                     return new CatalogFetchResult(CatalogFetchKind.WarmNotModified, cached, "warm-304");
                 }
 
@@ -105,6 +130,7 @@ public sealed partial class ModCatalogService
                 {
                     CatalogCache.Write(DataRoot, json);
                     CatalogCache.WriteEtag(DataRoot, LastCatalogEtag);
+                    CatalogCache.WriteSource(DataRoot, LastFetchSource);
                 }
 
                 return new CatalogFetchResult(CatalogFetchKind.ColdApplied, root, "cold");
@@ -117,7 +143,13 @@ public sealed partial class ModCatalogService
 
     string? EtagForSource(string source)
     {
-        if (!string.Equals(LastFetchSource, source, StringComparison.Ordinal))
+        var remembered = LastFetchSource;
+        if (string.IsNullOrWhiteSpace(remembered) &&
+            !string.IsNullOrWhiteSpace(DataRoot) &&
+            CatalogCache.TryReadSource(DataRoot, out var storedSource))
+            remembered = storedSource;
+
+        if (!string.Equals(remembered, source, StringComparison.Ordinal))
             return null;
 
         if (!string.IsNullOrWhiteSpace(LastCatalogEtag))

@@ -121,9 +121,11 @@ public sealed class RedistEnsureService
         Directory.CreateDirectory(redistDir);
 
         RedistManifest manifest;
+        var usedBundled = false;
         try
         {
-            manifest = await LoadManifestAsync(mirrorBaseUrl, bundledManifestJson, ct).ConfigureAwait(false);
+            (manifest, usedBundled) = await LoadManifestAsync(mirrorBaseUrl, bundledManifestJson, ct)
+                .ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -171,6 +173,51 @@ public sealed class RedistEnsureService
             ReportProgress(progress, completedWeight, totalWeight, artifact.Id, "done");
         }
 
+        if (errors.Count > 0 && usedBundled)
+        {
+            RedistManifest? refreshed = null;
+            try
+            {
+                refreshed = await TryFetchMirrorManifestAsync(mirrorBaseUrl, ct).ConfigureAwait(false);
+            }
+            catch
+            {
+                refreshed = null;
+            }
+
+            if (refreshed is not null)
+            {
+                var retryIds = errors
+                    .Select(e => e.Split(':')[0].Trim())
+                    .Where(id => refreshed.Artifacts.Any(a => string.Equals(a.Id, id, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+                errors.Clear();
+                var retry = ResolveWanted(refreshed, retryIds);
+                for (var i = 0; i < retry.Count; i++)
+                {
+                    var artifact = retry[i];
+                    try
+                    {
+                        var source = await EnsureOneAsync(
+                                redistDir,
+                                mirrorBaseUrl,
+                                artifact,
+                                1,
+                                0,
+                                1,
+                                progress: null,
+                                ct)
+                            .ConfigureAwait(false);
+                        sources[artifact.Id] = source;
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"{artifact.Id}: {ex.Message}");
+                    }
+                }
+            }
+        }
+
         if (errors.Count > 0)
         {
             return new RedistEnsureResult
@@ -190,31 +237,40 @@ public sealed class RedistEnsureService
         };
     }
 
-    async Task<RedistManifest> LoadManifestAsync(
+    async Task<(RedistManifest Manifest, bool FromBundled)> LoadManifestAsync(
         string? mirrorBaseUrl,
         string? bundledManifestJson,
         CancellationToken ct)
     {
-        var mirror = RemoteFetch.TryMirrorUri(mirrorBaseUrl, ManifestRelativePath);
-        if (mirror is not null)
+        var bundled = bundledManifestJson ?? TryReadBundledManifestJson();
+        if (!string.IsNullOrWhiteSpace(bundled))
         {
             try
             {
-                using var fetched = await RemoteFetch.GetAsync(_http, new[] { mirror }, ct).ConfigureAwait(false);
-                var json = await fetched.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                return ParseManifest(json);
+                return (ParseManifest(bundled), true);
             }
-            catch
+            catch (InvalidDataException)
             {
-                // Fall through to bundled pin.
+                // An unreadable pin is not a reason to skip the mirror copy.
             }
         }
 
-        var bundled = bundledManifestJson ?? TryReadBundledManifestJson();
-        if (string.IsNullOrWhiteSpace(bundled))
-            throw new InvalidDataException("无镜像清单且本地未附带 redist-manifest.json");
+        var mirror = await TryFetchMirrorManifestAsync(mirrorBaseUrl, ct).ConfigureAwait(false);
+        if (mirror is not null)
+            return (mirror, false);
 
-        return ParseManifest(bundled);
+        throw new InvalidDataException("无镜像清单且本地未附带 redist-manifest.json");
+    }
+
+    async Task<RedistManifest?> TryFetchMirrorManifestAsync(string? mirrorBaseUrl, CancellationToken ct)
+    {
+        var mirror = RemoteFetch.TryMirrorUri(mirrorBaseUrl, ManifestRelativePath);
+        if (mirror is null)
+            return null;
+
+        using var fetched = await RemoteFetch.GetAsync(_http, new[] { mirror }, ct).ConfigureAwait(false);
+        var json = await fetched.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        return ParseManifest(json);
     }
 
     public static string? TryReadBundledManifestJson()

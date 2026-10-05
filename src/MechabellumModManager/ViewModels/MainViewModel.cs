@@ -193,6 +193,7 @@ public sealed partial class MainViewModel : ObservableObject
         _setupDownloader = setupDownloader ?? new ManagerSetupDownloader();
         _promptManagerUpdate = promptManagerUpdate;
         _updateChecker = updateChecker ?? new UpdateChecker();
+        _updateChecker.QuietStampPath = Path.Combine(_paths.DataRoot, UpdateChecker.QuietStampFileName);
         _catalog = catalog ?? new ModCatalogService();
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
         _managerLog = managerLog ?? new ManagerLogWriter(paths.LogsDir);
@@ -3825,7 +3826,11 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
             if (outcome.Kind == CatalogFetchKind.HotSkip)
+            {
+                if (outcome.Root is not null && CatalogMods.Count == 0)
+                    ApplyCatalogRoot(outcome.Root);
                 return;
+            }
 
             _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
             if (outcome.Root is not null)
@@ -3879,7 +3884,11 @@ public sealed partial class MainViewModel : ObservableObject
         {
             var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: false).ConfigureAwait(true);
             if (outcome.Kind == CatalogFetchKind.HotSkip)
+            {
+                if (outcome.Root is not null && CatalogMods.Count == 0)
+                    ApplyCatalogRoot(outcome.Root);
                 return;
+            }
 
             _lastSilentCatalogFetch = DateTimeOffset.UtcNow;
             if (outcome.Root is not null)
@@ -4145,6 +4154,8 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (fromStartup && _managerUpdateSkippedThisSession)
             return;
+        if (fromStartup && _updateChecker.IsQuietPeriodOpen())
+            return;
         if (_checkingUpdates || _managerUpdateUiOpen)
             return;
 
@@ -4160,6 +4171,8 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var result = await _updateChecker.CheckAsync().ConfigureAwait(true);
+            if (result.Kind != UpdateCheckKind.Failed)
+                _updateChecker.MarkChecked();
             UpdateStatus = result.Message;
             AppendLog(result.Message);
             if (!string.IsNullOrWhiteSpace(result.Source))

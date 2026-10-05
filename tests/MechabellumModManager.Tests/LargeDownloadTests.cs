@@ -363,8 +363,7 @@ public sealed class LargeDownloadTests
                 {
                     File = "mods/cut-guide/Big.dll",
                     Sha256 = new string('a', 64),
-                    Size = ModCatalogService.GitRepoMaxBytes + 1,
-                    OriginUrl = "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll"
+                    Size = ModCatalogService.GitRepoMaxBytes + 1
                 },
                 dest);
 
@@ -462,7 +461,7 @@ public sealed class LargeDownloadTests
     }
 
     [Fact]
-    public void A_mod_over_the_git_limit_uses_only_the_mirror()
+    public void A_mod_over_the_git_limit_tries_the_release_then_the_mirror()
     {
         var svc = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
 
@@ -473,9 +472,140 @@ public sealed class LargeDownloadTests
             OriginUrl = "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll"
         });
 
-        candidates.Should().ContainSingle()
-            .Which.ToString().Should().Be(
-                "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/Mechabellum.Guide.TextHover.dll");
+        candidates.Select(u => u.ToString()).Should().Equal(
+            "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll",
+            "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/Mechabellum.Guide.TextHover.dll");
+    }
+
+    [Fact]
+    public void Part_candidates_try_the_repo_before_the_mirror()
+    {
+        var svc = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
+
+        var candidates = svc.BuildPartCandidates(new CatalogPart
+        {
+            File = "mods/cut-guide/parts/0000",
+            Size = 80,
+            Sha256 = new string('a', 64)
+        });
+
+        candidates.Select(u => u.ToString()).Should().Equal(
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cut-guide/parts/0000",
+            "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/parts/0000");
+    }
+
+    [Fact]
+    public async Task Parts_are_downloaded_from_git_first_and_concatenated()
+    {
+        var first = new byte[] { 1, 2, 3, 4 };
+        var second = new byte[] { 5, 6 };
+        var whole = first.Concat(second).ToArray();
+        var handler = new ScriptedHttpHandler(req =>
+        {
+            var path = req.RequestUri!.AbsolutePath;
+            if (path.EndsWith("/0000", StringComparison.Ordinal) &&
+                req.RequestUri.Host.Contains("githubusercontent", StringComparison.Ordinal))
+                return ScriptedHttpHandler.Bytes(HttpStatusCode.OK, first);
+            if (path.EndsWith("/0001", StringComparison.Ordinal) &&
+                req.RequestUri.Host.Contains("githubusercontent", StringComparison.Ordinal))
+                return ScriptedHttpHandler.Bytes(HttpStatusCode.OK, second);
+            return ScriptedHttpHandler.Bytes(HttpStatusCode.NotFound, Array.Empty<byte>());
+        });
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http, "https://mirror.example/m");
+        var dest = TempDest();
+
+        try
+        {
+            await svc.DownloadModAsync(new CatalogMod
+            {
+                File = "mods/cut-guide/Mechabellum.Guide.TextHover.dll",
+                Sha256 = Sha256Of(whole),
+                Size = whole.LongLength,
+                Parts =
+                [
+                    new CatalogPart { File = "mods/cut-guide/parts/0000", Sha256 = Sha256Of(first), Size = first.Length },
+                    new CatalogPart { File = "mods/cut-guide/parts/0001", Sha256 = Sha256Of(second), Size = second.Length }
+                ]
+            }, dest);
+
+            File.ReadAllBytes(dest).Should().Equal(whole);
+            handler.Requests.Should().OnlyContain(u =>
+                u.Host.Contains("githubusercontent", StringComparison.Ordinal));
+            handler.Requests.Should().NotContain(u => u.AbsolutePath.Contains("TextHover", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Cleanup(dest);
+        }
+    }
+
+    [Fact]
+    public async Task A_part_hash_mismatch_fails_the_whole_download()
+    {
+        var first = new byte[] { 1, 2, 3, 4 };
+        var handler = new ScriptedHttpHandler(_ =>
+            ScriptedHttpHandler.Bytes(HttpStatusCode.OK, first));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http, "https://mirror.example/m");
+        var dest = TempDest();
+
+        try
+        {
+            var act = async () => await svc.DownloadModAsync(new CatalogMod
+            {
+                File = "mods/cut-guide/Whole.dll",
+                Sha256 = Sha256Of(first),
+                Size = first.LongLength,
+                Parts =
+                [
+                    new CatalogPart { File = "mods/cut-guide/parts/0000", Sha256 = new string('b', 64), Size = first.Length }
+                ]
+            }, dest);
+
+            await act.Should().ThrowAsync<InvalidOperationException>();
+            File.Exists(dest).Should().BeFalse();
+        }
+        finally
+        {
+            Cleanup(dest);
+        }
+    }
+
+    [Fact]
+    public async Task A_part_at_the_git_limit_is_refused_before_any_request()
+    {
+        var handler = new ScriptedHttpHandler(_ =>
+            throw new InvalidOperationException("must not download"));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http);
+        var dest = TempDest();
+
+        try
+        {
+            var act = async () => await svc.DownloadModAsync(new CatalogMod
+            {
+                File = "mods/cut-guide/Whole.dll",
+                Sha256 = new string('a', 64),
+                Size = ModCatalogService.GitRepoMaxBytes,
+                Parts =
+                [
+                    new CatalogPart
+                    {
+                        File = "mods/cut-guide/parts/0000",
+                        Sha256 = new string('a', 64),
+                        Size = ModCatalogService.GitRepoMaxBytes
+                    }
+                ]
+            }, dest);
+
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*100MB*");
+            handler.Requests.Should().BeEmpty();
+        }
+        finally
+        {
+            Cleanup(dest);
+        }
     }
 
     [Fact]

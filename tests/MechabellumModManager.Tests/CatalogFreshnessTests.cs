@@ -64,6 +64,7 @@ public class CatalogFreshnessTests
         hitsMirror = false;
         mode = "warm";
         svc.HotCacheTtl = TimeSpan.Zero;
+        File.SetLastWriteTimeUtc(CatalogCache.GetPath(data), DateTime.UtcNow.AddHours(-13));
 
         var warm = await svc.FetchCatalogSmartAsync(false);
         warm.Kind.Should().Be(CatalogFetchKind.WarmNotModified);
@@ -103,6 +104,7 @@ public class CatalogFreshnessTests
         await svc.FetchCatalogSmartAsync(true);
         mode = "probe";
         svc.HotCacheTtl = TimeSpan.Zero;
+        File.SetLastWriteTimeUtc(CatalogCache.GetPath(data), DateTime.UtcNow.AddHours(-13));
 
         var before = handler.Requests.Count;
         var result = await svc.FetchCatalogSmartAsync(false);
@@ -132,5 +134,99 @@ public class CatalogFreshnessTests
         result.Kind.Should().Be(CatalogFetchKind.ColdApplied);
         result.Root!.UpdatedAt.Should().Be("2026-09-13");
         svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
+    }
+
+    [Fact]
+    public async Task A_recent_disk_catalog_makes_zero_requests_in_a_new_process()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-disk-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(data);
+        try
+        {
+            CatalogCache.Write(data, CatalogJson("2026-10-01"));
+            var handler = new ScriptedHttpHandler(_ =>
+                throw new InvalidOperationException("disk copy is fresh"));
+            using var http = new HttpClient(handler);
+            var svc = new ModCatalogService(http, "https://mirror.example/m", data)
+            {
+                HotCacheTtl = TimeSpan.Zero
+            };
+
+            var result = await svc.FetchCatalogSmartAsync(false);
+
+            result.Kind.Should().Be(CatalogFetchKind.HotSkip);
+            result.Root!.UpdatedAt.Should().Be("2026-10-01");
+            handler.Requests.Should().BeEmpty();
+        }
+        finally
+        {
+            try { Directory.Delete(data, recursive: true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task Manual_refresh_still_contacts_the_network_when_the_disk_copy_is_fresh()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-force-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(data);
+        try
+        {
+            CatalogCache.Write(data, CatalogJson("2026-10-01"));
+            var handler = new ScriptedHttpHandler(_ =>
+                ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-10-06")));
+            using var http = new HttpClient(handler);
+            var svc = new ModCatalogService(http, "https://mirror.example/m", data);
+
+            var result = await svc.FetchCatalogSmartAsync(forceCold: true);
+
+            result.Kind.Should().Be(CatalogFetchKind.ColdApplied);
+            result.Root!.UpdatedAt.Should().Be("2026-10-06");
+            handler.Requests.Should().NotBeEmpty();
+        }
+        finally
+        {
+            try { Directory.Delete(data, recursive: true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task A_stale_disk_catalog_sends_the_mirror_etag_when_github_fails()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-metag-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(data);
+        try
+        {
+            var handler = new ScriptedHttpHandler(req =>
+            {
+                if (!req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                    return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+
+                var resp = ScriptedHttpHandler.Json(HttpStatusCode.NotModified, "");
+                return resp;
+            });
+            using var http = new HttpClient(handler);
+            CatalogCache.Write(data, CatalogJson("2026-10-01"));
+            CatalogCache.WriteEtag(data, "\"mirror-1\"");
+            CatalogCache.WriteSource(data, RemoteFetch.MirrorSource);
+            File.SetLastWriteTimeUtc(CatalogCache.GetPath(data), DateTime.UtcNow.AddHours(-13));
+
+            var svc = new ModCatalogService(http, "https://mirror.example/m", data)
+            {
+                HotCacheTtl = TimeSpan.Zero
+            };
+
+            var result = await svc.FetchCatalogSmartAsync(false);
+
+            result.Kind.Should().Be(CatalogFetchKind.WarmNotModified);
+            result.Root!.UpdatedAt.Should().Be("2026-10-01");
+            handler.RequestSnapshots.Should().Contain(r =>
+                r.Uri.Host.Contains("mirror.example", StringComparison.Ordinal) &&
+                r.IfNoneMatch != null &&
+                r.IfNoneMatch.Contains("mirror-1"));
+        }
+        finally
+        {
+            try { Directory.Delete(data, recursive: true); } catch { /* best effort */ }
+        }
     }
 }

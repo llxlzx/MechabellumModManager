@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -75,6 +76,32 @@ public sealed class UpdateChecker
     readonly Func<string> _localVersionProvider;
 
     public string? MirrorBaseUrl { get; set; }
+
+    /// <summary>How long a successful update check is trusted before the next startup asks again.</summary>
+    public static readonly TimeSpan QuietPeriod = TimeSpan.FromHours(12);
+
+    public const string QuietStampFileName = "update-check.stamp";
+
+    /// <summary>File touched after a check that reached a verdict. Startup skips the network while it is young.</summary>
+    public string? QuietStampPath { get; set; }
+
+    public bool IsQuietPeriodOpen()
+    {
+        if (string.IsNullOrWhiteSpace(QuietStampPath) || !File.Exists(QuietStampPath))
+            return false;
+        var age = DateTime.UtcNow - File.GetLastWriteTimeUtc(QuietStampPath);
+        return age >= TimeSpan.Zero && age < QuietPeriod;
+    }
+
+    public void MarkChecked()
+    {
+        if (string.IsNullOrWhiteSpace(QuietStampPath))
+            return;
+        var dir = Path.GetDirectoryName(QuietStampPath);
+        if (!string.IsNullOrWhiteSpace(dir))
+            Directory.CreateDirectory(dir);
+        File.WriteAllText(QuietStampPath, DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+    }
 
     public UpdateChecker(HttpClient? http = null, Func<string>? localVersionProvider = null, string? mirrorBaseUrl = null)
     {
