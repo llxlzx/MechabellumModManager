@@ -24,7 +24,7 @@ public sealed class RedistProgress
 }
 
 /// <summary>
-/// Fills {redistDir} from MechabellumRedist/manifest.json (COS → origin) with mandatory sha256.
+/// Fills {redistDir} from MechabellumRedist/manifest.json (origin, then mirror) with mandatory sha256.
 /// </summary>
 public sealed class RedistEnsureService
 {
@@ -86,16 +86,16 @@ public sealed class RedistEnsureService
     {
         ArgumentNullException.ThrowIfNull(artifact);
         var list = new List<Uri>(2);
-        var mirror = RemoteFetch.TryMirrorUri(mirrorBaseUrl, "MechabellumRedist/" + artifact.Path.TrimStart('/'));
-        if (mirror is not null)
-            list.Add(mirror);
-
         if (!string.IsNullOrWhiteSpace(artifact.OriginUrl)
             && Uri.TryCreate(artifact.OriginUrl.Trim(), UriKind.Absolute, out var origin)
             && (origin.Scheme == Uri.UriSchemeHttps || origin.Scheme == Uri.UriSchemeHttp))
         {
             list.Add(origin);
         }
+
+        var mirror = RemoteFetch.TryMirrorUri(mirrorBaseUrl, "MechabellumRedist/" + artifact.Path.TrimStart('/'));
+        if (mirror is not null)
+            list.Add(mirror);
 
         return list;
     }
@@ -285,13 +285,18 @@ public sealed class RedistEnsureService
             throw new InvalidOperationException("无可用下载地址（无镜像且无 originUrl）");
 
         var failures = new List<string>();
-        foreach (var uri in candidates)
+        for (var index = 0; index < candidates.Count; index++)
         {
+            var uri = candidates[index];
             var temp = dest + ".partial-" + Guid.NewGuid().ToString("N");
+            using var header = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            if (index < candidates.Count - 1)
+                header.CancelAfter(RemoteFetch.ConnectBudget);
             try
             {
-                using var resp = await _http.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct)
+                using var resp = await _http.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, header.Token)
                     .ConfigureAwait(false);
+                header.CancelAfter(Timeout.InfiniteTimeSpan);
                 if (!resp.IsSuccessStatusCode)
                 {
                     failures.Add($"{uri.Host}: HTTP {(int)resp.StatusCode}");

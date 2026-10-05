@@ -166,26 +166,49 @@ public sealed class UpdateChecker
 
     public IReadOnlyList<Uri> BuildLatestJsonCandidates()
     {
-        var candidates = new List<Uri>(3);
+        var candidates = new List<Uri>(3)
+        {
+            LatestJsonUri,
+            RawLatestJsonUri
+        };
         var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumModManager/latest.json");
         if (mirror is not null)
             candidates.Add(mirror);
-        candidates.Add(LatestJsonUri);
-        candidates.Add(RawLatestJsonUri);
         return candidates;
     }
 
     /// <summary>
-    /// Reads every manifest source in parallel and keeps the one announcing the newest release. Taking
-    /// the first success would let a mirror that has not synced, or a Release that is not published
-    /// yet, decide what the player is told.
+    /// Reads the two GitHub manifests first and keeps the newer one. The mirror is requested only
+    /// when neither GitHub copy could be read, so a player who can reach GitHub is not sent to the
+    /// mirror for the installer.
     /// </summary>
     async Task<(UpdateManifest? Manifest, string? Source)> TryFetchLatestJsonAsync(CancellationToken ct)
+    {
+        var github = await ReadManifestsAsync(
+            new[] { LatestJsonUri, RawLatestJsonUri },
+            RemoteFetch.ConnectBudget,
+            ct).ConfigureAwait(false);
+        if (github.Manifest is not null)
+            return github;
+
+        var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumModManager/latest.json");
+        if (mirror is null)
+            return (null, null);
+
+        return await ReadManifestsAsync(new[] { mirror }, RemoteFetch.AllCandidatesTimeout, ct)
+            .ConfigureAwait(false);
+    }
+
+    async Task<(UpdateManifest? Manifest, string? Source)> ReadManifestsAsync(
+        IReadOnlyList<Uri> candidates,
+        TimeSpan budget,
+        CancellationToken ct)
     {
         IReadOnlyList<RemoteFetchResult> fetched;
         try
         {
-            fetched = await RemoteFetch.GetAllAsync(_http, BuildLatestJsonCandidates(), ct)
+            fetched = await RemoteFetch.GetAllAsync(
+                    _http, candidates, RemoteFetch.StragglerGrace, budget, ct)
                 .ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -246,9 +269,8 @@ public sealed class UpdateChecker
 
     /// <summary>
     /// Whether <paramref name="candidate"/> announces a newer release than <paramref name="incumbent"/>.
-    /// Equal versions keep the incumbent so the earlier candidate (mirror, then Release, then repo
-    /// pointer) wins a tie and domestic players keep the mirrored download. A publishedAt stamp only
-    /// breaks a tie when both sides carry one, so a manifest that omits the field cannot lose by it.
+    /// Equal versions keep the incumbent, so the earlier GitHub candidate wins a tie and the installer
+    /// stays on GitHub. A publishedAt stamp only breaks a tie when both sides carry one.
     /// </summary>
     static bool AnnouncesNewerThan(UpdateManifest candidate, UpdateManifest incumbent)
     {

@@ -220,7 +220,7 @@ public class ModCatalogServiceTests
             svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
             svc.LastStaleSource.Should().BeNull();
             File.Exists(CatalogCache.GetPath(dataRoot)).Should().BeTrue();
-            handler.Requests.Should().HaveCount(2, "both candidates are fetched so a stale mirror cannot hide updates");
+            handler.Requests.Should().HaveCount(2, "GitHub is tried first and the mirror is used only after it fails");
         }
         finally
         {
@@ -229,7 +229,7 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
-    public async Task FetchCatalogAsync_falls_back_to_github_when_mirror_fails()
+    public async Task FetchCatalogAsync_uses_github_and_does_not_ask_the_mirror()
     {
         var handler = new ScriptedHttpHandler(req =>
         {
@@ -244,7 +244,8 @@ public class ModCatalogServiceTests
 
         root.Mods.Should().HaveCount(2);
         svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
-        handler.Requests.Should().HaveCount(2);
+        handler.Requests.Should().ContainSingle();
+        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
     }
 
     static ModCatalogService CatalogServiceServing(string mirrorJson, string githubJson, out ScriptedHttpHandler handler, out HttpClient http)
@@ -295,44 +296,46 @@ public class ModCatalogServiceTests
 
             root.Mods[0].Version.Should().Be("1.3.0");
             svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
-            svc.LastStaleSource.Should().Be(RemoteFetch.MirrorSource);
+            svc.LastStaleSource.Should().BeNull();
         }
     }
 
     [Fact]
-    public async Task FetchCatalogAsync_keeps_the_mirror_copy_when_both_are_equally_fresh()
+    public async Task FetchCatalogAsync_keeps_github_when_both_would_be_equally_fresh()
     {
         var svc = CatalogServiceServing(
             CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
             CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
-            out _,
+            out var handler,
             out var http);
 
         using (http)
         {
             await svc.FetchCatalogAsync();
 
-            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
+            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
             svc.LastStaleSource.Should().BeNull();
+            handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
         }
     }
 
     [Fact]
-    public async Task FetchCatalogAsync_keeps_the_mirror_copy_when_it_is_the_newer_one()
+    public async Task FetchCatalogAsync_keeps_a_reachable_github_copy_even_if_the_mirror_is_newer()
     {
         var svc = CatalogServiceServing(
             CatalogWith("2026-09-10T00:00:00Z", "2026-09-10T00:00:00Z", "1.3.0"),
             CatalogWith("2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", "1.0.0"),
-            out _,
+            out var handler,
             out var http);
 
         using (http)
         {
             var root = await svc.FetchCatalogAsync();
 
-            root.Mods[0].Version.Should().Be("1.3.0");
-            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
+            root.Mods[0].Version.Should().Be("1.0.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
             svc.LastStaleSource.Should().BeNull();
+            handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
         }
     }
 
@@ -355,7 +358,7 @@ public class ModCatalogServiceTests
 
             root.Mods[0].Version.Should().Be("1.3.0");
             svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
-            svc.LastStaleSource.Should().Be(RemoteFetch.MirrorSource);
+            svc.LastStaleSource.Should().BeNull();
         }
     }
 
@@ -541,12 +544,12 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
-    public void PreviewUrl_with_mirror_lists_mirror_first()
+    public void PreviewUrl_with_mirror_lists_github_first()
     {
         var cam = new CatalogMod { Preview = "mods/cam/preview.png" };
         var urls = ModCatalogService.GetPreviewCandidateUrls(cam, "https://mirror.example/m");
-        urls[0].Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.png");
-        urls[1].Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
+        urls[0].Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
+        urls[1].Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.png");
         ModCatalogService.PreviewUrl(cam, "https://mirror.example/m").Should().Be(urls[0]);
     }
 
@@ -565,7 +568,7 @@ public class ModCatalogServiceTests
         try
         {
             ModCatalogService.PreviewUrl(cam, "https://mirror.example/m")
-                .Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.en.png");
+                .Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.en.png");
         }
         finally
         {

@@ -309,7 +309,7 @@ public sealed class LargeDownloadTests
     }
 
     [Fact]
-    public async Task A_mod_missing_from_the_mirror_is_fetched_from_the_origin()
+    public async Task A_reachable_github_copy_does_not_touch_the_mirror()
     {
         var payload = RandomBytes(50_000);
         using var origin = new LoopbackHttpServer(_ => new LoopbackHttpServer.Reply { Payload = payload });
@@ -335,8 +335,41 @@ public sealed class LargeDownloadTests
                 dest);
 
             File.ReadAllBytes(dest).Should().Equal(payload);
-            mirror.Requests.Should().HaveCount(1, "a cold mod's 404 must not be retried three times");
             origin.Requests.Should().HaveCount(1);
+            mirror.Requests.Should().BeEmpty("a reachable GitHub copy is not followed by a mirror request");
+        }
+        finally
+        {
+            Cleanup(dest);
+        }
+    }
+
+    [Fact]
+    public async Task A_404_on_the_only_candidate_is_not_retried()
+    {
+        using var mirror = new LoopbackHttpServer(_ => new LoopbackHttpServer.Reply
+        {
+            Status = HttpStatusCode.NotFound
+        });
+
+        using var http = ModCatalogService.CreateDefaultClient();
+        var svc = new ModCatalogService(http, mirror.BaseUri.ToString().TrimEnd('/'));
+        var dest = TempDest();
+
+        try
+        {
+            var act = async () => await svc.DownloadModAsync(
+                new CatalogMod
+                {
+                    File = "mods/cut-guide/Big.dll",
+                    Sha256 = new string('a', 64),
+                    Size = ModCatalogService.GitRepoMaxBytes + 1,
+                    OriginUrl = "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll"
+                },
+                dest);
+
+            await act.Should().ThrowAsync<HttpRequestException>();
+            mirror.Requests.Should().HaveCount(1);
         }
         finally
         {
@@ -412,7 +445,7 @@ public sealed class LargeDownloadTests
     }
 
     [Fact]
-    public void An_https_origin_url_sits_behind_the_mirror_and_ahead_of_the_repo_path()
+    public void An_https_origin_url_is_tried_before_the_repo_path_and_the_mirror()
     {
         var svc = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
 
@@ -423,9 +456,43 @@ public sealed class LargeDownloadTests
         });
 
         candidates.Select(u => u.ToString()).Should().Equal(
-            "https://mirror.example.com/m/MechabellumMods/mods/x/Mod.dll",
             "https://github.com/llxlzx/MechabellumMods/releases/download/mods-v1/Mod.dll",
-            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/x/Mod.dll");
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/x/Mod.dll",
+            "https://mirror.example.com/m/MechabellumMods/mods/x/Mod.dll");
+    }
+
+    [Fact]
+    public void A_mod_over_the_git_limit_uses_only_the_mirror()
+    {
+        var svc = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
+
+        var candidates = svc.BuildFileCandidates(new CatalogMod
+        {
+            File = "mods/cut-guide/Mechabellum.Guide.TextHover.dll",
+            Size = ModCatalogService.GitRepoMaxBytes + 1,
+            OriginUrl = "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll"
+        });
+
+        candidates.Should().ContainSingle()
+            .Which.ToString().Should().Be(
+                "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/Mechabellum.Guide.TextHover.dll");
+    }
+
+    [Fact]
+    public void A_mod_over_the_git_limit_without_a_mirror_still_uses_github()
+    {
+        var svc = new ModCatalogService();
+
+        var candidates = svc.BuildFileCandidates(new CatalogMod
+        {
+            File = "mods/cut-guide/Mechabellum.Guide.TextHover.dll",
+            Size = ModCatalogService.GitRepoMaxBytes + 1,
+            OriginUrl = "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll"
+        });
+
+        candidates.Select(u => u.Host).Should().OnlyContain(h => h.Contains("github"));
+        candidates[0].ToString().Should().Be(
+            "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll");
     }
 
     [Fact]

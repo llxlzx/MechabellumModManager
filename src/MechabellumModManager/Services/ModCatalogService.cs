@@ -117,7 +117,7 @@ public sealed record CatalogFetchResult(CatalogFetchKind Kind, CatalogRoot? Root
 /// <summary>
 /// Fetches Mod catalog and files from the independent MechabellumMods GitHub repo.
 /// </summary>
-public sealed class ModCatalogService
+public sealed partial class ModCatalogService
 {
     public const string Owner = "llxlzx";
     public const string Repo = "MechabellumMods";
@@ -168,6 +168,12 @@ public sealed class ModCatalogService
     /// its own declared size instead, so this never applies to a current catalog.
     /// </summary>
     public const long AbsoluteMaxDownloadBytes = 8L * 1024 * 1024 * 1024;
+
+    /// <summary>
+    /// GitHub rejects a git push over 100 MiB per file. A catalog entry larger than this cannot
+    /// come from the repo, so a configured mirror is the only download candidate.
+    /// </summary>
+    public const long GitRepoMaxBytes = 100L * 1024 * 1024;
 
     /// <summary>
     /// Longest gap tolerated between two received chunks, and the only liveness guard the
@@ -292,13 +298,13 @@ public sealed class ModCatalogService
     }
 
     /// <summary>
-    /// Mirror first, then the authoritative copy, then the repo tree. The middle one is
-    /// <c>originUrl</c> when the catalog gives one, because a mod over GitHub's 100 MB per-file
-    /// push limit cannot live in the repo tree and has to come from a Release asset instead.
+    /// GitHub first (release <c>originUrl</c> when present, then the repo path), mirror last.
+    /// A file over <see cref="GitRepoMaxBytes"/> cannot live in git; when a mirror is configured
+    /// it is the only candidate, so those downloads never wait on GitHub.
     ///
-    /// The repo path stays on the list behind it so that a mis-stamped or half-published
-    /// <c>originUrl</c> degrades to a wasted request rather than making the mod uninstallable.
-    /// For a mod genuinely too large for the repo that last candidate simply 404s.
+    /// The repo path stays on the list for a normal mod so that a mis-stamped <c>originUrl</c>
+    /// degrades to another GitHub request rather than making the mod uninstallable. With no
+    /// mirror, an oversized mod still uses its release URL.
     /// </summary>
     public IReadOnlyList<Uri> BuildFileCandidates(CatalogMod mod)
     {
@@ -306,14 +312,18 @@ public sealed class ModCatalogService
         var relative = NormalizeCatalogRelativePath(mod.File ?? "");
         var rawUrl = new Uri(GetRawUrl(relative));
         var origin = TryParseOriginUrl(mod.OriginUrl);
+        var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, $"MechabellumMods/{relative}");
 
-        var candidates = RemoteFetch
-            .BuildCandidates(MirrorBaseUrl, $"MechabellumMods/{relative}", origin ?? rawUrl)
-            .ToList();
+        if (mod.Size > GitRepoMaxBytes && mirror is not null)
+            return new[] { mirror };
 
-        if (origin is not null && origin != rawUrl)
+        var candidates = new List<Uri>(3);
+        if (origin is not null)
+            candidates.Add(origin);
+        if (origin is null || origin != rawUrl)
             candidates.Add(rawUrl);
-
+        if (mirror is not null)
+            candidates.Add(mirror);
         return candidates;
     }
 
@@ -337,288 +347,6 @@ public sealed class ModCatalogService
             return uri;
         return null;
     }
-
-    /// <summary>
-    /// Fetches every candidate in parallel and keeps the freshest copy. A mirror that is behind on
-    /// syncing answers 200 with an old catalog, so taking the first success would hide updates the
-    /// origin already publishes — the exact reason the player used to have to refresh the catalog
-    /// panel by hand before the library could see them.
-    /// </summary>
-    public async Task<CatalogRoot> FetchCatalogAsync(CancellationToken ct = default)
-    {
-        LastStaleSource = null;
-        var fetched = await RemoteFetch.GetAllAsync(_http, BuildCatalogCandidates(), ct).ConfigureAwait(false);
-
-        var copies = new List<CatalogCopy>(fetched.Count);
-        try
-        {
-            foreach (var result in fetched)
-            {
-                try
-                {
-                    var json = await result.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                    copies.Add(new CatalogCopy(
-                        result.Used,
-                        json,
-                        DeserializeCatalog(json),
-                        result.Response.Headers.ETag?.Tag));
-                }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested)
-                {
-                    throw;
-                }
-                catch
-                {
-                    // A truncated copy, a bad declared charset, or malformed JSON loses to whichever
-                    // candidate came back readable.
-                }
-            }
-        }
-        finally
-        {
-            foreach (var result in fetched)
-                result.Dispose();
-        }
-
-        if (copies.Count == 0)
-            throw new HttpRequestException("Catalog reached but no candidate returned parsable JSON.");
-
-        var winner = PickFreshestIndex(copies);
-        if (winner != 0)
-            LastStaleSource = RemoteFetch.ClassifySource(copies[0].Used);
-
-        var chosen = copies[winner];
-        LastFetchSource = RemoteFetch.ClassifySource(chosen.Used);
-        LastCatalogEtag = chosen.ETag;
-        if (!string.IsNullOrWhiteSpace(DataRoot))
-        {
-            CatalogCache.Write(DataRoot, chosen.Json);
-            CatalogCache.WriteEtag(DataRoot, chosen.ETag);
-        }
-        return chosen.Root;
-    }
-
-    public async Task<CatalogFetchResult> FetchCatalogSmartAsync(bool forceCold, CancellationToken ct = default)
-    {
-        if (!forceCold &&
-            LastCatalogAppliedUtc is { } applied &&
-            DateTimeOffset.UtcNow - applied < HotCacheTtl)
-        {
-            return new CatalogFetchResult(CatalogFetchKind.HotSkip, null, "hot");
-        }
-
-        if (!forceCold && MirrorBaseUrl is not null)
-        {
-            var mirrorUri = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumMods/catalog.json");
-            if (mirrorUri is not null)
-            {
-                var etag = LastCatalogEtag;
-                if (string.IsNullOrWhiteSpace(etag) &&
-                    !string.IsNullOrWhiteSpace(DataRoot) &&
-                    CatalogCache.TryReadEtag(DataRoot, out var stored))
-                    etag = stored;
-
-                try
-                {
-                    if (!string.IsNullOrWhiteSpace(etag))
-                    {
-                        using var probe = await RemoteFetch.GetConditionalAsync(_http, mirrorUri, etag, ct)
-                            .ConfigureAwait(false);
-                        if (probe.Response.StatusCode == HttpStatusCode.NotModified)
-                        {
-                            var cached = TryLoadCachedCatalog();
-                            if (cached is null)
-                                return await ColdAsync(ct).ConfigureAwait(false);
-                            LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
-                            return new CatalogFetchResult(CatalogFetchKind.WarmNotModified, cached, "warm-304");
-                        }
-
-                        // 200 already has the mirror body. Ask the other origins, but do not GET
-                        // the mirror again. A newer GitHub copy must still be able to win.
-                        var mirrorJson = await probe.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                        var mirrorTag = probe.Response.Headers.ETag?.Tag;
-                        return await MergeMirrorBodyAsync(mirrorUri, mirrorJson, mirrorTag, ct).ConfigureAwait(false);
-                    }
-
-                    // No etag: mirror-only GET + fingerprint
-                    using var mirrorOnly = await RemoteFetch.GetAsync(_http, new[] { mirrorUri }, ct)
-                        .ConfigureAwait(false);
-                    var json = await mirrorOnly.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                    var remote = DeserializeCatalog(json);
-                    var cachedRoot = TryLoadCachedCatalog();
-                    if (cachedRoot is not null &&
-                        FreshnessStamp(remote) is { } a &&
-                        FreshnessStamp(cachedRoot) is { } b &&
-                        a == b)
-                    {
-                        LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
-                        return new CatalogFetchResult(CatalogFetchKind.WarmNotModified, cachedRoot, "warm-fingerprint");
-                    }
-
-                    return await MergeMirrorBodyAsync(
-                        mirrorUri, json, mirrorOnly.Response.Headers.ETag?.Tag, ct).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested)
-                {
-                    throw;
-                }
-                catch
-                {
-                    // fall through to Cold
-                }
-            }
-        }
-
-        return await ColdAsync(ct).ConfigureAwait(false);
-    }
-
-    async Task<CatalogFetchResult> ColdAsync(CancellationToken ct)
-    {
-        var root = await FetchCatalogAsync(ct).ConfigureAwait(false);
-        LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
-        return new CatalogFetchResult(CatalogFetchKind.ColdApplied, root, "cold");
-    }
-
-    /// <summary>
-    /// The mirror body is already in hand. Other candidates are still fetched so a stale mirror
-    /// cannot hide a newer GitHub catalog, and the mirror URL is not requested again.
-    /// </summary>
-    async Task<CatalogFetchResult> MergeMirrorBodyAsync(
-        Uri mirrorUri, string json, string? etag, CancellationToken ct)
-    {
-        CatalogRoot mirrorRoot;
-        try
-        {
-            mirrorRoot = DeserializeCatalog(json);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch
-        {
-            return await ColdAsync(ct).ConfigureAwait(false);
-        }
-
-        var copies = new List<CatalogCopy>
-        {
-            new(mirrorUri, json, mirrorRoot, etag)
-        };
-
-        var others = BuildCatalogCandidates().Where(uri => uri != mirrorUri).ToList();
-        if (others.Count > 0)
-        {
-            try
-            {
-                var fetched = await RemoteFetch.GetAllAsync(_http, others, ct).ConfigureAwait(false);
-                try
-                {
-                    foreach (var result in fetched)
-                    {
-                        try
-                        {
-                            var body = await result.Response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                            copies.Add(new CatalogCopy(
-                                result.Used,
-                                body,
-                                DeserializeCatalog(body),
-                                result.Response.Headers.ETag?.Tag));
-                        }
-                        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-                        {
-                            throw;
-                        }
-                        catch
-                        {
-                            // An unparsable GitHub copy loses to the mirror body we already hold.
-                        }
-                    }
-                }
-                finally
-                {
-                    foreach (var result in fetched)
-                        result.Dispose();
-                }
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch
-            {
-                // GitHub unreachable. The mirror body remains a candidate.
-            }
-        }
-
-        return StoreWinner(copies);
-    }
-
-    CatalogFetchResult StoreWinner(List<CatalogCopy> copies)
-    {
-        if (copies.Count == 0)
-            throw new HttpRequestException("Catalog reached but no candidate returned parsable JSON.");
-
-        var winner = PickFreshestIndex(copies);
-        LastStaleSource = winner == 0 ? null : RemoteFetch.ClassifySource(copies[0].Used);
-        var chosen = copies[winner];
-        LastFetchSource = RemoteFetch.ClassifySource(chosen.Used);
-        LastCatalogEtag = chosen.ETag;
-        if (!string.IsNullOrWhiteSpace(DataRoot))
-        {
-            CatalogCache.Write(DataRoot, chosen.Json);
-            CatalogCache.WriteEtag(DataRoot, chosen.ETag);
-        }
-
-        LastCatalogAppliedUtc = DateTimeOffset.UtcNow;
-        return new CatalogFetchResult(CatalogFetchKind.ColdApplied, chosen.Root, "cold");
-    }
-
-    readonly record struct CatalogCopy(Uri Used, string Json, CatalogRoot Root, string? ETag);
-
-    /// <summary>
-    /// Index of the freshest copy. Candidates arrive mirror-first and a tie keeps the earlier one, so
-    /// an equally fresh mirror still wins and domestic players stay on it.
-    /// </summary>
-    static int PickFreshestIndex(IReadOnlyList<CatalogCopy> copies)
-    {
-        var stamps = copies.Select(c => FreshnessStamp(c.Root)).ToArray();
-
-        var best = 0;
-        for (var i = 1; i < copies.Count; i++)
-        {
-            if (stamps[i] is { } candidate && (stamps[best] is null || candidate > stamps[best]))
-                best = i;
-        }
-
-        return best;
-    }
-
-    /// <summary>
-    /// Newest stamp anywhere in the catalog. Entry stamps count alongside the root one because a
-    /// maintainer who updates a mod but forgets to bump the root field would otherwise leave a stale
-    /// mirror looking equally fresh — the exact case this comparison exists for. Also covers catalogs
-    /// predating the root field.
-    /// </summary>
-    static DateTimeOffset? FreshnessStamp(CatalogRoot root)
-    {
-        var newest = ParseStamp(root.UpdatedAt);
-        foreach (var mod in root.Mods)
-        {
-            if (ParseStamp(mod.UpdatedAt) is { } stamp && (newest is null || stamp > newest))
-                newest = stamp;
-        }
-
-        return newest;
-    }
-
-    static DateTimeOffset? ParseStamp(string? raw) =>
-        DateTimeOffset.TryParse(
-            raw,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-            out var parsed)
-            ? parsed
-            : null;
 
     public CatalogRoot? TryLoadCachedCatalog()
     {
@@ -645,10 +373,11 @@ public sealed class ModCatalogService
     }
 
     /// <summary>
-    /// Downloads a catalog mod to <paramref name="destPath"/>, resuming across attempts and
-    /// falling back from the mirror to the authoritative copy. The destination only appears once
-    /// the bytes match the catalog's sha256; until then the transfer lives in a sibling
-    /// <c>.part</c> file.
+    /// Downloads a catalog mod to <paramref name="destPath"/>. GitHub is tried first. A candidate
+    /// that cannot be reached is abandoned and the mirror is tried next, with no prompt in between.
+    /// A file over <see cref="GitRepoMaxBytes"/> goes straight to the mirror when one is configured.
+    /// The destination only appears once the bytes match the catalog's sha256; until then the
+    /// transfer lives in a sibling <c>.part</c> file.
     /// </summary>
     public async Task DownloadModAsync(
         CatalogMod mod,
@@ -677,9 +406,13 @@ public sealed class ModCatalogService
         var failures = new List<string>();
         string? contentFailure = null;
         Uri? used = null;
+        var candidates = BuildFileCandidates(mod);
 
-        foreach (var uri in BuildFileCandidates(mod))
+        for (var index = 0; index < candidates.Count; index++)
         {
+            var uri = candidates[index];
+            var anotherCandidateRemains = index < candidates.Count - 1;
+            var headerBudget = anotherCandidateRemains ? RemoteFetch.ConnectBudget : IdleTimeout;
             var moveOn = false;
             for (var attempt = 1; attempt <= AttemptsPerCandidate && used is null && !moveOn; attempt++)
             {
@@ -688,12 +421,12 @@ public sealed class ModCatalogService
 
                 try
                 {
-                    await FetchIntoPartAsync(uri, partPath, expectedSize, ceiling, progress, ct)
+                    await FetchIntoPartAsync(uri, partPath, expectedSize, ceiling, headerBudget, progress, ct)
                         .ConfigureAwait(false);
 
                     // Resuming rules out a streaming hash: TransformBlock state cannot survive a
                     // restart, so the completed file is hashed in one pass instead. It happens per
-                    // candidate because a mirror that is behind on syncing can serve the previous
+                    // candidate because a source that is behind on syncing can serve the previous
                     // build at the identical size (assemblies are 512-byte aligned), which slips
                     // past the size check — and another source may still have the named bytes.
                     var actualHash = await ComputeFileHashAsync(partPath, ct).ConfigureAwait(false);
@@ -724,8 +457,20 @@ public sealed class ModCatalogService
                 }
                 catch (PermanentFetchException ex)
                 {
-                    // A mirror 404 is the expected answer for a mod outside the hot subset, so the
-                    // partial stays put for the next candidate to resume.
+                    // 404/403 moves on. A mirror 404 is expected for a mod outside the hot subset;
+                    // a GitHub 404 is expected for a file that only exists on the mirror.
+                    failures.Add($"{uri.Host}: {ex.Message}");
+                    moveOn = true;
+                }
+                catch (HttpRequestException ex) when (anotherCandidateRemains)
+                {
+                    failures.Add($"{uri.Host}: {ex.Message}");
+                    moveOn = true;
+                }
+                catch (TransientFetchException ex) when (
+                    anotherCandidateRemains &&
+                    ex.Message.StartsWith("no response headers", StringComparison.Ordinal))
+                {
                     failures.Add($"{uri.Host}: {ex.Message}");
                     moveOn = true;
                 }
@@ -754,7 +499,7 @@ public sealed class ModCatalogService
     }
 
     static string HashMismatchMessage(string expectedHash, string actualHash) =>
-        $"下载文件校验失败（目录声明 {expectedHash[..Math.Min(12, expectedHash.Length)]}…，实际 {actualHash[..12]}…）。文件已丢弃，请稍后重试或改用 GitHub 源。";
+        $"下载文件校验失败（目录声明 {expectedHash[..Math.Min(12, expectedHash.Length)]}…，实际 {actualHash[..12]}…）。文件已丢弃，请稍后重试。";
 
     /// <summary>
     /// Pulls one candidate into the <c>.part</c> file, resuming from whatever is already there.
@@ -765,6 +510,7 @@ public sealed class ModCatalogService
         string partPath,
         long expectedSize,
         long ceiling,
+        TimeSpan headerBudget,
         IProgress<DownloadProgress>? progress,
         CancellationToken ct)
     {
@@ -794,12 +540,14 @@ public sealed class ModCatalogService
         if (existing > 0)
             request.Headers.Range = new RangeHeaderValue(existing, null);
 
-        // One token governs headers and body, with its deadline pushed forward after every chunk.
-        // That is an idle timeout: it fires on a stalled link but never on a merely slow one.
-        using var idle = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        idle.CancelAfter(IdleTimeout);
-
-        using var response = await SendAsync(request, idle.Token, ct).ConfigureAwait(false);
+        // Headers use a short budget when another source is still available, so a blocked GitHub
+        // route switches to the mirror instead of hanging. Once headers arrive the budget is
+        // disarmed and the body keeps the idle timeout, which fires on a stall but not on a
+        // merely slow transfer.
+        using var header = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        header.CancelAfter(headerBudget);
+        using var response = await SendAsync(request, header.Token, headerBudget, ct).ConfigureAwait(false);
+        header.CancelAfter(Timeout.InfiniteTimeSpan);
 
         if (response.StatusCode is HttpStatusCode.NotFound
             or HttpStatusCode.Forbidden
@@ -833,6 +581,9 @@ public sealed class ModCatalogService
                 throw new ContentContractException(
                     $"declared {announced} bytes, over the {ceiling} byte limit");
         }
+
+        using var idle = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        idle.CancelAfter(IdleTimeout);
 
         await using var stream = await response.Content.ReadAsStreamAsync(idle.Token).ConfigureAwait(false);
         await using var file = new FileStream(
@@ -887,6 +638,7 @@ public sealed class ModCatalogService
     async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken idleToken,
+        TimeSpan headerBudget,
         CancellationToken ct)
     {
         try
@@ -898,7 +650,7 @@ public sealed class ModCatalogService
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
             throw new TransientFetchException(
-                $"no response headers within {IdleTimeout.TotalSeconds:0} s");
+                $"no response headers within {headerBudget.TotalSeconds:0} s");
         }
     }
 

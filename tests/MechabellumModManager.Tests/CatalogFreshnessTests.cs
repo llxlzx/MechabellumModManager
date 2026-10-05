@@ -31,18 +31,17 @@ public class CatalogFreshnessTests
     }
 
     [Fact]
-    public async Task Smart_fetch_Warm_304_does_not_hit_github()
+    public async Task Smart_fetch_Warm_304_does_not_hit_the_mirror()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-w304-" + Guid.NewGuid().ToString("N"));
-        var hitsGithub = false;
+        var hitsMirror = false;
         var mode = "cold";
         var handler = new ScriptedHttpHandler(req =>
         {
             var host = req.RequestUri!.Host;
-            if (host.Contains("github", StringComparison.OrdinalIgnoreCase) ||
-                host.Contains("githubusercontent", StringComparison.OrdinalIgnoreCase))
+            if (host.Contains("mirror.example", StringComparison.Ordinal))
             {
-                hitsGithub = true;
+                hitsMirror = true;
                 return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-10"));
             }
 
@@ -62,45 +61,38 @@ public class CatalogFreshnessTests
         };
 
         (await svc.FetchCatalogSmartAsync(true)).Kind.Should().Be(CatalogFetchKind.ColdApplied);
-        hitsGithub = false;
+        hitsMirror = false;
         mode = "warm";
         svc.HotCacheTtl = TimeSpan.Zero;
 
         var warm = await svc.FetchCatalogSmartAsync(false);
         warm.Kind.Should().Be(CatalogFetchKind.WarmNotModified);
         warm.Root.Should().NotBeNull();
-        hitsGithub.Should().BeFalse();
+        hitsMirror.Should().BeFalse();
         handler.RequestSnapshots.Should().Contain(r =>
-            r.Uri.Host.Contains("mirror.example", StringComparison.Ordinal) &&
+            (r.Uri.Host.Contains("github", StringComparison.OrdinalIgnoreCase) ||
+             r.Uri.Host.Contains("githubusercontent", StringComparison.OrdinalIgnoreCase)) &&
             r.IfNoneMatch != null && r.IfNoneMatch.Contains("v1"));
     }
 
     [Fact]
-    public async Task Smart_fetch_Warm_200_runs_Cold_and_can_prefer_github()
+    public async Task Smart_fetch_after_ttl_uses_github_and_skips_the_mirror()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-w200-" + Guid.NewGuid().ToString("N"));
         var mode = "seed";
         var handler = new ScriptedHttpHandler(req =>
         {
-            var mirror = req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal);
+            if (req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-01"));
+
             if (mode == "seed")
             {
                 var resp = ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-01"));
-                if (mirror)
-                    resp.Headers.ETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"old\"");
+                resp.Headers.ETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"old\"");
                 return resp;
             }
 
-            if (mirror && req.Headers.IfNoneMatch.Count > 0)
-            {
-                var resp = ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-01"));
-                resp.Headers.ETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"new\"");
-                return resp;
-            }
-
-            return mirror
-                ? ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-01"))
-                : ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-13"));
+            return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-13"));
         });
         using var http = new HttpClient(handler);
         var svc = new ModCatalogService(http, "https://mirror.example/m", data)
@@ -117,22 +109,18 @@ public class CatalogFreshnessTests
         result.Kind.Should().Be(CatalogFetchKind.ColdApplied);
         result.Root!.UpdatedAt.Should().Be("2026-09-13");
         svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
-        handler.Requests.Skip(before).Count(uri =>
-            uri.Host.Contains("mirror.example", StringComparison.Ordinal)).Should().Be(1);
+        handler.Requests.Skip(before).Should().NotContain(uri =>
+            uri.Host.Contains("mirror.example", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task Smart_fetch_fingerprint_mismatch_prefers_github_without_a_second_mirror_get()
+    public async Task Smart_fetch_uses_the_mirror_when_github_cannot_be_reached()
     {
-        var data = Path.Combine(Path.GetTempPath(), "mmm-fp-miss-" + Guid.NewGuid().ToString("N"));
-        CatalogCache.Write(data, CatalogJson("2026-09-01"));
+        var data = Path.Combine(Path.GetTempPath(), "mmm-fb-" + Guid.NewGuid().ToString("N"));
         var handler = new ScriptedHttpHandler(req =>
-        {
-            var mirror = req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal);
-            return ScriptedHttpHandler.Json(
-                HttpStatusCode.OK,
-                CatalogJson(mirror ? "2026-09-10" : "2026-09-13"));
-        });
+            req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal)
+                ? ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-13"))
+                : new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
         using var http = new HttpClient(handler);
         var svc = new ModCatalogService(http, "https://mirror.example/m", data)
         {
@@ -143,33 +131,6 @@ public class CatalogFreshnessTests
 
         result.Kind.Should().Be(CatalogFetchKind.ColdApplied);
         result.Root!.UpdatedAt.Should().Be("2026-09-13");
-        handler.Requests.Count(uri => uri.Host.Contains("mirror.example", StringComparison.Ordinal))
-            .Should().Be(1);
-    }
-
-    [Fact]
-    public async Task Smart_fetch_fingerprint_match_skips_github_without_etag()
-    {
-        var data = Path.Combine(Path.GetTempPath(), "mmm-fp-" + Guid.NewGuid().ToString("N"));
-        CatalogCache.Write(data, CatalogJson("2026-09-10"));
-        var hitsGithub = false;
-        var handler = new ScriptedHttpHandler(req =>
-        {
-            if (!req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
-            {
-                hitsGithub = true;
-                return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-10"));
-            }
-            return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-10"));
-        });
-        using var http = new HttpClient(handler);
-        var svc = new ModCatalogService(http, "https://mirror.example/m", data)
-        {
-            HotCacheTtl = TimeSpan.Zero
-        };
-
-        var result = await svc.FetchCatalogSmartAsync(false);
-        result.Kind.Should().Be(CatalogFetchKind.WarmNotModified);
-        hitsGithub.Should().BeFalse();
+        svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
     }
 }

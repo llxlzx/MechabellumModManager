@@ -47,21 +47,27 @@ public class MirrorContractTests
     {
         var catalog = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
 
-        catalog.BuildCatalogCandidates()[0].ToString()
-            .Should().Be("https://mirror.example.com/m/MechabellumMods/catalog.json");
-        catalog.BuildFileCandidates("mods/show-grid/ShowGrid.dll")[0].ToString()
-            .Should().Be("https://mirror.example.com/m/MechabellumMods/mods/show-grid/ShowGrid.dll");
+        catalog.BuildCatalogCandidates()[0].Host.Should().Contain("githubusercontent");
+        catalog.BuildCatalogCandidates().Should().Contain(u =>
+            u.ToString() == "https://mirror.example.com/m/MechabellumMods/catalog.json");
+        catalog.BuildFileCandidates("mods/show-grid/ShowGrid.dll")[0].Host.Should().Contain("githubusercontent");
+        catalog.BuildFileCandidates("mods/show-grid/ShowGrid.dll").Should().Contain(u =>
+            u.ToString() == "https://mirror.example.com/m/MechabellumMods/mods/show-grid/ShowGrid.dll");
 
         var checker = new UpdateChecker(mirrorBaseUrl: "https://mirror.example.com/m");
-        checker.BuildLatestJsonCandidates()[0].ToString()
-            .Should().Be("https://mirror.example.com/m/MechabellumModManager/latest.json");
+        checker.BuildLatestJsonCandidates()[0].Should().Be(UpdateChecker.LatestJsonUri);
+        checker.BuildLatestJsonCandidates().Should().Contain(u =>
+            u.ToString() == "https://mirror.example.com/m/MechabellumModManager/latest.json");
     }
 
     [Fact]
     public async Task A_mirror_download_whose_bytes_match_the_catalog_hash_is_kept()
     {
         var payload = "mirror-served-mod"u8.ToArray();
-        var handler = new ScriptedHttpHandler(_ => ScriptedHttpHandler.Bytes(HttpStatusCode.OK, payload));
+        var handler = new ScriptedHttpHandler(req =>
+            req.RequestUri!.Host.Contains("github", StringComparison.OrdinalIgnoreCase)
+                ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                : ScriptedHttpHandler.Bytes(HttpStatusCode.OK, payload));
         using var http = new HttpClient(handler);
         var svc = new ModCatalogService(http, "https://mirror.example.com/m");
         var dest = Path.Combine(Path.GetTempPath(), "mmm-mirror-" + Guid.NewGuid().ToString("N"), "Mod.dll");

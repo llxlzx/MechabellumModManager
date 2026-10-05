@@ -8,18 +8,27 @@ public sealed record RemoteFetchResult(Uri Used, HttpResponseMessage Response) :
 }
 
 /// <summary>
-/// Sequential GET over candidate URLs (mirror first, then GitHub). One pass, no retry loop.
+/// GET over candidate URLs. Callers list GitHub first and the mirror last. One pass, no retry loop.
 /// Caller owns and must dispose the successful response.
 ///
-/// <see cref="GetAllAsync"/> exists for the metadata documents (catalog / update manifest) where
-/// a mirror serving a stale copy answers 200 and would otherwise shadow the newer GitHub copy.
-/// Binary downloads stay on the sequential path — for those the mirror is simply the cheaper
-/// route to the same sha256-verified bytes.
+/// <see cref="ConnectBudget"/> is how long a non-final candidate is given to answer. When it cannot
+/// be reached, the next candidate is tried with no player-facing prompt. The mirror is that next
+/// candidate for players who cannot reach GitHub.
+///
+/// <see cref="GetAllAsync"/> still fetches a set in parallel. Update checks use it for the two free
+/// GitHub manifests, then call the mirror only when neither of those answered.
 /// </summary>
 public static class RemoteFetch
 {
     public const string MirrorSource = "mirror";
     public const string GithubSource = "github";
+
+    /// <summary>
+    /// How long a GitHub candidate is given to produce response headers before the mirror is tried.
+    /// Long enough for a slow but reachable GitHub, short enough that a blocked route does not sit
+    /// on a dialog or a minute-long hang.
+    /// </summary>
+    public static readonly TimeSpan ConnectBudget = TimeSpan.FromSeconds(8);
 
     public static async Task<RemoteFetchResult> GetAsync(
         HttpClient http,
@@ -97,6 +106,55 @@ public static class RemoteFetch
             throw;
         }
         catch (TaskCanceledException)
+        {
+            throw new HttpRequestException($"{uri.Host}: timeout");
+        }
+        catch (HttpRequestException)
+        {
+            throw;
+        }
+
+        if (resp.StatusCode == System.Net.HttpStatusCode.NotModified || resp.IsSuccessStatusCode)
+            return new RemoteFetchResult(uri, resp);
+
+        var code = (int)resp.StatusCode;
+        resp.Dispose();
+        throw new HttpRequestException($"{uri.Host}: HTTP {code}");
+    }
+
+    /// <summary>
+    /// Same as <see cref="GetConditionalAsync"/>, but the attempt is abandoned after
+    /// <paramref name="budget"/> so a blackholed host cannot block the next candidate.
+    /// A caller-requested cancel still throws <see cref="OperationCanceledException"/>.
+    /// </summary>
+    public static async Task<RemoteFetchResult> GetConditionalWithinAsync(
+        HttpClient http,
+        Uri uri,
+        string? ifNoneMatch,
+        TimeSpan budget,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(uri);
+
+        using var budgetCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        budgetCts.CancelAfter(budget);
+
+        using var req = new HttpRequestMessage(HttpMethod.Get, uri);
+        if (!string.IsNullOrWhiteSpace(ifNoneMatch))
+            req.Headers.TryAddWithoutValidation("If-None-Match", ifNoneMatch.Trim());
+
+        HttpResponseMessage resp;
+        try
+        {
+            resp = await http.SendAsync(req, HttpCompletionOption.ResponseContentRead, budgetCts.Token)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException)
         {
             throw new HttpRequestException($"{uri.Host}: timeout");
         }
@@ -277,10 +335,10 @@ public static class RemoteFetch
     {
         ArgumentNullException.ThrowIfNull(githubFallback);
         var list = new List<Uri>(2);
+        list.Add(githubFallback);
         var mirror = TryMirrorUri(mirrorBaseUrl, mirrorRelativePath);
         if (mirror is not null)
             list.Add(mirror);
-        list.Add(githubFallback);
         return list;
     }
 }

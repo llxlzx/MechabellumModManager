@@ -38,7 +38,7 @@ public class RedistEnsureTests
     }
 
     [Fact]
-    public void BuildCandidates_mirror_before_origin_when_mirror_set()
+    public void BuildCandidates_origin_before_mirror_when_mirror_set()
     {
         var artifact = new RedistArtifact
         {
@@ -53,8 +53,8 @@ public class RedistEnsureTests
             artifact);
 
         list.Should().HaveCount(2);
-        list[0].ToString().Should().Be("https://cdn.example/MechabellumRedist/melonloader/MelonLoader.x64.zip");
-        list[1].Host.Should().Contain("github");
+        list[0].Host.Should().Contain("github");
+        list[1].ToString().Should().Be("https://cdn.example/MechabellumRedist/melonloader/MelonLoader.x64.zip");
     }
 
     [Fact]

@@ -415,10 +415,8 @@ public class ModUpdateFlowTests
         var row = vm.Mods.Should().ContainSingle(m => m.Package.Id == oldId).Subject;
         row.HasUpdate.Should().BeTrue();
         row.LatestVersion.Should().Be("1.2.0");
-        vm.LogText.Should().Contain(string.Format(
-            LocalizationService.T("LogCatalogSourceStale"),
-            RemoteFetch.MirrorSource,
-            RemoteFetch.GithubSource));
+        vm.LogText.Should().NotContain("目录已过期");
+        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
     }
 
     static async Task<ModItemViewModel> WaitForUpdateFlag(MainViewModel vm, string packageId)

@@ -230,13 +230,13 @@ public class RemoteFetchTests
     }
 
     [Fact]
-    public void BuildCandidates_mirror_then_github()
+    public void BuildCandidates_github_then_mirror()
     {
         var github = new Uri("https://github.com/llxlzx/x/latest.json");
         var list = RemoteFetch.BuildCandidates("https://cdn.example/m", "MechabellumModManager/latest.json", github);
         list.Should().HaveCount(2);
-        list[0].ToString().Should().Be("https://cdn.example/m/MechabellumModManager/latest.json");
-        list[1].Should().Be(github);
+        list[0].Should().Be(github);
+        list[1].ToString().Should().Be("https://cdn.example/m/MechabellumModManager/latest.json");
     }
 
     /// <summary>Hangs one URI until its token is cancelled; answers the rest immediately.</summary>

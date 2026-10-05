@@ -26,7 +26,7 @@ public class UpdateCheckerTests
     }
 
     [Fact]
-    public async Task CheckAsync_uses_mirror_latest_json_first()
+    public async Task CheckAsync_uses_the_mirror_when_github_cannot_be_reached()
     {
         var handler = new ScriptedHttpHandler(req =>
         {
@@ -47,7 +47,7 @@ public class UpdateCheckerTests
         result.RemoteVersion.Should().Be("9.9.9");
         result.SetupUrl.Should().Be("https://cdn.example/Setup.exe");
         result.Source.Should().Be(RemoteFetch.MirrorSource);
-        handler.Requests.Should().HaveCount(3, "every manifest source is read so a stale one cannot decide");
+        handler.Requests.Should().HaveCount(3, "both GitHub manifests fail, then the mirror is read");
     }
 
     [Fact]
@@ -72,20 +72,21 @@ public class UpdateCheckerTests
 
         result.Kind.Should().Be(UpdateCheckKind.UpToDate);
         result.Source.Should().Be(RemoteFetch.GithubSource);
-        handler.Requests.Should().HaveCount(3);
+        handler.Requests.Should().HaveCount(2);
+        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
     }
 
     [Fact]
-    public void BuildLatestJsonCandidates_includes_the_repo_pointer_behind_mirror_and_release()
+    public void BuildLatestJsonCandidates_lists_github_before_the_mirror()
     {
         var checker = new UpdateChecker(mirrorBaseUrl: "https://mirror.example/m");
 
         var candidates = checker.BuildLatestJsonCandidates();
 
         candidates.Should().HaveCount(3);
-        candidates[0].ToString().Should().Be("https://mirror.example/m/MechabellumModManager/latest.json");
-        candidates[1].Should().Be(UpdateChecker.LatestJsonUri);
-        candidates[2].Should().Be(UpdateChecker.RawLatestJsonUri);
+        candidates[0].Should().Be(UpdateChecker.LatestJsonUri);
+        candidates[1].Should().Be(UpdateChecker.RawLatestJsonUri);
+        candidates[2].ToString().Should().Be("https://mirror.example/m/MechabellumModManager/latest.json");
         UpdateChecker.RawLatestJsonUri.ToString().Should()
             .Be("https://raw.githubusercontent.com/llxlzx/MechabellumModManager/master/release/latest.json");
     }
@@ -120,10 +121,10 @@ public class UpdateCheckerTests
     }
 
     /// <summary>
-    /// A tie must keep the mirror, or domestic players would be sent to GitHub for the same build.
+    /// A tie keeps the GitHub installer. The mirror is not asked once a GitHub manifest answered.
     /// </summary>
     [Fact]
-    public async Task CheckAsync_keeps_the_mirror_when_every_source_announces_the_same_version()
+    public async Task CheckAsync_keeps_github_when_every_source_would_announce_the_same_version()
     {
         var handler = new ScriptedHttpHandler(req =>
             req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal)
@@ -137,15 +138,13 @@ public class UpdateCheckerTests
         var result = await checker.CheckAsync();
 
         result.Kind.Should().Be(UpdateCheckKind.UpdateAvailable);
-        result.SetupUrl.Should().Be("https://cdn.example/Setup.exe");
-        result.Source.Should().Be(RemoteFetch.MirrorSource);
+        result.SetupUrl.Should().Be("https://github.com/x/Setup.exe");
+        result.Source.Should().Be(RemoteFetch.GithubSource);
+        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
     }
 
-    /// <summary>
-    /// A mirror that omits publishedAt must not lose a same-version tie over the missing field alone.
-    /// </summary>
     [Fact]
-    public async Task CheckAsync_keeps_the_mirror_when_only_the_other_source_carries_a_stamp()
+    public async Task CheckAsync_keeps_github_when_only_the_other_source_would_carry_a_stamp()
     {
         var handler = new ScriptedHttpHandler(req =>
             req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal)
@@ -158,8 +157,9 @@ public class UpdateCheckerTests
 
         var result = await checker.CheckAsync();
 
-        result.SetupUrl.Should().Be("https://cdn.example/Setup.exe");
-        result.Source.Should().Be(RemoteFetch.MirrorSource);
+        result.SetupUrl.Should().Be("https://github.com/x/Setup.exe");
+        result.Source.Should().Be(RemoteFetch.GithubSource);
+        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
     }
 
     [Fact]
