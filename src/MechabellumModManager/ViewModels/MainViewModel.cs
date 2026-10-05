@@ -31,6 +31,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly SteamGameLocator _steamLocator;
     readonly UpdateChecker _updateChecker;
     readonly ModCatalogService _catalog;
+    readonly NoticeService _notices;
     readonly AssemblyInspector _assemblyInspector;
     readonly ManagerLogWriter _managerLog;
     readonly ManagerEventLog _events;
@@ -195,6 +196,7 @@ public sealed partial class MainViewModel : ObservableObject
         _updateChecker = updateChecker ?? new UpdateChecker();
         _updateChecker.QuietStampPath = Path.Combine(_paths.DataRoot, UpdateChecker.QuietStampFileName);
         _catalog = catalog ?? new ModCatalogService();
+        _notices = new NoticeService(dataRoot: _paths.DataRoot);
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
         _managerLog = managerLog ?? new ManagerLogWriter(paths.LogsDir);
         _events = new ManagerEventLog(paths.LogsDir);
@@ -1106,12 +1108,17 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>When checked, the next launch opens the library instead of the newcomer tutorial.</summary>
     [ObservableProperty] private bool _skipGuideOnStartup;
     [ObservableProperty] private MainContentPage _activeContentPage = MainContentPage.Library;
+    [ObservableProperty] private string _noticeBanner = "";
+    public ObservableCollection<NoticeLine> NoticeItems { get; } = new();
+    CancellationTokenSource? _noticeCts;
+    WholeFileMissBudget _wholeFileMissBudget;
 
     public bool IsLibraryPage => ActiveContentPage == MainContentPage.Library;
     public bool IsCatalogPage => ActiveContentPage == MainContentPage.Catalog;
     public bool IsSettingsPage => ActiveContentPage == MainContentPage.Settings;
     public bool IsGuidePage => ActiveContentPage == MainContentPage.Guide;
     public bool IsBranchPage => ActiveContentPage == MainContentPage.Branch;
+    public bool IsNoticePage => ActiveContentPage == MainContentPage.Notice;
 
     partial void OnActiveContentPageChanged(MainContentPage value)
     {
@@ -1120,6 +1127,9 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSettingsPage));
         OnPropertyChanged(nameof(IsGuidePage));
         OnPropertyChanged(nameof(IsBranchPage));
+        OnPropertyChanged(nameof(IsNoticePage));
+        if (value != MainContentPage.Notice)
+            _noticeCts?.Cancel();
 
         if (value == MainContentPage.Library)
             _ = SilentRefreshCatalogForLibraryAsync();
@@ -1429,6 +1439,9 @@ public sealed partial class MainViewModel : ObservableObject
 
         _catalog.MirrorBaseUrl = active;
         _catalog.DataRoot = _paths.DataRoot;
+        CatalogCache.DropIfManagerVersionChanged(_paths.DataRoot, UpdateChecker.ReadLocalVersion());
+        _notices.DataRoot = _paths.DataRoot;
+        _notices.MirrorBaseUrl = active;
         _updateChecker.MirrorBaseUrl = active;
 
         RefreshMirrorSummary();
@@ -2751,6 +2764,39 @@ public sealed partial class MainViewModel : ObservableObject
     void ShowGuidePage() => ActiveContentPage = MainContentPage.Guide;
 
     [RelayCommand]
+    async Task ShowNoticePage()
+    {
+        _noticeCts?.Cancel();
+        _noticeCts?.Dispose();
+        _noticeCts = new CancellationTokenSource();
+        var token = _noticeCts.Token;
+        ActiveContentPage = MainContentPage.Notice;
+        try
+        {
+            var result = await _notices.LoadAsync(token).ConfigureAwait(true);
+            if (token.IsCancellationRequested)
+                return;
+            NoticeItems.Clear();
+            foreach (var line in result.Items)
+                NoticeItems.Add(line);
+            NoticeBanner = result.Failed
+                ? LocalizationService.T(result.FromCache ? "NoticeStale" : "NoticeUnavailable")
+                : result.Items.Count == 0
+                    ? LocalizationService.T("NoticeEmpty")
+                    : "";
+        }
+        catch (OperationCanceledException)
+        {
+            // The player left the page.
+        }
+        catch (Exception ex)
+        {
+            NoticeBanner = LocalizationService.T("NoticeUnavailable");
+            AppendLog(NoticeBanner + " " + ex.Message);
+        }
+    }
+
+    [RelayCommand]
     void ToggleLogPanel() => IsLogExpanded = !IsLogExpanded;
 
     public bool CanInstallMelonLoader =>
@@ -3452,6 +3498,7 @@ public sealed partial class MainViewModel : ObservableObject
         NotifyTaskProgress();
         try
         {
+            _wholeFileMissBudget = new WholeFileMissBudget();
             await work().ConfigureAwait(true);
         }
         finally
@@ -3468,14 +3515,41 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    bool BlockedByManagerFloor(CatalogMod mod, out string message)
+    {
+        var decision = ManagerVersionFloor.Evaluate(mod.MinManagerVersion, AppVersion);
+        if (decision.Allowed)
+        {
+            message = "";
+            return false;
+        }
+
+        message = decision.Unreadable
+            ? string.Format(LocalizationService.T("ManagerFloorUnreadable"), mod.MinManagerVersion?.Trim())
+            : string.Format(LocalizationService.T("ManagerFloorBlocked"), decision.Required, decision.Local);
+        return true;
+    }
+
     async Task AddOneCatalogModAsync(CatalogModItemViewModel item)
     {
         try
         {
+            var rebound = CatalogMods.FirstOrDefault(mod =>
+                string.Equals(mod.Id, item.Id, StringComparison.OrdinalIgnoreCase));
+            if (rebound is not null)
+                item = rebound;
+
             if (item.IsInLibrary && !item.HasUpdate)
             {
                 AppendLog(string.Format(LocalizationService.T("LogAlreadyLatestSkipDownload"), item.Name));
                 CatalogStatus = $"已在本地库：{item.Name}";
+                return;
+            }
+
+            if (BlockedByManagerFloor(item.Mod, out var floorMessage))
+            {
+                AppendLog(floorMessage);
+                CatalogStatus = floorMessage;
                 return;
             }
 
@@ -3548,7 +3622,51 @@ public sealed partial class MainViewModel : ObservableObject
 
             try
             {
-                await _catalog.DownloadModAsync(item.Mod, tempPath, reporter).ConfigureAwait(true);
+                try
+                {
+                    await _catalog.DownloadModAsync(item.Mod, tempPath, reporter).ConfigureAwait(true);
+                }
+                catch (CatalogFileMissingException ex) when (_wholeFileMissBudget.TryUse())
+                {
+                    CatalogMod? fresh = null;
+                    try
+                    {
+                        var outcome = await _catalog.FetchCatalogSmartAsync(forceCold: true).ConfigureAwait(true);
+                        if (outcome.Root is not null)
+                        {
+                            ApplyCatalogRoot(outcome.Root);
+                            var live = CatalogMods.FirstOrDefault(mod =>
+                                string.Equals(mod.Id, item.Id, StringComparison.OrdinalIgnoreCase));
+                            if (live is not null)
+                            {
+                                item = live;
+                                fresh = live.Mod;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        fresh = null;
+                    }
+
+                    switch (CatalogWholeFileMiss.AfterRefresh(fresh, AppVersion))
+                    {
+                        case CatalogMissFollowUp.Blocked:
+                            if (BlockedByManagerFloor(item.Mod, out var blocked))
+                            {
+                                AppendLog(blocked);
+                                CatalogStatus = blocked;
+                            }
+                            return;
+                        case CatalogMissFollowUp.DownloadParts:
+                            await _catalog.DownloadModAsync(fresh!, tempPath, reporter).ConfigureAwait(true);
+                            break;
+                        default:
+                            CatalogStatus = $"加入本地库失败：{ex.Message}";
+                            AppendLog(CatalogStatus);
+                            return;
+                    }
+                }
             }
             finally
             {

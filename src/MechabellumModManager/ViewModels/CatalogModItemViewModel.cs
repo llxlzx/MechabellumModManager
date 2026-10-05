@@ -38,6 +38,24 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public bool IsFeaturedLead { get; set; }
 
     public string? Summary => CatalogLocaleResolver.ResolveSummary(Mod);
+
+    public string ManagerFloorText
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Mod.MinManagerVersion))
+                return "";
+            var decision = ManagerVersionFloor.Evaluate(Mod.MinManagerVersion, UpdateChecker.ReadLocalVersion());
+            if (decision.Unreadable)
+                return string.Format(LocalizationService.T("ManagerFloorUnreadable"), Mod.MinManagerVersion.Trim());
+            return string.Format(LocalizationService.T("ManagerFloorLine"), decision.Required);
+        }
+    }
+
+    public bool IsBlockedByManagerVersion =>
+        !string.IsNullOrWhiteSpace(Mod.MinManagerVersion) &&
+        !ManagerVersionFloor.Evaluate(Mod.MinManagerVersion, UpdateChecker.ReadLocalVersion()).Allowed;
+
     public string File => Mod.File;
     public string? Type => Mod.Type;
 

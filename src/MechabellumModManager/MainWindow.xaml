@@ -334,6 +334,52 @@
                                             </Border>
                                         </StackPanel>
                                     </Button>
+                                    <Button Command="{Binding ShowNoticePageCommand}"
+                                            ToolTip="{Binding Ui.NavNoteNotice}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsNoticePage}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                                        <Setter Property="Foreground" Value="{StaticResource AccentAmberBrush}" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Ui.NoticeNav}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Ui.NavNoteNotice}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontSize" Value="13" />
+                                                        <Setter Property="FontWeight" Value="Normal" />
+                                                        <Setter Property="Height" Value="16" />
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                        <Setter Property="Opacity" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsNoticePage}" Value="True">
+                                                                <Setter Property="Opacity" Value="1" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
+                                                        <Setter Property="Opacity" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsNoticePage}" Value="True">
+                                                                <Setter Property="Opacity" Value="1" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                        </StackPanel>
+                                    </Button>
                                     <Button Command="{Binding ShowGuidePageCommand}"
                                             ToolTip="{Binding Ui.NavNoteGuide}">
                                         <Button.Style>
@@ -492,6 +538,33 @@
 
             <!-- Content pages host (exclusive: settings / catalog / library) -->
             <Grid Grid.Row="1" x:Name="ContentPagesHost">
+
+            <Border Style="{StaticResource PanelChromeStyle}"
+                    Padding="14,10"
+                    Margin="12,8,12,8"
+                    Visibility="{Binding IsNoticePage, Converter={StaticResource BoolToVis}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+                        <TextBlock Text="{Binding Ui.NoticeNav}" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding NoticeBanner}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,12"
+                                   Visibility="{Binding NoticeBanner, Converter={StaticResource NonEmptyVis}}" />
+                        <ItemsControl ItemsSource="{Binding NoticeItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,16">
+                                        <TextBlock Text="{Binding TimeText}" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                        <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,4" />
+                                        <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
 
             <Border Style="{StaticResource PanelChromeStyle}"
                     Padding="14,10"
@@ -1108,6 +1181,12 @@
                                                            FontSize="13"
                                                            Foreground="{StaticResource TextMutedBrush}"
                                                            TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding ManagerFloorText}"
+                                                           Margin="0,2,0,0"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource AccentAmberBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Visibility="{Binding ManagerFloorText, Converter={StaticResource NonEmptyVis}}" />
                                             </StackPanel>
                                         </DockPanel>
                                     </Button>
@@ -1170,6 +1249,25 @@
                                                     ElementStyle="{StaticResource GridCellTextStyle}"
                                                     Width="80"
                                                     MinWidth="72" />
+                                <DataGridTextColumn Header="{Binding Data.Ui.ColumnManager, Source={StaticResource Proxy}}"
+                                                    Binding="{Binding ManagerFloorText}"
+                                                    ElementStyle="{StaticResource GridCellTextStyle}"
+                                                    Width="1.4*"
+                                                    MinWidth="140" />
+                                <DataGridTemplateColumn Header="{Binding Data.Ui.UpdateManager, Source={StaticResource Proxy}}"
+                                                        Width="120"
+                                                        MinWidth="108">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding DataContext.Ui.UpdateManager, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Command="{Binding DataContext.CheckForUpdatesCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Visibility="{Binding IsBlockedByManagerVersion, Converter={StaticResource BoolToVis}}"
+                                                    Padding="8,4"
+                                                    MinHeight="32"
+                                                    Style="{StaticResource AccentButtonStyle}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="{Binding Data.Ui.ColumnUpdated, Source={StaticResource Proxy}}"
                                                     Binding="{Binding UpdatedAt}"
                                                     ElementStyle="{StaticResource GridCellTextStyle}"
@@ -1567,16 +1665,28 @@
                                                         CanUserSort="False">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="{Binding DataContext.Ui.ActionUpdate, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    Command="{Binding DataContext.UpdateModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVis}}"
-                                                    Padding="10,4"
-                                                    MinWidth="72"
-                                                    MinHeight="32"
-                                                    HorizontalAlignment="Left"
-                                                    FontSize="14"
-                                                    Style="{StaticResource AccentButtonStyle}" />
+                                            <StackPanel>
+                                                <Button Content="{Binding DataContext.Ui.ActionUpdate, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        Command="{Binding DataContext.UpdateModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding ShowCatalogUpdateButton, Converter={StaticResource BoolToVis}}"
+                                                        Padding="10,4"
+                                                        MinWidth="72"
+                                                        MinHeight="32"
+                                                        HorizontalAlignment="Left"
+                                                        FontSize="14"
+                                                        Style="{StaticResource AccentButtonStyle}" />
+                                                <Button Content="{Binding DataContext.Ui.UpdateManager, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        Command="{Binding DataContext.CheckForUpdatesCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        Visibility="{Binding UpdateBlockedByManager, Converter={StaticResource BoolToVis}}"
+                                                        ToolTip="{Binding ManagerFloorStatus}"
+                                                        Padding="10,4"
+                                                        MinWidth="72"
+                                                        MinHeight="32"
+                                                        HorizontalAlignment="Left"
+                                                        FontSize="14"
+                                                        Style="{StaticResource AccentButtonStyle}" />
+                                            </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

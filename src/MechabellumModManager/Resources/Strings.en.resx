@@ -978,4 +978,14 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="ConflictInstallSelectionReason" xml:space="preserve"><value>"{0}" and "{1}" cannot be installed together. {2}Choose only one. Neither was installed this time.</value></data>
   <data name="ConflictInstallSelectionGeneric" xml:space="preserve"><value>"{0}" and "{1}" cannot be installed together. Choose only one. Neither was installed this time.</value></data>
   <data name="LogConflictInstallDeleteFailed" xml:space="preserve"><value>Could not remove conflicting mod "{0}" from the library: {1}</value></data>
+  <data name="NoticeNav" xml:space="preserve"><value>Notices</value></data>
+  <data name="NavNoteNotice" xml:space="preserve"><value>Refreshes when opened</value></data>
+  <data name="UpdateManager" xml:space="preserve"><value>Update manager</value></data>
+  <data name="ColumnManager" xml:space="preserve"><value>Manager</value></data>
+  <data name="ManagerFloorLine" xml:space="preserve"><value>Requires manager {0} or newer</value></data>
+  <data name="ManagerFloorBlocked" xml:space="preserve"><value>This mod requires manager {0} or newer. This copy is {1}. Update the manager first.</value></data>
+  <data name="ManagerFloorUnreadable" xml:space="preserve"><value>The catalog minimum manager version ({0}) is unreadable. Download through the manager was refused.</value></data>
+  <data name="NoticeEmpty" xml:space="preserve"><value>No notices</value></data>
+  <data name="NoticeStale" xml:space="preserve"><value>Notices could not be refreshed. Showing the last copy that loaded.</value></data>
+  <data name="NoticeUnavailable" xml:space="preserve"><value>Notices could not be loaded.</value></data>
 </root>

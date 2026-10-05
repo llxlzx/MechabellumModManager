@@ -981,4 +981,14 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="ConflictInstallSelectionReason" xml:space="preserve"><value>「{0}」和「{1}」不能同时安装。{2}请只选择其中一个。这次都没有安装。</value></data>
   <data name="ConflictInstallSelectionGeneric" xml:space="preserve"><value>「{0}」和「{1}」不能同时安装。请只选择其中一个。这次都没有安装。</value></data>
   <data name="LogConflictInstallDeleteFailed" xml:space="preserve"><value>未能从本地库移除冲突的 Mod「{0}」：{1}</value></data>
+  <data name="NoticeNav" xml:space="preserve"><value>公告</value></data>
+  <data name="NavNoteNotice" xml:space="preserve"><value>打开时更新</value></data>
+  <data name="UpdateManager" xml:space="preserve"><value>更新管理器</value></data>
+  <data name="ColumnManager" xml:space="preserve"><value>管理器</value></data>
+  <data name="ManagerFloorLine" xml:space="preserve"><value>需要管理器 {0} 或更高版本</value></data>
+  <data name="ManagerFloorBlocked" xml:space="preserve"><value>此 Mod 需要管理器 {0} 或更高版本。当前是 {1}。请先更新管理器。</value></data>
+  <data name="ManagerFloorUnreadable" xml:space="preserve"><value>目录里的最低管理器版本无法识别（{0}），已拒绝通过管理器下载。</value></data>
+  <data name="NoticeEmpty" xml:space="preserve"><value>暂无公告</value></data>
+  <data name="NoticeStale" xml:space="preserve"><value>公告暂时无法刷新，以下是上次成功获取的内容。</value></data>
+  <data name="NoticeUnavailable" xml:space="preserve"><value>公告暂时无法获取。</value></data>
 </root>

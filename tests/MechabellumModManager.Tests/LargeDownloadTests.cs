@@ -376,6 +376,74 @@ public sealed class LargeDownloadTests
         }
     }
 
+    [Fact]
+    public async Task Every_whole_file_404_throws_catalog_file_missing()
+    {
+        using var mirror = new LoopbackHttpServer(_ => new LoopbackHttpServer.Reply
+        {
+            Status = HttpStatusCode.NotFound
+        });
+
+        using var http = ModCatalogService.CreateDefaultClient();
+        var svc = new ModCatalogService(http, mirror.BaseUri.ToString().TrimEnd('/'));
+        var dest = TempDest();
+
+        try
+        {
+            var act = async () => await svc.DownloadModAsync(
+                new CatalogMod
+                {
+                    File = "mods/cut-guide/Big.dll",
+                    Sha256 = new string('a', 64),
+                    Size = ModCatalogService.GitRepoMaxBytes + 1
+                },
+                dest);
+
+            await act.Should().ThrowAsync<CatalogFileMissingException>();
+        }
+        finally
+        {
+            Cleanup(dest);
+        }
+    }
+
+    [Fact]
+    public async Task A_non_404_among_whole_file_failures_is_not_a_catalog_file_miss()
+    {
+        using var origin = new LoopbackHttpServer(_ => new LoopbackHttpServer.Reply
+        {
+            Status = HttpStatusCode.Forbidden
+        });
+        using var mirror = new LoopbackHttpServer(_ => new LoopbackHttpServer.Reply
+        {
+            Status = HttpStatusCode.NotFound
+        });
+
+        using var http = ModCatalogService.CreateDefaultClient();
+        var svc = new ModCatalogService(http, mirror.BaseUri.ToString().TrimEnd('/'));
+        var dest = TempDest();
+
+        try
+        {
+            var act = async () => await svc.DownloadModAsync(
+                new CatalogMod
+                {
+                    File = "mods/cut-guide/Big.dll",
+                    Sha256 = new string('a', 64),
+                    Size = ModCatalogService.GitRepoMaxBytes + 1,
+                    OriginUrl = origin.BaseUri + "Big.dll"
+                },
+                dest);
+
+            var thrown = await act.Should().ThrowAsync<HttpRequestException>();
+            thrown.Which.Should().NotBeOfType<CatalogFileMissingException>();
+        }
+        finally
+        {
+            Cleanup(dest);
+        }
+    }
+
     // ---- integrity ---------------------------------------------------------------------------
 
     [Fact]

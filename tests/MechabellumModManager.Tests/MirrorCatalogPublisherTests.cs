@@ -232,6 +232,49 @@ public class MirrorCatalogPublisherTests
         }
     }
 
+    [Fact]
+    public void Merge_sets_an_empty_floor_to_the_publisher_and_keeps_an_existing_one()
+    {
+        var sha = new string('c', 64);
+        var entry = $$"""{"id":"cam","name":"Cam","file":"mods/cam/a.dll","sha256":"{{sha}}","size":8,"minManagerVersion":"9.9.9"}""";
+
+        var created = MirrorCatalogPublisher.MergeListedEntry("""{"mods":[]}""", entry, "cam", "1.3.14.0");
+        JsonNode.Parse(created)!["mods"]![0]!["minManagerVersion"]!.GetValue<string>().Should().Be("1.3.14");
+
+        var keptLow = MirrorCatalogPublisher.MergeListedEntry(
+            """{"mods":[{"id":"cam","name":"Old","file":"mods/cam/a.dll","minManagerVersion":"1.3.14"}]}""",
+            entry,
+            "cam",
+            "1.3.18");
+        JsonNode.Parse(keptLow)!["mods"]![0]!["minManagerVersion"]!.GetValue<string>().Should().Be("1.3.14");
+
+        var keptHigh = MirrorCatalogPublisher.MergeListedEntry(
+            """{"mods":[{"id":"cam","name":"Old","file":"mods/cam/a.dll","minManagerVersion":"1.3.18"}]}""",
+            entry,
+            "cam",
+            "1.3.14");
+        JsonNode.Parse(keptHigh)!["mods"]![0]!["minManagerVersion"]!.GetValue<string>().Should().Be("1.3.18");
+
+        var untouched = MirrorCatalogPublisher.MergeListedEntry(
+            """{"mods":[{"id":"cam","name":"Old","file":"mods/cam/a.dll","minManagerVersion":"1.3.18"}]}""",
+            entry,
+            "cam");
+        JsonNode.Parse(untouched)!["mods"]![0]!["minManagerVersion"]!.GetValue<string>().Should().Be("1.3.18");
+    }
+
+    [Fact]
+    public void Merge_rejects_an_existing_floor_that_is_not_a_catalog_version()
+    {
+        var sha = new string('c', 64);
+        var act = () => MirrorCatalogPublisher.MergeListedEntry(
+            """{"mods":[{"id":"cam","name":"Old","file":"mods/cam/a.dll","minManagerVersion":"1.3"}]}""",
+            $$"""{"id":"cam","name":"Cam","file":"mods/cam/a.dll","sha256":"{{sha}}","size":8}""",
+            "cam",
+            "1.3.14");
+        act.Should().Throw<MirrorPublishException>()
+            .WithMessage("*minManagerVersion*");
+    }
+
     static string WriteTemp(byte[] bytes)
     {
         var path = Path.Combine(Path.GetTempPath(), "mmm-mirror-" + Guid.NewGuid().ToString("N") + ".dll");

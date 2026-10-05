@@ -12,6 +12,10 @@ public sealed class UiStrings : INotifyPropertyChanged
 
     public string Settings => T("Settings");
     public string GuideNav => T("GuideNav");
+    public string NoticeNav => T("NoticeNav");
+    public string NavNoteNotice => T("NavNoteNotice");
+    public string UpdateManager => T("UpdateManager");
+    public string ColumnManager => T("ColumnManager");
     public string GuideTitle => T("GuideTitle");
     public string GuideIntro => T("GuideIntro");
     public string GuideLanguageTitle => T("GuideLanguageTitle");

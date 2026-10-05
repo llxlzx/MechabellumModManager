@@ -72,7 +72,7 @@ public static class MirrorCatalogPublisher
         return rest[..end];
     }
 
-    public static MirrorPublishPlan Plan(string? catalogJson, MirrorPublishInput input)
+    public static MirrorPublishPlan Plan(string? catalogJson, MirrorPublishInput input, string? publisherVersion = null)
     {
         var id = input.Id.Trim();
         var name = input.Name.Trim();
@@ -144,6 +144,8 @@ public static class MirrorCatalogPublisher
         if (existing is null)
             mods.Add(entry);
 
+        ApplyPublisherFloor(entry, publisherVersion);
+
         root["updatedAt"] = entry["updatedAt"]!.GetValue<string>();
 
         var uploads = new List<MirrorUpload>
@@ -172,7 +174,11 @@ public static class MirrorCatalogPublisher
     /// control (author, tags, locales) stay as they already are. When incoming includes
     /// parts, they replace the entry parts. originUrl is always removed.
     /// </summary>
-    public static string MergeListedEntry(string? catalogJson, string entryJson, string expectedId)
+    public static string MergeListedEntry(
+        string? catalogJson,
+        string entryJson,
+        string expectedId,
+        string? publisherVersion = null)
     {
         var id = expectedId.Trim();
         if (!IsSafeId(id))
@@ -258,6 +264,7 @@ public static class MirrorCatalogPublisher
         }
 
         entry.Remove("originUrl");
+        ApplyPublisherFloor(entry, publisherVersion);
         var updatedAt = NormalizeTimestamp(ReadString(incoming, "updatedAt"));
         entry["updatedAt"] = updatedAt;
         if (preview is not null)
@@ -267,6 +274,28 @@ public static class MirrorCatalogPublisher
 
         root["updatedAt"] = updatedAt;
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    /// <summary>
+    /// A new entry takes the publishing manager version. An existing legal floor is kept,
+    /// so a later direct upload neither raises nor lowers it. Incoming entry.json is not consulted.
+    /// </summary>
+    static void ApplyPublisherFloor(JsonObject entry, string? publisherVersion)
+    {
+        if (publisherVersion is null)
+            return;
+        var canonical = ManagerVersionFloor.CanonicalLocal(publisherVersion)
+            ?? throw new MirrorPublishException(DirectUploadErrorCode.ValidationFailed, "minManagerVersion");
+        var existing = ReadString(entry, "minManagerVersion");
+        if (string.IsNullOrWhiteSpace(existing))
+        {
+            entry["minManagerVersion"] = canonical;
+            return;
+        }
+
+        if (!ManagerVersionFloor.TryCatalog(existing.Trim(), out var kept))
+            throw new MirrorPublishException(DirectUploadErrorCode.ValidationFailed, "minManagerVersion");
+        entry["minManagerVersion"] = $"{kept.Major}.{kept.Minor}.{kept.Patch}";
     }
 
     public static async Task<string> DownloadEntryAsync(HttpClient http, string mirrorBaseUrl, string id, CancellationToken ct)

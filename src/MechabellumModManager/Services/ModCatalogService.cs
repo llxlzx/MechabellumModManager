@@ -132,6 +132,22 @@ public sealed class CatalogMod
     /// </summary>
     [JsonPropertyName("locales")]
     public Dictionary<string, CatalogModLocale>? Locales { get; set; }
+
+    /// <summary>
+    /// Minimum manager version that may download this mod. Missing or blank means no floor.
+    /// Compared as major.minor.patch. Older shipped managers ignore the field.
+    /// </summary>
+    [JsonPropertyName("minManagerVersion")]
+    public string? MinManagerVersion { get; set; }
+}
+
+/// <summary>
+/// Every whole-file candidate returned HTTP 404. The caller may refresh the catalog once.
+/// Part downloads never throw this.
+/// </summary>
+public sealed class CatalogFileMissingException : HttpRequestException
+{
+    public CatalogFileMissingException(string message) : base(message) { }
 }
 
 public enum CatalogFetchKind { HotSkip, WarmNotModified, ColdApplied }
@@ -465,7 +481,8 @@ public sealed partial class ModCatalogService
         var partPath = destPath + ".part";
         var candidates = BuildFileCandidates(mod);
         var used = await DownloadVerifiedAsync(
-            candidates, partPath, expectedHash, expectedSize, ceiling, progress, ct).ConfigureAwait(false);
+            candidates, partPath, expectedHash, expectedSize, ceiling, progress, ct, signalAllNotFound: true)
+            .ConfigureAwait(false);
 
         LastDownloadSource = RemoteFetch.ClassifySource(used);
         File.Move(partPath, destPath, overwrite: true);
@@ -584,7 +601,8 @@ public sealed partial class ModCatalogService
         long expectedSize,
         long ceiling,
         IProgress<DownloadProgress>? progress,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool signalAllNotFound = false)
     {
         var failures = new List<string>();
         string? contentFailure = null;
@@ -665,14 +683,23 @@ public sealed partial class ModCatalogService
         {
             TryDeleteFile(partPath);
             var detail = string.Join("; ", failures);
-            throw contentFailure is null
-                ? new HttpRequestException("All remote fetch candidates failed: " + detail)
-                : new InvalidOperationException(
+            if (contentFailure is not null)
+            {
+                throw new InvalidOperationException(
                     $"下载内容与目录声明不符，已全部拒绝：{contentFailure}（{detail}）。请联系目录维护者核对。");
+            }
+
+            var message = "All remote fetch candidates failed: " + detail;
+            if (signalAllNotFound && AllCandidatesHttp404(failures))
+                throw new CatalogFileMissingException(message);
+            throw new HttpRequestException(message);
         }
 
         return used;
     }
+
+    internal static bool AllCandidatesHttp404(IReadOnlyList<string> failures) =>
+        failures.Count > 0 && failures.All(failure => failure.EndsWith(": HTTP 404", StringComparison.Ordinal));
 
     static string HashMismatchMessage(string expectedHash, string actualHash) =>
         $"下载文件校验失败（目录声明 {expectedHash[..Math.Min(12, expectedHash.Length)]}…，实际 {actualHash[..12]}…）。文件已丢弃，请稍后重试。";

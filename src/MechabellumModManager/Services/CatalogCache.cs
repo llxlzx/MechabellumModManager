@@ -8,6 +8,7 @@ public static class CatalogCache
     public const string FileName = "catalog-cache.json";
     public const string EtagFileName = "catalog-cache.etag";
     public const string SourceFileName = "catalog-cache.source";
+    public const string ManagerVersionFileName = "catalog-manager-version.txt";
 
     public static string GetPath(string dataRoot) =>
         Path.Combine(dataRoot, FileName);
@@ -17,6 +18,55 @@ public static class CatalogCache
 
     public static string GetSourcePath(string dataRoot) =>
         Path.Combine(dataRoot, SourceFileName);
+
+    public static string GetManagerVersionPath(string dataRoot) =>
+        Path.Combine(dataRoot, ManagerVersionFileName);
+
+    /// <summary>
+    /// Deletes the catalog cache when the running manager version differs from the stamp.
+    /// The stamp is written after the delete. Does not touch update-check.stamp or notice-cache.json.
+    /// </summary>
+    public static bool DropIfManagerVersionChanged(string dataRoot, string currentVersion)
+    {
+        if (string.IsNullOrWhiteSpace(dataRoot))
+            return false;
+
+        var stampPath = GetManagerVersionPath(dataRoot);
+        string? stored = null;
+        if (File.Exists(stampPath))
+        {
+            try { stored = File.ReadAllText(stampPath, Encoding.UTF8).Trim(); }
+            catch { stored = null; }
+        }
+
+        if (string.Equals(stored, currentVersion, StringComparison.Ordinal))
+            return false;
+
+        TryDelete(GetPath(dataRoot));
+        TryDelete(GetEtagPath(dataRoot));
+        TryDelete(GetSourcePath(dataRoot));
+
+        try
+        {
+            Directory.CreateDirectory(dataRoot);
+            var tmp = stampPath + ".tmp";
+            File.WriteAllText(tmp, currentVersion ?? "", Encoding.UTF8);
+            File.Copy(tmp, stampPath, overwrite: true);
+            try { File.Delete(tmp); } catch { /* best effort */ }
+        }
+        catch
+        {
+            // The next launch deletes again while the stamp is missing or stale.
+        }
+
+        return true;
+    }
+
+    static void TryDelete(string path)
+    {
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch { /* best effort */ }
+    }
 
     /// <summary>True when the cached catalog was written less than <paramref name="maxAge"/> ago.</summary>
     public static bool IsYoungerThan(string dataRoot, TimeSpan maxAge)

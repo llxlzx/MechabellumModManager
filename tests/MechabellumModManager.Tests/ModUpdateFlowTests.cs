@@ -371,6 +371,10 @@ public class ModUpdateFlowTests
     {
         using var fx = MainViewModelFixture.CreateReady();
         var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
+        Directory.CreateDirectory(fx.Paths.DataRoot);
+        File.WriteAllText(
+            CatalogCache.GetManagerVersionPath(fx.Paths.DataRoot),
+            UpdateChecker.ReadLocalVersion());
         CatalogCache.Write(fx.Paths.DataRoot, CatalogJson(version: "1.2.0"));
 
         var handler = new ScriptedHttpHandler(_ =>

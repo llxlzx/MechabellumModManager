@@ -7,4 +7,5 @@ public enum MainContentPage
     Settings = 2,
     Guide = 3,
     Branch = 4,
+    Notice = 5,
 }

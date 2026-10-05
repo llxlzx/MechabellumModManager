@@ -151,11 +151,11 @@ public partial class DirectUploadDialog : Window
                 using var http = CreateHttp();
                 var catalog = await MirrorCatalogPublisher.DownloadCatalogAsync(http, _mirrorBaseUrl!, CancellationToken.None)
                     .ConfigureAwait(true);
-                plan = MirrorCatalogPublisher.Plan(catalog, input);
+                plan = MirrorCatalogPublisher.Plan(catalog, input, UpdateChecker.ReadLocalVersion());
             }
             else
             {
-                plan = MirrorCatalogPublisher.Plan(null, input);
+                plan = MirrorCatalogPublisher.Plan(null, input, UpdateChecker.ReadLocalVersion());
             }
 
             entryTemp = Path.Combine(Path.GetTempPath(), "mmm-entry-" + Guid.NewGuid().ToString("N") + ".json");

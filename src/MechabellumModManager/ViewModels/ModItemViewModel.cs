@@ -71,7 +71,17 @@ public sealed partial class ModItemViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
+    [NotifyPropertyChangedFor(nameof(ShowCatalogUpdateButton))]
     private bool _hasUpdate;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
+    [NotifyPropertyChangedFor(nameof(ShowCatalogUpdateButton))]
+    private bool _updateBlockedByManager;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
+    private string _managerFloorStatus = "";
 
     /// <summary>
     /// True when this row is an older copy and the library already holds the catalog bytes.
@@ -98,12 +108,17 @@ public sealed partial class ModItemViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(UpdateStatusText))]
     private string? _latestVersion;
 
+    public bool ShowCatalogUpdateButton => HasUpdate && !UpdateBlockedByManager;
+
     public string UpdateStatusText
     {
         get
         {
             if (IsMissing || !CatalogMatched)
                 return "";
+
+            if (UpdateBlockedByManager && !string.IsNullOrWhiteSpace(ManagerFloorStatus))
+                return ManagerFloorStatus;
 
             if (IsStaleDuplicate)
                 return LocalizationService.T("LibraryStatusDuplicate");
@@ -222,6 +237,13 @@ public sealed partial class ModItemViewModel : ObservableObject
         IsStaleDuplicate = library != null &&
             ModCatalogService.IsStaleDuplicate(Package, library, catalog);
         HasUpdate = alone == CatalogEntryState.UpdateAvailable && !IsStaleDuplicate;
+        var floor = ManagerVersionFloor.Evaluate(catalog.MinManagerVersion, UpdateChecker.ReadLocalVersion());
+        UpdateBlockedByManager = HasUpdate && !floor.Allowed;
+        ManagerFloorStatus = UpdateBlockedByManager
+            ? floor.Unreadable
+                ? string.Format(LocalizationService.T("ManagerFloorUnreadable"), catalog.MinManagerVersion?.Trim())
+                : string.Format(LocalizationService.T("ManagerFloorBlocked"), floor.Required, floor.Local)
+            : "";
         CatalogMatched = true;
         RefreshCatalogFieldsFromPackage();
     }

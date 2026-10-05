@@ -973,4 +973,14 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="ConflictInstallSelectionReason" xml:space="preserve"><value>「{0}」と「{1}」は同時にインストールできません。{2}どちらか一方を選んでください。今回はどちらもインストールしていません。</value></data>
   <data name="ConflictInstallSelectionGeneric" xml:space="preserve"><value>「{0}」と「{1}」は同時にインストールできません。どちらか一方を選んでください。今回はどちらもインストールしていません。</value></data>
   <data name="LogConflictInstallDeleteFailed" xml:space="preserve"><value>競合する Mod「{0}」をライブラリから削除できませんでした：{1}</value></data>
+  <data name="NoticeNav" xml:space="preserve"><value>お知らせ</value></data>
+  <data name="NavNoteNotice" xml:space="preserve"><value>開いたときに更新</value></data>
+  <data name="UpdateManager" xml:space="preserve"><value>マネージャーを更新</value></data>
+  <data name="ColumnManager" xml:space="preserve"><value>マネージャー</value></data>
+  <data name="ManagerFloorLine" xml:space="preserve"><value>マネージャー {0} 以降が必要です</value></data>
+  <data name="ManagerFloorBlocked" xml:space="preserve"><value>この Mod にはマネージャー {0} 以降が必要です。今の版は {1} です。先にマネージャーを更新してください。</value></data>
+  <data name="ManagerFloorUnreadable" xml:space="preserve"><value>カタログの最低マネージャー版（{0}）を読めないため、マネージャーからのダウンロードを拒否しました。</value></data>
+  <data name="NoticeEmpty" xml:space="preserve"><value>お知らせはありません</value></data>
+  <data name="NoticeStale" xml:space="preserve"><value>お知らせを更新できません。前回読み込めた内容を表示しています。</value></data>
+  <data name="NoticeUnavailable" xml:space="preserve"><value>お知らせを取得できません。</value></data>
 </root>
