@@ -127,6 +127,17 @@ public static class MirrorCatalogPublisher
         entry["file"] = fileRel;
         entry["sha256"] = sha;
         entry["size"] = dllInfo.Length;
+        entry.Remove("originUrl");
+        var partRel = $"mods/{id}/parts/0000";
+        entry["parts"] = new JsonArray
+        {
+            new JsonObject
+            {
+                ["file"] = partRel,
+                ["sha256"] = sha,
+                ["size"] = dllInfo.Length
+            }
+        };
         entry["updatedAt"] = input.UpdatedAt.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
         if (previewRel is not null)
             entry["preview"] = previewRel;
@@ -137,7 +148,7 @@ public static class MirrorCatalogPublisher
 
         var uploads = new List<MirrorUpload>
         {
-            new(input.DllPath, "MechabellumMods/" + fileRel)
+            new(input.DllPath, "MechabellumMods/" + partRel)
         };
         if (previewRel is not null)
             uploads.Add(new MirrorUpload(input.PreviewPath!, "MechabellumMods/" + previewRel));
@@ -158,7 +169,8 @@ public static class MirrorCatalogPublisher
 
     /// <summary>
     /// Copies one uploader-owned entry into the catalog. Fields the uploader must not
-    /// control (author, tags, originUrl, locales) stay as they already are.
+    /// control (author, tags, locales) stay as they already are. When incoming includes
+    /// parts, they replace the entry parts. originUrl is always removed.
     /// </summary>
     public static string MergeListedEntry(string? catalogJson, string entryJson, string expectedId)
     {
@@ -229,6 +241,23 @@ public static class MirrorCatalogPublisher
         entry["file"] = file;
         entry["sha256"] = sha;
         entry["size"] = size;
+        if (incoming["parts"] is JsonArray partsArray)
+        {
+            if (partsArray.Count == 0)
+                throw new MirrorPublishException(DirectUploadErrorCode.ValidationFailed, "parts");
+            foreach (var partNode in partsArray)
+            {
+                if (partNode is not JsonObject partObj)
+                    throw new MirrorPublishException(DirectUploadErrorCode.ValidationFailed, "parts");
+                var partFile = ReadString(partObj, "file");
+                if (!IsValidPartPath(id, partFile))
+                    throw new MirrorPublishException(DirectUploadErrorCode.ValidationFailed, "parts");
+            }
+
+            entry["parts"] = partsArray.DeepClone();
+        }
+
+        entry.Remove("originUrl");
         var updatedAt = NormalizeTimestamp(ReadString(incoming, "updatedAt"));
         entry["updatedAt"] = updatedAt;
         if (preview is not null)
@@ -295,6 +324,17 @@ public static class MirrorCatalogPublisher
             && name is not "." and not ".."
             && name.IndexOfAny(['/', '\\']) < 0
             && !name.Contains("..", StringComparison.Ordinal);
+    }
+
+    static bool IsValidPartPath(string id, string? file)
+    {
+        if (string.IsNullOrWhiteSpace(file))
+            return false;
+        var prefix = $"mods/{id}/parts/";
+        if (!file.StartsWith(prefix, StringComparison.Ordinal) || file.Contains("..", StringComparison.Ordinal))
+            return false;
+        var name = file[prefix.Length..];
+        return name.Length > 0 && name is not "." and not "..";
     }
 
     static string? ReadString(JsonObject obj, string key)

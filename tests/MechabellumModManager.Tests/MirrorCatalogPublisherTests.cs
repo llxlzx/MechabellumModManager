@@ -40,7 +40,7 @@ public class MirrorCatalogPublisherTests
             plan.Size.Should().Be(4);
             plan.Sha256.Should().HaveLength(64);
             plan.Uploads.Select(u => u.RemoteKey).Should().Equal(
-                "MechabellumMods/mods/NewMod/" + Path.GetFileName(dll),
+                "MechabellumMods/mods/NewMod/parts/0000",
                 "MechabellumMods/mods/NewMod/preview.png");
             plan.Uploads.Should().NotContain(u => u.RemoteKey.EndsWith("catalog.json", StringComparison.Ordinal));
             plan.EntryKey.Should().Be("MechabellumMods/mods/NewMod/entry.json");
@@ -64,6 +64,72 @@ public class MirrorCatalogPublisherTests
             File.Delete(dll);
             File.Delete(preview);
         }
+    }
+
+    [Fact]
+    public void Plan_uploads_one_part_and_drops_origin()
+    {
+        var dll = WriteTemp(new byte[] { 1, 2, 3, 4 });
+        try
+        {
+            var plan = MirrorCatalogPublisher.Plan(
+                """{"updatedAt":"old","mods":[{"id":"cam","name":"Old","file":"mods/cam/old.dll","originUrl":"https://keep.example/a.dll"}]}""",
+                new MirrorPublishInput
+                {
+                    Id = "cam",
+                    Name = "Cam",
+                    DllPath = dll,
+                    UpdatedAt = new DateTimeOffset(2026, 10, 6, 0, 0, 0, TimeSpan.Zero)
+                });
+
+            plan.Uploads.Select(u => u.RemoteKey).Should().Equal("MechabellumMods/mods/cam/parts/0000");
+            var entry = JsonNode.Parse(plan.EntryJson)!.AsObject();
+            entry.ContainsKey("originUrl").Should().BeFalse();
+            entry["parts"]![0]!["file"]!.GetValue<string>().Should().Be("mods/cam/parts/0000");
+            entry["parts"]![0]!["sha256"]!.GetValue<string>().Should().Be(plan.Sha256);
+            entry["file"]!.GetValue<string>().Should().EndWith(".dll");
+        }
+        finally { File.Delete(dll); }
+    }
+
+    [Fact]
+    public void Merge_copies_parts_and_removes_origin()
+    {
+        var sha = new string('a', 64);
+        var merged = MirrorCatalogPublisher.MergeListedEntry(
+            """{"mods":[{"id":"cam","name":"Old","file":"mods/cam/old.dll","originUrl":"https://keep.example/a.dll"}]}""",
+            $$"""{"id":"cam","name":"Cam","file":"mods/cam/new.dll","sha256":"{{sha}}","size":4,"parts":[{"file":"mods/cam/parts/0000","sha256":"{{sha}}","size":4}]}""",
+            "cam");
+        var mod = JsonNode.Parse(merged)!["mods"]![0]!.AsObject();
+        mod.ContainsKey("originUrl").Should().BeFalse();
+        mod["parts"]![0]!["file"]!.GetValue<string>().Should().Be("mods/cam/parts/0000");
+    }
+
+    [Fact]
+    public void Merge_keeps_existing_parts_when_incoming_omits_them()
+    {
+        var sha = new string('a', 64);
+        var merged = MirrorCatalogPublisher.MergeListedEntry(
+            $$"""{"mods":[{"id":"cam","name":"Old","file":"mods/cam/old.dll","sha256":"{{sha}}","size":4,"originUrl":"https://keep.example/a.dll","parts":[{"file":"mods/cam/parts/0000","sha256":"{{sha}}","size":4}]}]}""",
+            $$"""{"id":"cam","name":"Cam","file":"mods/cam/new.dll","sha256":"{{sha}}","size":4}""",
+            "cam");
+        var mod = JsonNode.Parse(merged)!["mods"]![0]!.AsObject();
+        mod.ContainsKey("originUrl").Should().BeFalse();
+        mod["parts"]![0]!["file"]!.GetValue<string>().Should().Be("mods/cam/parts/0000");
+    }
+
+    [Theory]
+    [InlineData("""{"id":"cam","name":"Cam","file":"mods/cam/new.dll","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":4,"parts":[]}""")]
+    [InlineData("""{"id":"cam","name":"Cam","file":"mods/cam/new.dll","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":4,"parts":[{"file":"mods/cam/parts/../new.dll","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":4}]}""")]
+    [InlineData("""{"id":"cam","name":"Cam","file":"mods/cam/new.dll","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":4,"parts":[{"file":"mods/cam/parts/","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":4}]}""")]
+    public void Merge_rejects_parts_that_would_drop_the_slice(string entryJson)
+    {
+        var act = () => MirrorCatalogPublisher.MergeListedEntry(
+            """{"mods":[{"id":"cam","name":"Old","file":"mods/cam/old.dll","parts":[{"file":"mods/cam/parts/0000","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":4}]}]}""",
+            entryJson,
+            "cam");
+        act.Should().Throw<MirrorPublishException>()
+            .Which.Code.Should().Be(DirectUploadErrorCode.ValidationFailed);
     }
 
     [Fact]
@@ -127,7 +193,7 @@ public class MirrorCatalogPublisherTests
         mod["name"]!.GetValue<string>().Should().Be("Cam");
         mod["file"]!.GetValue<string>().Should().Be("mods/cam/new.dll");
         mod["author"]!.GetValue<string>().Should().Be("Ada");
-        mod["originUrl"]!.GetValue<string>().Should().Be("https://keep.example/a.dll");
+        mod.ContainsKey("originUrl").Should().BeFalse();
         mod["tags"]![0]!.GetValue<string>().Should().Be("hud");
     }
 
