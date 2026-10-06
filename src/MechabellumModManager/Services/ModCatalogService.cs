@@ -36,6 +36,26 @@ public sealed class CatalogPart
     public long Size { get; set; }
 }
 
+/// <summary>
+/// One file of a mod that stays a separate assembly on disk. <see cref="Path"/> is where it
+/// sits under the Melon slot (for example <c>CUTGuide.Assets/CUTGuide.Text.dll</c>).
+/// <see cref="File"/> is the catalog-repo path. These are not concatenated.
+/// </summary>
+public sealed class CatalogBundleFile
+{
+    [JsonPropertyName("path")]
+    public string? Path { get; set; }
+
+    [JsonPropertyName("file")]
+    public string? File { get; set; }
+
+    [JsonPropertyName("sha256")]
+    public string? Sha256 { get; set; }
+
+    [JsonPropertyName("size")]
+    public long Size { get; set; }
+}
+
 /// <summary>Whether a catalog entry is missing locally, current, or superseded by a newer catalog copy.</summary>
 public enum CatalogEntryState
 {
@@ -102,6 +122,13 @@ public sealed class CatalogMod
     /// </summary>
     [JsonPropertyName("parts")]
     public List<CatalogPart>? Parts { get; set; }
+
+    /// <summary>
+    /// Separate files deployed next to <see cref="File"/>. Each one must stay small enough for
+    /// git. Older managers ignore the field and still request <see cref="File"/> itself.
+    /// </summary>
+    [JsonPropertyName("bundle")]
+    public List<CatalogBundleFile>? Bundle { get; set; }
 
     [JsonPropertyName("preview")]
     public string? Preview { get; set; }
@@ -457,6 +484,8 @@ public sealed partial class ModCatalogService
         ArgumentNullException.ThrowIfNull(mod);
         if (string.IsNullOrWhiteSpace(destPath))
             throw new ArgumentException("Destination path is required.", nameof(destPath));
+        if (mod.Bundle is { Count: > 0 })
+            throw new InvalidOperationException("该目录条目是素材包，不能按单个文件下载。");
 
         // A mod is a .NET assembly MelonLoader loads into the game. Once mods are large enough to
         // live outside the repo tree, "it came from a github.com host" stops being a meaningful
@@ -486,6 +515,88 @@ public sealed partial class ModCatalogService
 
         LastDownloadSource = RemoteFetch.ClassifySource(used);
         File.Move(partPath, destPath, overwrite: true);
+    }
+
+    /// <summary>
+    /// Downloads each bundle member into <paramref name="stagingDirectory"/> at its deploy path.
+    /// A member at or above <see cref="GitRepoMaxBytes"/> is refused before any request.
+    /// </summary>
+    public async Task DownloadBundleAsync(
+        CatalogMod mod,
+        string stagingDirectory,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(mod);
+        if (string.IsNullOrWhiteSpace(stagingDirectory))
+            throw new ArgumentException("Staging directory is required.", nameof(stagingDirectory));
+
+        var files = mod.Bundle ?? throw new InvalidOperationException("素材包目录为空，已拒绝下载。");
+        if (mod.Parts is { Count: > 0 })
+            throw new InvalidOperationException("目录同时声明了分块和素材包，已拒绝下载。");
+
+        long total = 0;
+        foreach (var item in files)
+        {
+            if (item is null || string.IsNullOrWhiteSpace(item.File) || string.IsNullOrWhiteSpace(item.Path))
+                throw new InvalidOperationException("素材包缺少文件路径，已拒绝下载。");
+            if (NormalizeHash(item.Sha256) is null)
+                throw new InvalidOperationException(MissingHashMessage);
+            if (item.Size <= 0 || item.Size >= GitRepoMaxBytes)
+                throw new InvalidOperationException(
+                    "目录里的素材包达到或超过 100MB，无法放进 git 仓库，已拒绝下载。请联系目录维护者把素材包切小。");
+            _ = BundleDestination(stagingDirectory, item.Path);
+            total += item.Size;
+        }
+
+        Directory.CreateDirectory(stagingDirectory);
+        long done = 0;
+        var source = RemoteFetch.GithubSource;
+        for (var i = 0; i < files.Count; i++)
+        {
+            var item = files[i];
+            var dest = BundleDestination(stagingDirectory, item.Path!);
+            var dir = Path.GetDirectoryName(dest);
+            if (!string.IsNullOrWhiteSpace(dir))
+                Directory.CreateDirectory(dir);
+
+            var slice = progress is null ? null : new OffsetDownloadProgress(progress, done, total);
+            var used = await DownloadVerifiedAsync(
+                BuildFileCandidates(item.File!),
+                dest + ".part",
+                NormalizeHash(item.Sha256)!,
+                item.Size,
+                item.Size,
+                slice,
+                ct).ConfigureAwait(false);
+            File.Move(dest + ".part", dest, overwrite: true);
+            if (RemoteFetch.ClassifySource(used) == RemoteFetch.MirrorSource)
+                source = RemoteFetch.MirrorSource;
+            done += item.Size;
+        }
+
+        progress?.Report(new DownloadProgress(total, total));
+        LastDownloadSource = source;
+    }
+
+    static string BundleDestination(string stagingDirectory, string relativePath)
+    {
+        var normalized = relativePath.Replace('\\', '/').Trim();
+        if (Path.IsPathRooted(relativePath) || normalized.Contains(':') || normalized.StartsWith('/'))
+            throw new InvalidOperationException("素材包路径不安全，已拒绝下载。");
+
+        var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0 || segments.Any(segment => segment is "." or ".."))
+            throw new InvalidOperationException("素材包路径不安全，已拒绝下载。");
+
+        var dest = Path.GetFullPath(Path.Combine(
+            new[] { stagingDirectory }.Concat(segments).ToArray()));
+        var root = Path.GetFullPath(stagingDirectory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        if (!dest.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("素材包路径不安全，已拒绝下载。");
+        return dest;
     }
 
     async Task DownloadPartsAsync(
@@ -954,6 +1065,14 @@ public sealed partial class ModCatalogService
         if (installed.Count == 0)
             return CatalogEntryState.NotInstalled;
 
+        if (mod.Bundle is { Count: > 0 })
+        {
+            if (installed.Any(pkg => BundleIsComplete(pkg, mod)))
+                return CatalogEntryState.UpToDate;
+            if (installed.Any(HasAnyRecordedHash))
+                return CatalogEntryState.UpdateAvailable;
+        }
+
         // Byte equality is the only judgement that still holds when an author ships new content
         // without bumping "version", so it outranks the metadata comparisons below.
         if (!string.IsNullOrWhiteSpace(mod.Sha256))
@@ -1058,6 +1177,30 @@ public sealed partial class ModCatalogService
         stem.Equals("Plugin", StringComparison.OrdinalIgnoreCase) ||
         stem.Equals("Assembly", StringComparison.OrdinalIgnoreCase) ||
         stem.Equals("Assembly-CSharp", StringComparison.OrdinalIgnoreCase);
+
+    static bool BundleIsComplete(ModPackage pkg, CatalogMod mod)
+    {
+        var wanted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in mod.Bundle ?? [])
+        {
+            var hash = NormalizeHash(item?.Sha256);
+            if (hash is null)
+                return false;
+            wanted.Add(hash);
+        }
+
+        if (wanted.Count == 0)
+            return false;
+
+        foreach (var file in pkg.Files)
+        {
+            var hash = NormalizeHash(file.Sha256);
+            if (hash is not null)
+                wanted.Remove(hash);
+        }
+
+        return wanted.Count == 0;
+    }
 
     static bool HasMatchingFileHash(ModPackage pkg, CatalogMod mod)
     {

@@ -1,10 +1,10 @@
 {
-    "version": "1.3.14",
-    "notes": "能连上 GitHub 时从 GitHub 下载，连不上再自动改用国内镜像。每个 Mod 可以要求最低管理器版本，版本不够时不会开始下载。公告在打开公告页时更新，不必发新管理器。\nDownloads come from GitHub when it can be reached, and switch to the domestic mirror when it cannot. Each mod can require a minimum manager version, and an older manager does not start the download. Notices refresh when that page is opened, without a manager release.",
-    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.14/MechabellumModManager_Setup_v1.3.14.exe",
-    "setupSha256": "c8bedbcc61908c91535f6cfc0c22c0c01830f24e204df6119d6f47d36fae0c3b",
-    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.14/MechabellumModManager_portable_v1.3.14.zip",
-    "portableSha256": "e973eced19071441baa2df25f5b939c6cf640da43e92551ef48564c59b62f3da",
-    "publishedAt": "2026-10-05T20:47:13Z",
-    "build": "v1.3.14-floor"
+    "version": "1.3.15",
+    "notes": "可以安装拆成素材包的 Mod。CUT Guide 1.1.0 的文字和视频会按原来的文件夹放进游戏，不再拼成一个 DLL。这版以下的管理器会被拦住，不会开始下载。\nThis version installs mods that ship as separate asset packs. CUT Guide 1.1.0 keeps its text and video packs in their folder instead of joining them into one DLL. Older managers are stopped before the download starts.",
+    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.15/MechabellumModManager_Setup_v1.3.15.exe",
+    "setupSha256": "2b7844761d47242b44abeefba52613814fb811cbffc0d96df773ecbd2cbcc9d7",
+    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.15/MechabellumModManager_portable_v1.3.15.zip",
+    "portableSha256": "f3a0177b3d1d2dd190ba919c41035b415aa7fd80fbac4e3476a439242e414f83",
+    "publishedAt": "2026-10-06T08:57:40Z",
+    "build": "v1.3.15-bundle"
 }

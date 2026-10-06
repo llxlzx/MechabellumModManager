@@ -20,6 +20,35 @@ public class DeployPlannerTests
     }
 
     [Fact]
+    public void Keeps_an_asset_pack_beside_the_main_dll()
+    {
+        var pkg = new ModPackage
+        {
+            Id = "cut",
+            Type = ModPackageType.MelonMod,
+            PackageDirectory = @"C:\lib\mods\cut",
+            Files =
+            {
+                new DeployableFile { RelativePathInPackage = "Mechabellum.Guide.TextHover.dll", Sha256 = "a" },
+                new DeployableFile { RelativePathInPackage = "CUTGuide.Assets/CUTGuide.Text.dll", Sha256 = "b" }
+            }
+        };
+        var profile = new Profile { Id = "p", EnabledPackageIds = { "cut" } };
+        var plan = new DeployPlanner().Build(@"G:\Game", profile, new Dictionary<string, ModPackage> { ["cut"] = pkg }, null, false);
+        plan.Copies.Select(copy => copy.RelativeGamePath.Replace('\\', '/'))
+            .Should().BeEquivalentTo(
+                "Mods/Mechabellum.Guide.TextHover.dll",
+                "Mods/CUTGuide.Assets/CUTGuide.Text.dll");
+    }
+
+    [Fact]
+    public void Rejects_a_mod_path_that_escapes_Mods()
+    {
+        var act = () => DeployPlanner.MapRelativeGamePath(ModPackageType.MelonMod, @"CUTGuide.Assets\..\..\Windows\x.dll");
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
     public void Manifest_entry_escaping_the_game_folder_is_rejected()
     {
         var manifest = new DeployManifest

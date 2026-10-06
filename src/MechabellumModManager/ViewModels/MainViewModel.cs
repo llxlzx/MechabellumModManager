@@ -3624,7 +3624,7 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 try
                 {
-                    await _catalog.DownloadModAsync(item.Mod, tempPath, reporter).ConfigureAwait(true);
+                    await DownloadCatalogPayloadAsync(item.Mod, tempPath, reporter).ConfigureAwait(true);
                 }
                 catch (CatalogFileMissingException ex) when (_wholeFileMissBudget.TryUse())
                 {
@@ -3659,7 +3659,7 @@ public sealed partial class MainViewModel : ObservableObject
                             }
                             return;
                         case CatalogMissFollowUp.DownloadParts:
-                            await _catalog.DownloadModAsync(fresh!, tempPath, reporter).ConfigureAwait(true);
+                            await DownloadCatalogPayloadAsync(fresh!, tempPath, reporter).ConfigureAwait(true);
                             break;
                         default:
                             CatalogStatus = $"加入本地库失败：{ex.Message}";
@@ -3679,7 +3679,23 @@ public sealed partial class MainViewModel : ObservableObject
             try
             {
                 var forceType = ModCatalogService.ParsePackageType(item.Type);
-                var pkg = _library.ImportDll(tempPath, forceType);
+                ModPackage pkg;
+                if (item.Mod.Bundle is { Count: > 0 })
+                {
+                    var stage = Path.GetDirectoryName(tempPath)
+                        ?? throw new InvalidOperationException("素材包临时目录缺失，已拒绝加入本地库。");
+                    var imported = _library.ImportFolder(stage, forceType);
+                    pkg = imported.FirstOrDefault(candidate => candidate.Files.Any(file =>
+                            string.Equals(
+                                Path.GetFileName(file.RelativePathInPackage.Replace('/', Path.DirectorySeparatorChar)),
+                                fileName,
+                                StringComparison.OrdinalIgnoreCase)))
+                        ?? throw new InvalidOperationException("素材包里没有主文件，已拒绝加入本地库。");
+                }
+                else
+                {
+                    pkg = _library.ImportDll(tempPath, forceType);
+                }
                 try
                 {
                     pkg = _library.UpdatePackageMetadata(
@@ -3749,6 +3765,22 @@ public sealed partial class MainViewModel : ObservableObject
             CatalogStatus = $"加入本地库失败：{ex.Message}";
             AppendLog(CatalogStatus);
         }
+    }
+
+    async Task DownloadCatalogPayloadAsync(
+        CatalogMod mod,
+        string tempPath,
+        IProgress<DownloadProgress> reporter)
+    {
+        if (mod.Bundle is { Count: > 0 })
+        {
+            var stage = Path.GetDirectoryName(tempPath)
+                ?? throw new InvalidOperationException("素材包临时目录缺失，已拒绝下载。");
+            await _catalog.DownloadBundleAsync(mod, stage, reporter).ConfigureAwait(true);
+            return;
+        }
+
+        await _catalog.DownloadModAsync(mod, tempPath, reporter).ConfigureAwait(true);
     }
 
     /// <summary>

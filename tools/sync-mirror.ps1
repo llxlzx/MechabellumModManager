@@ -305,7 +305,19 @@ foreach ($mod in $catalog.mods) {
     }
     else {
         $relative = ($mod.file -replace '\\', '/')
-        Push-File -LocalPath (Join-Path $ModsRepo $relative) -RemoteKey "MechabellumMods/$relative"
+        # A bundle is separate assemblies. The whole-file key is what 1.3.13 would install as
+        # the only DLL, so it stays absent even when a local copy of that name exists.
+        if (-not $mod.bundle) {
+            Push-File -LocalPath (Join-Path $ModsRepo $relative) -RemoteKey "MechabellumMods/$relative"
+        }
+
+        if ($mod.bundle) {
+            foreach ($item in $mod.bundle) {
+                $bundleRelative = ("$($item.file)" -replace '\\', '/')
+                if (-not $bundleRelative) { throw "$($mod.id) has a bundle member with no file path" }
+                Push-File -LocalPath (Join-Path $ModsRepo $bundleRelative) -RemoteKey "MechabellumMods/$bundleRelative"
+            }
+        }
 
         # Slices of a file that is too big for one git blob. The whole file stays uploaded so
         # managers that predate "parts" can still install it. New managers download the slices

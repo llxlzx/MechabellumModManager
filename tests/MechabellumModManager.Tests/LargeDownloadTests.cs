@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using FluentAssertions;
+using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 using MechabellumModManager.Tests.Support;
 using Xunit;
@@ -674,6 +675,79 @@ public sealed class LargeDownloadTests
         {
             Cleanup(dest);
         }
+    }
+
+    [Fact]
+    public async Task A_bundle_member_at_the_git_limit_is_refused_before_any_request()
+    {
+        var handler = new ScriptedHttpHandler(_ =>
+            throw new InvalidOperationException("must not download"));
+        using var http = new HttpClient(handler);
+        var svc = new ModCatalogService(http);
+        var stage = Path.Combine(Path.GetTempPath(), "mmm-bundle-" + Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            var act = async () => await svc.DownloadBundleAsync(new CatalogMod
+            {
+                File = "mods/cut-guide/Mechabellum.Guide.TextHover.dll",
+                Sha256 = new string('a', 64),
+                Size = 8,
+                Bundle =
+                [
+                    new CatalogBundleFile
+                    {
+                        Path = "CUTGuide.Assets/CUTGuide.Videos.001.dll",
+                        File = "mods/cut-guide/payload/CUTGuide.Assets/CUTGuide.Videos.001.dll",
+                        Sha256 = new string('b', 64),
+                        Size = ModCatalogService.GitRepoMaxBytes
+                    }
+                ]
+            }, stage);
+
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*100MB*");
+            handler.Requests.Should().BeEmpty();
+        }
+        finally
+        {
+            if (Directory.Exists(stage))
+                Directory.Delete(stage, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void A_bundle_is_current_only_when_every_member_hash_is_installed()
+    {
+        var catalog = new CatalogMod
+        {
+            Id = "cut-guide",
+            File = "mods/cut-guide/Mechabellum.Guide.TextHover.dll",
+            Sha256 = new string('a', 64),
+            Bundle =
+            [
+                new CatalogBundleFile { Path = "Mechabellum.Guide.TextHover.dll", Sha256 = new string('a', 64), Size = 1 },
+                new CatalogBundleFile { Path = "CUTGuide.Assets/CUTGuide.Text.dll", Sha256 = new string('b', 64), Size = 1 }
+            ]
+        };
+        var partial = new ModPackage
+        {
+            Id = "cut-guide",
+            CatalogId = "cut-guide",
+            Files = { new DeployableFile { RelativePathInPackage = "Mechabellum.Guide.TextHover.dll", Sha256 = new string('a', 64) } }
+        };
+        var complete = new ModPackage
+        {
+            Id = "cut-guide",
+            CatalogId = "cut-guide",
+            Files =
+            {
+                new DeployableFile { RelativePathInPackage = "Mechabellum.Guide.TextHover.dll", Sha256 = new string('a', 64) },
+                new DeployableFile { RelativePathInPackage = "CUTGuide.Assets/CUTGuide.Text.dll", Sha256 = new string('b', 64) }
+            }
+        };
+
+        ModCatalogService.GetEntryState([partial], catalog).Should().Be(CatalogEntryState.UpdateAvailable);
+        ModCatalogService.GetEntryState([complete], catalog).Should().Be(CatalogEntryState.UpToDate);
     }
 
     [Fact]

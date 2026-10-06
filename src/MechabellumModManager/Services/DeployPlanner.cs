@@ -118,15 +118,33 @@ public sealed class DeployPlanner
     {
         return type switch
         {
-            ModPackageType.MelonMod =>
-                Path.Combine("Mods", Path.GetFileName(relativePathInPackage)),
-            ModPackageType.MelonPlugin =>
-                Path.Combine("Plugins", Path.GetFileName(relativePathInPackage)),
+            ModPackageType.MelonMod => CombineUnderSlot("Mods", relativePathInPackage),
+            ModPackageType.MelonPlugin => CombineUnderSlot("Plugins", relativePathInPackage),
             ModPackageType.MelonUserLibs =>
                 Path.Combine("UserLibs", Path.GetFileName(relativePathInPackage)),
             ModPackageType.MelonUserData => MapUserDataRelative(relativePathInPackage),
             _ => throw new InvalidOperationException($"Unsupported package type: {type}")
         };
+    }
+
+    /// <summary>
+    /// Keeps a package-relative subdirectory, so an asset pack stays beside the main DLL.
+    /// A lone file name still lands in the slot root.
+    /// </summary>
+    static string CombineUnderSlot(string slot, string relativePathInPackage)
+    {
+        if (string.IsNullOrWhiteSpace(relativePathInPackage))
+            throw new InvalidOperationException($"{slot} relative path is empty.");
+
+        var normalized = relativePathInPackage.Replace('\\', '/').Trim();
+        if (Path.IsPathRooted(relativePathInPackage) || normalized.Contains(':') || normalized.StartsWith('/'))
+            throw new InvalidOperationException($"{slot} rooted paths are not allowed.");
+
+        var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0 || segments.Any(segment => segment is "." or ".."))
+            throw new InvalidOperationException($"{slot} path escapes the {slot} directory.");
+
+        return Path.Combine(new[] { slot }.Concat(segments).ToArray());
     }
 
     private static string MapUserDataRelative(string relativePathInPackage)
