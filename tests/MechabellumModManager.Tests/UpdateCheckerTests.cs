@@ -47,7 +47,7 @@ public class UpdateCheckerTests
         result.RemoteVersion.Should().Be("9.9.9");
         result.SetupUrl.Should().Be("https://cdn.example/Setup.exe");
         result.Source.Should().Be(RemoteFetch.MirrorSource);
-        handler.Requests.Should().HaveCount(3, "both GitHub manifests fail, then the mirror is read");
+        handler.Requests.Should().ContainSingle("a usable mirror manifest is kept without asking GitHub");
     }
 
     [Fact]
@@ -72,21 +72,21 @@ public class UpdateCheckerTests
 
         result.Kind.Should().Be(UpdateCheckKind.UpToDate);
         result.Source.Should().Be(RemoteFetch.GithubSource);
-        handler.Requests.Should().HaveCount(2);
-        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
+        handler.Requests.Should().HaveCount(3);
+        handler.Requests[0].Host.Should().Contain("mirror.example");
     }
 
     [Fact]
-    public void BuildLatestJsonCandidates_lists_github_before_the_mirror()
+    public void BuildLatestJsonCandidates_lists_the_mirror_before_github()
     {
         var checker = new UpdateChecker(mirrorBaseUrl: "https://mirror.example/m");
 
         var candidates = checker.BuildLatestJsonCandidates();
 
         candidates.Should().HaveCount(3);
-        candidates[0].Should().Be(UpdateChecker.LatestJsonUri);
-        candidates[1].Should().Be(UpdateChecker.RawLatestJsonUri);
-        candidates[2].ToString().Should().Be("https://mirror.example/m/MechabellumModManager/latest.json");
+        candidates[0].ToString().Should().Be("https://mirror.example/m/MechabellumModManager/latest.json");
+        candidates[1].Should().Be(UpdateChecker.LatestJsonUri);
+        candidates[2].Should().Be(UpdateChecker.RawLatestJsonUri);
         UpdateChecker.RawLatestJsonUri.ToString().Should()
             .Be("https://raw.githubusercontent.com/llxlzx/MechabellumModManager/master/release/latest.json");
     }
@@ -96,11 +96,13 @@ public class UpdateCheckerTests
     /// not caught up with — that is the whole reason it is a source.
     /// </summary>
     [Fact]
-    public async Task CheckAsync_finds_the_new_version_from_the_repo_pointer_when_the_others_are_behind()
+    public async Task CheckAsync_finds_the_new_version_from_the_repo_pointer_when_the_mirror_is_down()
     {
         var handler = new ScriptedHttpHandler(req =>
         {
-            if (req.RequestUri!.Host.Contains("raw.githubusercontent.com", StringComparison.Ordinal))
+            if (req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                return ScriptedHttpHandler.Json(HttpStatusCode.ServiceUnavailable, "no");
+            if (req.RequestUri.Host.Contains("raw.githubusercontent.com", StringComparison.Ordinal))
             {
                 return ScriptedHttpHandler.Json(HttpStatusCode.OK,
                     """{"version":"1.2.1","notes":"n","setupUrl":"https://github.com/x/Setup.exe"}""");
@@ -121,10 +123,11 @@ public class UpdateCheckerTests
     }
 
     /// <summary>
-    /// A tie keeps the GitHub installer. The mirror is not asked once a GitHub manifest answered.
+    /// A usable mirror manifest is the installer players in mainland China download.
+    /// GitHub is not asked once that manifest answered.
     /// </summary>
     [Fact]
-    public async Task CheckAsync_keeps_github_when_every_source_would_announce_the_same_version()
+    public async Task CheckAsync_keeps_the_mirror_when_it_announces_the_same_version()
     {
         var handler = new ScriptedHttpHandler(req =>
             req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal)
@@ -138,13 +141,13 @@ public class UpdateCheckerTests
         var result = await checker.CheckAsync();
 
         result.Kind.Should().Be(UpdateCheckKind.UpdateAvailable);
-        result.SetupUrl.Should().Be("https://github.com/x/Setup.exe");
-        result.Source.Should().Be(RemoteFetch.GithubSource);
-        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
+        result.SetupUrl.Should().Be("https://cdn.example/Setup.exe");
+        result.Source.Should().Be(RemoteFetch.MirrorSource);
+        handler.Requests.Should().NotContain(u => u.Host.Contains("github"));
     }
 
     [Fact]
-    public async Task CheckAsync_keeps_github_when_only_the_other_source_would_carry_a_stamp()
+    public async Task CheckAsync_keeps_the_mirror_when_only_github_would_carry_a_stamp()
     {
         var handler = new ScriptedHttpHandler(req =>
             req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal)
@@ -157,20 +160,27 @@ public class UpdateCheckerTests
 
         var result = await checker.CheckAsync();
 
-        result.SetupUrl.Should().Be("https://github.com/x/Setup.exe");
-        result.Source.Should().Be(RemoteFetch.GithubSource);
-        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
+        result.SetupUrl.Should().Be("https://cdn.example/Setup.exe");
+        result.Source.Should().Be(RemoteFetch.MirrorSource);
+        handler.Requests.Should().NotContain(u => u.Host.Contains("github"));
     }
 
     [Fact]
-    public async Task CheckAsync_prefers_the_freshly_stamped_manifest_when_versions_are_equal()
+    public async Task CheckAsync_prefers_the_freshly_stamped_github_manifest_when_the_mirror_is_down()
     {
         var handler = new ScriptedHttpHandler(req =>
-            req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal)
-                ? ScriptedHttpHandler.Json(HttpStatusCode.OK,
-                    """{"version":"1.2.1","setupUrl":"https://cdn.example/Setup.exe","publishedAt":"2026-09-01T00:00:00Z"}""")
-                : ScriptedHttpHandler.Json(HttpStatusCode.OK,
-                    """{"version":"1.2.1","setupUrl":"https://github.com/x/Setup.exe","publishedAt":"2026-09-10T00:00:00Z"}"""));
+        {
+            if (req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                return ScriptedHttpHandler.Json(HttpStatusCode.ServiceUnavailable, "no");
+            if (req.RequestUri.Host.Contains("raw.githubusercontent.com", StringComparison.Ordinal))
+            {
+                return ScriptedHttpHandler.Json(HttpStatusCode.OK,
+                    """{"version":"1.2.1","setupUrl":"https://github.com/x/old.exe","publishedAt":"2026-09-01T00:00:00Z"}""");
+            }
+
+            return ScriptedHttpHandler.Json(HttpStatusCode.OK,
+                """{"version":"1.2.1","setupUrl":"https://github.com/x/Setup.exe","publishedAt":"2026-09-10T00:00:00Z"}""");
+        });
         using var http = new HttpClient(handler);
         var checker = new UpdateChecker(http, () => "1.2.0", "https://mirror.example/m");
 

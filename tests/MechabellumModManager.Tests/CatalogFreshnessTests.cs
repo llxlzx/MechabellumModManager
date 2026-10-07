@@ -31,19 +31,14 @@ public class CatalogFreshnessTests
     }
 
     [Fact]
-    public async Task Smart_fetch_Warm_304_does_not_hit_the_mirror()
+    public async Task Smart_fetch_Warm_304_revalidates_the_mirror()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-w304-" + Guid.NewGuid().ToString("N"));
-        var hitsMirror = false;
         var mode = "cold";
         var handler = new ScriptedHttpHandler(req =>
         {
-            var host = req.RequestUri!.Host;
-            if (host.Contains("mirror.example", StringComparison.Ordinal))
-            {
-                hitsMirror = true;
-                return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-10"));
-            }
+            if (!req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
 
             if (mode == "cold")
             {
@@ -61,7 +56,6 @@ public class CatalogFreshnessTests
         };
 
         (await svc.FetchCatalogSmartAsync(true)).Kind.Should().Be(CatalogFetchKind.ColdApplied);
-        hitsMirror = false;
         mode = "warm";
         svc.HotCacheTtl = TimeSpan.Zero;
         File.SetLastWriteTimeUtc(CatalogCache.GetPath(data), DateTime.UtcNow.AddHours(-13));
@@ -69,31 +63,24 @@ public class CatalogFreshnessTests
         var warm = await svc.FetchCatalogSmartAsync(false);
         warm.Kind.Should().Be(CatalogFetchKind.WarmNotModified);
         warm.Root.Should().NotBeNull();
-        hitsMirror.Should().BeFalse();
         handler.RequestSnapshots.Should().Contain(r =>
-            (r.Uri.Host.Contains("github", StringComparison.OrdinalIgnoreCase) ||
-             r.Uri.Host.Contains("githubusercontent", StringComparison.OrdinalIgnoreCase)) &&
+            r.Uri.Host.Contains("mirror.example", StringComparison.Ordinal) &&
             r.IfNoneMatch != null && r.IfNoneMatch.Contains("v1"));
+        handler.Requests.Should().NotContain(u => u.Host.Contains("githubusercontent"));
     }
 
     [Fact]
-    public async Task Smart_fetch_after_ttl_uses_github_and_skips_the_mirror()
+    public async Task Smart_fetch_after_ttl_uses_the_mirror_and_skips_github()
     {
         var data = Path.Combine(Path.GetTempPath(), "mmm-w200-" + Guid.NewGuid().ToString("N"));
         var mode = "seed";
         var handler = new ScriptedHttpHandler(req =>
         {
-            if (req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
-                return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-01"));
+            if (!req.RequestUri!.Host.Contains("mirror.example", StringComparison.Ordinal))
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
 
-            if (mode == "seed")
-            {
-                var resp = ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-01"));
-                resp.Headers.ETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"old\"");
-                return resp;
-            }
-
-            return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson("2026-09-13"));
+            var stamp = mode == "seed" ? "2026-09-01" : "2026-09-13";
+            return ScriptedHttpHandler.Json(HttpStatusCode.OK, CatalogJson(stamp));
         });
         using var http = new HttpClient(handler);
         var svc = new ModCatalogService(http, "https://mirror.example/m", data)
@@ -110,9 +97,9 @@ public class CatalogFreshnessTests
         var result = await svc.FetchCatalogSmartAsync(false);
         result.Kind.Should().Be(CatalogFetchKind.ColdApplied);
         result.Root!.UpdatedAt.Should().Be("2026-09-13");
-        svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+        svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
         handler.Requests.Skip(before).Should().NotContain(uri =>
-            uri.Host.Contains("mirror.example", StringComparison.Ordinal));
+            uri.Host.Contains("githubusercontent", StringComparison.Ordinal));
     }
 
     [Fact]

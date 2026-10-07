@@ -86,7 +86,12 @@ public static class EnsureRedistCli
                 progress = new SyncFileProgress(path);
             }
 
-            var svc = new RedistEnsureService();
+            var svc = new RedistEnsureService
+            {
+                Route = noMirror
+                    ? DownloadRouteKind.GitHubOnly
+                    : DownloadRoutePolicy.ResolveAuto(null)
+            };
             var result = svc.EnsureAsync(redistDir.Trim(), mirror, ids, progress: progress)
                 .GetAwaiter()
                 .GetResult();

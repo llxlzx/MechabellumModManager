@@ -814,6 +814,11 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Domestic mirror base</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Pre-filled with the domestic COS mirror; clear for GitHub only. Same layout as the repos.</value></data>
+  <data name="DownloadRoute" xml:space="preserve"><value>Download route</value></data>
+  <data name="DownloadRouteAuto" xml:space="preserve"><value>Automatic (mirror in China, GitHub elsewhere)</value></data>
+  <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>Always use the domestic mirror</value></data>
+  <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>Always use GitHub</value></data>
+  <data name="DownloadRouteHint" xml:space="preserve"><value>Automatic follows region. If the check fails, the domestic mirror is still tried first.</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>Advanced</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>Content mirror: on (factory default)</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>Content mirror: custom</value></data>

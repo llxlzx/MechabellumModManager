@@ -392,11 +392,11 @@ public class ModUpdateFlowTests
     }
 
     /// <summary>
-    /// A mirror that stopped syncing answers 200 with an old catalog, and silence about that is the
-    /// hardest version of this bug to diagnose.
+    /// A mirror that answers is the catalog the player sees. GitHub is not contacted, so a blocked
+    /// GitHub does not add a wait on top of a catalog that already arrived.
     /// </summary>
     [Fact]
-    public async Task A_stale_mirror_is_named_in_the_log_and_the_newer_copy_wins()
+    public async Task A_successful_mirror_catalog_is_applied_without_asking_github()
     {
         using var fx = MainViewModelFixture.CreateReady();
         var oldId = SeedInstalledGridMod(fx, version: "1.0.0");
@@ -417,10 +417,9 @@ public class ModUpdateFlowTests
         await vm.RefreshCatalogCommand.ExecuteAsync(null);
 
         var row = vm.Mods.Should().ContainSingle(m => m.Package.Id == oldId).Subject;
-        row.HasUpdate.Should().BeTrue();
-        row.LatestVersion.Should().Be("1.2.0");
-        vm.LogText.Should().NotContain("目录已过期");
-        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
+        row.LatestVersion.Should().Be("1.0.0");
+        handler.Requests.Should().Contain(u => u.Host.Contains("mirror.example"));
+        handler.Requests.Should().NotContain(u => u.Host.Contains("githubusercontent"));
     }
 
     static async Task<ModItemViewModel> WaitForUpdateFlag(MainViewModel vm, string packageId)

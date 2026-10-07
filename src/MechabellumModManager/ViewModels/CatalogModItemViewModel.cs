@@ -9,6 +9,7 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 {
     readonly string? _mirrorBaseUrl;
     readonly string? _cacheRoot;
+    DownloadRouteKind _route;
     CancellationTokenSource? _previewCts;
     string? _previewLoadUrl;
 
@@ -18,13 +19,22 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
         CatalogMod mod,
         CatalogEntryState state,
         string? mirrorBaseUrl = null,
-        string? cacheRoot = null)
+        string? cacheRoot = null,
+        DownloadRouteKind route = DownloadRouteKind.MirrorFirst)
     {
         Mod = mod ?? throw new ArgumentNullException(nameof(mod));
         _state = state;
         _mirrorBaseUrl = mirrorBaseUrl;
         _cacheRoot = cacheRoot;
-        PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(mod, mirrorBaseUrl);
+        _route = route;
+        PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(mod, mirrorBaseUrl, route);
+        PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
+    }
+
+    public void ApplyRoute(DownloadRouteKind route)
+    {
+        _route = route;
+        PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(Mod, _mirrorBaseUrl, _route);
         PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
     }
 
@@ -115,7 +125,7 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
 
     public async Task LoadPreviewImageAsync()
     {
-        PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(Mod, _mirrorBaseUrl);
+        PreviewCandidateUrls = ModCatalogService.GetPreviewCandidateUrls(Mod, _mirrorBaseUrl, _route);
         PreviewUrl = PreviewCandidateUrls.Count == 0 ? null : PreviewCandidateUrls[0];
         var urls = PreviewCandidateUrls;
         var url = urls.Count == 0 ? PreviewUrl : string.Join('\n', urls);

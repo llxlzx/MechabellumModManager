@@ -47,17 +47,18 @@ public class MirrorContractTests
     {
         var catalog = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
 
-        catalog.BuildCatalogCandidates()[0].Host.Should().Contain("githubusercontent");
-        catalog.BuildCatalogCandidates().Should().Contain(u =>
-            u.ToString() == "https://mirror.example.com/m/MechabellumMods/catalog.json");
-        catalog.BuildFileCandidates("mods/show-grid/ShowGrid.dll")[0].Host.Should().Contain("githubusercontent");
+        catalog.BuildCatalogCandidates()[0].ToString().Should()
+            .Be("https://mirror.example.com/m/MechabellumMods/catalog.json");
+        catalog.BuildCatalogCandidates().Should().Contain(u => u.Host.Contains("githubusercontent"));
+        catalog.BuildFileCandidates("mods/show-grid/ShowGrid.dll")[0].ToString().Should()
+            .Be("https://mirror.example.com/m/MechabellumMods/mods/show-grid/ShowGrid.dll");
         catalog.BuildFileCandidates("mods/show-grid/ShowGrid.dll").Should().Contain(u =>
-            u.ToString() == "https://mirror.example.com/m/MechabellumMods/mods/show-grid/ShowGrid.dll");
+            u.Host.Contains("githubusercontent"));
 
         var checker = new UpdateChecker(mirrorBaseUrl: "https://mirror.example.com/m");
-        checker.BuildLatestJsonCandidates()[0].Should().Be(UpdateChecker.LatestJsonUri);
-        checker.BuildLatestJsonCandidates().Should().Contain(u =>
-            u.ToString() == "https://mirror.example.com/m/MechabellumModManager/latest.json");
+        checker.BuildLatestJsonCandidates()[0].ToString().Should()
+            .Be("https://mirror.example.com/m/MechabellumModManager/latest.json");
+        checker.BuildLatestJsonCandidates().Should().Contain(UpdateChecker.LatestJsonUri);
     }
 
     [Fact]

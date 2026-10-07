@@ -793,6 +793,11 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>国内ミラー基点</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>国内 COS が初期値。空欄なら GitHub のみ。リポジトリと同型。</value></data>
+  <data name="DownloadRoute" xml:space="preserve"><value>ダウンロード経路</value></data>
+  <data name="DownloadRouteAuto" xml:space="preserve"><value>自動（国内はミラー、海外は GitHub）</value></data>
+  <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>常に国内ミラー</value></data>
+  <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>常に GitHub</value></data>
+  <data name="DownloadRouteHint" xml:space="preserve"><value>自動は地域で選びます。判定に失敗したときは国内ミラーを先に使います。</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>詳細設定</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>コンテンツミラー：オン（出荷時既定）</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>コンテンツミラー：カスタム</value></data>

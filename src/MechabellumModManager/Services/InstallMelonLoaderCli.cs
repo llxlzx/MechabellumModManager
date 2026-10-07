@@ -62,7 +62,7 @@ public static class InstallMelonLoaderCli
             if (zip is null && !string.IsNullOrWhiteSpace(redistDir))
             {
                 Log("local Melon zip missing — ensuring redist from mirror/origin…");
-                var ensure = new RedistEnsureService()
+                var ensure = new RedistEnsureService { Route = DownloadRoutePolicy.ResolveAuto(null) }
                     .EnsureAsync(
                         redistDir.Trim(),
                         DomesticMirrorDefaults.BaseUrl,

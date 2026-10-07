@@ -202,6 +202,9 @@ public sealed partial class ModCatalogService
     readonly HttpClient _http;
 
     public string? MirrorBaseUrl { get; set; }
+
+    /// <summary>Domestic installs try the mirror first. A GitHub-only route omits the mirror.</summary>
+    public DownloadRouteKind Route { get; set; } = DownloadRouteKind.MirrorFirst;
     public string? DataRoot { get; set; }
     public string? LastFetchSource { get; private set; }
     public string? LastDownloadSource { get; private set; }
@@ -246,7 +249,7 @@ public sealed partial class ModCatalogService
     /// How long a catalog already written to disk is trusted across process restarts.
     /// Inside this window a launch does not contact GitHub or the mirror.
     /// </summary>
-    public static readonly TimeSpan DiskQuietPeriod = TimeSpan.FromHours(12);
+    public static readonly TimeSpan DiskQuietPeriod = TimeSpan.FromHours(6);
 
     /// <summary>
     /// Longest gap tolerated between two received chunks, and the only liveness guard the
@@ -330,13 +333,19 @@ public sealed partial class ModCatalogService
         return new Uri(GetRawUrl(mod.File ?? ""));
     }
 
-    public static string? PreviewUrl(CatalogMod? mod, string? mirrorBaseUrl = null)
+    public static string? PreviewUrl(
+        CatalogMod? mod,
+        string? mirrorBaseUrl = null,
+        DownloadRouteKind route = DownloadRouteKind.MirrorFirst)
     {
-        var urls = GetPreviewCandidateUrls(mod, mirrorBaseUrl);
+        var urls = GetPreviewCandidateUrls(mod, mirrorBaseUrl, route);
         return urls.Count == 0 ? null : urls[0];
     }
 
-    public static IReadOnlyList<string> GetPreviewCandidateUrls(CatalogMod? mod, string? mirrorBaseUrl = null)
+    public static IReadOnlyList<string> GetPreviewCandidateUrls(
+        CatalogMod? mod,
+        string? mirrorBaseUrl = null,
+        DownloadRouteKind route = DownloadRouteKind.MirrorFirst)
     {
         var preview = mod is null ? null : CatalogLocaleResolver.ResolvePreview(mod);
         if (string.IsNullOrWhiteSpace(preview))
@@ -348,7 +357,8 @@ public sealed partial class ModCatalogService
             return RemoteFetch.BuildCandidates(
                     mirrorBaseUrl,
                     $"MechabellumMods/{relative}",
-                    new Uri(GetRawUrl(relative)))
+                    new Uri(GetRawUrl(relative)),
+                    route)
                 .Select(u => u.ToString())
                 .ToList();
         }
@@ -359,7 +369,11 @@ public sealed partial class ModCatalogService
     }
 
     public IReadOnlyList<Uri> BuildCatalogCandidates() =>
-        RemoteFetch.BuildCandidates(MirrorBaseUrl, "MechabellumMods/catalog.json", CatalogOriginUrl);
+        RemoteFetch.BuildCandidates(
+            MirrorBaseUrl,
+            "MechabellumMods/catalog.json",
+            CatalogOriginUrl,
+            Route);
 
     public IReadOnlyList<Uri> BuildFileCandidates(string relativePath)
     {
@@ -367,14 +381,15 @@ public sealed partial class ModCatalogService
         return RemoteFetch.BuildCandidates(
             MirrorBaseUrl,
             $"MechabellumMods/{relative}",
-            new Uri(GetRawUrl(relative)));
+            new Uri(GetRawUrl(relative)),
+            Route);
     }
 
     /// <summary>
-    /// GitHub first (release <c>originUrl</c> when present, then the repo path), mirror last.
-    /// A file over <see cref="GitRepoMaxBytes"/> cannot live in git, so the raw repo path is
-    /// skipped: <c>originUrl</c> is tried, then the mirror. Parts use <see cref="BuildPartCandidates"/>
-    /// instead, and those stay under the git limit.
+    /// Mirror first when <see cref="Route"/> says so, then a release <c>originUrl</c>, then the
+    /// repo path. A file over <see cref="GitRepoMaxBytes"/> cannot live in git, so the raw repo
+    /// path is skipped unless nothing else is left. A GitHub-only route never lists the mirror.
+    /// Parts use <see cref="BuildPartCandidates"/> and stay under the git limit.
     ///
     /// The repo path stays on the list for a normal mod so that a mis-stamped <c>originUrl</c>
     /// degrades to another GitHub request rather than making the mod uninstallable.
@@ -385,33 +400,35 @@ public sealed partial class ModCatalogService
         var relative = NormalizeCatalogRelativePath(mod.File ?? "");
         var rawUrl = new Uri(GetRawUrl(relative));
         var origin = TryParseOriginUrl(mod.OriginUrl);
-        var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, $"MechabellumMods/{relative}");
+        var mirror = Route == DownloadRouteKind.GitHubOnly
+            ? null
+            : RemoteFetch.TryMirrorUri(MirrorBaseUrl, $"MechabellumMods/{relative}");
 
         if (mod.Size > GitRepoMaxBytes)
         {
-            var oversized = new List<Uri>(2);
-            if (origin is not null)
-                oversized.Add(origin);
+            var oversized = new List<Uri>(3);
             if (mirror is not null)
                 oversized.Add(mirror);
+            if (origin is not null)
+                oversized.Add(origin);
             if (oversized.Count == 0)
                 oversized.Add(rawUrl);
             return oversized;
         }
 
         var candidates = new List<Uri>(3);
+        if (mirror is not null)
+            candidates.Add(mirror);
         if (origin is not null)
             candidates.Add(origin);
         if (origin is null || origin != rawUrl)
             candidates.Add(rawUrl);
-        if (mirror is not null)
-            candidates.Add(mirror);
         return candidates;
     }
 
     /// <summary>
-    /// Repo path first, mirror last. A part is small enough for git, so it never uses the
-    /// whole-file <c>originUrl</c>.
+    /// Mirror first, repo path after. A part is small enough for git, so it never uses the
+    /// whole-file <c>originUrl</c>. A GitHub-only route omits the mirror.
     /// </summary>
     public IReadOnlyList<Uri> BuildPartCandidates(CatalogPart part)
     {
@@ -420,7 +437,8 @@ public sealed partial class ModCatalogService
         return RemoteFetch.BuildCandidates(
             MirrorBaseUrl,
             $"MechabellumMods/{relative}",
-            new Uri(GetRawUrl(relative)));
+            new Uri(GetRawUrl(relative)),
+            Route);
     }
 
     /// <summary>

@@ -310,7 +310,7 @@ public sealed class LargeDownloadTests
     }
 
     [Fact]
-    public async Task A_reachable_github_copy_does_not_touch_the_mirror()
+    public async Task A_mirror_miss_falls_through_to_the_origin()
     {
         var payload = RandomBytes(50_000);
         using var origin = new LoopbackHttpServer(_ => new LoopbackHttpServer.Reply { Payload = payload });
@@ -336,8 +336,8 @@ public sealed class LargeDownloadTests
                 dest);
 
             File.ReadAllBytes(dest).Should().Equal(payload);
-            origin.Requests.Should().HaveCount(1);
-            mirror.Requests.Should().BeEmpty("a reachable GitHub copy is not followed by a mirror request");
+            mirror.Requests.Should().ContainSingle();
+            origin.Requests.Should().ContainSingle();
         }
         finally
         {
@@ -513,7 +513,7 @@ public sealed class LargeDownloadTests
     }
 
     [Fact]
-    public void An_https_origin_url_is_tried_before_the_repo_path_and_the_mirror()
+    public void An_https_origin_url_follows_the_mirror_and_precedes_the_repo_path()
     {
         var svc = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
 
@@ -524,13 +524,13 @@ public sealed class LargeDownloadTests
         });
 
         candidates.Select(u => u.ToString()).Should().Equal(
+            "https://mirror.example.com/m/MechabellumMods/mods/x/Mod.dll",
             "https://github.com/llxlzx/MechabellumMods/releases/download/mods-v1/Mod.dll",
-            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/x/Mod.dll",
-            "https://mirror.example.com/m/MechabellumMods/mods/x/Mod.dll");
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/x/Mod.dll");
     }
 
     [Fact]
-    public void A_mod_over_the_git_limit_tries_the_release_then_the_mirror()
+    public void A_mod_over_the_git_limit_tries_the_mirror_then_the_release()
     {
         var svc = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
 
@@ -542,12 +542,12 @@ public sealed class LargeDownloadTests
         });
 
         candidates.Select(u => u.ToString()).Should().Equal(
-            "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll",
-            "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/Mechabellum.Guide.TextHover.dll");
+            "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/Mechabellum.Guide.TextHover.dll",
+            "https://github.com/llxlzx/MechabellumMods/releases/download/mods-current/big.dll");
     }
 
     [Fact]
-    public void Part_candidates_try_the_repo_before_the_mirror()
+    public void Part_candidates_try_the_mirror_before_the_repo()
     {
         var svc = new ModCatalogService(mirrorBaseUrl: "https://mirror.example.com/m");
 
@@ -559,8 +559,8 @@ public sealed class LargeDownloadTests
         });
 
         candidates.Select(u => u.ToString()).Should().Equal(
-            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cut-guide/parts/0000",
-            "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/parts/0000");
+            "https://mirror.example.com/m/MechabellumMods/mods/cut-guide/parts/0000",
+            "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cut-guide/parts/0000");
     }
 
     [Fact]
@@ -599,7 +599,8 @@ public sealed class LargeDownloadTests
             }, dest);
 
             File.ReadAllBytes(dest).Should().Equal(whole);
-            handler.Requests.Should().OnlyContain(u =>
+            handler.Requests.Should().Contain(u => u.Host.Contains("mirror", StringComparison.Ordinal));
+            handler.Requests.Should().Contain(u =>
                 u.Host.Contains("githubusercontent", StringComparison.Ordinal));
             handler.Requests.Should().NotContain(u => u.AbsolutePath.Contains("TextHover", StringComparison.Ordinal));
         }

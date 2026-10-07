@@ -331,14 +331,17 @@ public static class RemoteFetch
     public static IReadOnlyList<Uri> BuildCandidates(
         string? mirrorBaseUrl,
         string mirrorRelativePath,
-        Uri githubFallback)
+        Uri githubFallback,
+        DownloadRouteKind route = DownloadRouteKind.MirrorFirst)
     {
         ArgumentNullException.ThrowIfNull(githubFallback);
         var list = new List<Uri>(2);
-        list.Add(githubFallback);
-        var mirror = TryMirrorUri(mirrorBaseUrl, mirrorRelativePath);
+        var mirror = route == DownloadRouteKind.GitHubOnly
+            ? null
+            : TryMirrorUri(mirrorBaseUrl, mirrorRelativePath);
         if (mirror is not null)
             list.Add(mirror);
+        list.Add(githubFallback);
         return list;
     }
 }

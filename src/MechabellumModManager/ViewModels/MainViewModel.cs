@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
@@ -32,6 +33,8 @@ public sealed partial class MainViewModel : ObservableObject
     readonly UpdateChecker _updateChecker;
     readonly ModCatalogService _catalog;
     readonly NoticeService _notices;
+    DispatcherTimer? _periodicUpdates;
+    int _downloadRoutePreference;
     readonly AssemblyInspector _assemblyInspector;
     readonly ManagerLogWriter _managerLog;
     readonly ManagerEventLog _events;
@@ -318,6 +321,11 @@ public sealed partial class MainViewModel : ObservableObject
             ApplyMirrorBaseUrl(config.MirrorBaseUrl, save: false);
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
         ApplyUiScale(config.UiScale, save: false);
+        _downloadRoutePreference = Math.Clamp(config.DownloadRoutePreference, 0, 2);
+        DownloadRouteOptions = BuildDownloadRouteOptions();
+        ApplyDownloadRoute(_downloadRoutePreference == (int)Services.DownloadRoutePreference.AlwaysGitHub
+            ? DownloadRouteKind.GitHubOnly
+            : DownloadRouteKind.MirrorFirst);
 
         try
         {
@@ -421,6 +429,33 @@ public sealed partial class MainViewModel : ObservableObject
     public IReadOnlyList<CategoryFilterOption> LibraryCategoryFilterOptions { get; private set; } = Array.Empty<CategoryFilterOption>();
     public IReadOnlyList<SortModeOption> SortModeOptions { get; private set; } = Array.Empty<SortModeOption>();
     public IReadOnlyList<LaunchModeOption> LaunchModeOptions { get; }
+
+    public DownloadRouteKind DownloadRoute { get; private set; } = DownloadRouteKind.MirrorFirst;
+
+    public IReadOnlyList<DownloadRouteOption> DownloadRouteOptions { get; private set; } =
+        Array.Empty<DownloadRouteOption>();
+
+    public int DownloadRoutePreference
+    {
+        get => _downloadRoutePreference;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 2);
+            if (_downloadRoutePreference == clamped)
+                return;
+            _downloadRoutePreference = clamped;
+            OnPropertyChanged();
+            var config = LoadConfig();
+            config.DownloadRoutePreference = clamped;
+            SaveConfig(config);
+            if (clamped == (int)Services.DownloadRoutePreference.AlwaysGitHub)
+                ApplyDownloadRoute(DownloadRouteKind.GitHubOnly);
+            else if (clamped == (int)Services.DownloadRoutePreference.AlwaysMirror)
+                ApplyDownloadRoute(DownloadRouteKind.MirrorFirst);
+            else
+                _ = ResolveDownloadRouteAsync();
+        }
+    }
     public IReadOnlyList<LanguageOption> LanguageOptions { get; }
     public IReadOnlyList<UiScaleOption> UiScaleOptions { get; }
     public UiStrings Ui { get; }
@@ -1554,6 +1589,68 @@ public sealed partial class MainViewModel : ObservableObject
 
         return set;
     }
+
+    /// <summary>
+    /// Resolves the download route, then runs the startup mod and manager checks.
+    /// A later tick repeats both checks; each one still no-ops while its six-hour quiet file is young.
+    /// </summary>
+    public async Task BeginStartupChecksAsync()
+    {
+        if (_downloadRoutePreference == (int)Services.DownloadRoutePreference.Auto)
+            await ResolveDownloadRouteAsync().ConfigureAwait(true);
+        await RunStartupModUpdateCheckAsync().ConfigureAwait(true);
+        await RunStartupManagerUpdateCheckAsync().ConfigureAwait(true);
+        StartPeriodicUpdateChecks();
+    }
+
+    void StartPeriodicUpdateChecks()
+    {
+        if (_periodicUpdates is not null)
+            return;
+        _periodicUpdates = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
+        _periodicUpdates.Tick += async (_, _) =>
+        {
+            await RunStartupModUpdateCheckAsync().ConfigureAwait(true);
+            await RunStartupManagerUpdateCheckAsync().ConfigureAwait(true);
+        };
+        _periodicUpdates.Start();
+    }
+
+    async Task ResolveDownloadRouteAsync()
+    {
+        try
+        {
+            using var http = new HttpClient { Timeout = DownloadRoutePolicy.ProbeTimeout + TimeSpan.FromSeconds(1) };
+            var route = await DownloadRoutePolicy.ResolveAsync(
+                (Services.DownloadRoutePreference)_downloadRoutePreference,
+                _paths.DataRoot,
+                http,
+                CancellationToken.None).ConfigureAwait(true);
+            ApplyDownloadRoute(route);
+        }
+        catch
+        {
+            ApplyDownloadRoute(DownloadRouteKind.MirrorFirst);
+        }
+    }
+
+    void ApplyDownloadRoute(DownloadRouteKind route)
+    {
+        DownloadRoute = route;
+        _catalog.Route = route;
+        _notices.Route = route;
+        _updateChecker.Route = route;
+        OnPropertyChanged(nameof(DownloadRoute));
+        foreach (var item in CatalogMods)
+            item.ApplyRoute(route);
+    }
+
+    static DownloadRouteOption[] BuildDownloadRouteOptions() =>
+    [
+        new((int)Services.DownloadRoutePreference.Auto, LocalizationService.T("DownloadRouteAuto")),
+        new((int)Services.DownloadRoutePreference.AlwaysMirror, LocalizationService.T("DownloadRouteAlwaysMirror")),
+        new((int)Services.DownloadRoutePreference.AlwaysGitHub, LocalizationService.T("DownloadRouteAlwaysGitHub"))
+    ];
 
     /// <summary>
     /// Reports which installed mods the catalog has moved past. Deliberately does not install:
@@ -2843,7 +2940,7 @@ public sealed partial class MainViewModel : ObservableObject
                 // MirrorBaseUrl "" = opt-out (origin only). Null should not happen after factory fill.
                 var mirror = MirrorBaseUrl;
                 AppendLog(LocalizationService.T("LogMelonRedistPreparing"));
-                var ensure = await new RedistEnsureService()
+                var ensure = await new RedistEnsureService { Route = DownloadRoute }
                     .EnsureAsync(
                         redistDir,
                         mirror,
@@ -4098,7 +4195,8 @@ public sealed partial class MainViewModel : ObservableObject
         {
             LogInvalidCatalogCategory(mod);
             var state = ModCatalogService.GetEntryState(packages, mod);
-            built.Add(new CatalogModItemViewModel(mod, state, _catalog.MirrorBaseUrl, _paths.DataRoot));
+            built.Add(new CatalogModItemViewModel(
+                mod, state, _catalog.MirrorBaseUrl, _paths.DataRoot, _catalog.Route));
         }
 
         CatalogMods.Clear();

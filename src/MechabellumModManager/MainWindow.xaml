@@ -943,6 +943,24 @@
                                        FontSize="12"
                                        TextWrapping="Wrap"
                                        Margin="0,6,0,0" />
+                            <DockPanel Margin="0,10,0,0">
+                                <TextBlock Text="{Binding Ui.DownloadRoute}"
+                                           Width="120"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           DockPanel.Dock="Left"
+                                           Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{Binding DownloadRouteOptions}"
+                                          SelectedValue="{Binding DownloadRoutePreference}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Label"
+                                          VerticalAlignment="Center" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding Ui.DownloadRouteHint}"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Margin="0,6,0,0" />
                         </StackPanel>
                     </Expander>
 

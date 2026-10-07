@@ -220,7 +220,7 @@ public class ModCatalogServiceTests
             svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
             svc.LastStaleSource.Should().BeNull();
             File.Exists(CatalogCache.GetPath(dataRoot)).Should().BeTrue();
-            handler.Requests.Should().HaveCount(2, "GitHub is tried first and the mirror is used only after it fails");
+            handler.Requests.Should().ContainSingle("a successful mirror answer is used without waiting on GitHub");
         }
         finally
         {
@@ -229,7 +229,7 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
-    public async Task FetchCatalogAsync_uses_github_and_does_not_ask_the_mirror()
+    public async Task FetchCatalogAsync_uses_github_when_the_mirror_misses()
     {
         var handler = new ScriptedHttpHandler(req =>
         {
@@ -244,8 +244,8 @@ public class ModCatalogServiceTests
 
         root.Mods.Should().HaveCount(2);
         svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
-        handler.Requests.Should().ContainSingle();
-        handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
+        handler.Requests.Should().HaveCount(2);
+        handler.Requests[0].Host.Should().Contain("mirror.example");
     }
 
     static ModCatalogService CatalogServiceServing(string mirrorJson, string githubJson, out ScriptedHttpHandler handler, out HttpClient http)
@@ -278,11 +278,11 @@ public class ModCatalogServiceTests
     }
 
     /// <summary>
-    /// The mirror answering 200 with a stale catalog is the failure that used to make players open
-    /// the catalog panel by hand; the newer origin copy has to win.
+    /// A mirror that answers is used immediately. Waiting to compare it with GitHub would add
+    /// the connect budget on every mainland launch where GitHub does not answer.
     /// </summary>
     [Fact]
-    public async Task FetchCatalogAsync_takes_the_github_copy_when_the_mirror_is_behind()
+    public async Task FetchCatalogAsync_keeps_a_successful_mirror_copy()
     {
         var svc = CatalogServiceServing(
             CatalogWith("2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", "1.0.0"),
@@ -294,8 +294,8 @@ public class ModCatalogServiceTests
         {
             var root = await svc.FetchCatalogAsync();
 
-            root.Mods[0].Version.Should().Be("1.3.0");
-            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+            root.Mods[0].Version.Should().Be("1.0.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
             svc.LastStaleSource.Should().BeNull();
         }
     }
@@ -313,9 +313,10 @@ public class ModCatalogServiceTests
         {
             await svc.FetchCatalogAsync();
 
-            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
             svc.LastStaleSource.Should().BeNull();
-            handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
+            handler.Requests.Should().Contain(u => u.Host.Contains("mirror.example"));
+            handler.Requests.Should().NotContain(u => u.Host.Contains("githubusercontent"));
         }
     }
 
@@ -332,19 +333,18 @@ public class ModCatalogServiceTests
         {
             var root = await svc.FetchCatalogAsync();
 
-            root.Mods[0].Version.Should().Be("1.0.0");
-            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+            root.Mods[0].Version.Should().Be("1.3.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
             svc.LastStaleSource.Should().BeNull();
-            handler.Requests.Should().NotContain(u => u.Host.Contains("mirror.example"));
+            handler.Requests.Should().Contain(u => u.Host.Contains("mirror.example"));
         }
     }
 
     /// <summary>
-    /// The maintainer updating a mod but forgetting to bump the root stamp is the case that would
-    /// otherwise leave a stale mirror looking equally fresh.
+    /// Entry stamps are not compared across hosts. The first copy that parses is the one kept.
     /// </summary>
     [Fact]
-    public async Task FetchCatalogAsync_counts_entry_stamps_even_when_both_root_stamps_match()
+    public async Task FetchCatalogAsync_keeps_the_mirror_copy_when_only_its_entries_are_older()
     {
         var svc = CatalogServiceServing(
             CatalogWith("2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", "1.0.0"),
@@ -356,17 +356,17 @@ public class ModCatalogServiceTests
         {
             var root = await svc.FetchCatalogAsync();
 
-            root.Mods[0].Version.Should().Be("1.3.0");
-            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+            root.Mods[0].Version.Should().Be("1.0.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
             svc.LastStaleSource.Should().BeNull();
         }
     }
 
     /// <summary>
-    /// A catalog predating the root "updatedAt" field still has to be comparable.
+    /// A missing root stamp does not cause a second fetch. The mirror copy is kept.
     /// </summary>
     [Fact]
-    public async Task FetchCatalogAsync_falls_back_to_the_newest_entry_stamp_when_a_root_stamp_is_missing()
+    public async Task FetchCatalogAsync_keeps_the_mirror_when_a_root_stamp_is_missing()
     {
         var svc = CatalogServiceServing(
             CatalogWith(null, "2026-09-01T00:00:00Z", "1.0.0"),
@@ -378,8 +378,8 @@ public class ModCatalogServiceTests
         {
             var root = await svc.FetchCatalogAsync();
 
-            root.Mods[0].Version.Should().Be("1.3.0");
-            svc.LastFetchSource.Should().Be(RemoteFetch.GithubSource);
+            root.Mods[0].Version.Should().Be("1.0.0");
+            svc.LastFetchSource.Should().Be(RemoteFetch.MirrorSource);
         }
     }
 
@@ -544,12 +544,12 @@ public class ModCatalogServiceTests
     }
 
     [Fact]
-    public void PreviewUrl_with_mirror_lists_github_first()
+    public void PreviewUrl_with_mirror_lists_the_mirror_first()
     {
         var cam = new CatalogMod { Preview = "mods/cam/preview.png" };
         var urls = ModCatalogService.GetPreviewCandidateUrls(cam, "https://mirror.example/m");
-        urls[0].Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
-        urls[1].Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.png");
+        urls[0].Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.png");
+        urls[1].Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.png");
         ModCatalogService.PreviewUrl(cam, "https://mirror.example/m").Should().Be(urls[0]);
     }
 
@@ -568,7 +568,7 @@ public class ModCatalogServiceTests
         try
         {
             ModCatalogService.PreviewUrl(cam, "https://mirror.example/m")
-                .Should().Be("https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/mods/cam/preview.en.png");
+                .Should().Be("https://mirror.example/m/MechabellumMods/mods/cam/preview.en.png");
         }
         finally
         {

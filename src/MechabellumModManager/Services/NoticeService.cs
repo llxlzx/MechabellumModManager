@@ -17,7 +17,7 @@ public sealed class NoticeLoadResult
 }
 
 /// <summary>
-/// Loads notice.json when the notice page opens. GitHub raw first, then the mirror.
+/// Loads notice.json when the notice page opens. The domestic mirror is tried first.
 /// A failed load keeps the previous cache and does not replace it.
 /// </summary>
 public sealed class NoticeService
@@ -32,6 +32,9 @@ public sealed class NoticeService
     readonly HttpClient _http;
 
     public string? MirrorBaseUrl { get; set; }
+
+    /// <summary>Domestic installs try the mirror first. A GitHub-only route omits the mirror.</summary>
+    public DownloadRouteKind Route { get; set; } = DownloadRouteKind.MirrorFirst;
     public string? DataRoot { get; set; }
     public Func<string>? Language { get; set; }
 
@@ -110,10 +113,11 @@ public sealed class NoticeService
 
     IEnumerable<Uri> Candidates()
     {
-        yield return GitHubNoticeUri;
-        if (!string.IsNullOrWhiteSpace(MirrorBaseUrl) &&
+        if (Route != DownloadRouteKind.GitHubOnly &&
+            !string.IsNullOrWhiteSpace(MirrorBaseUrl) &&
             Uri.TryCreate(MirrorBaseUrl.Trim().TrimEnd('/') + "/MechabellumMods/notice.json", UriKind.Absolute, out var mirror))
             yield return mirror;
+        yield return GitHubNoticeUri;
     }
 
     async Task<byte[]?> ReadAsync(Uri uri, CancellationToken ct)

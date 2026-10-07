@@ -286,7 +286,8 @@ public sealed partial class ModItemViewModel : ObservableObject
         if (_boundCatalog is not null)
         {
             var identity = CatalogLocaleResolver.ResolvePreviewIdentity(_boundCatalog);
-            var urls = ModCatalogService.GetPreviewCandidateUrls(_boundCatalog, _owner.MirrorBaseUrl);
+            var urls = ModCatalogService.GetPreviewCandidateUrls(
+                _boundCatalog, _owner.MirrorBaseUrl, _owner.DownloadRoute);
             bmp = await PreviewImageLoader.LoadResolvedAsync(
                 identity.RelativePath, identity.Sha256, urls, _owner.PreviewCacheRoot, ct).ConfigureAwait(true);
         }

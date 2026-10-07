@@ -793,6 +793,11 @@
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>База внутреннего зеркала</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>По умолчанию COS-зеркало; пусто = только GitHub. Та же раскладка.</value></data>
+  <data name="DownloadRoute" xml:space="preserve"><value>Маршрут загрузки</value></data>
+  <data name="DownloadRouteAuto" xml:space="preserve"><value>Авто (зеркало в Китае, иначе GitHub)</value></data>
+  <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>Всегда внутреннее зеркало</value></data>
+  <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>Всегда GitHub</value></data>
+  <data name="DownloadRouteHint" xml:space="preserve"><value>Авто выбирает по региону. Если проверка не удалась, зеркало всё равно идёт первым.</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>Дополнительно</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>CDN-зеркало: включено (заводское)</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>CDN-зеркало: своё</value></data>

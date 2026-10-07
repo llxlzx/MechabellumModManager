@@ -187,6 +187,8 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SettingsAdvanced => T("SettingsAdvanced");
     public string MirrorBaseUrl => T("MirrorBaseUrl");
     public string MirrorBaseUrlHint => T("MirrorBaseUrlHint");
+    public string DownloadRoute => T("DownloadRoute");
+    public string DownloadRouteHint => T("DownloadRouteHint");
     public string MirrorSummaryOnDefault => T("MirrorSummaryOnDefault");
     public string MirrorSummaryCustom => T("MirrorSummaryCustom");
     public string MirrorSummaryOff => T("MirrorSummaryOff");

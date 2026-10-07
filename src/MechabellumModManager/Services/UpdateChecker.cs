@@ -77,8 +77,11 @@ public sealed class UpdateChecker
 
     public string? MirrorBaseUrl { get; set; }
 
+    /// <summary>Domestic installs try the mirror first. A GitHub-only route omits the mirror.</summary>
+    public DownloadRouteKind Route { get; set; } = DownloadRouteKind.MirrorFirst;
+
     /// <summary>How long a successful update check is trusted before the next startup asks again.</summary>
-    public static readonly TimeSpan QuietPeriod = TimeSpan.FromHours(12);
+    public static readonly TimeSpan QuietPeriod = TimeSpan.FromHours(6);
 
     public const string QuietStampFileName = "update-check.stamp";
 
@@ -193,36 +196,45 @@ public sealed class UpdateChecker
 
     public IReadOnlyList<Uri> BuildLatestJsonCandidates()
     {
-        var candidates = new List<Uri>(3)
+        var github = new List<Uri>(3)
         {
             LatestJsonUri,
             RawLatestJsonUri
         };
-        var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumModManager/latest.json");
-        if (mirror is not null)
-            candidates.Add(mirror);
-        return candidates;
-    }
-
-    /// <summary>
-    /// Reads the two GitHub manifests first and keeps the newer one. The mirror is requested only
-    /// when neither GitHub copy could be read, so a player who can reach GitHub is not sent to the
-    /// mirror for the installer.
-    /// </summary>
-    async Task<(UpdateManifest? Manifest, string? Source)> TryFetchLatestJsonAsync(CancellationToken ct)
-    {
-        var github = await ReadManifestsAsync(
-            new[] { LatestJsonUri, RawLatestJsonUri },
-            RemoteFetch.ConnectBudget,
-            ct).ConfigureAwait(false);
-        if (github.Manifest is not null)
+        if (Route == DownloadRouteKind.GitHubOnly)
             return github;
 
         var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumModManager/latest.json");
         if (mirror is null)
-            return (null, null);
+            return github;
 
-        return await ReadManifestsAsync(new[] { mirror }, RemoteFetch.AllCandidatesTimeout, ct)
+        var candidates = new List<Uri>(3) { mirror };
+        candidates.AddRange(github);
+        return candidates;
+    }
+
+    /// <summary>
+    /// Domestic route: a usable mirror manifest is enough, so a blocked GitHub does not add a wait.
+    /// When the mirror is missing or unusable, the two GitHub copies are read and the newer one wins.
+    /// </summary>
+    async Task<(UpdateManifest? Manifest, string? Source)> TryFetchLatestJsonAsync(CancellationToken ct)
+    {
+        var github = new[] { LatestJsonUri, RawLatestJsonUri };
+        if (Route != DownloadRouteKind.GitHubOnly)
+        {
+            var mirror = RemoteFetch.TryMirrorUri(MirrorBaseUrl, "MechabellumModManager/latest.json");
+            if (mirror is not null)
+            {
+                var mirrored = await ReadManifestsAsync(
+                    new[] { mirror },
+                    RemoteFetch.ConnectBudget,
+                    ct).ConfigureAwait(false);
+                if (mirrored.Manifest is not null)
+                    return mirrored;
+            }
+        }
+
+        return await ReadManifestsAsync(github, RemoteFetch.AllCandidatesTimeout, ct)
             .ConfigureAwait(false);
     }
 

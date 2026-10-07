@@ -793,6 +793,11 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Inländische Spiegelbasis</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Werkseitig COS-Spiegel; leer = nur GitHub. Gleiches Layout wie die Repos.</value></data>
+  <data name="DownloadRoute" xml:space="preserve"><value>Download-Route</value></data>
+  <data name="DownloadRouteAuto" xml:space="preserve"><value>Automatisch (Spiegel in China, sonst GitHub)</value></data>
+  <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>Immer den inländischen Spiegel</value></data>
+  <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>Immer GitHub</value></data>
+  <data name="DownloadRouteHint" xml:space="preserve"><value>Automatisch folgt der Region. Schlägt die Prüfung fehl, wird der Spiegel trotzdem zuerst versucht.</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>Erweitert</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>Content-Spiegel: an (Werkseinstellung)</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>Content-Spiegel: benutzerdefiniert</value></data>

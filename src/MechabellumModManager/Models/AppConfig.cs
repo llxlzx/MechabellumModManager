@@ -29,6 +29,12 @@ public sealed class AppConfig
     public string? MirrorBaseUrl { get; set; }
 
     /// <summary>
+    /// 0 = automatic (mirror in mainland China, GitHub when the region check says otherwise),
+    /// 1 = always the domestic mirror, 2 = always GitHub.
+    /// </summary>
+    public int DownloadRoutePreference { get; set; }
+
+    /// <summary>
     /// Fetch the catalog on launch and say which installed mods are outdated. Never installs
     /// anything — swapping an injected DLL behind the player's back is not worth the convenience.
     /// On by default: a player who is not told is a player running a version the author has

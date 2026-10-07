@@ -24,7 +24,7 @@ public sealed class RedistProgress
 }
 
 /// <summary>
-/// Fills {redistDir} from MechabellumRedist/manifest.json (origin, then mirror) with mandatory sha256.
+/// Fills {redistDir} from MechabellumRedist/manifest.json (mirror, then origin) with mandatory sha256.
 /// </summary>
 public sealed class RedistEnsureService
 {
@@ -42,6 +42,9 @@ public sealed class RedistEnsureService
     };
 
     readonly HttpClient _http;
+
+    /// <summary>Domestic installs try the mirror copy first. A GitHub-only route omits it.</summary>
+    public DownloadRouteKind Route { get; set; } = DownloadRouteKind.MirrorFirst;
 
     public RedistEnsureService(HttpClient? http = null)
     {
@@ -82,20 +85,25 @@ public sealed class RedistEnsureService
         return manifest;
     }
 
-    public static IReadOnlyList<Uri> BuildArtifactCandidates(string? mirrorBaseUrl, RedistArtifact artifact)
+    public static IReadOnlyList<Uri> BuildArtifactCandidates(
+        string? mirrorBaseUrl,
+        RedistArtifact artifact,
+        DownloadRouteKind route = DownloadRouteKind.MirrorFirst)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         var list = new List<Uri>(2);
+        var mirror = route == DownloadRouteKind.GitHubOnly
+            ? null
+            : RemoteFetch.TryMirrorUri(mirrorBaseUrl, "MechabellumRedist/" + artifact.Path.TrimStart('/'));
+        if (mirror is not null)
+            list.Add(mirror);
+
         if (!string.IsNullOrWhiteSpace(artifact.OriginUrl)
             && Uri.TryCreate(artifact.OriginUrl.Trim(), UriKind.Absolute, out var origin)
             && (origin.Scheme == Uri.UriSchemeHttps || origin.Scheme == Uri.UriSchemeHttp))
         {
             list.Add(origin);
         }
-
-        var mirror = RemoteFetch.TryMirrorUri(mirrorBaseUrl, "MechabellumRedist/" + artifact.Path.TrimStart('/'));
-        if (mirror is not null)
-            list.Add(mirror);
 
         return list;
     }
@@ -336,7 +344,7 @@ public sealed class RedistEnsureService
             return LocalSource;
         }
 
-        var candidates = BuildArtifactCandidates(mirrorBaseUrl, artifact);
+        var candidates = BuildArtifactCandidates(mirrorBaseUrl, artifact, Route);
         if (candidates.Count == 0)
             throw new InvalidOperationException("无可用下载地址（无镜像且无 originUrl）");
 
