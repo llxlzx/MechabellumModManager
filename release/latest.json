@@ -1,10 +1,10 @@
 {
-    "version": "1.3.17",
-    "notes": "新增「Mod 创作标准」页，放在「管理器教程」旁边。作者只从这一页下载创作标准。版本门槛只在通过管理器下载或更新 Mod 时生效。\nAdds a Mod standard page beside the manager guide. Authors download the authoring standard only from that page. The version floor applies only when a mod is downloaded or updated through the manager.",
-    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.17/MechabellumModManager_Setup_v1.3.17.exe",
-    "setupSha256": "9b8b5e4dcfca039a4a7bfc861a62d98e5df317bda2a0d4ba7237233f1e7ae7c5",
-    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.17/MechabellumModManager_portable_v1.3.17.zip",
-    "portableSha256": "660d454c1aa95006f59832b18e7e6136e6030329e643683ba8333957fbe49e72",
-    "publishedAt": "2026-10-08T10:10:57Z",
-    "build": "v1.3.17"
+  "version": "2.0.0",
+  "notes": "打开「Mod 创作标准」时，如果网上的标准和上次保存的不同，会提示重新下载。普通 Mod 的版本门槛仍是 1.3.14，没有抬到 2.0.0。\nOpening the mod authoring standard page reports when the online document differs from the last saved copy. Ordinary mods still use the 1.3.14 manager floor.",
+  "setupSha256": "c3a20aced7707b84050b04b9624d2877c235cfbc3c9930c7fe74194aa56ff032",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.0/MechabellumModManager_portable_v2.0.0.zip",
+  "portableSha256": "a7b109b989fa4589520510f4daac5046287b6a4d606ec49c386e0358444829d3",
+  "publishedAt": "2026-10-08T11:02:04Z",
+  "build": "v2.0.0",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.0/MechabellumModManager_Setup_v2.0.0.exe"
 }
