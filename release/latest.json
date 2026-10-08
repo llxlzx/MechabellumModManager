@@ -1,10 +1,10 @@
 {
-    "version": "1.3.16",
-    "notes": "国内默认先从镜像下载目录、Mod 和管理器更新，镜像没有回应再改用 GitHub。确认在海外时只走 GitHub。打开管理器时检查一次，窗口一直开着则每 6 小时再检查一次。\nDomestic installs try the mirror first for the catalog, mods, and manager updates, then GitHub if the mirror does not answer. Confirmed overseas installs use GitHub only. The manager checks at launch and again every 6 hours while the window stays open.",
-    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.16/MechabellumModManager_Setup_v1.3.16.exe",
-    "setupSha256": "a3b216e852d466282e96840572782246a828ff5fb62eb8c3e5989aac2c025db4",
-    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.16/MechabellumModManager_portable_v1.3.16.zip",
-    "portableSha256": "cd8bf5f48f56f343674ebae8dd1a2d43f520da3e0f5101722eebee40988326ba",
-    "publishedAt": "2026-10-07T10:35:47Z",
-    "build": "v1.3.16-mirror-first"
+    "version": "1.3.17",
+    "notes": "新增「Mod 创作标准」页，放在「管理器教程」旁边。作者只从这一页下载创作标准。版本门槛只在通过管理器下载或更新 Mod 时生效。\nAdds a Mod standard page beside the manager guide. Authors download the authoring standard only from that page. The version floor applies only when a mod is downloaded or updated through the manager.",
+    "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.17/MechabellumModManager_Setup_v1.3.17.exe",
+    "setupSha256": "9b8b5e4dcfca039a4a7bfc861a62d98e5df317bda2a0d4ba7237233f1e7ae7c5",
+    "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.3.17/MechabellumModManager_portable_v1.3.17.zip",
+    "portableSha256": "660d454c1aa95006f59832b18e7e6136e6030329e643683ba8333957fbe49e72",
+    "publishedAt": "2026-10-08T10:10:57Z",
+    "build": "v1.3.17"
 }
