@@ -1,5 +1,8 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Windows;
 using MechabellumModManager.Models;
 using MechabellumModManager.Services;
@@ -13,8 +16,11 @@ public partial class DirectUploadDialog : Window
     readonly AppConfig _config;
     readonly Action<AppConfig> _saveConfig;
     readonly UiStrings _ui;
-    readonly string? _mirrorBaseUrl;
+    readonly string _apiBaseUrl;
     readonly string? _coscliPath;
+    readonly ObservableCollection<ListedFile> _files = new();
+    CancellationTokenSource? _cts;
+    string? _sessionConfig;
 
     public DirectUploadDialog(AppConfig config, Action<AppConfig> saveConfig, UiStrings ui)
     {
@@ -25,89 +31,63 @@ public partial class DirectUploadDialog : Window
         DataContext = new Labels(ui);
         Title = ui.DirectUploadTitle;
 
-        _mirrorBaseUrl = string.IsNullOrWhiteSpace(config.MirrorBaseUrl)
-            ? (config.MirrorBaseUrl is null ? DomesticMirrorDefaults.BaseUrl : "")
-            : config.MirrorBaseUrl.Trim().TrimEnd('/');
+        _apiBaseUrl = ResolveApiBase(config);
         _coscliPath = CoscliMirrorUploader.TryFind();
 
         InviteBox.Text = config.AuthorInviteCode ?? "";
-        SecretIdBox.Text = CoscliUserConfig.ReadSecretId() ?? "";
-        if (string.IsNullOrWhiteSpace(_mirrorBaseUrl) || MirrorCatalogPublisher.BucketFromMirrorUrl(_mirrorBaseUrl) is null || _coscliPath is null)
+        KindBox.Items.Add(new KindItem("single", ui.DirectUploadKindSingle));
+        KindBox.Items.Add(new KindItem("parts", ui.DirectUploadKindParts));
+        KindBox.Items.Add(new KindItem("bundle", ui.DirectUploadKindBundle));
+        KindBox.DisplayMemberPath = nameof(KindItem.Label);
+        KindBox.SelectedIndex = 0;
+        FileList.ItemsSource = _files;
+
+        if (string.IsNullOrWhiteSpace(_apiBaseUrl) || _coscliPath is null)
             StatusText.Text = ui.DirectUploadNotConfigured;
-        else if (!CoscliUserConfig.HasSecret())
-            StatusText.Text = ui.DirectUploadNeedSecret;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        try
+        {
+            _cts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        TryDelete(_sessionConfig);
+        base.OnClosed(e);
     }
 
     void SaveCode_Click(object sender, RoutedEventArgs e)
     {
         _config.AuthorInviteCode = InviteBox.Text?.Trim() ?? "";
         _saveConfig(_config);
-        if (!TrySaveSecret(out var secretStatus))
-        {
-            StatusText.Text = secretStatus;
-            return;
-        }
-
-        StatusText.Text = string.IsNullOrEmpty(secretStatus) ? _ui.DirectUploadCodeSaved : secretStatus;
+        StatusText.Text = _ui.DirectUploadCodeSaved;
     }
 
-    bool TrySaveSecret(out string status)
-    {
-        status = "";
-        var secretId = SecretIdBox.Text?.Trim() ?? "";
-        var secretKey = SecretKeyBox.Password?.Trim() ?? "";
-        var hasNewKey = secretKey.Length > 0;
-        if (!hasNewKey)
-        {
-            if (secretId.Length > 0 && !CoscliUserConfig.HasSecret())
-            {
-                status = _ui.DirectUploadNeedSecret;
-                return false;
-            }
-
-            return CoscliUserConfig.HasSecret() || secretId.Length == 0;
-        }
-
-        if (secretId.Length == 0)
-        {
-            status = _ui.DirectUploadNeedSecret;
-            return false;
-        }
-
-        var bucket = MirrorCatalogPublisher.BucketFromMirrorUrl(_mirrorBaseUrl);
-        var region = MirrorCatalogPublisher.RegionFromMirrorUrl(_mirrorBaseUrl);
-        if (bucket is null || region is null)
-        {
-            status = _ui.DirectUploadNotConfigured;
-            return false;
-        }
-
-        CoscliUserConfig.Save(CoscliUserConfig.DefaultPath, secretId, secretKey, bucket, region);
-        SecretKeyBox.Password = "";
-        status = _ui.DirectUploadSecretSaved;
-        return true;
-    }
-
-    void PickDll_Click(object sender, RoutedEventArgs e)
+    void AddFile_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog
         {
             Filter = LocalizationService.T("FileFilterDll"),
-            CheckFileExists = true
+            CheckFileExists = true,
+            Multiselect = true
         };
-        if (dialog.ShowDialog(this) == true)
-            DllPathBox.Text = dialog.FileName;
-    }
+        if (dialog.ShowDialog(this) != true)
+            return;
 
-    void PickPreview_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new OpenFileDialog
+        foreach (var path in dialog.FileNames)
         {
-            Filter = "PNG|*.png|All|*.*",
-            CheckFileExists = true
-        };
-        if (dialog.ShowDialog(this) == true)
-            PreviewPathBox.Text = dialog.FileName;
+            if (_files.Any(file => string.Equals(file.FullPath, path, StringComparison.OrdinalIgnoreCase)))
+                continue;
+            var row = new ListedFile(path);
+            if (SelectedKind() == "bundle" && row.Name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+                && !_files.Any(file => file.Main))
+                row.Main = true;
+            _files.Add(row);
+        }
     }
 
     void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
@@ -119,8 +99,8 @@ public partial class DirectUploadDialog : Window
 
         var id = IdBox.Text?.Trim() ?? "";
         var name = NameBox.Text?.Trim() ?? "";
-        var dll = DllPathBox.Text?.Trim() ?? "";
-        if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(dll) || !File.Exists(dll))
+        var kind = SelectedKind();
+        if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(kind) || _files.Count == 0)
         {
             StatusText.Text = _ui.DirectUploadNeedFields;
             return;
@@ -129,76 +109,106 @@ public partial class DirectUploadDialog : Window
         _config.AuthorInviteCode = InviteBox.Text?.Trim() ?? "";
         _saveConfig(_config);
 
-        var updateCatalog = UpdateCatalogBox.IsChecked == true;
+        ReplaceUploadCancellation();
+        var ct = _cts!.Token;
         SetBusy(true);
         StatusText.Text = _ui.DirectUploadPublishing;
-        string? entryTemp = null;
-        string? catalogTemp = null;
+        _sessionConfig = Path.Combine(Path.GetTempPath(), "mmm-inbox-" + Guid.NewGuid().ToString("N") + ".yaml");
         try
         {
-            var input = new MirrorPublishInput
+            var submissionFiles = new List<InboxSubmissionFile>(_files.Count);
+            foreach (var row in _files)
             {
-                Id = id,
-                Name = name,
-                Summary = string.IsNullOrWhiteSpace(SummaryBox.Text) ? null : SummaryBox.Text.Trim(),
-                Version = string.IsNullOrWhiteSpace(VersionBox.Text) ? null : VersionBox.Text.Trim(),
-                DllPath = dll,
-                PreviewPath = string.IsNullOrWhiteSpace(PreviewPathBox.Text) ? null : PreviewPathBox.Text.Trim()
-            };
-            MirrorPublishPlan plan;
-            if (updateCatalog)
-            {
-                using var http = CreateHttp();
-                var catalog = await MirrorCatalogPublisher.DownloadCatalogAsync(http, _mirrorBaseUrl!, CancellationToken.None)
-                    .ConfigureAwait(true);
-                plan = MirrorCatalogPublisher.Plan(catalog, input, UpdateChecker.ReadLocalVersion());
-            }
-            else
-            {
-                plan = MirrorCatalogPublisher.Plan(null, input, UpdateChecker.ReadLocalVersion());
-            }
-
-            entryTemp = Path.Combine(Path.GetTempPath(), "mmm-entry-" + Guid.NewGuid().ToString("N") + ".json");
-            await File.WriteAllTextAsync(entryTemp, plan.EntryJson).ConfigureAwait(true);
-
-            var uploader = new CoscliMirrorUploader(_coscliPath!, MirrorCatalogPublisher.BucketFromMirrorUrl(_mirrorBaseUrl)!);
-            foreach (var upload in plan.Uploads)
-                await uploader.UploadAsync(upload.LocalPath, upload.RemoteKey, CancellationToken.None).ConfigureAwait(true);
-            await uploader.UploadAsync(entryTemp, plan.EntryKey, CancellationToken.None).ConfigureAwait(true);
-
-            if (updateCatalog)
-            {
-                catalogTemp = Path.Combine(Path.GetTempPath(), "mmm-catalog-" + Guid.NewGuid().ToString("N") + ".json");
-                await File.WriteAllTextAsync(catalogTemp, plan.CatalogJson).ConfigureAwait(true);
-                try
+                ct.ThrowIfCancellationRequested();
+                var info = new FileInfo(row.FullPath);
+                if (!info.Exists)
                 {
-                    await uploader.UploadAsync(catalogTemp, MirrorCatalogPublisher.CatalogKey, CancellationToken.None)
-                        .ConfigureAwait(true);
-                }
-                catch (Exception ex)
-                {
-                    StatusText.Text = _ui.DirectUploadCatalogDenied + ": " + ex.Message;
+                    StatusText.Text = _ui.DirectUploadNeedFields;
                     return;
                 }
 
-                MessageBox.Show(
-                    this,
-                    _ui.DirectUploadSuccess + "\n\n" + _ui.DirectUploadMirrorLagHint,
-                    _ui.DirectUploadTitle,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(
-                    this,
-                    _ui.DirectUploadFilesUploaded + "\n\n" + _ui.DirectUploadMirrorLagHint,
-                    _ui.DirectUploadTitle,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                var submissionName = SubmissionName(kind, row.Name);
+                var role = SubmissionRole(kind, row.Name);
+                var sha = InboxSubmission.HashFile(row.FullPath);
+                submissionFiles.Add(new InboxSubmissionFile(role, submissionName, row.FullPath, info.Length, sha, row.Main));
             }
 
+            if (kind == "bundle")
+                submissionFiles = WithOneDefaultMain(submissionFiles);
+
+            var built = InboxSubmission.Build(
+                kind,
+                id,
+                name,
+                string.IsNullOrWhiteSpace(SummaryBox.Text) ? null : SummaryBox.Text.Trim(),
+                string.IsNullOrWhiteSpace(VersionBox.Text) ? null : VersionBox.Text.Trim(),
+                submissionFiles);
+            if (!built.Ok || built.Request is null)
+            {
+                StatusText.Text = MapError(built.Error);
+                return;
+            }
+
+            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
+            var client = new InboxGrantClient(http, _apiBaseUrl);
+            var invite = InviteBox.Text?.Trim() ?? "";
+            var grant = await client.RequestAsync(invite, built.Request, ct).ConfigureAwait(true);
+            if (!grant.Ok || grant.Credentials is null
+                || string.IsNullOrWhiteSpace(grant.Bucket) || string.IsNullOrWhiteSpace(grant.Region))
+            {
+                StatusText.Text = MapError(grant.Error == DirectUploadErrorCode.None
+                    ? DirectUploadErrorCode.Internal
+                    : grant.Error);
+                return;
+            }
+
+            var localByName = submissionFiles.ToDictionary(file => file.Name, StringComparer.Ordinal);
+            foreach (var obj in grant.Objects)
+            {
+                ct.ThrowIfCancellationRequested();
+                var leaf = ObjectLeaf(obj.Key);
+                if (!localByName.TryGetValue(leaf, out var local))
+                {
+                    StatusText.Text = _ui.DirectUploadErrValidation;
+                    return;
+                }
+
+                InboxCoscliSession.Write(
+                    _sessionConfig,
+                    grant.Credentials.TmpSecretId,
+                    grant.Credentials.TmpSecretKey,
+                    grant.Credentials.SessionToken,
+                    grant.Bucket,
+                    grant.Region);
+                await InboxCoscliSession.RunAsync(
+                    _coscliPath!,
+                    _sessionConfig,
+                    local.FullPath,
+                    grant.Bucket,
+                    obj.Key,
+                    string.IsNullOrEmpty(obj.Sha256) ? local.Sha256 : obj.Sha256,
+                    ct).ConfigureAwait(true);
+            }
+
+            var complete = await client.CompleteAsync(invite, id, ct).ConfigureAwait(true);
+            if (!complete.Ok)
+            {
+                StatusText.Text = MapError(complete.Error);
+                return;
+            }
+
+            MessageBox.Show(
+                this,
+                _ui.DirectUploadWaiting,
+                _ui.DirectUploadTitle,
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
             DialogResult = true;
+        }
+        catch (OperationCanceledException)
+        {
+            if (IsLoaded)
+                StatusText.Text = _ui.DirectUploadFailed;
         }
         catch (MirrorPublishException ex)
         {
@@ -210,108 +220,125 @@ public partial class DirectUploadDialog : Window
         }
         finally
         {
-            TryDelete(entryTemp);
-            TryDelete(catalogTemp);
-            SetBusy(false);
-        }
-    }
-
-    async void MergeCatalog_Click(object sender, RoutedEventArgs e)
-    {
-        if (!EnsureReady())
-            return;
-
-        var id = IdBox.Text?.Trim() ?? "";
-        if (!MirrorCatalogPublisher.IsSafeId(id))
-        {
-            StatusText.Text = _ui.DirectUploadNeedModId;
-            return;
-        }
-
-        SetBusy(true);
-        StatusText.Text = _ui.DirectUploadPublishing;
-        string? catalogTemp = null;
-        try
-        {
-            using var http = CreateHttp();
-            var entry = await MirrorCatalogPublisher.DownloadEntryAsync(http, _mirrorBaseUrl!, id, CancellationToken.None)
-                .ConfigureAwait(true);
-            var catalog = await MirrorCatalogPublisher.DownloadCatalogAsync(http, _mirrorBaseUrl!, CancellationToken.None)
-                .ConfigureAwait(true);
-            var merged = MirrorCatalogPublisher.MergeListedEntry(catalog, entry, id);
-            catalogTemp = Path.Combine(Path.GetTempPath(), "mmm-catalog-" + Guid.NewGuid().ToString("N") + ".json");
-            await File.WriteAllTextAsync(catalogTemp, merged).ConfigureAwait(true);
-
-            var uploader = new CoscliMirrorUploader(_coscliPath!, MirrorCatalogPublisher.BucketFromMirrorUrl(_mirrorBaseUrl)!);
-            await uploader.UploadAsync(catalogTemp, MirrorCatalogPublisher.CatalogKey, CancellationToken.None)
-                .ConfigureAwait(true);
-
-            MessageBox.Show(
-                this,
-                _ui.DirectUploadMergeSuccess + "\n\n" + _ui.DirectUploadMirrorLagHint,
-                _ui.DirectUploadTitle,
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            DialogResult = true;
-        }
-        catch (MirrorPublishException ex) when (ex.Code is DirectUploadErrorCode.EntryNotFound or DirectUploadErrorCode.ValidationFailed)
-        {
-            StatusText.Text = MapError(ex.Code);
-        }
-        catch (Exception ex)
-        {
-            StatusText.Text = _ui.DirectUploadCatalogWriteFailed + ": " + ex.Message;
-        }
-        finally
-        {
-            TryDelete(catalogTemp);
+            TryDelete(_sessionConfig);
             SetBusy(false);
         }
     }
 
     bool EnsureReady()
     {
-        if (string.IsNullOrWhiteSpace(_mirrorBaseUrl) || _coscliPath is null
-            || MirrorCatalogPublisher.BucketFromMirrorUrl(_mirrorBaseUrl) is null)
+        if (string.IsNullOrWhiteSpace(_apiBaseUrl) || _coscliPath is null)
         {
             StatusText.Text = _ui.DirectUploadNotConfigured;
             return false;
         }
 
-        if (!TrySaveSecret(out var secretStatus))
+        if (string.IsNullOrWhiteSpace(InviteBox.Text))
         {
-            StatusText.Text = secretStatus;
-            return false;
-        }
-
-        if (!CoscliUserConfig.HasSecret())
-        {
-            StatusText.Text = _ui.DirectUploadNeedSecret;
+            StatusText.Text = _ui.DirectUploadNeedInvite;
             return false;
         }
 
         return true;
     }
 
-    static HttpClient CreateHttp() => new(new HttpClientHandler
+    string SelectedKind() => (KindBox.SelectedItem as KindItem)?.Kind ?? "";
+
+    void ReplaceUploadCancellation()
     {
-        AutomaticDecompression = System.Net.DecompressionMethods.All
-    })
+        try
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        _cts = new CancellationTokenSource();
+    }
+
+    static string ResolveApiBase(AppConfig config)
     {
-        Timeout = TimeSpan.FromMinutes(10)
-    };
+        if (!string.IsNullOrWhiteSpace(config.DirectUploadApiBaseUrl))
+            return config.DirectUploadApiBaseUrl.Trim().TrimEnd('/');
+        return (DirectUploadDefaults.ApiBaseUrl ?? "").Trim().TrimEnd('/');
+    }
+
+    static string SubmissionRole(string kind, string fileName)
+    {
+        if (IsPreview(fileName))
+            return "preview";
+        return kind switch
+        {
+            "parts" => "part",
+            "bundle" => "bundle",
+            _ => "dll"
+        };
+    }
+
+    static string SubmissionName(string kind, string fileName)
+    {
+        if (IsPreview(fileName))
+            return "preview.png";
+        if (kind == "parts")
+        {
+            var stem = Path.GetFileNameWithoutExtension(fileName);
+            if (PartStem.IsMatch(stem))
+                return stem;
+            if (PartStem.IsMatch(fileName))
+                return fileName;
+        }
+
+        return fileName;
+    }
+
+    static bool IsPreview(string fileName) =>
+        fileName.Equals("preview.png", StringComparison.OrdinalIgnoreCase);
+
+    static readonly Regex PartStem = new("^\\d{4}$", RegexOptions.CultureInvariant);
+
+    static List<InboxSubmissionFile> WithOneDefaultMain(List<InboxSubmissionFile> files)
+    {
+        var bundles = files.Where(file => file.Role == "bundle").ToList();
+        if (bundles.Count == 0 || bundles.Any(file => file.Main))
+            return files;
+
+        var first = bundles[0];
+        return files.Select(file => file == first
+            ? file with { Main = true }
+            : file).ToList();
+    }
+
+    static string ObjectLeaf(string? key)
+    {
+        var trimmed = (key ?? "").Replace('\\', '/').Trim('/');
+        var slash = trimmed.LastIndexOf('/');
+        return slash < 0 ? trimmed : trimmed[(slash + 1)..];
+    }
 
     void SetBusy(bool busy)
     {
+        if (!IsLoaded)
+            return;
         PublishButton.IsEnabled = !busy;
-        MergeButton.IsEnabled = !busy;
+        AddFileButton.IsEnabled = !busy;
     }
 
     static void TryDelete(string? path)
     {
         if (string.IsNullOrEmpty(path))
             return;
-        try { File.Delete(path); } catch { /* temp json */ }
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     string MapError(DirectUploadErrorCode code) => code switch
@@ -321,12 +348,52 @@ public partial class DirectUploadDialog : Window
         DirectUploadErrorCode.ValidationFailed => _ui.DirectUploadErrValidation,
         DirectUploadErrorCode.PayloadTooLarge => _ui.DirectUploadErrTooLarge,
         DirectUploadErrorCode.CatalogConflict => _ui.DirectUploadErrConflict,
+        DirectUploadErrorCode.IdConflict => _ui.DirectUploadErrConflict,
         DirectUploadErrorCode.UpstreamGithub => _ui.DirectUploadErrGithub,
         DirectUploadErrorCode.NotConfigured => _ui.DirectUploadNotConfigured,
         DirectUploadErrorCode.Network => _ui.DirectUploadErrNetwork,
         DirectUploadErrorCode.EntryNotFound => _ui.DirectUploadEntryMissing,
         _ => _ui.DirectUploadFailed
     };
+
+    public sealed class KindItem
+    {
+        public KindItem(string kind, string label)
+        {
+            Kind = kind;
+            Label = label;
+        }
+
+        public string Kind { get; }
+        public string Label { get; }
+    }
+
+    public sealed class ListedFile : INotifyPropertyChanged
+    {
+        public ListedFile(string fullPath)
+        {
+            FullPath = fullPath;
+            Name = Path.GetFileName(fullPath);
+        }
+
+        public string FullPath { get; }
+        public string Name { get; }
+
+        bool _main;
+        public bool Main
+        {
+            get => _main;
+            set
+            {
+                if (_main == value)
+                    return;
+                _main = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Main)));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
 
     sealed class Labels
     {
@@ -335,18 +402,12 @@ public partial class DirectUploadDialog : Window
         public string TitleText => _ui.DirectUploadTitle;
         public string InviteLabel => _ui.DirectUploadInviteCode;
         public string SaveCodeLabel => _ui.DirectUploadSaveCode;
-        public string SecretIdLabel => _ui.DirectUploadSecretId;
-        public string SecretKeyLabel => _ui.DirectUploadSecretKey;
-        public string SecretHint => _ui.DirectUploadSecretHint;
         public string ModIdLabel => _ui.DirectUploadModId;
         public string NameLabel => _ui.DirectUploadName;
         public string SummaryLabel => _ui.DirectUploadSummary;
         public string VersionLabel => _ui.DirectUploadVersion;
-        public string PickDllLabel => _ui.DirectUploadPickDll;
-        public string PickPreviewLabel => _ui.DirectUploadPickPreview;
-        public string UpdateCatalogLabel => _ui.DirectUploadUpdateCatalog;
-        public string UpdateCatalogHint => _ui.DirectUploadUpdateCatalogHint;
-        public string MergeCatalogLabel => _ui.DirectUploadMergeCatalog;
+        public string KindLabel => _ui.DirectUploadKind;
+        public string AddFileLabel => _ui.DirectUploadPickDll;
         public string PublishLabel => _ui.DirectUploadPublish;
         public string CancelLabel => _ui.Cancel;
     }

@@ -161,7 +161,22 @@
     <value>Whitelist upload (unfertig)</value>
   </data>
   <data name="DirectUploadTitle" xml:space="preserve">
-    <value>Whitelist upload (unfertig)</value>
+    <value>Mod einreichen</value>
+  </data>
+  <data name="DirectUploadKind" xml:space="preserve">
+    <value>Dateiform</value>
+  </data>
+  <data name="DirectUploadKindSingle" xml:space="preserve">
+    <value>Einzelne DLL</value>
+  </data>
+  <data name="DirectUploadKindParts" xml:space="preserve">
+    <value>Teile</value>
+  </data>
+  <data name="DirectUploadKindBundle" xml:space="preserve">
+    <value>Paket</value>
+  </data>
+  <data name="DirectUploadWaiting" xml:space="preserve">
+    <value>In den Eingangsbereich hochgeladen. Spieler sehen es noch nicht. Es erscheint, nachdem der Betreuer es in den Katalog übernommen und den Spiegel abgeglichen hat.</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
     <value>Invite code</value>
@@ -988,4 +1003,22 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NoticeEmpty" xml:space="preserve"><value>Keine Hinweise</value></data>
   <data name="NoticeStale" xml:space="preserve"><value>Hinweise konnten nicht aktualisiert werden. Es folgt die letzte erfolgreiche Fassung.</value></data>
   <data name="NoticeUnavailable" xml:space="preserve"><value>Hinweise konnten nicht geladen werden.</value></data>
+  <data name="AuthorNav" xml:space="preserve"><value>Mod-Standard</value></data>
+  <data name="NavNoteAuthor" xml:space="preserve"><value>Text laden</value></data>
+  <data name="AuthorTitle" xml:space="preserve"><value>Mod-Standard</value></data>
+  <data name="AuthorIntro" xml:space="preserve"><value>Lies diese Hinweise, bevor du einen Mod schreibst. Der vollständige Text wird nur auf dieser Seite heruntergeladen. Der Manager hat keinen zweiten Einstieg.</value></data>
+  <data name="AuthorDownload" xml:space="preserve"><value>Standard herunterladen</value></data>
+  <data name="AuthorDownloading" xml:space="preserve"><value>Wird heruntergeladen…</value></data>
+  <data name="AuthorDownloadSaved" xml:space="preserve"><value>Gespeichert unter {0}</value></data>
+  <data name="AuthorDownloadSavedCached" xml:space="preserve"><value>Eine neue Fassung war nicht erreichbar. Die letzte erfolgreiche Kopie wurde unter {0} gespeichert.</value></data>
+  <data name="AuthorDownloadFailed" xml:space="preserve"><value>Der Standard konnte nicht geladen werden. Bitte später erneut versuchen.</value></data>
+  <data name="AuthorStandardUpdateAvailable" xml:space="preserve"><value>Der Standard hat sich geändert. Bitte erneut herunterladen.</value></data>
+  <data name="AuthorScopeTitle" xml:space="preserve"><value>Nur das, was der Spieler sieht</value></data>
+  <data name="AuthorScopeBody" xml:space="preserve"><value>Ändere nicht den Manager und schreibe keine installierte DLL um, während das Spiel läuft. Versprich nicht, dass der Mod eine Sperre verhindert.</value></data>
+  <data name="AuthorDataTitle" xml:space="preserve"><value>Was ein Data Error öffentlich bedeutet</value></data>
+  <data name="AuthorDataBody" xml:space="preserve"><value>Diese Runde gilt als verloren, und ein erneutes Verbinden ist nicht möglich. Das ist keine bestätigte dauerhafte Sperre. Fehler des Spiels und Paketverlust können denselben Eintrag schreiben.</value></data>
+  <data name="AuthorHookTitle" xml:space="preserve"><value>Hooks zählen nach Ziel, nicht nach Namen</value></data>
+  <data name="AuthorHookBody" xml:space="preserve"><value>Oberfläche, Kamera und Freundesliste dürfen nicht an Schaden, Vorrat oder Kampfende hängen. Ein Prefix mit Rückgabetyp bool gilt als hoch, auch wenn der Rumpf die Originalmethode nie überspringt. Ein laufendes Match darf nur Aktionen senden, die das Spiel schon hat. Die Einsatzzeit darf nur in der Wiederholung geändert werden, und nur hinter einer Prüfung „ist das eine Wiederholung“.</value></data>
+  <data name="AuthorCatalogTitle" xml:space="preserve"><value>Was in den Katalog gehört</value></data>
+  <data name="AuthorCatalogBody" xml:space="preserve"><value>Die Kurzbeschreibung sagt, was der Spieler tun kann, welche Taste, und ob es für den Live-Server, den Testserver oder beide gilt. Schreib keine Manager-Version hinein. „Benötigt 1.3.13“ in alten Texten ist veraltet. Ein neuer Mod nutzt minManagerVersion 1.3.14, außer er braucht wirklich ein neueres Manager-Verhalten. Der Installationsort ist standardmäßig MelonMod. Schreibe gegen MelonLoader 0.7.3.</value></data>
 </root>

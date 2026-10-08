@@ -12,6 +12,19 @@ public sealed class UiStrings : INotifyPropertyChanged
 
     public string Settings => T("Settings");
     public string GuideNav => T("GuideNav");
+    public string AuthorNav => T("AuthorNav");
+    public string NavNoteAuthor => T("NavNoteAuthor");
+    public string AuthorTitle => T("AuthorTitle");
+    public string AuthorIntro => T("AuthorIntro");
+    public string AuthorDownload => T("AuthorDownload");
+    public string AuthorScopeTitle => T("AuthorScopeTitle");
+    public string AuthorScopeBody => T("AuthorScopeBody");
+    public string AuthorDataTitle => T("AuthorDataTitle");
+    public string AuthorDataBody => T("AuthorDataBody");
+    public string AuthorHookTitle => T("AuthorHookTitle");
+    public string AuthorHookBody => T("AuthorHookBody");
+    public string AuthorCatalogTitle => T("AuthorCatalogTitle");
+    public string AuthorCatalogBody => T("AuthorCatalogBody");
     public string NoticeNav => T("NoticeNav");
     public string NavNoteNotice => T("NavNoteNotice");
     public string UpdateManager => T("UpdateManager");
@@ -98,6 +111,11 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string SubmitModFailed => T("SubmitModFailed");
     public string DirectUpload => T("DirectUpload");
     public string DirectUploadTitle => T("DirectUploadTitle");
+    public string DirectUploadKind => T("DirectUploadKind");
+    public string DirectUploadKindSingle => T("DirectUploadKindSingle");
+    public string DirectUploadKindParts => T("DirectUploadKindParts");
+    public string DirectUploadKindBundle => T("DirectUploadKindBundle");
+    public string DirectUploadWaiting => T("DirectUploadWaiting");
     public string DirectUploadInviteCode => T("DirectUploadInviteCode");
     public string DirectUploadSaveCode => T("DirectUploadSaveCode");
     public string DirectUploadSecretId => T("DirectUploadSecretId");

@@ -8,4 +8,5 @@ public enum MainContentPage
     Guide = 3,
     Branch = 4,
     Notice = 5,
+    Author = 6,
 }

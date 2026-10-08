@@ -90,8 +90,8 @@ public class UiLanguageSwitchTests
         vm.StatusKindLabel.Should().Be("就绪");
         vm.StatusDetail.Should().Be("游戏与 MelonLoader 已就绪。");
         vm.DiagnosisTitle.Should().Be("未发现阻断问题");
-        vm.Ui.GuideNav.Should().Be("新手教程");
-        vm.Ui.GuideTitle.Should().Be("新手教程");
+        vm.Ui.GuideNav.Should().Be("管理器教程");
+        vm.Ui.GuideTitle.Should().Be("管理器教程");
 
         vm.SelectedUiLanguageCode = "en";
 
@@ -99,7 +99,7 @@ public class UiLanguageSwitchTests
         vm.StatusKindLabel.Should().Be("Ready");
         vm.StatusDetail.Should().Be("Game and MelonLoader are ready.");
         vm.DiagnosisTitle.Should().Be("No blocking issue found");
-        vm.Ui.GuideNav.Should().Be("Newcomer tutorial");
+        vm.Ui.GuideNav.Should().Be("Manager guide");
         vm.Ui.GuideSupportBody.Should().Contain("llxmod@foxmail.com");
         vm.Ui.GuideSupportBody.Should().Contain("https://github.com/llxlzx/MechabellumModManager");
         vm.Ui.GuideSupportBody.Should().Contain("https://discord.gg/CQDkCfDTA");

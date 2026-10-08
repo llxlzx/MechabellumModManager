@@ -161,7 +161,22 @@
     <value>Whitelist upload（未完成）</value>
   </data>
   <data name="DirectUploadTitle" xml:space="preserve">
-    <value>Whitelist upload（未完成）</value>
+    <value>Mod を提出</value>
+  </data>
+  <data name="DirectUploadKind" xml:space="preserve">
+    <value>ファイル形式</value>
+  </data>
+  <data name="DirectUploadKindSingle" xml:space="preserve">
+    <value>単一 DLL</value>
+  </data>
+  <data name="DirectUploadKindParts" xml:space="preserve">
+    <value>分割</value>
+  </data>
+  <data name="DirectUploadKindBundle" xml:space="preserve">
+    <value>リソースパック</value>
+  </data>
+  <data name="DirectUploadWaiting" xml:space="preserve">
+    <value>受付領域へアップロードしました。プレイヤーにはまだ表示されません。管理者がカタログへ取り込み、ミラーを同期したあと表示されます。</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
     <value>Invite code</value>
@@ -988,4 +1003,22 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NoticeEmpty" xml:space="preserve"><value>お知らせはありません</value></data>
   <data name="NoticeStale" xml:space="preserve"><value>お知らせを更新できません。前回読み込めた内容を表示しています。</value></data>
   <data name="NoticeUnavailable" xml:space="preserve"><value>お知らせを取得できません。</value></data>
+  <data name="AuthorNav" xml:space="preserve"><value>Mod制作基準</value></data>
+  <data name="NavNoteAuthor" xml:space="preserve"><value>文書を取得</value></data>
+  <data name="AuthorTitle" xml:space="preserve"><value>Mod制作基準</value></data>
+  <data name="AuthorIntro" xml:space="preserve"><value>Mod を書く前に次の注意を読んでください。全文はこのページからだけダウンロードします。マネージャーに別の入口はありません。</value></data>
+  <data name="AuthorDownload" xml:space="preserve"><value>制作基準をダウンロード</value></data>
+  <data name="AuthorDownloading" xml:space="preserve"><value>ダウンロード中…</value></data>
+  <data name="AuthorDownloadSaved" xml:space="preserve"><value>{0} に保存しました</value></data>
+  <data name="AuthorDownloadSavedCached" xml:space="preserve"><value>新しい版を取得できませんでした。前回取得できた基準を {0} に保存しました。</value></data>
+  <data name="AuthorDownloadFailed" xml:space="preserve"><value>基準を取得できません。しばらくしてからもう一度試してください。</value></data>
+  <data name="AuthorStandardUpdateAvailable" xml:space="preserve"><value>基準が更新されました。もう一度ダウンロードしてください。</value></data>
+  <data name="AuthorScopeTitle" xml:space="preserve"><value>クライアントで見える体験だけ</value></data>
+  <data name="AuthorScopeBody" xml:space="preserve"><value>マネージャーは改変しないでください。ゲームの実行中に、すでに入っている DLL を書き換えないでください。入れれば封禁されない、とは約束しないでください。</value></data>
+  <data name="AuthorDataTitle" xml:space="preserve"><value>Data Error の公開されている結果</value></data>
+  <data name="AuthorDataBody" xml:space="preserve"><value>その対局は敗北になり、再接続できません。確認済みの永久封禁ではありません。ゲーム自身の不具合やパケットロスでも同じ記録が出ます。</value></data>
+  <data name="AuthorHookTitle" xml:space="preserve"><value>フックは名前ではなく対象で見る</value></data>
+  <data name="AuthorHookBody" xml:space="preserve"><value>画面、カメラ、フレンド一覧は、ダメージ、補給、決着の観測点に掛けないでください。戻り値が bool の Prefix は、本体が元の関数を飛ばさなくても高になります。本番の対局では、ゲームがもともと持っている操作だけを送ってください。配置時間の変更はリプレイの中だけで、しかも「今がリプレイか」の門を通したときだけです。</value></data>
+  <data name="AuthorCatalogTitle" xml:space="preserve"><value>カタログに書くこと</value></data>
+  <data name="AuthorCatalogBody" xml:space="preserve"><value>概要には、プレイヤーができること、使うキー、正式サーバーかテストサーバーか両方かを書きます。マネージャーの版番号は書かないでください。古い概要の「1.3.13 が必要」は古い文です。新しい Mod の minManagerVersion は 1.3.14 です。より新しいマネージャーの動作に本当に依存するときだけ上げます。インストール先は既定で MelonMod です。MelonLoader 0.7.3 向けに書いてください。</value></data>
 </root>

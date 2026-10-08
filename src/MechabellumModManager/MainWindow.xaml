@@ -426,6 +426,52 @@
                                             </Border>
                                         </StackPanel>
                                     </Button>
+                                    <Button Command="{Binding ShowAuthorPageCommand}"
+                                            ToolTip="{Binding Ui.NavNoteAuthor}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsAuthorPage}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                                        <Setter Property="Foreground" Value="{StaticResource AccentAmberBrush}" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Ui.AuthorNav}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Ui.NavNoteAuthor}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontSize" Value="13" />
+                                                        <Setter Property="FontWeight" Value="Normal" />
+                                                        <Setter Property="Height" Value="16" />
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                        <Setter Property="Opacity" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsAuthorPage}" Value="True">
+                                                                <Setter Property="Opacity" Value="1" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
+                                                        <Setter Property="Opacity" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsAuthorPage}" Value="True">
+                                                                <Setter Property="Opacity" Value="1" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                        </StackPanel>
+                                    </Button>
                                     <Button Command="{Binding ShowBranchPageCommand}"
                                             ToolTip="{Binding Ui.NavBranchTip}">
                                         <Button.Style>
@@ -715,6 +761,90 @@
 
                         <TextBlock Text="{Binding Ui.GuideCommunityTitle}" FontWeight="SemiBold" Margin="0,8,0,4" />
                         <TextBlock Text="{Binding Ui.GuideCommunityBody}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <Border Style="{StaticResource PanelChromeStyle}"
+                    Padding="14,10"
+                    Margin="12,8,12,8"
+                    Visibility="{Binding IsAuthorPage, Converter={StaticResource BoolToVis}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+                        <StackPanel.Resources>
+                            <Style x:Key="AuthorNoteBorder" TargetType="Border">
+                                <Setter Property="Background" Value="#331C3040" />
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentAmberBrush}" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Setter Property="CornerRadius" Value="3" />
+                                <Setter Property="Padding" Value="10,8" />
+                                <Setter Property="Margin" Value="0,2,0,10" />
+                            </Style>
+                        </StackPanel.Resources>
+                        <TextBlock Text="{Binding Ui.AuthorTitle}" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding Ui.AuthorIntro}" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12" />
+                        <Button Content="{Binding Ui.AuthorDownload}"
+                                Command="{Binding DownloadAuthorStandardCommand}"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,0,6"
+                                Style="{StaticResource GhostButtonStyle}" />
+                        <TextBlock Text="{Binding AuthorStandardStatus}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,14"
+                                   Visibility="{Binding AuthorStandardStatus, Converter={StaticResource NonEmptyVis}}" />
+
+                        <TextBlock Text="{Binding Ui.AuthorScopeTitle}" FontWeight="SemiBold" Margin="0,8,0,4" />
+                        <Border Style="{StaticResource AuthorNoteBorder}">
+                            <DockPanel>
+                                <Viewbox Width="16" Height="16" Margin="0,1,10,0" DockPanel.Dock="Left" VerticalAlignment="Top">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Fill="{StaticResource AccentAmberHotBrush}" Data="{StaticResource IconNoticeGeometry}" />
+                                        <Path Fill="{StaticResource TextOnAccentBrush}" Data="{StaticResource IconNoticeMarkGeometry}" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="{Binding Ui.AuthorScopeBody}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding Ui.AuthorDataTitle}" FontWeight="SemiBold" Margin="0,8,0,4" />
+                        <Border Style="{StaticResource AuthorNoteBorder}">
+                            <DockPanel>
+                                <Viewbox Width="16" Height="16" Margin="0,1,10,0" DockPanel.Dock="Left" VerticalAlignment="Top">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Fill="{StaticResource AccentAmberHotBrush}" Data="{StaticResource IconNoticeGeometry}" />
+                                        <Path Fill="{StaticResource TextOnAccentBrush}" Data="{StaticResource IconNoticeMarkGeometry}" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="{Binding Ui.AuthorDataBody}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding Ui.AuthorHookTitle}" FontWeight="SemiBold" Margin="0,8,0,4" />
+                        <Border Style="{StaticResource AuthorNoteBorder}">
+                            <DockPanel>
+                                <Viewbox Width="16" Height="16" Margin="0,1,10,0" DockPanel.Dock="Left" VerticalAlignment="Top">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Fill="{StaticResource AccentAmberHotBrush}" Data="{StaticResource IconNoticeGeometry}" />
+                                        <Path Fill="{StaticResource TextOnAccentBrush}" Data="{StaticResource IconNoticeMarkGeometry}" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="{Binding Ui.AuthorHookBody}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding Ui.AuthorCatalogTitle}" FontWeight="SemiBold" Margin="0,8,0,4" />
+                        <Border Style="{StaticResource AuthorNoteBorder}">
+                            <DockPanel>
+                                <Viewbox Width="16" Height="16" Margin="0,1,10,0" DockPanel.Dock="Left" VerticalAlignment="Top">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Fill="{StaticResource AccentAmberHotBrush}" Data="{StaticResource IconNoticeGeometry}" />
+                                        <Path Fill="{StaticResource TextOnAccentBrush}" Data="{StaticResource IconNoticeMarkGeometry}" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="{Binding Ui.AuthorCatalogBody}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Border>

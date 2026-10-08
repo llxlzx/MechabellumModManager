@@ -48,6 +48,11 @@ public sealed partial class ModCatalogService
     {
         if (string.IsNullOrWhiteSpace(DataRoot))
             return false;
+        // A new process has not applied a catalog yet, so a young file still
+        // stands in for a launch. Once this session has applied one and the
+        // hot window is then set to zero, that file must not keep answering.
+        if (HotCacheTtl <= TimeSpan.Zero && LastCatalogAppliedUtc is not null)
+            return false;
         return CatalogCache.IsYoungerThan(DataRoot, DiskQuietPeriod);
     }
 

@@ -161,7 +161,22 @@
     <value>Whitelist upload (не готово)</value>
   </data>
   <data name="DirectUploadTitle" xml:space="preserve">
-    <value>Whitelist upload (не готово)</value>
+    <value>Отправить мод</value>
+  </data>
+  <data name="DirectUploadKind" xml:space="preserve">
+    <value>Вид файлов</value>
+  </data>
+  <data name="DirectUploadKindSingle" xml:space="preserve">
+    <value>Один DLL</value>
+  </data>
+  <data name="DirectUploadKindParts" xml:space="preserve">
+    <value>Части</value>
+  </data>
+  <data name="DirectUploadKindBundle" xml:space="preserve">
+    <value>Набор</value>
+  </data>
+  <data name="DirectUploadWaiting" xml:space="preserve">
+    <value>Загружено в зону приёма. Игроки пока её не видят. Она появится после того, как сопровождающий добавит её в каталог и синхронизирует зеркало.</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
     <value>Invite code</value>
@@ -988,4 +1003,22 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NoticeEmpty" xml:space="preserve"><value>Объявлений нет</value></data>
   <data name="NoticeStale" xml:space="preserve"><value>Объявления не обновились. Ниже последняя удачно загруженная копия.</value></data>
   <data name="NoticeUnavailable" xml:space="preserve"><value>Объявления загрузить не удалось.</value></data>
+  <data name="AuthorNav" xml:space="preserve"><value>Стандарт модов</value></data>
+  <data name="NavNoteAuthor" xml:space="preserve"><value>Скачать текст</value></data>
+  <data name="AuthorTitle" xml:space="preserve"><value>Стандарт модов</value></data>
+  <data name="AuthorIntro" xml:space="preserve"><value>Прочитайте эти замечания перед тем, как писать мод. Полный текст скачивается только с этой страницы. В менеджере нет второго входа.</value></data>
+  <data name="AuthorDownload" xml:space="preserve"><value>Скачать стандарт</value></data>
+  <data name="AuthorDownloading" xml:space="preserve"><value>Загрузка…</value></data>
+  <data name="AuthorDownloadSaved" xml:space="preserve"><value>Сохранено в {0}</value></data>
+  <data name="AuthorDownloadSavedCached" xml:space="preserve"><value>Свежую копию скачать не удалось. Последняя удачная копия сохранена в {0}</value></data>
+  <data name="AuthorDownloadFailed" xml:space="preserve"><value>Стандарт скачать не удалось. Попробуйте позже.</value></data>
+  <data name="AuthorStandardUpdateAvailable" xml:space="preserve"><value>Стандарт изменился. Скачайте его снова.</value></data>
+  <data name="AuthorScopeTitle" xml:space="preserve"><value>Только то, что видит игрок</value></data>
+  <data name="AuthorScopeBody" xml:space="preserve"><value>Не меняйте менеджер и не переписывайте уже установленную DLL, пока игра запущена. Не обещайте, что мод защищает от бана.</value></data>
+  <data name="AuthorDataTitle" xml:space="preserve"><value>Что публично значит Data Error</value></data>
+  <data name="AuthorDataBody" xml:space="preserve"><value>Этот матч считается проигрышем, и переподключиться нельзя. Это не подтверждённый постоянный бан. Тот же след оставляют собственные сбои игры и потеря пакетов.</value></data>
+  <data name="AuthorHookTitle" xml:space="preserve"><value>Хук оценивают по цели, не по имени</value></data>
+  <data name="AuthorHookBody" xml:space="preserve"><value>Интерфейс, камера и список друзей не должны вешаться на точки урона, снабжения и конца боя. Prefix с типом возврата bool считается высоким, даже если тело ни разу не пропускает исходный метод. В живом матче можно отправлять только действия, которые у игры уже есть. Время размещения можно менять только в повторе и только за проверкой «это повтор».</value></data>
+  <data name="AuthorCatalogTitle" xml:space="preserve"><value>Что писать в каталог</value></data>
+  <data name="AuthorCatalogBody" xml:space="preserve"><value>В кратком описании: что может игрок, какая клавиша, и это официальный сервер, тестовый или оба. Номер версии менеджера туда не пишите. «Нужна 1.3.13» в старых описаниях — устаревшая фраза. Новый мод ставит minManagerVersion 1.3.14 и повышает её, только если ему правда нужно более новое поведение менеджера. Место установки по умолчанию — MelonMod. Пишите под MelonLoader 0.7.3.</value></data>
 </root>

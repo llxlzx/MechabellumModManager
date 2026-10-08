@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Microsoft.Win32;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -33,6 +34,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly UpdateChecker _updateChecker;
     readonly ModCatalogService _catalog;
     readonly NoticeService _notices;
+    readonly AuthorStandardService _authorStandard;
     DispatcherTimer? _periodicUpdates;
     int _downloadRoutePreference;
     readonly AssemblyInspector _assemblyInspector;
@@ -200,6 +202,7 @@ public sealed partial class MainViewModel : ObservableObject
         _updateChecker.QuietStampPath = Path.Combine(_paths.DataRoot, UpdateChecker.QuietStampFileName);
         _catalog = catalog ?? new ModCatalogService();
         _notices = new NoticeService(dataRoot: _paths.DataRoot);
+        _authorStandard = new AuthorStandardService(dataRoot: _paths.DataRoot);
         _assemblyInspector = assemblyInspector ?? new AssemblyInspector();
         _managerLog = managerLog ?? new ManagerLogWriter(paths.LogsDir);
         _events = new ManagerEventLog(paths.LogsDir);
@@ -1154,6 +1157,7 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsGuidePage => ActiveContentPage == MainContentPage.Guide;
     public bool IsBranchPage => ActiveContentPage == MainContentPage.Branch;
     public bool IsNoticePage => ActiveContentPage == MainContentPage.Notice;
+    public bool IsAuthorPage => ActiveContentPage == MainContentPage.Author;
 
     partial void OnActiveContentPageChanged(MainContentPage value)
     {
@@ -1163,6 +1167,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsGuidePage));
         OnPropertyChanged(nameof(IsBranchPage));
         OnPropertyChanged(nameof(IsNoticePage));
+        OnPropertyChanged(nameof(IsAuthorPage));
         if (value != MainContentPage.Notice)
             _noticeCts?.Cancel();
 
@@ -1477,6 +1482,8 @@ public sealed partial class MainViewModel : ObservableObject
         CatalogCache.DropIfManagerVersionChanged(_paths.DataRoot, UpdateChecker.ReadLocalVersion());
         _notices.DataRoot = _paths.DataRoot;
         _notices.MirrorBaseUrl = active;
+        _authorStandard.DataRoot = _paths.DataRoot;
+        _authorStandard.MirrorBaseUrl = active;
         _updateChecker.MirrorBaseUrl = active;
 
         RefreshMirrorSummary();
@@ -1639,6 +1646,7 @@ public sealed partial class MainViewModel : ObservableObject
         DownloadRoute = route;
         _catalog.Route = route;
         _notices.Route = route;
+        _authorStandard.Route = route;
         _updateChecker.Route = route;
         OnPropertyChanged(nameof(DownloadRoute));
         foreach (var item in CatalogMods)
@@ -2859,6 +2867,79 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void ShowGuidePage() => ActiveContentPage = MainContentPage.Guide;
+
+    [RelayCommand]
+    async Task ShowAuthorPage()
+    {
+        ActiveContentPage = MainContentPage.Author;
+        if (IsAuthorStandardDownloading)
+            return;
+
+        AuthorStandardStatus = "";
+        var check = await _authorStandard.CheckAsync().ConfigureAwait(true);
+        if (IsAuthorStandardDownloading)
+            return;
+        _authorStandardUpdateVisible = check == AuthorStandardCheck.UpdateAvailable;
+        if (_authorStandardUpdateVisible)
+            AuthorStandardStatus = LocalizationService.T("AuthorStandardUpdateAvailable");
+    }
+
+    [ObservableProperty] private string _authorStandardStatus = "";
+    [ObservableProperty] private bool _isAuthorStandardDownloading;
+    bool _authorStandardUpdateVisible;
+
+    bool CanDownloadAuthorStandard() => !IsAuthorStandardDownloading;
+
+    partial void OnIsAuthorStandardDownloadingChanged(bool value) =>
+        DownloadAuthorStandardCommand.NotifyCanExecuteChanged();
+
+    [RelayCommand(CanExecute = nameof(CanDownloadAuthorStandard))]
+    async Task DownloadAuthorStandard()
+    {
+        IsAuthorStandardDownloading = true;
+        AuthorStandardStatus = LocalizationService.T("AuthorDownloading");
+        try
+        {
+            var fetched = await _authorStandard.FetchAsync().ConfigureAwait(true);
+            if (fetched is null)
+            {
+                AuthorStandardStatus = LocalizationService.T("AuthorDownloadFailed");
+                return;
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                FileName = "ai-mod-standard.md",
+                Filter = "Markdown (*.md)|*.md",
+                DefaultExt = ".md",
+                AddExtension = true,
+                OverwritePrompt = true
+            };
+            if (dialog.ShowDialog() != true)
+            {
+                AuthorStandardStatus = _authorStandardUpdateVisible
+                    ? LocalizationService.T("AuthorStandardUpdateAvailable")
+                    : "";
+                return;
+            }
+
+            File.WriteAllBytes(dialog.FileName, fetched.Bytes);
+            _authorStandard.Remember(fetched.Bytes);
+            _authorStandardUpdateVisible = false;
+            AuthorStandardStatus = string.Format(
+                LocalizationService.T(fetched.FromCache ? "AuthorDownloadSavedCached" : "AuthorDownloadSaved"),
+                dialog.FileName);
+        }
+        catch (Exception ex)
+        {
+            AuthorStandardStatus = LocalizationService.T("AuthorDownloadFailed");
+            AppendLog(AuthorStandardStatus + " " + ex.Message);
+        }
+        finally
+        {
+            IsAuthorStandardDownloading = false;
+        }
+    }
 
     [RelayCommand]
     async Task ShowNoticePage()

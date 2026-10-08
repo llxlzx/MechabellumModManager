@@ -64,6 +64,12 @@ public class MainContentPageTests
 
         vm.ShowGuidePageCommand.Execute(null);
         vm.IsGuidePage.Should().BeTrue();
+
+        vm.ShowAuthorPageCommand.Execute(null);
+        vm.ActiveContentPage.Should().Be(MainContentPage.Author);
+        vm.IsAuthorPage.Should().BeTrue();
+        vm.IsGuidePage.Should().BeFalse();
+        vm.IsLibraryPage.Should().BeFalse();
         vm.SkipGuideOnStartup.Should().BeFalse();
 
         vm.SkipGuideOnStartup = true;
