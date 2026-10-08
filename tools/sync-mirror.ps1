@@ -66,7 +66,7 @@
 
 .EXAMPLE
   .\tools\sync-mirror.ps1 -Bucket mmm-mirror-1312774738 `
-      -ModsRepo D:\gongzuo\独立工作区\MechabellumMods `
+      -ModsRepo D:\gongzuo\钢铁指挥官\社区目录 `
       -ReleaseDir .\release\v1.2.0
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
@@ -305,9 +305,12 @@ foreach ($mod in $catalog.mods) {
     }
     else {
         $relative = ($mod.file -replace '\\', '/')
-        # A bundle is separate assemblies. The whole-file key is what 1.3.13 would install as
-        # the only DLL, so it stays absent even when a local copy of that name exists.
-        if (-not $mod.bundle) {
+        # A bundle is separate assemblies. The whole-file key is what an old manager would
+        # install as the only DLL, so it stays absent even when a local copy of that name exists.
+        # Parts-backed mods are the same: the slices are the download. Uploading the whole DLL
+        # again would reopen that old path.
+        $hasParts = $mod.parts -and @($mod.parts).Count -gt 0
+        if (-not $mod.bundle -and -not $hasParts) {
             Push-File -LocalPath (Join-Path $ModsRepo $relative) -RemoteKey "MechabellumMods/$relative"
         }
 
@@ -319,9 +322,8 @@ foreach ($mod in $catalog.mods) {
             }
         }
 
-        # Slices of a file that is too big for one git blob. The whole file stays uploaded so
-        # managers that predate "parts" can still install it. New managers download the slices
-        # from git and only fall back to these objects.
+        # Slices replace the whole file. Old managers that only know the whole-file key get
+        # a 404 here on purpose. New managers download these slices.
         if ($mod.parts) {
             foreach ($part in $mod.parts) {
                 $partRelative = ("$($part.file)" -replace '\\', '/')
@@ -423,6 +425,12 @@ $noticePath = Join-Path $ModsRepo "notice.json"
 if (Test-Path -LiteralPath $noticePath) {
     Write-Output "== notice.json =="
     Push-File -LocalPath $noticePath -RemoteKey "MechabellumMods/notice.json"
+}
+
+$authorStandardPath = Join-Path $ModsRepo "docs\ai-mod-standard.md"
+if (Test-Path -LiteralPath $authorStandardPath) {
+    Write-Output "== ai-mod-standard.md =="
+    Push-File -LocalPath $authorStandardPath -RemoteKey "MechabellumMods/docs/ai-mod-standard.md"
 }
 
 # catalog.json is the one object that grows with the whole catalog, and it is JSON, so it
