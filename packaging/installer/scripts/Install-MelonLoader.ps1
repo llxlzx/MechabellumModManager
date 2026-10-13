@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [string] $GamePath,
     [Parameter(Mandatory = $true)]
