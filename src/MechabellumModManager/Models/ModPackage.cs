@@ -27,12 +27,17 @@ public sealed class ModPackage
     public string? CategoryOverride { get; set; }
     /// <summary>Local extra tags merged with catalog tags.</summary>
     public List<string>? ExtraTags { get; set; }
+    /// <summary>Local override of catalog usage (Tournament / Casual); null = follow catalog.</summary>
+    public string? UsageOverride { get; set; }
     /// <summary>Runtime-only catalog category from last enrichment.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public string? CatalogCategory { get; set; }
     /// <summary>Runtime-only catalog tags from last enrichment.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public List<string>? CatalogTags { get; set; }
+    /// <summary>Runtime-only catalog usage from last enrichment.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? CatalogUsage { get; set; }
     /// <summary>Runtime-only default catalog name (top-level name) from last enrichment.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public string? CatalogDisplayName { get; set; }

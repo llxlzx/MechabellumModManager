@@ -220,6 +220,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string CurrentProfile => T("CurrentProfile");
     public string FilterSearch => T("FilterSearch");
     public string FilterCategory => T("FilterCategory");
+    public string FilterUsage => T("FilterUsage");
     public string FilterTag => T("FilterTag");
     public string FilterSort => T("FilterSort");
     public string FilterAll => T("FilterAll");
@@ -251,6 +252,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string TagsLabel => T("TagsLabel");
     public string EditModTaxonomy => T("EditModTaxonomy");
     public string CategoryFollowCatalog => T("CategoryFollowCatalog");
+    public string UsageFollowCatalog => T("UsageFollowCatalog");
     public string ExtraTagsHint => T("ExtraTagsHint");
 
     public string BranchSwitchTitle => T("BranchSwitchTitle");
@@ -280,6 +282,9 @@ public sealed class UiStrings : INotifyPropertyChanged
         Models.ModCategory.Misc => T("CategoryMisc"),
         _ => T("CategoryUncategorized")
     };
+
+    public string UsageLabel(Models.ModUsage usage) =>
+        T(Services.ModTaxonomy.UsageResourceKey(usage));
 
     public void Refresh()
     {

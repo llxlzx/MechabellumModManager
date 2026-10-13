@@ -521,6 +521,7 @@
   <data name="FilterSearch" xml:space="preserve"><value>Поиск</value></data>
   <data name="SearchModName" xml:space="preserve"><value>Поиск по названию</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>Категория</value></data>
+  <data name="FilterUsage" xml:space="preserve"><value>Назначение</value></data>
   <data name="FilterTag" xml:space="preserve"><value>Тег</value></data>
   <data name="FilterSort" xml:space="preserve"><value>Сортировка</value></data>
   <data name="FilterAll" xml:space="preserve"><value>Все</value></data>
@@ -537,8 +538,12 @@
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Реплей и отладка</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Прочее</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Без категории</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>Турнирные моды</value></data>
+  <data name="UsageCasual" xml:space="preserve"><value>Повседневные моды</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>Не оценено</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Категория и теги</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>Как в каталоге</value></data>
+  <data name="UsageFollowCatalog" xml:space="preserve"><value>Как в каталоге</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>Доп. теги (через запятую)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Официальная / Тестовая</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
@@ -941,6 +946,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>Не удалось обновить состояние включения: {0}</value></data>
   <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>Не удалось обновить метку высокого риска для {0}: {1}</value></data>
   <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>Локальный пакет &apos;{0}&apos;: неверный override категории &apos;{1}&apos;; как каталог/без категории.</value></data>
+  <data name="LogInvalidUsageOverride" xml:space="preserve"><value>Локальный пакет &apos;{0}&apos;: недопустимое переопределение назначения &apos;{1}&apos;; используется каталог / не оценено.</value></data>
   <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>Не удалось доустановить MelonLoader для двух веток при запуске: {0}</value></data>
   <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>Проверка целевого склада перед переключением не удалась: {0}</value></data>
   <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>Не сохранён снимок ACF {0} перед переключением: {1}</value></data>
@@ -959,6 +965,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>Сохранён снимок манифеста Steam {0} для следующего переключения без загрузки</value></data>
   <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>Не удалось проверить статус обновления Steam: {0}</value></data>
   <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>Запись каталога &apos;{0}&apos;: неверная категория &apos;{1}&apos;; без категории.</value></data>
+  <data name="LogInvalidCatalogUsage" xml:space="preserve"><value>Запись каталога &apos;{0}&apos;: неверное назначение &apos;{1}&apos;; не оценено.</value></data>
   <data name="LogImportedDll" xml:space="preserve"><value>Импортирован DLL: {0} ({1})</value></data>
   <data name="LogImportCancelledNoType" xml:space="preserve"><value>Импорт отменён (тип не выбран)</value></data>
   <data name="LogImportDllFailed" xml:space="preserve"><value>Импорт DLL не удался: {0}</value></data>

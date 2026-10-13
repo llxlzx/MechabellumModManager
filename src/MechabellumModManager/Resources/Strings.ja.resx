@@ -521,6 +521,7 @@
   <data name="FilterSearch" xml:space="preserve"><value>検索</value></data>
   <data name="SearchModName" xml:space="preserve"><value>MOD名を検索</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>カテゴリ</value></data>
+  <data name="FilterUsage" xml:space="preserve"><value>用途</value></data>
   <data name="FilterTag" xml:space="preserve"><value>タグ</value></data>
   <data name="FilterSort" xml:space="preserve"><value>並び替え</value></data>
   <data name="FilterAll" xml:space="preserve"><value>すべて</value></data>
@@ -537,8 +538,12 @@
   <data name="CategoryReplayDebug" xml:space="preserve"><value>リプレイ・診断</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>その他</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>未分類</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>大会用 Mod</value></data>
+  <data name="UsageCasual" xml:space="preserve"><value>日常用 Mod</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>未判定</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>分類とタグを編集</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>カタログの分類を使う</value></data>
+  <data name="UsageFollowCatalog" xml:space="preserve"><value>カタログに従う</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>追加タグ（カンマ区切り）</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>正式版 / テスト版</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
@@ -941,6 +946,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>有効状態の更新失敗：{0}</value></data>
   <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>{0} の高リスクマーク更新失敗：{1}</value></data>
   <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>ローカルパッケージ &apos;{0}&apos;: 無効な分類上書き &apos;{1}&apos;。カタログ/未分類として処理。</value></data>
+  <data name="LogInvalidUsageOverride" xml:space="preserve"><value>ローカルパッケージ &apos;{0}&apos;：用途の上書き &apos;{1}&apos; が無効です。カタログ／未判定として扱います。</value></data>
   <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>起動時の二系統 MelonLoader 補完失敗：{0}</value></data>
   <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>切替前の目標ストア検査失敗：{0}</value></data>
   <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>切替前に {0} の ACF スナップショット未保存：{1}</value></data>
@@ -959,6 +965,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>{0} の Steam マニフェストスナップショットを保存。次回切替でダウンロード不要</value></data>
   <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>Steam 更新状態の確認失敗：{0}</value></data>
   <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>カタログ項目 &apos;{0}&apos;: 無効な分類 &apos;{1}&apos;。未分類として処理。</value></data>
+  <data name="LogInvalidCatalogUsage" xml:space="preserve"><value>カタログ項目 &apos;{0}&apos;：無効な用途 &apos;{1}&apos;。未判定として処理。</value></data>
   <data name="LogImportedDll" xml:space="preserve"><value>DLL をインポート：{0} ({1})</value></data>
   <data name="LogImportCancelledNoType" xml:space="preserve"><value>インポートをキャンセル（タイプ未選択）</value></data>
   <data name="LogImportDllFailed" xml:space="preserve"><value>DLL のインポート失敗：{0}</value></data>

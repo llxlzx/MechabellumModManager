@@ -521,6 +521,7 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="FilterSearch" xml:space="preserve"><value>Search</value></data>
   <data name="SearchModName" xml:space="preserve"><value>Search mod names</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="FilterUsage" xml:space="preserve"><value>Usage</value></data>
   <data name="FilterTag" xml:space="preserve"><value>Tag</value></data>
   <data name="FilterSort" xml:space="preserve"><value>Sort</value></data>
   <data name="FilterAll" xml:space="preserve"><value>All</value></data>
@@ -537,8 +538,12 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Replay &amp; Debug</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Other</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Uncategorized</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>Tournament mods</value></data>
+  <data name="UsageCasual" xml:space="preserve"><value>Casual mods</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>Not rated</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Edit category &amp; tags</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>Use catalog category</value></data>
+  <data name="UsageFollowCatalog" xml:space="preserve"><value>Follow catalog</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>Extra tags (comma-separated)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Official / Test (Beta)</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
@@ -946,6 +951,7 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>Failed to update enable state: {0}</value></data>
   <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>Failed to update high-risk mark for {0}: {1}</value></data>
   <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>Local package &apos;{0}&apos;: invalid category override &apos;{1}&apos;; treating as catalog/uncategorized.</value></data>
+  <data name="LogInvalidUsageOverride" xml:space="preserve"><value>Local package &apos;{0}&apos;: invalid usage override &apos;{1}&apos;; using catalog / not rated.</value></data>
   <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>Failed to ensure dual-branch MelonLoader at startup: {0}</value></data>
   <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>Pre-switch target store check failed: {0}</value></data>
   <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>Did not save {0} ACF snapshot before switch: {1}</value></data>
@@ -964,6 +970,7 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>Saved {0} Steam manifest snapshot for next switch without download</value></data>
   <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>Failed to check Steam update status: {0}</value></data>
   <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>Catalog entry &apos;{0}&apos;: invalid category &apos;{1}&apos;; treating as uncategorized.</value></data>
+  <data name="LogInvalidCatalogUsage" xml:space="preserve"><value>Catalog entry &apos;{0}&apos;: invalid usage &apos;{1}&apos;; treating as not rated.</value></data>
   <data name="LogImportedDll" xml:space="preserve"><value>Imported DLL: {0} ({1})</value></data>
   <data name="LogImportCancelledNoType" xml:space="preserve"><value>Import cancelled (no type selected)</value></data>
   <data name="LogImportDllFailed" xml:space="preserve"><value>Import DLL failed: {0}</value></data>

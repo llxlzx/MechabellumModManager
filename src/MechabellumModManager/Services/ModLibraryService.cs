@@ -641,6 +641,7 @@ public sealed class ModLibraryService
             CatalogId = pkg.CatalogId,
             CategoryOverride = pkg.CategoryOverride,
             ExtraTags = pkg.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(pkg.ExtraTags).ToList(),
+            UsageOverride = pkg.UsageOverride,
             Files = pkg.Files
         };
         var json = JsonSerializer.Serialize(meta, PackageJsonOptions);
@@ -677,6 +678,7 @@ public sealed class ModLibraryService
                 CatalogId = meta.CatalogId,
                 CategoryOverride = meta.CategoryOverride,
                 ExtraTags = meta.ExtraTags is null ? null : ModTaxonomy.NormalizeTags(meta.ExtraTags).ToList(),
+                UsageOverride = meta.UsageOverride,
                 Files = meta.Files ?? new List<DeployableFile>(),
                 PackageDirectory = dir
             };
@@ -948,6 +950,7 @@ public sealed class ModLibraryService
         public string? CatalogId { get; set; }
         public string? CategoryOverride { get; set; }
         public List<string>? ExtraTags { get; set; }
+        public string? UsageOverride { get; set; }
         public List<DeployableFile>? Files { get; set; }
     }
 

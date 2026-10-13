@@ -146,6 +146,10 @@ public sealed class CatalogMod
     [JsonPropertyName("tags")]
     public List<string>? Tags { get; set; }
 
+    /// <summary>Maintainer-set: Tournament or Casual. Missing = not rated.</summary>
+    [JsonPropertyName("usage")]
+    public string? Usage { get; set; }
+
     /// <summary>
     /// Other catalog mods that must not be in the library at the same time.
     /// A one-sided entry still blocks both directions.

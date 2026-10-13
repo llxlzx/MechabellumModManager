@@ -521,6 +521,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="FilterSearch" xml:space="preserve"><value>Suche</value></data>
   <data name="SearchModName" xml:space="preserve"><value>Mod-Namen suchen</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>Kategorie</value></data>
+  <data name="FilterUsage" xml:space="preserve"><value>Verwendung</value></data>
   <data name="FilterTag" xml:space="preserve"><value>Stichwort</value></data>
   <data name="FilterSort" xml:space="preserve"><value>Sortierung</value></data>
   <data name="FilterAll" xml:space="preserve"><value>Alle</value></data>
@@ -537,8 +538,12 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Wiederholung &amp; Diagnose</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Sonstiges</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Unkategorisiert</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>Turnier-Mods</value></data>
+  <data name="UsageCasual" xml:space="preserve"><value>Alltags-Mods</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>Nicht bewertet</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Kategorie &amp; Stichwörter</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>Katalog-Kategorie</value></data>
+  <data name="UsageFollowCatalog" xml:space="preserve"><value>Katalog folgen</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Stichwörter (kommagetrennt)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Offiziell / Test</value></data>
   <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
@@ -941,6 +946,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>Aktualisieren des Aktivierungsstatus fehlgeschlagen: {0}</value></data>
   <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>Hochrisiko-Markierung für {0} fehlgeschlagen: {1}</value></data>
   <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>Lokales Paket &apos;{0}&apos;: ungültige Kategorieüberschreibung &apos;{1}&apos;; als Katalog/unkategorisiert behandelt.</value></data>
+  <data name="LogInvalidUsageOverride" xml:space="preserve"><value>Lokales Paket &apos;{0}&apos;: ungültige Verwendungs-Überschreibung &apos;{1}&apos;; Katalog / nicht bewertet wird verwendet.</value></data>
   <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>Sicherstellen von Zweizweig-MelonLoader beim Start fehlgeschlagen: {0}</value></data>
   <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>Prüfung des Ziel-Stores vor Wechsel fehlgeschlagen: {0}</value></data>
   <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>ACF-Snapshot für {0} vor Wechsel nicht gespeichert: {1}</value></data>
@@ -959,6 +965,7 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>{0} Steam-Manifest-Snapshot gespeichert für nächsten Wechsel ohne Download</value></data>
   <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>Steam-Update-Status konnte nicht geprüft werden: {0}</value></data>
   <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>Katalogeintrag &apos;{0}&apos;: ungültige Kategorie &apos;{1}&apos;; als unkategorisiert behandelt.</value></data>
+  <data name="LogInvalidCatalogUsage" xml:space="preserve"><value>Katalogeintrag &apos;{0}&apos;: ungültige Verwendung &apos;{1}&apos;; als nicht bewertet behandelt.</value></data>
   <data name="LogImportedDll" xml:space="preserve"><value>DLL importiert: {0} ({1})</value></data>
   <data name="LogImportCancelledNoType" xml:space="preserve"><value>Import abgebrochen (kein Typ gewählt)</value></data>
   <data name="LogImportDllFailed" xml:space="preserve"><value>DLL-Import fehlgeschlagen: {0}</value></data>

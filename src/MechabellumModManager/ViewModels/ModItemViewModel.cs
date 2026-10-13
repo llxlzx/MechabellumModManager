@@ -62,6 +62,9 @@ public sealed partial class ModItemViewModel : ObservableObject
     public IReadOnlyList<string> EffectiveTags =>
         ModTaxonomy.ResolveEffectiveTags(Package.CatalogTags, Package.ExtraTags);
 
+    public ModUsage EffectiveUsage =>
+        ModTaxonomy.ResolveEffectiveUsage(Package.UsageOverride, Package.CatalogUsage);
+
     public string EffectiveCategoryDisplay => _owner.Ui.CategoryLabel(EffectiveCategory);
 
     public string EffectiveTagsText => ModTaxonomy.FormatTagsDisplay(EffectiveTags);
@@ -182,6 +185,7 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(PreviewUrl));
         OnPropertyChanged(nameof(EffectiveCategory));
         OnPropertyChanged(nameof(EffectiveTags));
+        OnPropertyChanged(nameof(EffectiveUsage));
         OnPropertyChanged(nameof(EffectiveCategoryDisplay));
         OnPropertyChanged(nameof(EffectiveTagsText));
         OnPropertyChanged(nameof(TypeLabel));
@@ -224,6 +228,7 @@ public sealed partial class ModItemViewModel : ObservableObject
             Package.Preview = catalog.Preview;
         Package.CatalogCategory = catalog.Category;
         Package.CatalogTags = catalog.Tags is null ? null : new List<string>(catalog.Tags);
+        Package.CatalogUsage = catalog.Usage;
         Package.CatalogDisplayName = string.IsNullOrWhiteSpace(catalog.Name) ? null : catalog.Name;
         Package.CatalogLocales = CloneLocales(catalog.Locales);
         _boundCatalog = catalog;

@@ -522,6 +522,7 @@
   <data name="FilterSearch" xml:space="preserve"><value>搜索</value></data>
   <data name="SearchModName" xml:space="preserve"><value>搜索 MOD 名称</value></data>
   <data name="FilterCategory" xml:space="preserve"><value>分类</value></data>
+  <data name="FilterUsage" xml:space="preserve"><value>用途</value></data>
   <data name="FilterTag" xml:space="preserve"><value>标签</value></data>
   <data name="FilterSort" xml:space="preserve"><value>排序</value></data>
   <data name="FilterAll" xml:space="preserve"><value>全部</value></data>
@@ -538,8 +539,12 @@
   <data name="CategoryReplayDebug" xml:space="preserve"><value>回放与调试</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>其他</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>未分类</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>赛事专用 Mod</value></data>
+  <data name="UsageCasual" xml:space="preserve"><value>日常化 Mod</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>未判定</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>编辑分类与标签</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>使用目录分类</value></data>
+  <data name="UsageFollowCatalog" xml:space="preserve"><value>跟随目录</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>额外标签（用英文逗号分隔）</value></data>
 
   <data name="BranchSwitchTitle" xml:space="preserve"><value>正式服 / 测试服</value></data>
@@ -949,6 +954,7 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="LogUpdateEnableStateFailed" xml:space="preserve"><value>更新启用状态失败：{0}</value></data>
   <data name="LogUpdatePkgHighRiskFailed" xml:space="preserve"><value>更新 {0} 高风险标记失败：{1}</value></data>
   <data name="LogInvalidCategoryOverride" xml:space="preserve"><value>本地包 &apos;{0}&apos;: 无效分类覆盖 &apos;{1}&apos;，按目录/未分类处理。</value></data>
+  <data name="LogInvalidUsageOverride" xml:space="preserve"><value>本地包 &apos;{0}&apos;：无效用途覆盖 &apos;{1}&apos;，按目录/未判定处理。</value></data>
   <data name="LogStartupEnsureDualMelonFailed" xml:space="preserve"><value>启动时补齐双服 MelonLoader 失败：{0}</value></data>
   <data name="LogPreSwitchTargetStoreCheckFailed" xml:space="preserve"><value>切服前检查目标仓失败：{0}</value></data>
   <data name="LogPreSwitchAcfSnapshotMissed" xml:space="preserve"><value>切服前未保存 {0} ACF 快照：{1}</value></data>
@@ -967,6 +973,7 @@ GitHub 备用：https://github.com/llxlzx/MechabellumModManager/releases/latest<
   <data name="LogSavedAcfSnapshotForSwitch" xml:space="preserve"><value>已保存 {0} Steam 清单快照，供下次切服免下载</value></data>
   <data name="LogCheckSteamUpdateFailed" xml:space="preserve"><value>检查 Steam 更新状态失败：{0}</value></data>
   <data name="LogInvalidCatalogCategory" xml:space="preserve"><value>目录条目 &apos;{0}&apos;: 无效分类 &apos;{1}&apos;，按未分类处理。</value></data>
+  <data name="LogInvalidCatalogUsage" xml:space="preserve"><value>目录条目 &apos;{0}&apos;：无效用途 &apos;{1}&apos;，按未判定处理。</value></data>
   <data name="LogImportedDll" xml:space="preserve"><value>已导入 DLL：{0} ({1})</value></data>
   <data name="LogImportCancelledNoType" xml:space="preserve"><value>已取消导入（未选择类型）</value></data>
   <data name="LogImportDllFailed" xml:space="preserve"><value>导入 DLL 失败：{0}</value></data>

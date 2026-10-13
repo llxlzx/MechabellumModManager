@@ -5048,6 +5048,11 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 AppendLog(string.Format(LocalizationService.T("LogInvalidCategoryOverride"), pkg.Id, pkg.CategoryOverride));
             }
+            if (!string.IsNullOrWhiteSpace(pkg.UsageOverride) &&
+                !ModTaxonomy.TryParseUsage(pkg.UsageOverride, out _))
+            {
+                AppendLog(string.Format(LocalizationService.T("LogInvalidUsageOverride"), pkg.Id, pkg.UsageOverride));
+            }
             Mods.Add(new ModItemViewModel(this, pkg, enabled.Contains(pkg.Id)));
         }
 
@@ -6970,6 +6975,11 @@ public sealed partial class MainViewModel : ObservableObject
             !ModTaxonomy.TryParseCategory(mod.Category, out _))
         {
             AppendLog(string.Format(LocalizationService.T("LogInvalidCatalogCategory"), mod.Id, mod.Category));
+        }
+        if (!string.IsNullOrWhiteSpace(mod.Usage) &&
+            !ModTaxonomy.TryParseUsage(mod.Usage, out _))
+        {
+            AppendLog(string.Format(LocalizationService.T("LogInvalidCatalogUsage"), mod.Id, mod.Usage));
         }
     }
 

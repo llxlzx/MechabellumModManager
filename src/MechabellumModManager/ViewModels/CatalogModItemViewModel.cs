@@ -75,6 +75,8 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public IReadOnlyList<string> EffectiveTags =>
         ModTaxonomy.NormalizeTags(Mod.Tags);
 
+    public ModUsage EffectiveUsage => ModTaxonomy.ResolveEffectiveUsage(null, Mod.Usage);
+
     public string EffectiveCategoryDisplay => LocalizationService.T(EffectiveCategory switch
     {
         ModCategory.OverlayUI => "CategoryOverlayUI",
