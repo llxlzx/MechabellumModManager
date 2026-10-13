@@ -41,3 +41,16 @@ public sealed class SortModeOption
     public string Label { get; }
     public override string ToString() => Label;
 }
+
+public sealed class UsageFilterOption
+{
+    public UsageFilterOption(ModUsage? usage, string label)
+    {
+        Usage = usage;
+        Label = label;
+    }
+
+    public ModUsage? Usage { get; }
+    public string Label { get; }
+    public override string ToString() => Label;
+}

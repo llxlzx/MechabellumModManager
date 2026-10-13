@@ -279,6 +279,8 @@ public sealed partial class MainViewModel : ObservableObject
         LibraryModsView.Filter = FilterLibraryItem;
         LibraryModsView.SortDescriptions.Add(
             new SortDescription(nameof(ModItemViewModel.DisplayName), ListSortDirection.Ascending));
+        AddUsageGrouping(CatalogModsView);
+        AddUsageGrouping(LibraryModsView);
         CatalogMods.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsCatalogEmpty));
         Mods.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsLibraryEmpty));
         CatalogAvailableTagOptions = new ObservableCollection<TagFilterOption>();
@@ -430,6 +432,7 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<TagFilterOption> LibraryAvailableTagOptions { get; }
     public IReadOnlyList<CategoryFilterOption> CatalogCategoryFilterOptions { get; private set; } = Array.Empty<CategoryFilterOption>();
     public IReadOnlyList<CategoryFilterOption> LibraryCategoryFilterOptions { get; private set; } = Array.Empty<CategoryFilterOption>();
+    public IReadOnlyList<UsageFilterOption> UsageFilterOptions { get; private set; } = Array.Empty<UsageFilterOption>();
     public IReadOnlyList<SortModeOption> SortModeOptions { get; private set; } = Array.Empty<SortModeOption>();
     public IReadOnlyList<LaunchModeOption> LaunchModeOptions { get; }
 
@@ -1196,10 +1199,12 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _selectedUiScaleCode = UiScalePolicy.Auto;
     [ObservableProperty] private string _catalogSearchText = "";
     [ObservableProperty] private CategoryFilterOption? _selectedCatalogCategoryFilter;
+    [ObservableProperty] private UsageFilterOption? _selectedCatalogUsageFilter;
     [ObservableProperty] private TagFilterOption? _selectedCatalogTagFilter;
     [ObservableProperty] private SortModeOption? _selectedCatalogSortMode;
     [ObservableProperty] private string _librarySearchText = "";
     [ObservableProperty] private CategoryFilterOption? _selectedLibraryCategoryFilter;
+    [ObservableProperty] private UsageFilterOption? _selectedLibraryUsageFilter;
     [ObservableProperty] private TagFilterOption? _selectedLibraryTagFilter;
     [ObservableProperty] private SortModeOption? _selectedLibrarySortMode;
     [ObservableProperty] private bool _branchSwitchEnabled;
@@ -1221,6 +1226,11 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (!_suppressFilterRefresh) RefreshCatalogView();
     }
+
+    partial void OnSelectedCatalogUsageFilterChanged(UsageFilterOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshCatalogView();
+    }
     partial void OnSelectedCatalogTagFilterChanged(TagFilterOption? value)
     {
         if (!_suppressFilterRefresh) RefreshCatalogView();
@@ -1234,6 +1244,11 @@ public sealed partial class MainViewModel : ObservableObject
         if (!_suppressFilterRefresh) RefreshLibraryView();
     }
     partial void OnSelectedLibraryCategoryFilterChanged(CategoryFilterOption? value)
+    {
+        if (!_suppressFilterRefresh) RefreshLibraryView();
+    }
+
+    partial void OnSelectedLibraryUsageFilterChanged(UsageFilterOption? value)
     {
         if (!_suppressFilterRefresh) RefreshLibraryView();
     }
@@ -4263,7 +4278,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// column, so any path that fetches a catalog has to come through here or the fetch is
     /// invisible to the player.
     /// </summary>
-    void ApplyCatalogRoot(CatalogRoot root)
+    internal void ApplyCatalogRoot(CatalogRoot root)
     {
         RunOnUiThread(() => ApplyCatalogRootCore(root));
     }
@@ -5099,6 +5114,16 @@ public sealed partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(CatalogCategoryFilterOptions));
             OnPropertyChanged(nameof(LibraryCategoryFilterOptions));
 
+            var usageOptions = new List<UsageFilterOption> { new(null, allLabel) };
+            foreach (var usage in Enum.GetValues<ModUsage>())
+                usageOptions.Add(new UsageFilterOption(usage, Ui.UsageLabel(usage)));
+            UsageFilterOptions = usageOptions;
+            OnPropertyChanged(nameof(UsageFilterOptions));
+            SelectedCatalogUsageFilter = UsageFilterOptions.FirstOrDefault(o =>
+                o.Usage == SelectedCatalogUsageFilter?.Usage) ?? UsageFilterOptions[0];
+            SelectedLibraryUsageFilter = UsageFilterOptions.FirstOrDefault(o =>
+                o.Usage == SelectedLibraryUsageFilter?.Usage) ?? UsageFilterOptions[0];
+
             SortModeOptions = new[]
             {
                 new SortModeOption(ModSortMode.NameAsc, Ui.SortByName),
@@ -5224,6 +5249,17 @@ public sealed partial class MainViewModel : ObservableObject
         LibraryModsView.Refresh();
     }
 
+    /// <summary>
+    /// Groups sort themselves by the ModUsage value, so group order does not depend on
+    /// CustomSort or on which column header the player clicked.
+    /// </summary>
+    static void AddUsageGrouping(ICollectionView view)
+    {
+        var byUsage = new PropertyGroupDescription(nameof(ModItemViewModel.EffectiveUsage));
+        byUsage.SortDescriptions.Add(new SortDescription(nameof(CollectionViewGroup.Name), ListSortDirection.Ascending));
+        view.GroupDescriptions.Add(byUsage);
+    }
+
     static void ApplySort(ICollectionView view, ModSortMode mode, bool catalog)
     {
         if (view is not ListCollectionView lcv) return;
@@ -5274,6 +5310,8 @@ public sealed partial class MainViewModel : ObservableObject
         if (!ModListFilter.MatchesSearch(
                 CatalogSearchText, item.Name, item.Author, item.Summary, item.Id))
             return false;
+        if (!ModListFilter.MatchesUsage(SelectedCatalogUsageFilter?.Usage, item.EffectiveUsage))
+            return false;
         if (!ModListFilter.MatchesCategory(SelectedCatalogCategoryFilter?.Category, item.EffectiveCategory))
             return false;
         if (!ModListFilter.MatchesTag(SelectedCatalogTagFilter?.Tag, item.EffectiveTags))
@@ -5286,6 +5324,8 @@ public sealed partial class MainViewModel : ObservableObject
         if (obj is not ModItemViewModel item) return false;
         if (!ModListFilter.MatchesSearch(
                 LibrarySearchText, item.DisplayName, item.Author, item.Summary, item.Package.Id))
+            return false;
+        if (!ModListFilter.MatchesUsage(SelectedLibraryUsageFilter?.Usage, item.EffectiveUsage))
             return false;
         if (!ModListFilter.MatchesCategory(SelectedLibraryCategoryFilter?.Category, item.EffectiveCategory))
             return false;
