@@ -538,9 +538,9 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Wiederholung &amp; Diagnose</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Sonstiges</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Unkategorisiert</value></data>
-  <data name="UsageTournament" xml:space="preserve"><value>Turnier-Mods</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>Turniertaugliche Mods</value></data>
   <data name="UsageCasual" xml:space="preserve"><value>Alltags-Mods</value></data>
-  <data name="UsageUnrated" xml:space="preserve"><value>Nicht bewertet</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>Nicht kategorisierte Mods</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Kategorie &amp; Stichwörter</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>Katalog-Kategorie</value></data>
   <data name="UsageFollowCatalog" xml:space="preserve"><value>Katalog folgen</value></data>

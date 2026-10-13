@@ -538,9 +538,9 @@
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Реплей и отладка</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Прочее</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Без категории</value></data>
-  <data name="UsageTournament" xml:space="preserve"><value>Турнирные моды</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>Моды, допустимые на турнирах</value></data>
   <data name="UsageCasual" xml:space="preserve"><value>Повседневные моды</value></data>
-  <data name="UsageUnrated" xml:space="preserve"><value>Не оценено</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>Моды без категории</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Категория и теги</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>Как в каталоге</value></data>
   <data name="UsageFollowCatalog" xml:space="preserve"><value>Как в каталоге</value></data>

@@ -538,9 +538,9 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="CategoryReplayDebug" xml:space="preserve"><value>Replay &amp; Debug</value></data>
   <data name="CategoryMisc" xml:space="preserve"><value>Other</value></data>
   <data name="CategoryUncategorized" xml:space="preserve"><value>Uncategorized</value></data>
-  <data name="UsageTournament" xml:space="preserve"><value>Tournament mods</value></data>
+  <data name="UsageTournament" xml:space="preserve"><value>Tournament-legal mods</value></data>
   <data name="UsageCasual" xml:space="preserve"><value>Casual mods</value></data>
-  <data name="UsageUnrated" xml:space="preserve"><value>Not rated</value></data>
+  <data name="UsageUnrated" xml:space="preserve"><value>Uncategorized mods</value></data>
   <data name="EditModTaxonomy" xml:space="preserve"><value>Edit category &amp; tags</value></data>
   <data name="CategoryFollowCatalog" xml:space="preserve"><value>Use catalog category</value></data>
   <data name="UsageFollowCatalog" xml:space="preserve"><value>Follow catalog</value></data>
