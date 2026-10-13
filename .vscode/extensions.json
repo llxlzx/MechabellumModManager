@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "JetBrains.resharper-code",
+    "ms-dotnettools.vscode-dotnet-runtime"
+  ],
+  "unwantedRecommendations": [
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "nromanov.dotrush",
+    "muhammad-sammy.csharp",
+    "anysphere.csharp"
+  ]
+}

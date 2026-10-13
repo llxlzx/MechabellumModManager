@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { authorizePublish } from "./ownership";
+import { authorizeInbox, authorizePublish } from "./ownership";
 
 describe("authorizePublish", () => {
   it("allows create when catalog lacks mod", () => {
@@ -44,5 +44,39 @@ describe("authorizePublish", () => {
         ownerInviteId: "b",
       }),
     ).toBe("forbidden_not_owner");
+  });
+});
+
+describe("authorizeInbox", () => {
+  it("rejects when another invite already owns the id even if the catalog entry is gone", () => {
+    expect(authorizeInbox({
+      catalogHasMod: false,
+      ownerInviteId: "alice",
+      inviteId: "bob",
+    })).toBe("forbidden_not_owner");
+  });
+
+  it("rejects an existing catalog id that has no owner", () => {
+    expect(authorizeInbox({
+      catalogHasMod: true,
+      ownerInviteId: null,
+      inviteId: "alice",
+    })).toBe("forbidden_not_owner");
+  });
+
+  it("allows the recorded owner to submit again", () => {
+    expect(authorizeInbox({
+      catalogHasMod: true,
+      ownerInviteId: "alice",
+      inviteId: "alice",
+    })).toBe("allow");
+  });
+
+  it("allows a new id with no owner", () => {
+    expect(authorizeInbox({
+      catalogHasMod: false,
+      ownerInviteId: null,
+      inviteId: "alice",
+    })).toBe("allow");
   });
 });

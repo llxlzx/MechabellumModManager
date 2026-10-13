@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Mod Manager",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder:钢铁指挥官mod管理器开发}/src/MechabellumModManager/bin/Debug/net8.0-windows/MechabellumModManager.dll",
+      "args": [],
+      "cwd": "${workspaceFolder:钢铁指挥官mod管理器开发}/src/MechabellumModManager",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Attach to Mod Manager",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

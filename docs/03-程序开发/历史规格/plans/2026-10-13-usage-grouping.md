@@ -23,6 +23,7 @@
 - 旧版管理器读到 `usage` 字段会忽略它（System.Text.Json 默认忽略未知字段），所以目录可以先于管理器发布。
 - 两个仓库的工作区里都有用户尚未提交的改动。**每次提交只 `git add` 本任务列出的文件路径，绝不 `git add -A` / `git add .`**。提交前用 `git diff --cached --stat` 确认暂存区只有本任务的文件。
 - 不 push、不开 PR、不合并。
+- **这是测试版本，不发布到仓库**：两个仓库都只做本地提交。不 `git push`，不运行 `tools/sync-mirror.ps1` / `tools/publish-mods-release.ps1`，不改 `release/latest.json`，不上传 GitHub Release，不打安装包。
 - PowerShell 5.1：命令之间用 `;`，不要用 `&&`。
 
 测试命令统一写法（在管理器仓库根目录运行）：

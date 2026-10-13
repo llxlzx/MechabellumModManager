@@ -1,4 +1,4 @@
-﻿# Mechabellum（钢铁指挥官）Mod 管理器
+# Mechabellum（钢铁指挥官）Mod 管理器
 
 Windows 桌面工具：外部 Mod 库 + 方案勾选，一键同步到游戏目录。
 
@@ -39,7 +39,7 @@ Use the links below to jump within this page (Chinese and English sections share
 
 ## 最终用户 (中文)
 
-更细的安装与使用说明见 [docs/分发-使用说明.md](docs/分发-使用说明.md)。
+更细的安装与使用说明见 [docs/04-Guide新手指南/分发-使用说明.md](docs/04-Guide新手指南/分发-使用说明.md)。
 
 ### 系统要求
 
@@ -97,6 +97,8 @@ Use the links below to jump within this page (Chinese and English sections share
 
 ## 开发与发版 (中文)
 
+文档按中文文件夹放在 [docs/读我.md](docs/读我.md)。
+
 ### 构建安装包
 
 开发机需安装 [Inno Setup 6](https://jrsoftware.org/isinfo.php)。正式包**必须**准备 MelonLoader 离线 zip：
@@ -104,12 +106,12 @@ Use the links below to jump within this page (Chinese and English sections share
 `packaging/installer/redist/melonloader/MelonLoader.x64.zip`
 
 ```powershell
-.\installer\build-installer.ps1
+.\packaging\installer\build-installer.ps1
 # 或
-.\installer\build-installer.bat
+.\packaging\installer\build-installer.bat
 ```
 
-产物：`dist\MechabellumModManager_Setup_v*.exe`。整理与发版步骤见 [docs/GitHub-Release更新说明.md（中文）](docs/GitHub-Release更新说明.md#1-两个仓库分别干什么-中文)。
+产物：`dist\MechabellumModManager_Setup_v*.exe`。整理与发版步骤见 [docs/05-版本分析/GitHub-Release更新说明.md（中文）](docs/05-版本分析/GitHub-Release更新说明.md#1-两个仓库分别干什么-中文)。
 
 ### 开发命令
 
@@ -121,7 +123,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 最终用户请使用 **Setup** 或开始菜单快捷方式，不要依赖仓库根目录下临时 bat / 便捷 exe 副本。
 
-维护者发版流程见 [GitHub Release 更新说明（中文）](docs/GitHub-Release更新说明.md#3-发管理器新版本标准步骤-中文)。更紧凑的流程摘要见 [docs/releasing.md](docs/releasing.md)。
+维护者发版流程见 [GitHub Release 更新说明（中文）](docs/05-版本分析/GitHub-Release更新说明.md#3-发管理器新版本标准步骤-中文)。更紧凑的流程摘要见 [docs/05-版本分析/releasing.md](docs/05-版本分析/releasing.md)。
 
 ---
 
@@ -129,7 +131,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 - 使用第三方 Mod 可能导致**封号、存档损坏、游戏或系统异常**等，风险自负。  
 - 高风险包启用需二次确认；管理器提供的本地检查**不是**完整杀毒。  
-- 本管理器**不含**作弊入口；**不再内置**一键安装 MelonLoader（改由安装包处理）。  
+- 本管理器**不含**作弊入口。已选择游戏目录时，管理器内仍可安装 MelonLoader；安装包也会安装。  
 - 投稿与目录内容由提供者负责；维护者可拒绝上架或下架，但无法保证每一份文件的安全性。  
 - 详细免责声明见应用内「关于与声明」。 仓库根目录另见 `NOTICE.md` 与 MIT `LICENSE`。
 
@@ -148,7 +150,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 ## End users (English)
 
-See also [docs/分发-使用说明.md](docs/分发-使用说明.md) (bilingual end-user notes).
+See also [docs/04-Guide新手指南/分发-使用说明.md](docs/04-Guide新手指南/分发-使用说明.md) (bilingual end-user notes).
 
 ### Requirements
 
@@ -213,10 +215,10 @@ Install [Inno Setup 6](https://jrsoftware.org/isinfo.php). Release builds **requ
 `packaging/installer/redist/melonloader/MelonLoader.x64.zip`
 
 ```powershell
-.\installer\build-installer.ps1
+.\packaging\installer\build-installer.ps1
 ```
 
-Output: `dist\MechabellumModManager_Setup_v*.exe`. Packaging / Release steps: [GitHub Release guide (English)](docs/GitHub-Release更新说明.md#1-what-the-two-repos-are-for-english).
+Output: `dist\MechabellumModManager_Setup_v*.exe`. Packaging / Release steps: [GitHub Release guide (English)](docs/05-版本分析/GitHub-Release更新说明.md#1-what-the-two-repos-are-for-english).
 
 ### Dev commands
 
@@ -228,7 +230,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 End users should run the **Setup** or Start Menu shortcut—not ad-hoc bat/exe copies in the repo root.
 
-Release checklist: upload Setup + `latest.json` + portable zip; see [Shipping steps (English)](docs/GitHub-Release更新说明.md#3-shipping-a-new-manager-version-english). Compact summary: [docs/releasing.md](docs/releasing.md).
+Release checklist: upload Setup + `latest.json` + portable zip; see [Shipping steps (English)](docs/05-版本分析/GitHub-Release更新说明.md#3-shipping-a-new-manager-version-english). Compact summary: [docs/05-版本分析/releasing.md](docs/05-版本分析/releasing.md).
 
 ---
 
@@ -238,6 +240,6 @@ See also repo `NOTICE.md` and MIT `LICENSE`.
 
 - Third-party mods may cause **bans, save corruption, or instability**—use at your own risk.  
 - High-risk packages require confirmation; local checks are **not** a full antivirus.  
-- This manager has **no** cheat entry points and **no** in-app one-click MelonLoader install (installer handles Melon).  
+- This manager has **no** cheat entry points. With a game folder selected, it can still install MelonLoader; the Setup installer can install it too.  
 - Catalog / submissions are the providers’ responsibility; maintainers may reject or remove entries without guaranteeing every file’s safety.  
 - Full disclaimer: in-app **About / Credits**.

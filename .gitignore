@@ -30,3 +30,8 @@ release/_release_notes/
 .worktrees/
 
 mods/BlackBox/**/BlackBoxDump.exe
+
+# Local non-product dumps. Archive outside the repo.
+/output/
+/coscli_output/
+/debug-*.log

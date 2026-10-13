@@ -41,3 +41,4 @@ team-beacon
 predict-position
 leaderboard-fix
 axis-lock
+skin-selector

@@ -1,7 +1,8 @@
-import { hashInviteCode, sha256Hex } from "./crypto";
-import { mergeCatalogMod, type CatalogRoot, type CatalogMod } from "./catalog";
-import { authorizePublish } from "./ownership";
-import { getRepoFile, putRepoBinary, putRepoFileWithRetry, type GitHubEnv } from "./github";
+import { hashInviteCode } from "./crypto";
+import { assignKeys, inspectGrant, type GrantRequest } from "./inboxGrant";
+import { buildInboxPolicy } from "./inboxPolicy";
+import { authorizeInbox } from "./ownership";
+import { createDefaultIssuer, type CredentialIssuer } from "./sts";
 
 export interface Env {
   PUBLISH_KV: KVNamespace;
@@ -9,11 +10,17 @@ export interface Env {
   GITHUB_OWNER: string;
   GITHUB_REPO: string;
   GITHUB_BRANCH: string;
+  ADMIN_TOKEN?: string;
+  COS_SECRET_ID?: string;
+  COS_SECRET_KEY?: string;
+  credentialIssuer?: CredentialIssuer;
+  loadCatalog?: () => Promise<string>;
 }
 
-const MAX_DLL_BYTES = 95 * 1024 * 1024;
-const MIRROR_NOTE =
-  "Published to GitHub MechabellumMods. Domestic COS mirror may lag until synced. / 已发布到 GitHub；国内镜像可能延迟。";
+const BUCKET = "mmm-inbox-1312774738";
+const REGION = "ap-shanghai";
+const DURATION_SECONDS = 3600;
+const CATALOG_URL = "https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json";
 
 type InviteRecord = { inviteId: string; label?: string; enabled?: boolean };
 
@@ -23,7 +30,7 @@ function json(data: unknown, status = 200): Response {
     headers: {
       "content-type": "application/json; charset=utf-8",
       "access-control-allow-origin": "*",
-      "access-control-allow-headers": "content-type, x-invite-code",
+      "access-control-allow-headers": "content-type, x-invite-code, authorization",
       "access-control-allow-methods": "GET, POST, OPTIONS",
     },
   });
@@ -31,15 +38,6 @@ function json(data: unknown, status = 200): Response {
 
 function err(code: string, status: number): Response {
   return json({ error: code }, status);
-}
-
-function ghEnv(env: Env): GitHubEnv {
-  return {
-    token: env.GITHUB_TOKEN,
-    owner: env.GITHUB_OWNER || "llxlzx",
-    repo: env.GITHUB_REPO || "MechabellumMods",
-    branch: env.GITHUB_BRANCH || "master",
-  };
 }
 
 async function resolveInvite(
@@ -70,11 +68,6 @@ async function listOwned(env: Env, inviteId: string): Promise<string[]> {
   return ids.sort();
 }
 
-function safeFileName(name: string): string {
-  const base = name.replace(/^.*[\\/]/, "").replace(/[^\w.\-]+/g, "_");
-  return base || "mod.dll";
-}
-
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method === "OPTIONS") {
@@ -98,6 +91,18 @@ export default {
         return json({ modIds });
       }
 
+      if (url.pathname === "/v1/inbox/grant" && request.method === "POST") {
+        return await handleGrant(request, env);
+      }
+
+      if (url.pathname === "/v1/inbox/complete" && request.method === "POST") {
+        return await handleComplete(request, env);
+      }
+
+      if (url.pathname === "/v1/admin/grants" && request.method === "GET") {
+        return await handleAdminGrants(request, env);
+      }
+
       if (url.pathname === "/v1/mods/publish" && request.method === "POST") {
         return await handlePublish(request, env);
       }
@@ -115,134 +120,188 @@ export default {
   },
 };
 
-async function handlePublish(request: Request, env: Env): Promise<Response> {
-  const form = await request.formData();
-  const inviteCode = String(form.get("inviteCode") ?? "");
-  const id = String(form.get("id") ?? "").trim();
-  const name = String(form.get("name") ?? "").trim();
-  const summary = String(form.get("summary") ?? "").trim() || null;
-  const version = String(form.get("version") ?? "").trim() || null;
-  const category = String(form.get("category") ?? "").trim() || null;
-  const type = String(form.get("type") ?? "").trim() || null;
-  const dll = form.get("dll");
+async function handlePublish(_request: Request, _env: Env): Promise<Response> {
+  return err("publish_disabled", 410);
+}
 
-  const resolved = await resolveInvite(env, inviteCode);
+async function handleGrant(request: Request, env: Env): Promise<Response> {
+  const body = await readJson(request);
+  if (body === undefined) return err("validation_failed", 400);
+
+  const resolved = await resolveInvite(env, readInviteCode(body, request));
   if (resolved instanceof Response) return resolved;
-  const { inviteId } = resolved;
 
-  if (!id || !name || !(dll instanceof File)) return err("validation_failed", 400);
-  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(id)) return err("validation_failed", 400);
+  const inspected = inspectGrant(body);
+  if (!inspected.ok) {
+    return err(inspected.error, inspected.error === "payload_too_large" ? 413 : 400);
+  }
+  const grant = inspected.value;
 
-  const dllBytes = new Uint8Array(await dll.arrayBuffer());
-  if (dllBytes.byteLength > MAX_DLL_BYTES) return err("payload_too_large", 413);
-  if (dllBytes.byteLength === 0) return err("validation_failed", 400);
-
-  const sha256 = await sha256Hex(dllBytes);
-  const dllName = safeFileName(dll.name || `${id}.dll`);
-  const filePath = `mods/${id}/${dllName}`;
-
-  let previewPath: string | null = null;
-  let previewBytes: Uint8Array | null = null;
-  const preview = form.get("preview");
-  if (preview instanceof File && preview.size > 0) {
-    if (preview.size > MAX_DLL_BYTES) return err("payload_too_large", 413);
-    previewBytes = new Uint8Array(await preview.arrayBuffer());
-    previewPath = `mods/${id}/preview.png`;
+  let catalogHasMod: boolean;
+  try {
+    const raw = await (env.loadCatalog ?? defaultLoadCatalog)();
+    catalogHasMod = catalogIncludes(raw, grant.id);
+  } catch {
+    return err("upstream_github", 502);
   }
 
-  const g = ghEnv(env);
-  const catalogFile = await getRepoFile(g, "catalog.json");
-  let root: CatalogRoot = { mods: [] };
-  if (catalogFile) {
-    try {
-      root = JSON.parse(catalogFile.content) as CatalogRoot;
-      if (!Array.isArray(root.mods)) root.mods = [];
-    } catch {
-      return err("upstream_github", 502);
-    }
-  }
-
-  const catalogHasMod = root.mods.some((m) => m.id === id);
-  const ownerInviteId = await env.PUBLISH_KV.get(`owner:${id}`);
-  const decision = authorizePublish({
-    modId: id,
-    inviteId,
+  const ownerInviteId = await env.PUBLISH_KV.get(`owner:${grant.id}`);
+  if (authorizeInbox({
     catalogHasMod,
     ownerInviteId,
-  });
-  if (decision === "forbidden_not_owner") return err("forbidden_not_owner", 403);
-
-  const existingDll = await getRepoFile(g, filePath);
-  await putRepoBinary(
-    g,
-    filePath,
-    `publish: ${id} dll`,
-    dllBytes,
-    existingDll?.sha,
-  );
-
-  if (previewPath && previewBytes) {
-    const existingPreview = await getRepoFile(g, previewPath);
-    await putRepoBinary(
-      g,
-      previewPath,
-      `publish: ${id} preview`,
-      previewBytes,
-      existingPreview?.sha,
-    );
+    inviteId: resolved.inviteId,
+  }) === "forbidden_not_owner") {
+    return err("forbidden_not_owner", 403);
   }
 
-  const entry: CatalogMod = {
-    id,
-    name,
-    summary,
-    version,
-    category,
-    type,
-    file: filePath,
-    sha256,
-    size: dllBytes.byteLength,
-    preview: previewPath,
-    updatedAt: new Date().toISOString(),
+  let encoded: string;
+  try {
+    encoded = buildInboxPolicy(resolved.inviteId, grant.id).encoded;
+  } catch {
+    return err("validation_failed", 400);
+  }
+
+  const objects = issuedObjects(resolved.inviteId, grant);
+  const record = {
+    inviteId: resolved.inviteId,
+    id: grant.id,
+    kind: grant.kind,
+    name: grant.name,
+    summary: grant.summary,
+    version: grant.version,
+    status: "issued",
+    objects,
   };
+  await env.PUBLISH_KV.put(`grant:${resolved.inviteId}:${grant.id}`, JSON.stringify(record));
 
-  const put = await putRepoFileWithRetry(
-    g,
-    "catalog.json",
-    `publish: ${id} catalog`,
-    (latest) => {
-      let base: CatalogRoot = { mods: [] };
-      if (latest) {
-        try {
-          base = JSON.parse(latest) as CatalogRoot;
-          if (!Array.isArray(base.mods)) base.mods = [];
-        } catch {
-          base = { mods: [] };
-        }
-      }
-      // Re-check ownership against latest catalog presence
-      const has = base.mods.some((m) => m.id === id);
-      const d = authorizePublish({
-        modId: id,
-        inviteId,
-        catalogHasMod: has,
-        ownerInviteId,
-      });
-      if (d === "forbidden_not_owner") throw new Error("forbidden_not_owner");
-      const merged = mergeCatalogMod(base, entry);
-      return `${JSON.stringify(merged, null, 2)}\n`;
-    },
-  );
-
-  if (decision === "allow_create" || !ownerInviteId) {
-    await env.PUBLISH_KV.put(`owner:${id}`, inviteId);
-  }
-
+  const credentials = await issuerFor(env)(encoded);
   return json({
-    modId: id,
-    sha256,
-    size: dllBytes.byteLength,
-    commitSha: put.commitSha,
-    mirrorNote: MIRROR_NOTE,
+    ok: true,
+    inviteId: resolved.inviteId,
+    bucket: BUCKET,
+    region: REGION,
+    durationSeconds: DURATION_SECONDS,
+    credentials,
+    objects,
   });
+}
+
+async function handleComplete(request: Request, env: Env): Promise<Response> {
+  const body = await readJson(request);
+  if (body === undefined) return err("validation_failed", 400);
+
+  const resolved = await resolveInvite(env, readInviteCode(body, request));
+  if (resolved instanceof Response) return resolved;
+
+  const id = isRecord(body) && typeof body.id === "string" ? body.id : "";
+  if (!id) return err("validation_failed", 400);
+
+  const key = `grant:${resolved.inviteId}:${id}`;
+  const raw = await env.PUBLISH_KV.get(key);
+  if (!raw) return err("not_found", 404);
+
+  let stored: Record<string, unknown>;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isRecord(parsed)) return err("internal", 500);
+    stored = parsed;
+  } catch {
+    return err("internal", 500);
+  }
+  stored.status = "complete-claimed";
+  await env.PUBLISH_KV.put(key, JSON.stringify(stored));
+  return json({ ok: true, status: "complete-claimed" });
+}
+
+async function handleAdminGrants(request: Request, env: Env): Promise<Response> {
+  const token = env.ADMIN_TOKEN ?? "";
+  const header = request.headers.get("Authorization") ?? "";
+  if (!token || header !== `Bearer ${token}`) return err("unauthorized", 401);
+
+  const grants: unknown[] = [];
+  let cursor: string | undefined;
+  for (;;) {
+    const listed = await env.PUBLISH_KV.list({ prefix: "grant:", cursor });
+    for (const key of listed.keys) {
+      const raw = await env.PUBLISH_KV.get(key.name);
+      if (!raw) continue;
+      try {
+        grants.push(JSON.parse(raw));
+      } catch {
+        continue;
+      }
+    }
+    if (listed.list_complete || !listed.cursor) break;
+    cursor = listed.cursor;
+  }
+  return json({ grants });
+}
+
+function issuerFor(env: Env): CredentialIssuer {
+  if (env.credentialIssuer) return env.credentialIssuer;
+  if (!env.COS_SECRET_ID || !env.COS_SECRET_KEY) {
+    return async () => {
+      throw new Error("sts_failed");
+    };
+  }
+  return createDefaultIssuer({
+    secretId: env.COS_SECRET_ID,
+    secretKey: env.COS_SECRET_KEY,
+  });
+}
+
+async function defaultLoadCatalog(): Promise<string> {
+  let response: Response;
+  try {
+    response = await fetch(CATALOG_URL, { method: "GET" });
+  } catch {
+    throw new Error("upstream_github");
+  }
+  if (!response.ok) throw new Error("upstream_github");
+  return response.text();
+}
+
+function catalogIncludes(raw: string, id: string): boolean {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("upstream_github");
+  }
+  if (!isRecord(parsed) || !Array.isArray(parsed.mods)) throw new Error("upstream_github");
+  return parsed.mods.some((mod) => isRecord(mod) && mod.id === id);
+}
+
+function issuedObjects(inviteId: string, grant: GrantRequest) {
+  return assignKeys(inviteId, grant).map((item) => {
+    const name = item.key.slice(item.key.lastIndexOf("/") + 1);
+    const file = grant.files.find((candidate) => candidate.role === item.role && candidate.name === name);
+    return {
+      key: item.key,
+      role: item.role,
+      name,
+      size: item.size,
+      sha256: item.sha256,
+      main: file?.main === true,
+    };
+  });
+}
+
+async function readJson(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    return undefined;
+  }
+}
+
+function readInviteCode(body: unknown, request: Request): string {
+  if (isRecord(body) && typeof body.inviteCode === "string" && body.inviteCode.trim()) {
+    return body.inviteCode;
+  }
+  return request.headers.get("X-Invite-Code") ?? "";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

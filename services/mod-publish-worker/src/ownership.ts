@@ -11,3 +11,15 @@ export function authorizePublish(args: {
   if (ownerInviteId != null && ownerInviteId === inviteId) return "allow_update";
   return "forbidden_not_owner";
 }
+
+export function authorizeInbox(args: {
+  catalogHasMod: boolean;
+  ownerInviteId: string | null;
+  inviteId: string;
+}): "allow" | "forbidden_not_owner" {
+  if (args.ownerInviteId != null && args.ownerInviteId !== args.inviteId)
+    return "forbidden_not_owner";
+  if (args.catalogHasMod && args.ownerInviteId !== args.inviteId)
+    return "forbidden_not_owner";
+  return "allow";
+}
