@@ -25,6 +25,14 @@
             <ComboBox x:Name="CategoryCombo"
                       Height="36"
                       SelectedIndex="0" />
+            <TextBlock x:Name="UsageFieldLabel"
+                       Text="用途"
+                       Margin="0,12,0,4"
+                       FontSize="15"
+                       Foreground="{StaticResource TextMutedBrush}" />
+            <ComboBox x:Name="UsageCombo"
+                      Height="36"
+                      SelectedIndex="0" />
             <TextBlock x:Name="ExtraTagsLabel"
                        Text="额外标签（逗号分隔）"
                        Margin="0,12,0,4"

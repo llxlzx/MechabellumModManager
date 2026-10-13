@@ -51,12 +51,30 @@ public partial class EditModTaxonomyDialog : Window
         }
 
         CategoryCombo.SelectedIndex = selectedIndex;
+
+        UsageFieldLabel.Text = ui.FilterUsage;
+        UsageCombo.Items.Add(new ComboBoxItem
+        {
+            Content = ui.UsageFollowCatalog,
+            Tag = null
+        });
+        foreach (var usage in ModTaxonomy.CatalogWritableUsages)
+        {
+            UsageCombo.Items.Add(new ComboBoxItem
+            {
+                Content = ui.UsageLabel(usage),
+                Tag = usage.ToString()
+            });
+        }
+        UsageCombo.SelectedIndex = ModTaxonomy.TryParseUsage(package.UsageOverride, out var usageParsed)
+            ? 1 + ModTaxonomy.CatalogWritableUsages.ToList().IndexOf(usageParsed)
+            : 0;
         ExtraTagsBox.Text = package.ExtraTags is null || package.ExtraTags.Count == 0
             ? ""
             : string.Join(", ", package.ExtraTags);
     }
 
-    public (string? Override, IReadOnlyList<string> ExtraTags)? Result { get; private set; }
+    public (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)? Result { get; private set; }
 
     void Ok_Click(object sender, RoutedEventArgs e)
     {
@@ -66,7 +84,10 @@ public partial class EditModTaxonomyDialog : Window
 
         var extras = ModTaxonomy.NormalizeTags(
             ExtraTagsBox.Text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
-        Result = (categoryOverride, extras);
+        string? usageOverride = null;
+        if (UsageCombo.SelectedItem is ComboBoxItem usageItem && usageItem.Tag is string u)
+            usageOverride = u;
+        Result = (categoryOverride, extras, usageOverride);
         DialogResult = true;
     }
 

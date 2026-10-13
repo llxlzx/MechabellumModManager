@@ -54,7 +54,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Func<string, (ReportCategory Category, string Notes)?>? _promptReport;
     readonly Func<bool>? _promptSubmitGuide;
     readonly Action? _promptDirectUpload;
-    readonly Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? _promptEditTaxonomy;
+    readonly Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)?>? _promptEditTaxonomy;
     readonly Action<string>? _copyText;
     readonly Action? _unselectLibrary;
     readonly Action? _unselectCatalog;
@@ -152,7 +152,7 @@ public sealed partial class MainViewModel : ObservableObject
         Func<string, (ReportCategory Category, string Notes)?>? promptReport = null,
         Func<bool>? promptSubmitGuide = null,
         Action? promptDirectUpload = null,
-        Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags)?>? promptEditTaxonomy = null,
+        Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)?>? promptEditTaxonomy = null,
         Action<string>? copyText = null,
         Action? unselectLibrary = null,
         Action? unselectCatalog = null,
@@ -3132,6 +3132,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (result is null) return;
         mod.Package.CategoryOverride = result.Value.Override;
         mod.Package.ExtraTags = result.Value.ExtraTags.ToList();
+        mod.Package.UsageOverride = result.Value.UsageOverride;
         PersistPackageMeta(mod.Package);
         mod.NotifyDetailChanged();
         RefreshLibraryView();

@@ -444,7 +444,7 @@ public partial class App : Application
         dialog.ShowDialog();
     }
 
-    static (string? Override, IReadOnlyList<string> ExtraTags)? PromptEditTaxonomy(Window owner, ModPackage package)
+    static (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)? PromptEditTaxonomy(Window owner, ModPackage package)
     {
         var ui = (owner.DataContext as MainViewModel)?.Ui ?? new UiStrings();
         var dialog = new EditModTaxonomyDialog(package, ui) { Owner = owner };

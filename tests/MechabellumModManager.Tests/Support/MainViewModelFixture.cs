@@ -246,7 +246,8 @@ public sealed class MainViewModelFixture : IDisposable
         ManagerSetupDownloader? setupDownloader = null,
         Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null,
         Func<DiagnosticsFollowUp>? promptDiagnosticsMail = null,
-        Func<string, bool>? tryOpenExternal = null)
+        Func<string, bool>? tryOpenExternal = null,
+        Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)?>? promptEditTaxonomy = null)
     {
         var processStarter = starter ?? new RecordingProcessStarter();
         var launcher = new GameLauncher(processStarter, () => false);
@@ -299,7 +300,8 @@ public sealed class MainViewModelFixture : IDisposable
             melonAssemblyGenerator: melonAssemblyGenerator,
             steamAppMarkedRunning: steamAppMarkedRunning ?? (() => false),
             promptDiagnosticsMail: promptDiagnosticsMail,
-            tryOpenExternal: tryOpenExternal);
+            tryOpenExternal: tryOpenExternal,
+            promptEditTaxonomy: promptEditTaxonomy);
         vm.LaunchFollowUpPolls = 0;
         return vm;
     }
