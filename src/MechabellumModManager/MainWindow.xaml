@@ -1232,6 +1232,15 @@
                                      Text="{Binding CatalogSearchText, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Ui.FilterUsage}"
+                                       Style="{StaticResource FilterFieldLabelStyle}" />
+                            <ComboBox Width="140" MinHeight="36"
+                                      ToolTip="{Binding Ui.FilterUsage}"
+                                      ItemsSource="{Binding UsageFilterOptions}"
+                                      SelectedItem="{Binding SelectedCatalogUsageFilter}"
+                                      ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Ui.FilterCategory}"
                                        Style="{StaticResource FilterFieldLabelStyle}" />
                             <ComboBox Width="140" MinHeight="36"
@@ -1358,8 +1367,12 @@
                                   HeadersVisibility="Column"
                                   EnableRowVirtualization="True"
                                   VirtualizingPanel.VirtualizationMode="Recycling"
+                                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                   ScrollViewer.IsDeferredScrollingEnabled="False"
                                   VerticalAlignment="Stretch">
+                            <DataGrid.GroupStyle>
+                                <GroupStyle HeaderTemplate="{StaticResource UsageGroupHeaderTemplate}" />
+                            </DataGrid.GroupStyle>
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Width="48" MinWidth="48">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -1636,6 +1649,15 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </Grid>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Ui.FilterUsage}"
+                                               Style="{StaticResource FilterFieldLabelStyle}" />
+                                    <ComboBox Width="140" MinHeight="36"
+                                              ToolTip="{Binding Ui.FilterUsage}"
+                                              ItemsSource="{Binding UsageFilterOptions}"
+                                              SelectedItem="{Binding SelectedLibraryUsageFilter}"
+                                              ItemTemplate="{StaticResource FilterOptionLabelTemplate}" />
+                                </StackPanel>
                                 <Button Content="{Binding Ui.EditModTaxonomy}"
                                         Command="{Binding EditLibraryModTaxonomyCommand}"
                                         MinHeight="36"
@@ -1723,7 +1745,11 @@
                                   ColumnHeaderStyle="{StaticResource SortableColumnHeaderStyle}"
                                   CanUserSortColumns="True"
                                   IsReadOnly="False"
+                                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                   HeadersVisibility="Column">
+                            <DataGrid.GroupStyle>
+                                <GroupStyle HeaderTemplate="{StaticResource UsageGroupHeaderTemplate}" />
+                            </DataGrid.GroupStyle>
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="{Binding Data.Ui.ColumnEnabled, Source={StaticResource Proxy}}"
                                                         Width="78"
