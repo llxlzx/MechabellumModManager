@@ -25,6 +25,15 @@ public class ModListFilterTests
     }
 
     [Fact]
+    public void MatchesUsage_null_filter_means_all()
+    {
+        ModListFilter.MatchesUsage(null, ModUsage.Casual).Should().BeTrue();
+        ModListFilter.MatchesUsage(ModUsage.Casual, ModUsage.Casual).Should().BeTrue();
+        ModListFilter.MatchesUsage(ModUsage.Casual, ModUsage.Tournament).Should().BeFalse();
+        ModListFilter.MatchesUsage(ModUsage.Unrated, ModUsage.Unrated).Should().BeTrue();
+    }
+
+    [Fact]
     public void MatchesTag_null_or_blank_means_all()
     {
         var tags = new[] { "hud", "grid" };

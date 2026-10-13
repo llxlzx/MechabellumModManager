@@ -26,6 +26,9 @@ public static class ModListFilter
     public static bool MatchesCategory(ModCategory? filter, ModCategory effective) =>
         filter is null || filter == effective;
 
+    public static bool MatchesUsage(ModUsage? filter, ModUsage effective) =>
+        filter is null || filter == effective;
+
     public static bool MatchesTag(string? filterTag, IEnumerable<string> effectiveTags)
     {
         if (string.IsNullOrWhiteSpace(filterTag)) return true;

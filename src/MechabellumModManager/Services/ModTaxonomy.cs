@@ -38,6 +38,42 @@ public static class ModTaxonomy
         return ModCategory.Uncategorized;
     }
 
+    public static readonly IReadOnlyList<ModUsage> CatalogWritableUsages =
+        [ModUsage.Tournament, ModUsage.Casual];
+
+    /// <summary>
+    /// Matches enum names only. Enum.TryParse would also accept "0" or "1".
+    /// </summary>
+    public static bool TryParseUsage(string? value, out ModUsage usage)
+    {
+        usage = ModUsage.Unrated;
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        var trimmed = value.Trim();
+        foreach (var candidate in CatalogWritableUsages)
+        {
+            if (string.Equals(candidate.ToString(), trimmed, StringComparison.Ordinal))
+            {
+                usage = candidate;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static ModUsage ResolveEffectiveUsage(string? usageOverride, string? catalogUsage)
+    {
+        if (TryParseUsage(usageOverride, out var o)) return o;
+        if (TryParseUsage(catalogUsage, out var c)) return c;
+        return ModUsage.Unrated;
+    }
+
+    public static string UsageResourceKey(ModUsage usage) => usage switch
+    {
+        ModUsage.Tournament => "UsageTournament",
+        ModUsage.Casual => "UsageCasual",
+        _ => "UsageUnrated"
+    };
+
     public static IReadOnlyList<string> NormalizeTags(IEnumerable<string>? tags)
     {
         if (tags is null) return Array.Empty<string>();

@@ -49,4 +49,55 @@ public class ModTaxonomyTests
             new[] { "grid", "hotkey", "  " });
         tags.Should().Equal("hud", "grid", "hotkey");
     }
+
+    [Theory]
+    [InlineData("Tournament", ModUsage.Tournament)]
+    [InlineData("Casual", ModUsage.Casual)]
+    [InlineData("  Casual ", ModUsage.Casual)]
+    public void TryParseUsage_accepts_catalog_values(string raw, ModUsage expected)
+    {
+        ModTaxonomy.TryParseUsage(raw, out var usage).Should().BeTrue();
+        usage.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("Unrated")]
+    [InlineData("tournament")]
+    [InlineData("0")]
+    [InlineData("1")]
+    [InlineData("Neutral")]
+    public void TryParseUsage_rejects_blank_unrated_numeric_and_invalid(string? raw)
+    {
+        ModTaxonomy.TryParseUsage(raw, out var usage).Should().BeFalse();
+        usage.Should().Be(ModUsage.Unrated);
+    }
+
+    [Fact]
+    public void ResolveEffectiveUsage_override_wins_over_catalog()
+    {
+        ModTaxonomy.ResolveEffectiveUsage("Casual", "Tournament").Should().Be(ModUsage.Casual);
+        ModTaxonomy.ResolveEffectiveUsage(null, "Tournament").Should().Be(ModUsage.Tournament);
+        ModTaxonomy.ResolveEffectiveUsage("bogus", "Tournament").Should().Be(ModUsage.Tournament);
+        ModTaxonomy.ResolveEffectiveUsage("bogus", "also-bad").Should().Be(ModUsage.Unrated);
+        ModTaxonomy.ResolveEffectiveUsage(null, null).Should().Be(ModUsage.Unrated);
+    }
+
+    [Fact]
+    public void ModUsage_declaration_order_is_group_order()
+    {
+        Enum.GetValues<ModUsage>().Should().Equal(ModUsage.Tournament, ModUsage.Casual, ModUsage.Unrated);
+        ModTaxonomy.CatalogWritableUsages.Should().Equal(ModUsage.Tournament, ModUsage.Casual);
+    }
+
+    [Theory]
+    [InlineData(ModUsage.Tournament, "UsageTournament")]
+    [InlineData(ModUsage.Casual, "UsageCasual")]
+    [InlineData(ModUsage.Unrated, "UsageUnrated")]
+    public void UsageResourceKey_maps_each_value(ModUsage usage, string key)
+    {
+        ModTaxonomy.UsageResourceKey(usage).Should().Be(key);
+    }
 }
