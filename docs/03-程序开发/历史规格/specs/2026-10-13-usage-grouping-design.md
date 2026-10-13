@@ -29,8 +29,8 @@ Mod 浏览与 Mod 库两张列表都按用途分成三组：赛事专用 Mod、�
 - `CatalogWritableUsages`：`[Tournament, Casual]`。
 - `TryParseUsage(string?, out ModUsage)`：区分大小写的枚举名；`Unrated`、空白、未知值都返回 `false`。
 - `ResolveEffectiveUsage(string? usageOverride, string? catalogUsage)`：覆盖合法用覆盖；否则目录合法用目录；否则 `Unrated`。
-- `UsageGroupOrder(ModUsage)`：`Tournament` 0、`Casual` 1、`Unrated` 2。
-- `GetUsageDisplayName(ModUsage)`：取本地化文案。
+
+枚举的声明顺序就是分组顺序：`Tournament` = 0、`Casual` = 1、`Unrated` = 2。不另设组序函数。
 
 ## 数据
 
@@ -51,7 +51,7 @@ Mod 浏览与 Mod 库两张列表都按用途分成三组：赛事专用 Mod、�
 
 ### 非法值
 
-- 目录值非空但不合法：按 `Unrated` 处理，写一条日志，整份目录照常加载。
+- 目录值非空但不合法：按 `Unrated` 处理，写 `LogInvalidCatalogUsage`（和 `LogInvalidCatalogCategory` 同一位置），整份目录照常加载。
 - 本地覆盖非空但不合法：按「跟随目录」处理，写 `LogInvalidUsageOverride`，和 `LogInvalidCategoryOverride` 同一位置。
 - 都不弹窗，不阻断。
 
@@ -61,24 +61,25 @@ Mod 浏览与 Mod 库两张列表都按用途分成三组：赛事专用 Mod、�
 
 ### 分组
 
-- `CatalogModsView`、`LibraryModsView` 各加一条 `PropertyGroupDescription(nameof(EffectiveUsage))`。
-- `CatalogModItemViewModel`、`ModItemViewModel` 各加三个只读属性：`EffectiveUsage`（`ModUsage`）、`UsageGroupOrder`（`int`）、`UsageGroupLabel`（本地化文案）。编辑覆盖或目录刷新后对这三个属性发 `PropertyChanged`，列表立即重分组。
-- 两张 DataGrid 加同一个 `GroupStyle`，放进 `Themes/AppTheme.xaml`：标题行左侧是 `AccentBarStyle` 竖条，接组名，再接「（N）」计数，N 是 `CollectionViewGroup.ItemCount`。组键是 `ModUsage` 枚举，组名经 `Converters/ModUsageToLabelConverter.cs` 转成本地化文案，这样切换界面语言时只需刷新 View，不必重建分组。三组都用默认强调色，不按组变色。标题行不可选中、不可勾选。
+- `CatalogModsView`、`LibraryModsView` 各加一条 `PropertyGroupDescription("EffectiveUsage")`。
+- `CatalogModItemViewModel`、`ModItemViewModel` 各加一个只读属性 `EffectiveUsage`（`ModUsage`）。编辑覆盖后对它发 `PropertyChanged` 并刷新 View，列表立即重分组。
+- 两张 DataGrid 的 `GroupStyle` 共用 `Themes/AppTheme.xaml` 里的标题模板 `UsageGroupHeaderTemplate`：标题行左侧是 `AccentBarStyle` 竖条，接组名，再接「(N)」计数，N 是 `CollectionViewGroup.ItemCount`。组键是 `ModUsage` 枚举，组名经 `Converters/ModUsageToLabelConverter.cs` 转成本地化文案，这样切换界面语言时只需刷新 View，不必重建分组。三组都用默认强调色，不按组变色。标题行不可选中、不可勾选。
 - 筛选后为空的组由 WPF 自动隐藏，不会出现空标题。
 - DataGrid 设 `VirtualizingPanel.IsVirtualizingWhenGrouping="True"`，保住现有行虚拟化。
 
 ### 排序与分组顺序
 
-WPF 分组的组顺序取决于排序后第一个出现的元素，不按键值。因此：
+没有额外设置时，WPF 分组的组顺序取决于排序后第一个出现的元素。两张表的排序方式又不同：Mod 浏览用 `ListCollectionView.CustomSort`（`ApplySort` 里的比较器），Mod 库用 `SortDescriptions` 并允许点列头排序。
 
-- `SortDescriptions` 第一条固定是 `UsageGroupOrder` 升序，后面才是用户选的排序。
-- `ApplySort` 改为：清空，先加组序，再加用户选的排序（名称或更新时间）。
-- Mod 库支持点列头排序。处理 `DataGrid.Sorting` 事件：先让 WPF 按默认方式替换 `SortDescriptions`，再把 `UsageGroupOrder` 升序插回第 0 位。点任何列头，三组都不打乱，只在组内排序。
-- 列头的排序箭头仍只反映用户点的那一列。
+因此组顺序不靠行排序，而是由分组描述自己排：`PropertyGroupDescription.SortDescriptions` 加一条 `new SortDescription("Name", Ascending)`，组的 `Name` 是 `ModUsage` 枚举值，按声明顺序排。
+
+- `ApplySort`、`CustomSort` 比较器、Mod 库的 `SortDescriptions` 都不改。
+- 不处理 `DataGrid.Sorting`。点任何列头、切换任何排序，三组顺序都不变，只在组内排序。
+- 列头的排序箭头照旧。
 
 ### 筛选栏
 
-- 在「分类」左侧增加「用途」下拉，宽度 120，用现有 `FilterFieldLabelStyle` 与 `FilterOptionLabelTemplate`。选项：全部、赛事专用 Mod、日常化 Mod、未判定。
+- Mod 浏览：在「分类」左侧增加「用途」下拉。Mod 库的工具栏目前只有搜索框，没有分类、标签下拉：在搜索框右侧加「用途」下拉。宽度都是 140，用现有 `FilterFieldLabelStyle` 与 `FilterOptionLabelTemplate`。选项：全部、赛事专用 Mod、日常化 Mod、未判定。
 - 新增 `UsageFilterOption(ModUsage? Usage, string Label)`，放进 `ViewModels/FilterOptions.cs`，和 `CategoryFilterOption` 同一写法。null 表示全部。
 - `ModListFilter.MatchesUsage(ModUsage? filter, ModUsage effective)`：filter 为 null 放行，否则相等才通过。
 - `FilterCatalogItem`、`FilterLibraryItem` 各加这一个判断。筛选仍是 AND：搜索 ∩ 用途 ∩ 分类 ∩ 标签。
@@ -97,6 +98,7 @@ WPF 分组的组顺序取决于排序后第一个出现的元素，不按键值�
 | `UsageUnrated` | 未判定 | Not rated | Nicht bewertet | 未判定 | Не оценено |
 | `FilterUsage` | 用途 | Usage | Verwendung | 用途 | Назначение |
 | `UsageFollowCatalog` | 跟随目录 | Follow catalog | Katalog folgen | カタログに従う | Как в каталоге |
+| `LogInvalidCatalogUsage` | 目录条目 '{0}'：无效用途 '{1}'，按未判定处理。 | Catalog entry '{0}': invalid usage '{1}'; treating as not rated. | Katalogeintrag '{0}': ungültige Verwendung '{1}'; als nicht bewertet behandelt. | カタログ項目 '{0}'：無効な用途 '{1}'。未判定として処理。 | Запись каталога '{0}': неверное назначение '{1}'; не оценено. |
 | `LogInvalidUsageOverride` | 本地包 '{0}'：无效用途覆盖 '{1}'，按目录/未判定处理。 | Local package '{0}': invalid usage override '{1}'; using catalog / not rated. | Lokales Paket '{0}': ungültige Verwendungs-Überschreibung '{1}'; Katalog / nicht bewertet wird verwendet. | ローカルパッケージ '{0}'：用途の上書き '{1}' が無効です。カタログ／未判定として扱います。 | Локальный пакет '{0}': недопустимое переопределение назначения '{1}'; используется каталог / не оценено. |
 
 五个 resx 用 `tools/add-resource-key.ps1` 一起加。`UiStrings` 增加对应访问器和 `UsageLabel(ModUsage)`。
@@ -121,12 +123,13 @@ MechabellumMods 仓库（本机 `D:\gongzuo\钢铁指挥官\社区目录`）独�
 
 - `ModTaxonomy.TryParseUsage`：`Tournament`、`Casual` 通过；`Unrated`、`tournament`、空、空白、未知值拒绝。
 - `ModTaxonomy.ResolveEffectiveUsage`：覆盖合法则用覆盖，无视目录；覆盖非法、目录合法则用目录；都无或都非法则 `Unrated`。
-- `ModTaxonomy.UsageGroupOrder`：`Tournament` < `Casual` < `Unrated`。
+- `ModUsage` 声明顺序：`Tournament` < `Casual` < `Unrated`。
 - `ModListFilter.MatchesUsage`：null 放行；相等通过；不等拒绝。
-- `ModLibraryService`：写入 `usageOverride` 后重载仍在；目录 enrichment 不清掉它；非法值重载时按 null 处理并写日志。
-- 目录解析：含 `usage` 的条目读进 `CatalogMod.Usage`；非法值不让整份目录加载失败。
-- `MainViewModel`：切换排序模式后 `SortDescriptions[0]` 是 `UsageGroupOrder`；模拟列头排序后仍是；两个 View 各有且只有一条 `GroupDescription`。
-- `EditModTaxonomyDialog` 结果元组：选「跟随目录」得 null，选两档之一得对应枚举名。
+- `ModLibraryService`：写入 `usageOverride` 后重载仍在；目录 enrichment 不清掉它。
+- 目录解析：含 `usage` 的条目读进 `CatalogMod.Usage`；非法值按 `Unrated` 显示，整份目录照常加载。
+- `MainViewModel`：两个 View 各有且只有一条 `GroupDescription`；名称排序、更新时间排序、列头式 `SortDescriptions` 三种情况下组顺序都是 `Tournament`、`Casual`、`Unrated`；「用途」筛选只留对应一组。
+- 编辑命令：注入的编辑回调返回用途后，`UsageOverride` 写进 `package.json`，该行 `EffectiveUsage` 随之改变。
+- 主窗口：两张 DataGrid 各有一个 `GroupStyle`，且开着 `IsVirtualizingWhenGrouping`。
 
 ## 不做
 
