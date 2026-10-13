@@ -143,6 +143,12 @@ foreach ($mod in $catalog.mods) {
         Write-Output "  skip    $($mod.id) whole file (parts only)"
         continue
     }
+    # Bundle members are served from the repo tree like parts; stamp_hashes.py gives these
+    # entries no originUrl, so there is no whole-file asset to publish.
+    if ($mod.bundle -and @($mod.bundle).Count -gt 0) {
+        Write-Output "  skip    $($mod.id) whole file (bundle)"
+        continue
+    }
     $relative = ($mod.file -replace '\\', '/')
     $localPath = Join-Path $ModsRepo $relative
     if (-not (Test-Path -LiteralPath $localPath -PathType Leaf)) {
