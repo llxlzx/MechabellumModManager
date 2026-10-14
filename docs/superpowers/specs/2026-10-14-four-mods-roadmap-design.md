@@ -50,7 +50,7 @@
   1. 高亮地图中央轴；放置过程中显示当前单位中心到该轴的垂直距离（原社区诉求）。
   2. 显示正在放置/选中的单位相对**已放置单位**的距离（VoidInsanity 2026-10-14 补充：「For 3, possible to display distance from unit being placed/selected relative to placed units?」）。
   3. 不承诺地图几何 100% 对称下的完美镜像。
-- **示意参考（非验收 UI）：** 同线程色块点阵图（蓝底 + 竖列数字 + 绿块）仅作「相对位置/距离」概念草稿，不规定必须用聊天 emoji 或该配色实现；正式 UI 在 P1 功能规格里定。
+- **UI 方向（已确认）：** 部署时要有真实「格点 + 距离数字」的读数感（社区色块图仅作概念参考）。**不用**聊天 emoji 实现。可与现有 `show-grid` 并存或复用格线习惯，具体热键/样式在 P1 功能规格里定。
 - **依赖：** 部署阶段坐标与叠加绘制；可参考 toasterparty/mechabellum-modding 与现有 `show-grid` / `axis-lock` 交互习惯。
 - **风险：** 低–中（叠加层）。单位–单位距离需约定：最近邻 / 全部 / 同侧己方等（留给 P1 规格，避免一次做满）。
 - **目录：** 新 `id`（建议 `placement-assist`）；与 `show-grid`、`axis-lock` 互补，不替代、不强制冲突。
