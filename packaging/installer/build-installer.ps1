@@ -1,5 +1,8 @@
-﻿# Build publish folder + Inno Setup installer
+﻿# Build publish folder + Inno Setup installer(s)
+# -Flavor cn|global|both (default both): one publish, then one ISCC run per flavor.
 param(
+    [ValidateSet("cn", "global", "both")]
+    [string] $Flavor = "both",
     [switch] $SkipMelonRedistCheck
 )
 
@@ -82,6 +85,12 @@ if ($SkipMelonRedistCheck) {
     Write-Warning "SkipMelonRedistCheck set — staging warnings suppressed."
 }
 
+# Catalog takedowns only work in builds that carry the maintainer public key.
+$verifier = [IO.File]::ReadAllText((Join-Path (Get-Location) "src\MechabellumModManager\Services\RemovalListVerifier.cs"))
+if ($verifier -match 'const string PublicKey = "";') {
+    Write-Warning "RemovalListVerifier.PublicKey is empty: catalog takedowns are disabled in this build. Run tools\sign-removed.ps1 -NewKey before a release that should enforce them."
+}
+
 
 
 # UTF-8 BOM check for Inno script (prevents Chinese CustomMessages mojibake)
@@ -114,8 +123,18 @@ if (-not $iscc) {
 }
 
 Write-Host "Using $iscc"
-& $iscc "packaging\installer\MechabellumModManager.iss"
-if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
+$flavors = if ($Flavor -eq "both") { @("cn", "global") } else { @($Flavor) }
+foreach ($f in $flavors) {
+    Write-Host "Compiling flavor: $f"
+    & $iscc "/DMMM_FLAVOR=$f" "packaging\installer\MechabellumModManager.iss"
+    if ($LASTEXITCODE -ne 0) { throw "ISCC failed for flavor $f" }
+}
 
-Get-ChildItem "dist\*Setup*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "OK $($_.FullName)" }
+$suffixes = @{ cn = "_CN.exe"; global = "_Global.exe" }
+foreach ($f in $flavors) {
+    Get-ChildItem "dist\*Setup*$($suffixes[$f])" -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1 |
+        ForEach-Object { Write-Host "OK $($_.FullName)" }
+}
 

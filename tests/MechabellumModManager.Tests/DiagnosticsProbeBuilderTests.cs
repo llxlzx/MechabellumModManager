@@ -32,6 +32,27 @@ public class DiagnosticsProbeBuilderTests
     }
 
     [Fact]
+    public void The_probe_records_the_edition()
+    {
+        var data = Path.Combine(Path.GetTempPath(), "mmm-probe-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var bundle = DiagnosticsProbeBuilder.Build(new DiagnosticsExportRequest
+            {
+                Paths = new PathsService(data),
+                Edition = "global"
+            });
+
+            var probe = (Dictionary<string, object?>)bundle["probe"]!;
+            probe["edition"].Should().Be("global");
+        }
+        finally
+        {
+            try { Directory.Delete(data, true); } catch { /* cleanup */ }
+        }
+    }
+
+    [Fact]
     public void Melon_log_open_for_append_is_still_readable()
     {
         var root = CreateGameWithLog("Preferences Loaded\n");

@@ -91,6 +91,30 @@ public sealed partial class MainViewModel : ObservableObject
     bool _checkingUpdates;
     bool _checkingCatalog;
     bool _addingCatalogMod;
+    /// <summary>Last verified takedown list, and the catalog mods its hashes are checked against.</summary>
+    VerifiedRemovalList? _removalList;
+    bool _removalListLoaded;
+    IReadOnlyList<CatalogMod> _removalListedMods = [];
+    readonly HashSet<string> _removalNotesLogged = new(StringComparer.Ordinal);
+    /// <summary>True once the constructor has finished; dialogs raised before that are held.</summary>
+    bool _constructed;
+    string? _heldRemovalNotice;
+    /// <summary>False until a catalog or the cache supplied the listed mods; hash-only matches wait until then.</summary>
+    bool _removalListedModsKnown;
+
+    /// <summary>Key takedown lists must be signed with. Tests swap in a throwaway key.</summary>
+    internal string RemovalPublicKey
+    {
+        get => _removalPublicKey;
+        set
+        {
+            _removalPublicKey = value;
+            _removalList = null;
+            _removalListLoaded = false;
+        }
+    }
+
+    string _removalPublicKey = RemovalListVerifier.PublicKey;
     DateTimeOffset? _lastSilentCatalogFetch;
     TimeSpan _silentCatalogRefreshInterval = TimeSpan.FromMinutes(15);
     /// <summary>
@@ -319,12 +343,18 @@ public sealed partial class MainViewModel : ObservableObject
         _profiles.EnsureDefaults();
 
         var config = LoadConfig();
+        // "en" as the probe fallback: an unsupported Windows language must not look Chinese.
+        if (EditionPolicy.Resolve(config, LocalizationService.ResolveSystemLanguage(fallback: "en"), out _edition))
+            SaveConfig(config);
+        _updateChecker.Edition = _edition;
+        EditionOptions = BuildEditionOptions();
         // null = never configured → factory COS default. "" = player opted out (do not refill).
         if (config.MirrorBaseUrl is null)
             ApplyMirrorBaseUrl(DomesticMirrorDefaults.BaseUrl, save: true);
         else
             ApplyMirrorBaseUrl(config.MirrorBaseUrl, save: false);
         ApplyUiLanguage(config.UiLanguage, save: false, refreshUi: true);
+        AppendLog(string.Format(LocalizationService.T("LogEditionStartup"), EditionDisplayName, AppVersion));
         ApplyUiScale(config.UiScale, save: false);
         _downloadRoutePreference = Math.Clamp(config.DownloadRoutePreference, 0, 2);
         DownloadRouteOptions = BuildDownloadRouteOptions();
@@ -388,6 +418,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (!LoadConfig().OnboardingDismissed)
             ActiveContentPage = MainContentPage.Guide;
+        _constructed = true;
     }
 
     string ResolveInitialGamePath(string? configured)
@@ -462,6 +493,98 @@ public sealed partial class MainViewModel : ObservableObject
                 _ = ResolveDownloadRouteAsync();
         }
     }
+    AppEdition _edition = AppEdition.Cn;
+
+    public AppEdition Edition => _edition;
+
+    public IReadOnlyList<LanguageOption> EditionOptions { get; private set; } = Array.Empty<LanguageOption>();
+
+    /// <summary>Settings dropdown. Switching applies the edition's route preset at once.</summary>
+    public string SelectedEditionCode
+    {
+        get => EditionPolicy.Format(_edition);
+        set
+        {
+            if (!EditionPolicy.TryParse(value, out var edition) || edition == _edition)
+                return;
+            SwitchEdition(edition);
+        }
+    }
+
+    /// <summary>Short label shown in the title bar badge and window title.</summary>
+    public string EditionBadge => LocalizationService.T(_edition == AppEdition.Cn ? "EditionShortCn" : "EditionShortGlobal");
+
+    public string EditionDisplayName => LocalizationService.T(_edition == AppEdition.Cn ? "EditionCn" : "EditionGlobal");
+
+    public string WindowTitle => string.Format(LocalizationService.T("WindowTitleFormat"), EditionBadge);
+
+    public string EditionAboutText => _edition == AppEdition.Cn
+        ? string.Format(LocalizationService.T("EditionAboutCn"), GitHubCommunityLinks.QqGroupNumber)
+        : LocalizationService.T("EditionAboutGlobal");
+
+    public MailProvider PreferredMail => EditionPolicy.PreferredMail(_edition);
+
+    public string ContributeGuideUrl => EditionLinks.ContributeGuide(_edition, MirrorBaseUrl, DownloadRoute);
+
+    /// <summary>Where "open the download page" goes when an update cannot be downloaded in-app.</summary>
+    public string ReleasesPageUrl => EditionLinks.ReleasesPage(_edition, MirrorBaseUrl, DownloadRoute);
+
+    static LanguageOption[] BuildEditionOptions() =>
+    [
+        new(EditionPolicy.CnCode, LocalizationService.T("EditionCn")),
+        new(EditionPolicy.GlobalCode, LocalizationService.T("EditionGlobal"))
+    ];
+
+    void SwitchEdition(AppEdition edition)
+    {
+        _edition = edition;
+        var config = LoadConfig();
+        config.Edition = EditionPolicy.Format(edition);
+        SaveConfig(config);
+        _updateChecker.Edition = edition;
+        DownloadRoutePreference = EditionPolicy.DefaultRoute(edition);
+
+        // The fallback language belongs to the edition, so "follow system" may now resolve differently.
+        if (string.Equals(SelectedUiLanguageCode, "system", StringComparison.OrdinalIgnoreCase))
+            ApplyUiLanguage("system", save: false, refreshUi: true);
+        else
+            RefreshEditionText();
+
+        OnPropertyChanged(nameof(Edition));
+        OnPropertyChanged(nameof(SelectedEditionCode));
+        OnPropertyChanged(nameof(PreferredMail));
+        AppendLog(string.Format(LocalizationService.T("LogEditionSwitched"), EditionDisplayName));
+    }
+
+    void RefreshEditionText()
+    {
+        foreach (var option in EditionOptions)
+            option.Label = LocalizationService.T(option.Code == EditionPolicy.CnCode ? "EditionCn" : "EditionGlobal");
+        OnPropertyChanged(nameof(EditionBadge));
+        OnPropertyChanged(nameof(EditionDisplayName));
+        OnPropertyChanged(nameof(WindowTitle));
+        OnPropertyChanged(nameof(EditionAboutText));
+        OnPropertyChanged(nameof(CommunityBarText));
+        OnPropertyChanged(nameof(CommunityBarToolTip));
+    }
+
+    public string CommunityBarText => LocalizationService.T(
+        _edition == AppEdition.Cn ? "CommunityBarQq" : "CommunityBarDiscord");
+
+    public string CommunityBarToolTip => _edition == AppEdition.Cn
+        ? string.Format(LocalizationService.T("CommunityBarQqTip"), GitHubCommunityLinks.QqGroupNumber)
+        : LocalizationService.T("CommunityBarDiscordTip");
+
+    [RelayCommand]
+    void OpenCommunityBar()
+    {
+        var url = _edition == AppEdition.Cn
+            ? GitHubCommunityLinks.QqGroupUrl
+            : GitHubCommunityLinks.DiscordFeedbackUrl;
+        if (!TryOpenUrl(url))
+            _notify(LocalizationService.T("CommunityBarOpenFailed"));
+    }
+
     public IReadOnlyList<LanguageOption> LanguageOptions { get; }
     public IReadOnlyList<UiScaleOption> UiScaleOptions { get; }
     public UiStrings Ui { get; }
@@ -1320,8 +1443,9 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var configured = string.IsNullOrWhiteSpace(code) ? "system" : code.Trim();
         var previousConfigured = previousConfiguredOverride ?? SelectedUiLanguageCode;
-        var previousResolved = LocalizationService.ResolveConfiguredLanguage(previousConfigured);
-        var resolved = LocalizationService.ResolveConfiguredLanguage(configured);
+        var fallback = EditionPolicy.LanguageFallback(_edition);
+        var previousResolved = LocalizationService.ResolveConfiguredLanguage(previousConfigured, fallback);
+        var resolved = LocalizationService.ResolveConfiguredLanguage(configured, fallback);
         LocalizationService.Apply(resolved);
 
         _suppressLanguageSave = true;
@@ -1374,6 +1498,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (refreshUi)
         {
             Ui.Refresh();
+            RefreshEditionText();
             RefreshLaunchModeLabels();
             RefreshUiScaleLabels();
             OnPropertyChanged(nameof(DirtyHint));
@@ -1618,6 +1743,12 @@ public sealed partial class MainViewModel : ObservableObject
     /// </summary>
     public async Task BeginStartupChecksAsync()
     {
+        if (_heldRemovalNotice is { } held)
+        {
+            _heldRemovalNotice = null;
+            _notify(held);
+        }
+
         if (_downloadRoutePreference == (int)Services.DownloadRoutePreference.Auto)
             await ResolveDownloadRouteAsync().ConfigureAwait(true);
         await RunStartupModUpdateCheckAsync().ConfigureAwait(true);
@@ -1678,13 +1809,13 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>
     /// Reports which installed mods the catalog has moved past. Deliberately does not install:
     /// the player asked to be told, not to have a loaded DLL swapped under them.
+    /// The catalog is fetched even when reporting is off, because takedowns must reach every player.
     /// </summary>
     public async Task RunStartupModUpdateCheckAsync()
     {
-        if (!CheckModUpdatesOnStartup)
-            return;
         if (_checkingCatalog || _addingCatalogMod)
             return;
+        var reportUpdates = CheckModUpdatesOnStartup;
 
         // Claimed for the same reason the other fetch paths claim it: the library page can come into
         // view while this is still in flight, and two fetches applying two roots is pure waste.
@@ -1715,7 +1846,8 @@ public sealed partial class MainViewModel : ObservableObject
                 if (cached is null)
                     throw;
                 root = cached;
-                AppendLog(CatalogNetworkHint.Format(networkEx.Message, _catalog.MirrorBaseUrl, usedCache: true));
+                if (reportUpdates)
+                    AppendLog(CatalogNetworkHint.Format(networkEx.Message, _catalog.MirrorBaseUrl, usedCache: true));
             }
 
             // Populating the list is what makes the check visible: it enriches the installed
@@ -1724,18 +1856,26 @@ public sealed partial class MainViewModel : ObservableObject
             if (root is not null)
             {
                 ApplyCatalogRoot(root);
-                LogStaleCatalogSource();
+                if (reportUpdates)
+                    LogStaleCatalogSource();
             }
             else if (CatalogMods.Count == 0)
             {
                 return;
             }
 
+            if (!reportUpdates)
+                return;
+
             var packages = _library.List();
             IEnumerable<CatalogMod> catalogMods = root is not null
                 ? root.Mods
                 : CatalogMods.Select(item => item.Mod);
+            var takenDown = new HashSet<string>(
+                ModRemovalGate.ListedAndRemoved(catalogMods, CurrentRemovals()).Select(m => m.Id),
+                StringComparer.OrdinalIgnoreCase);
             var stale = catalogMods
+                .Where(mod => !takenDown.Contains(mod.Id))
                 .Where(mod => ModCatalogService.GetEntryState(packages, mod) == CatalogEntryState.UpdateAvailable)
                 .Select(mod => CatalogLocaleResolver.ResolveName(mod))
                 .ToList();
@@ -1755,7 +1895,8 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog(string.Format(LocalizationService.T("LogModUpdateCheckFailed"), ex.Message));
+            if (reportUpdates)
+                AppendLog(string.Format(LocalizationService.T("LogModUpdateCheckFailed"), ex.Message));
         }
         finally
         {
@@ -1982,6 +2123,7 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var msg in result.Messages)
                 AppendLog(msg);
             AppendLog(string.Format(LocalizationService.T("LogAutoImportedFromGame"), result.Imported, result.Skipped));
+            EnforceCatalogRemovalsAndNotify();
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -2002,6 +2144,7 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var msg in result.Messages)
                 AppendLog(msg);
             AppendLog(string.Format(LocalizationService.T("LogImportFromGameDone"), result.Imported, result.Skipped));
+            EnforceCatalogRemovalsAndNotify();
             ReloadMods();
             UpdateLoaderVersionWarning();
             UpdateFirstAssemblyWarning();
@@ -2099,7 +2242,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var pkg = _library.ImportDll(path);
-            var kept = DropConflictingImports([pkg]);
+            var kept = DropTakenDownImports(DropConflictingImports([pkg]));
             if (kept.Count > 0)
             {
                 AppendLog(string.Format(LocalizationService.T("LogImportedDll"), kept[0].DisplayName, kept[0].Id));
@@ -2123,7 +2266,7 @@ public sealed partial class MainViewModel : ObservableObject
             try
             {
                 var pkg = _library.CommitStaging(ex.StagingPath, picked.Value);
-                var kept = DropConflictingImports([pkg]);
+                var kept = DropTakenDownImports(DropConflictingImports([pkg]));
                 if (kept.Count > 0)
                 {
                     AppendLog(string.Format(LocalizationService.T("LogImportedDll"), kept[0].DisplayName, kept[0].Id));
@@ -2161,7 +2304,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(path)) return;
         try
         {
-            var pkgs = DropConflictingImports(_library.ImportFolder(path));
+            var pkgs = DropTakenDownImports(DropConflictingImports(_library.ImportFolder(path)));
             AppendLog(string.Format(LocalizationService.T("LogImportedFolder"), pkgs.Count));
             TryEnableImportedPackages(pkgs);
             ReloadMods();
@@ -2182,7 +2325,7 @@ public sealed partial class MainViewModel : ObservableObject
             try
             {
                 _library.DiscardStaging(ex.StagingPath);
-                var pkgs = DropConflictingImports(_library.ImportFolder(path, picked.Value));
+                var pkgs = DropTakenDownImports(DropConflictingImports(_library.ImportFolder(path, picked.Value)));
                 AppendLog(string.Format(LocalizationService.T("LogImportedFolder"), pkgs.Count));
                 TryEnableImportedPackages(pkgs);
                 ReloadMods();
@@ -2205,7 +2348,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            var pkgs = DropConflictingImports(_library.ImportZip(path, forceType));
+            var pkgs = DropTakenDownImports(DropConflictingImports(_library.ImportZip(path, forceType)));
             AppendLog(string.Format(LocalizationService.T("LogImportedZip"), pkgs.Count));
             TryEnableImportedPackages(pkgs);
             ReloadMods();
@@ -2226,7 +2369,7 @@ public sealed partial class MainViewModel : ObservableObject
             try
             {
                 _library.DiscardStaging(ex.StagingPath);
-                var pkgs = DropConflictingImports(_library.ImportZip(path, picked.Value));
+                var pkgs = DropTakenDownImports(DropConflictingImports(_library.ImportZip(path, picked.Value)));
                 AppendLog(string.Format(LocalizationService.T("LogImportedZip"), pkgs.Count));
                 TryEnableImportedPackages(pkgs);
                 ReloadMods();
@@ -2272,6 +2415,9 @@ public sealed partial class MainViewModel : ObservableObject
             return false;
         }
 
+        // A takedown deferred while the game ran is finished here, before anything is deployed.
+        EnforceCatalogRemovalsAndNotify();
+
         RefreshStatusCore(offerAssemblyGeneratePrompt: false);
         if (GameStatus?.Kind == GameStatusKind.LoaderPresentAssembliesMissing)
         {
@@ -2296,6 +2442,10 @@ public sealed partial class MainViewModel : ObservableObject
 
             var profile = _profiles.Get(SelectedProfile.Id);
             var packages = _library.List().ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+            // Enforcement can be skipped (locked file, branch wizard). A taken-down package must
+            // still never be deployed; leaving it out also lets the planner delete its old copy.
+            foreach (var hit in ModRemovalGate.Plan(packages.Values.ToList(), CurrentRemovals()))
+                packages.Remove(hit.Package.Id);
             var manifestPath = CurrentDeployManifestPath();
             var manifestPrevPath = CurrentDeployManifestPrevPath();
             var result = _deploy.Apply(
@@ -3231,6 +3381,20 @@ public sealed partial class MainViewModel : ObservableObject
             case DiagnosticsFollowUp.Discord:
                 var opened = TryOpenUrl(GitHubCommunityLinks.DiscordFeedbackUrl);
                 return LocalizationService.T(opened ? "DiagnosticsDiscordOpened" : "DiagnosticsDiscordOpenFailed");
+            case DiagnosticsFollowUp.QqGroup:
+                if (ExternalUrlPolicy.IsHttpsUrl(GitHubCommunityLinks.QqGroupUrl))
+                {
+                    var groupOpened = TryOpenUrl(GitHubCommunityLinks.QqGroupUrl);
+                    return LocalizationService.T(groupOpened ? "DiagnosticsQqGroupOpened" : "DiagnosticsQqGroupOpenFailed");
+                }
+
+                if (!GitHubCommunityLinks.IsQqGroupNumber(GitHubCommunityLinks.QqGroupNumber))
+                    return LocalizationService.T("DiagnosticsQqGroupOpenFailed");
+
+                TryCopyText(GitHubCommunityLinks.QqGroupNumber);
+                return string.Format(
+                    LocalizationService.T("DiagnosticsQqGroupCopied"),
+                    GitHubCommunityLinks.QqGroupNumber);
             case DiagnosticsFollowUp.Qq:
             case DiagnosticsFollowUp.Gmail:
                 var provider = choice == DiagnosticsFollowUp.Qq ? MailProvider.Qq : MailProvider.Gmail;
@@ -3395,6 +3559,7 @@ public sealed partial class MainViewModel : ObservableObject
                 GamePath = GamePath ?? "",
                 SessionLogText = LogText ?? "",
                 AppVersion = AppVersion ?? "",
+                Edition = EditionPolicy.Format(_edition),
                 GameStatusKind = GameStatus?.Kind.ToString(),
                 GameStatusMessage = GameStatus?.Message,
                 BranchSwitchEnabled = BranchSwitchEnabled,
@@ -4284,12 +4449,232 @@ public sealed partial class MainViewModel : ObservableObject
         RunOnUiThread(() => ApplyCatalogRootCore(root));
     }
 
+    void LogRemovalNoteOnce(string message)
+    {
+        if (_removalNotesLogged.Add(message))
+            AppendLog(message);
+    }
+
+    /// <summary>
+    /// The accepted list survives catalog-cache drops (manager upgrades) and offline launches, so
+    /// it is read from its own file rather than from the cached catalog.
+    /// </summary>
+    void LoadRemovalListOnce()
+    {
+        if (_removalListLoaded)
+            return;
+        _removalListLoaded = true;
+        if (RemovalListVerifier.TryLoadAccepted(_paths.DataRoot, RemovalPublicKey, out var list, out _))
+            _removalList = list;
+
+        try
+        {
+            if (!_removalListedModsKnown && CatalogCache.TryRead(_paths.DataRoot, out var json))
+            {
+                _removalListedMods = ModCatalogService.DeserializeCatalog(json).Mods;
+                _removalListedModsKnown = true;
+            }
+        }
+        catch
+        {
+            // Hash matches wait for the next catalog; id matches still apply.
+        }
+    }
+
+    /// <summary>Adopts the catalog's signed list when it verifies and is not older than the accepted one.</summary>
+    void AcceptCatalogRemovals(CatalogRoot root)
+    {
+        LoadRemovalListOnce();
+        _removalListedMods = root.Mods;
+        _removalListedModsKnown = true;
+        if (root.RemovedSigned is null)
+            return;
+
+        if (!RemovalListVerifier.TryVerify(root.RemovedSigned, RemovalPublicKey, out var list, out var error))
+        {
+            LogRemovalNoteOnce(error == RemovalListVerifier.ErrorNoKey
+                ? LocalizationService.T("LogRemovalListNoKey")
+                : string.Format(LocalizationService.T("LogRemovalListRejected"), error));
+            return;
+        }
+
+        if (_removalList is not null && list.IssuedAt < _removalList.IssuedAt)
+        {
+            LogRemovalNoteOnce(LocalizationService.T("LogRemovalListOlder"));
+            return;
+        }
+
+        _removalList = list;
+        try
+        {
+            RemovalListVerifier.SaveAccepted(_paths.DataRoot, root.RemovedSigned);
+        }
+        catch
+        {
+            // Still enforced this session; the next catalog saves it again.
+        }
+    }
+
+    IReadOnlyList<CatalogRemoval> CurrentRemovals()
+    {
+        LoadRemovalListOnce();
+        if (_removalList is null)
+            return [];
+        var clean = ModRemovalGate.Sanitize(_removalList.Removed, _removalListedMods, out var warnings);
+        foreach (var warning in warnings)
+            LogRemovalNoteOnce(string.Format(LocalizationService.T("LogRemovalHashIgnored"), warning));
+        if (_removalListedModsKnown)
+            return clean;
+
+        // Without the listed mods (fresh upgrade, offline) a takedown hash cannot be checked
+        // against bytes a renamed mod still ships, so only id matches apply until a catalog arrives.
+        return clean
+            .Where(r => r.Id.Length > 0)
+            .Select(r => new CatalogRemoval
+            {
+                Id = r.Id,
+                Name = r.Name,
+                Sha256 = [],
+                Reason = r.Reason,
+                Since = r.Since,
+                Locales = r.Locales
+            })
+            .ToList();
+    }
+
+    /// <summary>
+    /// Deploy records paired with the folder their files physically live in. Dual-folder records
+    /// name the Steam link, which only reaches the mounted store, so each branch record is paired
+    /// with its own store folder.
+    /// </summary>
+    (IReadOnlyList<DeployTarget> Targets, IReadOnlyList<string> Roots) RemovalTargets()
+    {
+        var targets = new List<DeployTarget> { new(_paths.DeployManifestPath, null) };
+        var roots = new List<string>();
+        BranchSwitchConfig? cfg = null;
+        try
+        {
+            cfg = _branchSwitch.LoadConfig();
+        }
+        catch
+        {
+            // Treated as single-folder.
+        }
+
+        if (cfg is { Enabled: true })
+        {
+            targets.Add(new DeployTarget(_paths.GetDeployManifestPath(GameBranch.Official, enabled: true), cfg.OfficialStorePath));
+            targets.Add(new DeployTarget(_paths.GetDeployManifestPath(GameBranch.Beta, enabled: true), cfg.BetaStorePath));
+            roots.Add(cfg.OfficialStorePath);
+            roots.Add(cfg.BetaStorePath);
+        }
+        else if (!string.IsNullOrWhiteSpace(GamePath) && Directory.Exists(GamePath))
+        {
+            // Single folder: a missing game folder holds no copies, so it is not a reason to wait.
+            roots.Add(GamePath);
+        }
+
+        return (targets, roots);
+    }
+
+    /// <summary>
+    /// Removes library packages the catalog has taken down. Runs on every catalog arrival, after
+    /// every import and before every deploy. Skipped while a critical operation, the branch wizard,
+    /// Steam settle or interrupted-operation recovery owns the folders; the next run retries.
+    /// Returns the notice to show once the caller has finished refreshing, or null.
+    /// </summary>
+    string? EnforceCatalogRemovals()
+    {
+        var removals = CurrentRemovals();
+        if (removals.Count == 0)
+            return null;
+        if (IsCriticalOpRunning || IsSessionLocked || ShouldOfferCriticalRecovery())
+            return null;
+
+        ModRemovalResult result;
+        try
+        {
+            var (targets, roots) = RemovalTargets();
+            result = new ModRemovalEnforcer(_library, _store, _processProbe).Run(removals, targets, roots);
+        }
+        catch (Exception ex)
+        {
+            AppendLog(string.Format(LocalizationService.T("LogModRemovalRunFailed"), ex.Message));
+            return null;
+        }
+
+        foreach (var removed in result.Removed)
+        {
+            AppendLog(string.IsNullOrWhiteSpace(removed.Reason)
+                ? string.Format(LocalizationService.T("LogModRemovedByCatalogNoReason"), removed.Name)
+                : string.Format(LocalizationService.T("LogModRemovedByCatalog"), removed.Name, removed.Reason));
+        }
+
+        foreach (var name in result.Deferred)
+            LogRemovalNoteOnce(string.Format(LocalizationService.T("LogModRemovalDeferred"), name));
+        foreach (var (name, error) in result.Failed)
+            AppendLog(string.Format(LocalizationService.T("LogModRemovalFailed"), name, error));
+
+        if (result.Removed.Count == 0)
+            return null;
+
+        ReloadMods();
+        RecomputeDirty();
+        UpdateLoaderVersionWarning();
+        UpdateFirstAssemblyWarning();
+        return string.Format(
+            LocalizationService.T("NotifyModsRemovedByCatalog"),
+            result.Removed.Count,
+            string.Join("、", result.Removed.Select(r => r.Name)));
+    }
+
+    void EnforceCatalogRemovalsAndNotify()
+    {
+        if (EnforceCatalogRemovals() is { } notice)
+            ShowRemovalNotice(notice);
+    }
+
+    void ShowRemovalNotice(string notice)
+    {
+        // The constructor's auto-import runs before the window is shown, and a dialog cannot be
+        // owned by a window that has never been shown. Startup checks run once it is.
+        if (_constructed)
+            _notify(notice);
+        else
+            _heldRemovalNotice = notice;
+    }
+
+    /// <summary>
+    /// Runs the takedown list over fresh imports before they are enabled, so the player is never
+    /// asked to confirm a mod that is about to be removed.
+    /// </summary>
+    IReadOnlyList<ModPackage> DropTakenDownImports(IReadOnlyList<ModPackage> imported)
+    {
+        if (imported.Count == 0)
+            return imported;
+        EnforceCatalogRemovalsAndNotify();
+        var remaining = new HashSet<string>(_library.List().Select(p => p.Id), StringComparer.OrdinalIgnoreCase);
+        return imported.Where(p => remaining.Contains(p.Id)).ToList();
+    }
+
     void ApplyCatalogRootCore(CatalogRoot root)
     {
+        AcceptCatalogRemovals(root);
+        var removalNotice = EnforceCatalogRemovals();
+
+        var takenDown = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var mod in ModRemovalGate.ListedAndRemoved(root.Mods, CurrentRemovals()))
+        {
+            takenDown.Add(mod.Id);
+            LogRemovalNoteOnce(string.Format(LocalizationService.T("LogCatalogIdBothListedAndRemoved"), mod.Id));
+        }
+
         var packages = _library.List();
         var built = new List<CatalogModItemViewModel>(root.Mods.Count);
         foreach (var mod in root.Mods)
         {
+            if (takenDown.Contains(mod.Id))
+                continue;
             LogInvalidCatalogCategory(mod);
             var state = ModCatalogService.GetEntryState(packages, mod);
             built.Add(new CatalogModItemViewModel(
@@ -4319,6 +4704,10 @@ public sealed partial class MainViewModel : ObservableObject
         EnrichModsFromCatalog();
         RefreshCatalogView();
         RefreshLibraryView();
+
+        // Modal, so only once both lists reflect the removal.
+        if (removalNotice is not null)
+            ShowRemovalNotice(removalNotice);
     }
 
     /// <summary>
@@ -4547,7 +4936,7 @@ public sealed partial class MainViewModel : ObservableObject
                 }
                 else if (Confirm(LocalizationService.T("ConfirmStillOpenGitHubReleases")))
                 {
-                    TryOpenUrl(UpdateChecker.DefaultBrowseUrl);
+                    TryOpenUrl(ReleasesPageUrl);
                 }
 
                 return;
@@ -4597,7 +4986,7 @@ public sealed partial class MainViewModel : ObservableObject
             result.RemoteVersion ?? "",
             result.Notes ?? "",
             result.SetupUrl,
-            result.BrowseUrl ?? UpdateChecker.DefaultBrowseUrl);
+            result.BrowseUrl ?? ReleasesPageUrl);
 
         ManagerUpdateUiResult ui;
         _managerUpdateUiOpen = true;
@@ -4625,7 +5014,7 @@ public sealed partial class MainViewModel : ObservableObject
                 return;
 
             case ManagerUpdateUiAction.OpenBrowseUrl:
-                TryOpenUrl(prompt.BrowseUrl ?? UpdateChecker.DefaultBrowseUrl);
+                TryOpenUrl(prompt.BrowseUrl ?? ReleasesPageUrl);
                 return;
 
             case ManagerUpdateUiAction.StayAfterFailure:

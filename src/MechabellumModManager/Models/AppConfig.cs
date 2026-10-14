@@ -35,6 +35,12 @@ public sealed class AppConfig
     public int DownloadRoutePreference { get; set; }
 
     /// <summary>
+    /// "cn" or "global" (<see cref="EditionPolicy"/>). Written by Setup on a fresh install,
+    /// inferred once for older configs, switched in Settings. The installer must keep this field.
+    /// </summary>
+    public string? Edition { get; set; }
+
+    /// <summary>
     /// Fetch the catalog on launch and say which installed mods are outdated. Never installs
     /// anything — swapping an injected DLL behind the player's back is not worth the convenience.
     /// On by default: a player who is not told is a player running a version the author has

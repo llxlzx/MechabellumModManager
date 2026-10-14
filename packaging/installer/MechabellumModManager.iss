@@ -8,11 +8,42 @@
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"
 
+; Setup flavor: ISCC /DMMM_FLAVOR=cn|global. Same app and AppId; only the first-install
+; download route and the runtime-package source differ.
+#ifndef MMM_FLAVOR
+  #define MMM_FLAVOR "cn"
+#endif
+#if MMM_FLAVOR == "cn"
+  #define FlavorSuffix "CN"
+  #define FlavorRoute "1"
+  #define FlavorEdition "cn"
+  #define EditionZh "（国内版）"
+  #define EditionEn " (China)"
+  #define EditionRu " (Китай)"
+  #define EditionJa "（中国版）"
+  #define EditionDe " (China)"
+#elif MMM_FLAVOR == "global"
+  #define FlavorSuffix "Global"
+  #define FlavorRoute "2"
+  #define FlavorEdition "global"
+  #define EditionZh "（国际版）"
+  #define EditionEn " (Global)"
+  #define EditionRu " (Global)"
+  #define EditionJa "（グローバル版）"
+  #define EditionDe " (Global)"
+#else
+  #error MMM_FLAVOR must be cn or global
+#endif
+
 [Setup]
 AppId={{A8F3C2E1-7B4D-4F91-9C2A-1E5B8D0F3A27}
-AppName={cm:AppDisplayName}
+; Wizard title and the uninstall list name the edition. Shortcuts and the Start menu group use
+; the plain name, so installing the other flavor over this one does not leave a second shortcut.
+AppName={cm:AppDisplayNameEdition}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+VersionInfoDescription=Mechabellum Mod Manager Setup ({#FlavorSuffix})
+VersionInfoProductName=Mechabellum Mod Manager ({#FlavorSuffix})
 DefaultDirName={autopf}\MechabellumModManager
 DefaultGroupName={cm:AppDisplayName}
 DisableProgramGroupPage=yes
@@ -20,7 +51,7 @@ DisableProgramGroupPage=yes
 DisableDirPage=no
 AlwaysShowDirOnReadyPage=yes
 OutputDir=..\..\dist
-OutputBaseFilename=MechabellumModManager_Setup_v{#MyAppVersion}
+OutputBaseFilename=MechabellumModManager_Setup_v{#MyAppVersion}_{#FlavorSuffix}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -55,6 +86,7 @@ Name: "german"; MessagesFile: "compiler:Languages\German.isl"; LicenseFile: "EUL
 
 [CustomMessages]
 chinesesimplified.AppDisplayName=钢铁指挥官 Mod 管理器
+chinesesimplified.AppDisplayNameEdition=钢铁指挥官 Mod 管理器{#EditionZh}
 chinesesimplified.TaskDesktop=创建桌面快捷方式
 chinesesimplified.TaskDesktopGroup=附加选项:
 chinesesimplified.CompMain=管理器本体（必选）
@@ -74,6 +106,10 @@ chinesesimplified.ErrWriteConfig=写入管理器配置失败。可稍后在管�
 chinesesimplified.StatusRestoreOptional=可选恢复脚本未运行（不影响安装；配置已用内置方式写入）。
 chinesesimplified.StatusSanitizeAcf=正在清理无效的 Steam 分支快照（不修改 Steam 本体）…
 chinesesimplified.StatusEnsureRedist=正在从国内镜像（失败则官方源）下载运行时离线包（Melon/.NET 等，可能较大，请稍候）…
+chinesesimplified.StatusEnsureRedistOrigin=正在从官方源（GitHub / 微软）下载运行时离线包（Melon/.NET 等，可能较大，请稍候）…
+chinesesimplified.ReadyMemoRouteHeading=下载线路：
+chinesesimplified.ReadyMemoRouteCN=国内包：全新安装预设为「始终使用国内镜像」（镜像不可用时改用 GitHub）。覆盖安装保留原有设置，可在管理器「设置」中更改。
+chinesesimplified.ReadyMemoRouteGlobal=国际包：全新安装预设为「始终使用 GitHub」，不使用国内镜像。覆盖安装保留原有设置，可在管理器「设置」中更改。
 chinesesimplified.StatusEnsureRedistDone=运行时离线包已就绪。
 chinesesimplified.StatusEnsureRedistFail=无法启动管理器下载离线包；将尝试继续（可能失败）。
 chinesesimplified.ErrEnsureRedist=下载运行时离线包失败（exit %1）。请检查网络后重试。%n%n为避免半成品安装，失败时将跳过 MelonLoader。
@@ -101,6 +137,7 @@ chinesesimplified.StatusPostDone=后置步骤已处理，即将进入完成页�
 chinesesimplified.AskPureGameCleanup=是否同时彻底清理游戏内 Melon/Mods，并删除管理器数据和另一侧游戏仓？%n%n选「否」（推荐）：只卸载管理器，保留双服记录和游戏目录。%n选「是」：与管理器内「彻底清理」相同，不可恢复。
 
 english.AppDisplayName=Mechabellum Mod Manager
+english.AppDisplayNameEdition=Mechabellum Mod Manager{#EditionEn}
 english.TaskDesktop=Create a desktop shortcut
 english.TaskDesktopGroup=Additional tasks:
 english.CompMain=Manager app (required)
@@ -120,6 +157,10 @@ english.ErrWriteConfig=Failed to write manager config. You can set the game path
 english.StatusRestoreOptional=Optional restore script did not run (install continues; config was written natively).
 english.StatusSanitizeAcf=Removing invalid Steam branch snapshots (Steam itself is not modified)…
 english.StatusEnsureRedist=Downloading runtime packages from the domestic mirror (official sources on failure; may be large)…
+english.StatusEnsureRedistOrigin=Downloading runtime packages from official sources (GitHub / Microsoft; may be large)…
+english.ReadyMemoRouteHeading=Download route:
+english.ReadyMemoRouteCN=China package: a fresh install starts on "Always use the domestic mirror" (GitHub if the mirror fails). Reinstalls keep your current setting. Change it in the manager's Settings.
+english.ReadyMemoRouteGlobal=Global package: a fresh install starts on "Always use GitHub"; the domestic mirror is not used. Reinstalls keep your current setting. Change it in the manager's Settings.
 english.StatusEnsureRedistDone=Runtime packages ready.
 english.StatusEnsureRedistFail=Could not start the manager to download packages; continuing (may fail).
 english.ErrEnsureRedist=Failed to download runtime packages (exit %1). Check the network and retry.%n%nMelonLoader will be skipped to avoid a half-installed Loader.
@@ -147,6 +188,7 @@ english.StatusPostDone=Post-install steps done; opening the Completed page…
 english.AskPureGameCleanup=Also wipe Melon/Mods, manager data, and the other game store?%n%nNo (recommended): uninstall the manager only; keep dual-folder records and game folders.%nYes: same as in-app Pure game cleanup; cannot be undone.
 
 russian.AppDisplayName=Mechabellum Mod Manager
+russian.AppDisplayNameEdition=Mechabellum Mod Manager{#EditionRu}
 russian.TaskDesktop=Создать ярлык на рабочем столе
 russian.TaskDesktopGroup=Дополнительно:
 russian.CompMain=Приложение менеджера (обязательно)
@@ -167,6 +209,10 @@ russian.StatusRestoreOptional=Дополнительный скрипт восс
 russian.StatusSanitizeAcf=Удаление недействительных снимков ветки Steam (сам Steam не изменяется)…
 
 russian.StatusEnsureRedist=Загрузка пакетов runtime с зеркала (при сбое — официальные источники)…
+russian.StatusEnsureRedistOrigin=Загрузка пакетов runtime из официальных источников (GitHub / Microsoft)…
+russian.ReadyMemoRouteHeading=Маршрут загрузки:
+russian.ReadyMemoRouteCN=Пакет для Китая: при новой установке выбрано «Всегда внутреннее зеркало» (GitHub, если зеркало недоступно). Переустановка сохраняет текущую настройку. Изменить можно в настройках менеджера.
+russian.ReadyMemoRouteGlobal=Глобальный пакет: при новой установке выбрано «Всегда GitHub», внутреннее зеркало не используется. Переустановка сохраняет текущую настройку. Изменить можно в настройках менеджера.
 russian.StatusEnsureRedistDone=Пакеты runtime готовы.
 russian.StatusEnsureRedistFail=Не удалось запустить менеджер для загрузки; продолжаем (возможны ошибки).
 russian.WarnEnsureRedistSkipMelon=Runtime packages failed; MelonLoader skipped.
@@ -194,6 +240,7 @@ russian.StatusPostDone=Постустановочные шаги выполне�
 russian.AskPureGameCleanup=Также очистить Melon/Mods, данные менеджера и другой склад игры?%n%nНет (рекомендуется): удалить только менеджер; сохранить записи двух веток и папки игры.%nДа: как «полная очистка» в приложении; необратимо.
 
 japanese.AppDisplayName=Mechabellum Mod Manager
+japanese.AppDisplayNameEdition=Mechabellum Mod Manager{#EditionJa}
 japanese.TaskDesktop=デスクトップにショートカットを作成
 japanese.TaskDesktopGroup=追加タスク:
 japanese.CompMain=マネージャー本体（必須）
@@ -213,6 +260,10 @@ japanese.ErrWriteConfig=マネージャー設定の書き込みに失敗しま�
 japanese.StatusRestoreOptional=オプションの復元スクリプトは実行されませんでした（インストールは続行；設定は組み込み方式で書き込み済み）。
 japanese.StatusSanitizeAcf=無効な Steam ブランチスナップショットを削除中（Steam 本体は変更しません）…
 japanese.StatusEnsureRedist=国内ミラー（失敗時は公式）からランタイムをダウンロード中…
+japanese.StatusEnsureRedistOrigin=公式ソース（GitHub / Microsoft）からランタイムをダウンロード中…
+japanese.ReadyMemoRouteHeading=ダウンロード経路:
+japanese.ReadyMemoRouteCN=中国版パッケージ：新規インストールでは「常に国内ミラー」（ミラーが使えないときは GitHub）。上書きインストールでは現在の設定を保持します。マネージャーの設定で変更できます。
+japanese.ReadyMemoRouteGlobal=グローバル版パッケージ：新規インストールでは「常に GitHub」で、国内ミラーは使いません。上書きインストールでは現在の設定を保持します。マネージャーの設定で変更できます。
 japanese.StatusEnsureRedistDone=ランタイム準備完了。
 japanese.StatusEnsureRedistFail=マネージャーを起動できずダウンロードできません；続行します。
 japanese.WarnEnsureRedistSkipMelon=Runtime packages failed; MelonLoader skipped.
@@ -240,6 +291,7 @@ japanese.StatusPostDone=インストール後処理が終わりました。完�
 japanese.AskPureGameCleanup=Melon/Mods・マネージャーデータ・もう一方のゲームフォルダも削除しますか？%n%nいいえ（推奨）：マネージャーだけ削除し、二系統の記録とゲームフォルダは残します。%nはい：アプリ内の「徹底クリーン」と同じで、元に戻せません。
 
 german.AppDisplayName=Mechabellum Mod Manager
+german.AppDisplayNameEdition=Mechabellum Mod Manager{#EditionDe}
 german.TaskDesktop=Desktop-Verknüpfung erstellen
 german.TaskDesktopGroup=Zusätzliche Aufgaben:
 german.CompMain=Manager-App (erforderlich)
@@ -260,6 +312,10 @@ german.StatusRestoreOptional=Optionales Wiederherstellungsskript nicht ausgefüh
 german.StatusSanitizeAcf=Ungültige Steam-Branch-Snapshots werden entfernt (Steam selbst wird nicht geändert)…
 
 german.StatusEnsureRedist=Runtime-Pakete vom Spiegel werden geladen (bei Fehler offizielle Quellen)…
+german.StatusEnsureRedistOrigin=Runtime-Pakete werden aus offiziellen Quellen geladen (GitHub / Microsoft)…
+german.ReadyMemoRouteHeading=Download-Route:
+german.ReadyMemoRouteCN=China-Paket: Eine Erstinstallation startet mit „Immer den inländischen Spiegel“ (GitHub, wenn der Spiegel ausfällt). Eine Installation über eine bestehende behält Ihre Einstellung. Änderbar in den Einstellungen des Managers.
+german.ReadyMemoRouteGlobal=Globales Paket: Eine Erstinstallation startet mit „Immer GitHub“; der inländische Spiegel wird nicht verwendet. Eine Installation über eine bestehende behält Ihre Einstellung. Änderbar in den Einstellungen des Managers.
 german.StatusEnsureRedistDone=Runtime-Pakete bereit.
 german.StatusEnsureRedistFail=Manager konnte nicht starten; Download übersprungen (kann scheitern).
 german.WarnEnsureRedistSkipMelon=Runtime packages failed; MelonLoader skipped.
@@ -538,24 +594,27 @@ begin
   Result := Code <> -1;
 end;
 
-function EnsureRedistViaApp(const Redist: string): Integer;
+function EnsureRedistViaApp(const Redist, RouteArg: string): Integer;
 var
-  Params, ProgressFile, ExitFile, Line, PctStr, Artifact, Detail, LastLine: string;
+  Params, ProgressFile, ExitFile, Line, PctStr, Artifact, Detail, LastLine, Status: string;
   Pct, P1, P2, ResultCode, ExitCode, Waited, Idle: Integer;
   ProgressA: AnsiString;
 begin
   { Thin Setup: pull Melon/Unity/Cpp2IL/.NET into installer-redist.
-    zh-CN prefers domestic COS; other languages use origin only.
+    RouteArg is one of the fixed flags from RedistRouteArg, never text read from config.json.
     Child writes percent|id|detail and a .exit sidecar. ewNoWait ResultCode is not a PID. }
   ProgressFile := ExpandConstant('{tmp}\ensure-redist-progress.txt');
   ExitFile := ProgressFile + '.exit';
   DeleteFile(ProgressFile);
   DeleteFile(ExitFile);
   Params := '--ensure-redist --redist-dir "' + Redist + '" --progress-file "' + ProgressFile + '"';
-  if CompareText(ActiveLanguage, 'chinesesimplified') = 0 then
-    Params := Params + ' --mirror-base-url "https://mmm-mirror-1312774738.cos.ap-shanghai.myqcloud.com"'
+  if RouteArg <> '' then
+    Params := Params + ' ' + RouteArg;
+  if RouteArg = '--no-mirror' then
+    Status := CustomMessage('StatusEnsureRedistOrigin')
   else
-    Params := Params + ' --no-mirror';
+    Status := CustomMessage('StatusEnsureRedist');
+  SetStatus(Status);
 
   if not Exec(ExpandConstant('{app}\{#MyAppExeName}'), Params, '', SW_SHOWMINNOACTIVE, ewNoWait, ResultCode) then
   begin
@@ -600,9 +659,9 @@ begin
               Artifact := Line;
 
             if Artifact <> '' then
-              SetStatus(CustomMessage('StatusEnsureRedist') + ' ' + IntToStr(Pct) + '% (' + Artifact + ')')
+              SetStatus(Status + ' ' + IntToStr(Pct) + '% (' + Artifact + ')')
             else
-              SetStatus(CustomMessage('StatusEnsureRedist') + ' ' + IntToStr(Pct) + '%');
+              SetStatus(Status + ' ' + IntToStr(Pct) + '%');
             if Detail <> '' then
             begin
               WizardForm.StatusLabel.Caption := WizardForm.StatusLabel.Caption + ' ' + Detail;
@@ -801,6 +860,48 @@ begin
   Result := True;
 end;
 
+{ Raw value of Key: 'null', or a quoted string with its escapes kept, so it can be written back
+  unchanged. Unescaping and re-escaping would corrupt sequences such as \u0026. }
+function TryExtractJsonRaw(const Content, Key: string; var Raw: string): Boolean;
+var
+  Marker, SearchKey: string;
+  P, I: Integer;
+begin
+  Result := False;
+  Raw := '';
+  SearchKey := '"' + Key + '"';
+  P := Pos(SearchKey, Content);
+  if P = 0 then
+    exit;
+  Marker := Copy(Content, P + Length(SearchKey), Length(Content));
+  P := Pos(':', Marker);
+  if P = 0 then
+    exit;
+  Marker := Trim(Copy(Marker, P + 1, Length(Marker)));
+  if Copy(LowerCase(Marker), 1, 4) = 'null' then
+  begin
+    Raw := 'null';
+    Result := True;
+    exit;
+  end;
+  if (Length(Marker) = 0) or (Marker[1] <> '"') then
+    exit;
+  I := 2;
+  while I <= Length(Marker) do
+  begin
+    if Marker[I] = '\' then
+      I := I + 2
+    else if Marker[I] = '"' then
+    begin
+      Raw := Copy(Marker, 1, I);
+      Result := True;
+      exit;
+    end
+    else
+      I := I + 1;
+  end;
+end;
+
 function MapInstallerLanguageToUi: string;
 begin
   if ActiveLanguage = 'chinesesimplified' then
@@ -841,10 +942,10 @@ end;
 function WriteManagerConfigNative(const GamePath: string): Boolean;
 var
   Root, ConfigPath, ProfilePath, Json, Resolved, Link, ExistingContent, Lang, UiScale: string;
-  CommonRoot, SeedJson: string;
-  LaunchMode: Integer;
+  CommonRoot, SeedJson, MirrorRaw, EditionRaw, EditionOut: string;
+  LaunchMode, Route: Integer;
   ActiveProfileId, DataRoot: string;
-  DataRootIsNull, OnboardingDismissed: Boolean;
+  DataRootIsNull, OnboardingDismissed, HasMirror, HasEdition, ConfigExisted: Boolean;
 begin
   Result := False;
   Resolved := GamePath;
@@ -872,9 +973,19 @@ begin
   DataRoot := '';
   OnboardingDismissed := False;
   UiScale := '';
+  Route := -1;
+  MirrorRaw := '';
+  HasMirror := False;
+  EditionRaw := '';
+  HasEdition := False;
+  ConfigExisted := FileExists(ConfigPath);
 
-  if FileExists(ConfigPath) and LoadUtf8TextFile(ConfigPath, ExistingContent) then
+  if ConfigExisted and LoadUtf8TextFile(ConfigPath, ExistingContent) then
   begin
+    Route := TryExtractJsonInt(ExistingContent, 'downloadRoutePreference', -1);
+    HasMirror := TryExtractJsonRaw(ExistingContent, 'mirrorBaseUrl', MirrorRaw);
+    HasEdition := TryExtractJsonRaw(ExistingContent, 'edition', EditionRaw) and
+      ((LowerCase(EditionRaw) = '"cn"') or (LowerCase(EditionRaw) = '"global"'));
     LaunchMode := TryExtractJsonInt(ExistingContent, 'launchMode', 0);
     ActiveProfileId := TryExtractJsonString(ExistingContent, 'activeProfileId');
     if ActiveProfileId = '' then
@@ -886,6 +997,21 @@ begin
     if not IsAllowedUiScale(UiScale) then
       UiScale := '';
   end;
+
+  { A route the player already saved survives reinstalls with either flavor. }
+  if (Route < 0) or (Route > 2) then
+    Route := {#FlavorRoute};
+
+  { The edition is the package's only on a fresh install. An existing config keeps its own, and
+    one written before editions existed gets none here: the manager infers it from the route and
+    Windows language. Updates through the old feed are the Global package, so writing the flavor
+    over an existing config would relabel every mainland player. }
+  if HasEdition then
+    EditionOut := EditionRaw
+  else if not ConfigExisted then
+    EditionOut := '"{#FlavorEdition}"'
+  else
+    EditionOut := '';
 
   Lang := MapInstallerLanguageToUi();
 
@@ -899,7 +1025,12 @@ begin
   else
     Json := Json + '  "dataRoot": "' + EscapeJsonPath(DataRoot) + '",' + #13#10;
   Json := Json +
-    '  "uiLanguage": "' + Lang + '"';
+    '  "uiLanguage": "' + Lang + '",' + #13#10 +
+    '  "downloadRoutePreference": ' + IntToStr(Route);
+  if HasMirror then
+    Json := Json + ',' + #13#10 + '  "mirrorBaseUrl": ' + MirrorRaw;
+  if EditionOut <> '' then
+    Json := Json + ',' + #13#10 + '  "edition": ' + EditionOut;
   if OnboardingDismissed then
     Json := Json + ',' + #13#10 + '  "onboardingDismissed": true';
   if UiScale <> '' then
@@ -914,8 +1045,14 @@ begin
   SeedJson :=
     '{' + #13#10 +
     '  "gamePath": "' + EscapeJsonPath(Resolved) + '",' + #13#10 +
-    '  "uiLanguage": "' + Lang + '"' + #13#10 +
-    '}' + #13#10;
+    '  "uiLanguage": "' + Lang + '",' + #13#10 +
+    '  "downloadRoutePreference": ' + IntToStr(Route) + ',' + #13#10;
+  { The seed only fills a daily-user config that does not exist yet, so the package's edition fits there. }
+  if HasEdition then
+    SeedJson := SeedJson + '  "edition": ' + EditionRaw + #13#10
+  else
+    SeedJson := SeedJson + '  "edition": "{#FlavorEdition}"' + #13#10;
+  SeedJson := SeedJson + '}' + #13#10;
   SaveUtf8TextFile(CommonRoot + '\install-defaults.json', SeedJson);
 
   ProfilePath := Root + '\profiles\default.json';
@@ -931,6 +1068,56 @@ begin
   end;
 
   Result := True;
+end;
+
+{ Route flag for the runtime download. It follows the route saved in config.json, so a Global
+  Setup that reaches a mainland player as an update still downloads from the mirror; without a
+  saved route the flavor preset decides. An emptied mirror field means GitHub only.
+  '--no-mirror' = GitHub only, '--route-mirror' = mirror first with no region probe, '' = auto. }
+function RedistRouteArg: string;
+var
+  ConfigPath, Content, MirrorRaw: string;
+  Route, Saved: Integer;
+begin
+  Route := {#FlavorRoute};
+  ConfigPath := ExpandConstant('{userappdata}\MechabellumModManager\config.json');
+  if FileExists(ConfigPath) and LoadUtf8TextFile(ConfigPath, Content) then
+  begin
+    Saved := TryExtractJsonInt(Content, 'downloadRoutePreference', -1);
+    if TryExtractJsonRaw(Content, 'mirrorBaseUrl', MirrorRaw) and (MirrorRaw = '""') then
+      Route := 2
+    else if (Saved >= 0) and (Saved <= 2) then
+      Route := Saved;
+  end;
+
+  case Route of
+    1: Result := '--route-mirror';
+    2: Result := '--no-mirror';
+  else
+    Result := '';
+  end;
+end;
+
+function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo,
+  MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
+var
+  S: string;
+begin
+  S := '';
+  if MemoUserInfoInfo <> '' then
+    S := S + MemoUserInfoInfo + NewLine + NewLine;
+  if MemoDirInfo <> '' then
+    S := S + MemoDirInfo + NewLine + NewLine;
+  if MemoTypeInfo <> '' then
+    S := S + MemoTypeInfo + NewLine + NewLine;
+  if MemoComponentsInfo <> '' then
+    S := S + MemoComponentsInfo + NewLine + NewLine;
+  if MemoGroupInfo <> '' then
+    S := S + MemoGroupInfo + NewLine + NewLine;
+  if MemoTasksInfo <> '' then
+    S := S + MemoTasksInfo + NewLine + NewLine;
+  S := S + CustomMessage('ReadyMemoRouteHeading') + NewLine + Space + CustomMessage('ReadyMemoRoute{#FlavorSuffix}');
+  Result := S;
 end;
 
 function DetectGamePathViaScript: string;
@@ -1116,8 +1303,7 @@ begin
   RedistOk := True;
   if WizardIsComponentSelected('dotnet8') or WizardIsComponentSelected('dotnet6') or WizardIsComponentSelected('melon') then
   begin
-    SetStatus(CustomMessage('StatusEnsureRedist'));
-    Code := EnsureRedistViaApp(Redist);
+    Code := EnsureRedistViaApp(Redist, RedistRouteArg());
     if Code = 0 then
       SetStatus(CustomMessage('StatusEnsureRedistDone'))
     else

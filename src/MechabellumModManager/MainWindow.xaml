@@ -7,7 +7,7 @@
         xmlns:helpers="clr-namespace:MechabellumModManager.Helpers"
         xmlns:theme="clr-namespace:MechabellumModManager.Themes"
         mc:Ignorable="d"
-        Title="钢铁指挥官 Mod 管理器"
+        Title="{Binding WindowTitle}"
         Height="740"
         Width="1200"
         MinHeight="600"
@@ -72,9 +72,21 @@
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="钢铁指挥官"
                                            Style="{StaticResource ShellTitleStyle}" />
-                                <TextBlock Text="Mod 管理器 · Mechabellum"
-                                           Style="{StaticResource ShellSubtitleStyle}"
-                                           Margin="0,2,0,0" />
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="Mod 管理器 · Mechabellum"
+                                               Style="{StaticResource ShellSubtitleStyle}"
+                                               VerticalAlignment="Center" />
+                                    <Border Margin="8,0,0,0"
+                                            Padding="6,1"
+                                            VerticalAlignment="Center"
+                                            BorderThickness="1"
+                                            BorderBrush="{StaticResource SteelEdgeBrush}"
+                                            Background="{StaticResource BgPanelBrush}">
+                                        <TextBlock Text="{Binding EditionBadge}"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                    </Border>
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
 
@@ -273,7 +285,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                            <Border Height="2" HorizontalAlignment="Stretch" Margin="0,3,0,0">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
@@ -319,7 +331,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                            <Border Height="2" HorizontalAlignment="Stretch" Margin="0,3,0,0">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
@@ -365,7 +377,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                            <Border Height="2" HorizontalAlignment="Stretch" Margin="0,3,0,0">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
@@ -411,7 +423,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                            <Border Height="2" HorizontalAlignment="Stretch" Margin="0,3,0,0">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
@@ -457,7 +469,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                            <Border Height="2" HorizontalAlignment="Stretch" Margin="0,3,0,0">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
@@ -503,7 +515,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <Border Height="2" Width="36" HorizontalAlignment="Left" Margin="0,3,0,0">
+                                            <Border Height="2" HorizontalAlignment="Stretch" Margin="0,3,0,0">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource AccentAmberBrush}" />
@@ -516,6 +528,24 @@
                                                     </Style>
                                                 </Border.Style>
                                             </Border>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding OpenCommunityBarCommand}"
+                                            ToolTip="{Binding CommunityBarToolTip}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+                                                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource AccentAmberBrush}" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding CommunityBarText}" VerticalAlignment="Center" />
+                                            <TextBlock Height="16" Opacity="0" Text=" " FontSize="13" />
+                                            <Border Height="2" Margin="0,3,0,0" Opacity="0" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -1019,16 +1049,30 @@
                                  VerticalAlignment="Center" />
                     </DockPanel>
 
-                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-                        <TextBlock Text="{Binding Ui.LaunchMode}"
-                                   VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   Margin="0,0,8,0" />
-                        <ComboBox Width="150"
-                                  ItemsSource="{Binding LaunchModeOptions}"
-                                  SelectedValue="{Binding LaunchMode}"
-                                  SelectedValuePath="Mode"
-                                  DisplayMemberPath="Label" />
+                    <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Ui.LaunchMode}"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Margin="0,0,8,0" />
+                            <ComboBox Width="150"
+                                      ItemsSource="{Binding LaunchModeOptions}"
+                                      SelectedValue="{Binding LaunchMode}"
+                                      SelectedValuePath="Mode"
+                                      DisplayMemberPath="Label" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="{Binding Ui.EditionLabel}"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Margin="0,0,8,0" />
+                            <ComboBox Width="150"
+                                      ItemsSource="{Binding EditionOptions}"
+                                      SelectedValue="{Binding SelectedEditionCode}"
+                                      SelectedValuePath="Code"
+                                      DisplayMemberPath="Label"
+                                      ToolTip="{Binding Ui.EditionHint}" />
+                        </StackPanel>
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">
@@ -1036,6 +1080,7 @@
                                   IsChecked="{Binding UsePortableDataRoot}" />
                         <CheckBox Content="{Binding Ui.CheckModUpdatesOnStartup}"
                                   IsChecked="{Binding CheckModUpdatesOnStartup}"
+                                  ToolTip="{Binding Ui.CheckModUpdatesOnStartupTip}"
                                   Margin="0,6,0,0" />
                         <CheckBox Content="{Binding Ui.HideMelonConsole}"
                                   IsChecked="{Binding HideMelonConsole}"
@@ -1169,6 +1214,11 @@
                                        Style="{StaticResource SectionLabelStyle}"
                                        VerticalAlignment="Center" />
                         </DockPanel>
+                        <TextBlock Text="{Binding EditionAboutText}"
+                                   TextWrapping="Wrap"
+                                   FontSize="13"
+                                   Margin="0,0,0,6"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
                         <TextBox Text="{Binding Ui.CreditsBody, Mode=OneWay}"
                                  Style="{StaticResource SelectableReadOnlyTextStyle}"
                                  FontSize="13"
@@ -1517,10 +1567,14 @@
                                             <Run Text="{Binding SelectedCatalogMod.UpdatedAt, Mode=OneWay}" />
                                         </TextBlock>
                                         <TextBlock Margin="0,8,0,0"
-                                                   Text="{Binding SelectedCatalogMod.Summary}"
                                                    Foreground="{StaticResource TextPrimaryBrush}"
                                                    TextWrapping="Wrap"
-                                                   FontSize="13" />
+                                                   FontSize="13"
+                                                   Visibility="{Binding SelectedCatalogMod.Summary, Converter={StaticResource NonEmptyVis}}">
+                                            <Run Text="{Binding Ui.LabelSummary, Mode=OneWay}" />
+                                            <Run Text="：" />
+                                            <Run Text="{Binding SelectedCatalogMod.Summary, Mode=OneWay}" />
+                                        </TextBlock>
                                         <TextBlock Margin="0,6,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"
                                                    FontSize="13"
@@ -2021,7 +2075,8 @@
                                                     <TextBlock Margin="0,6,0,0"
                                                                Foreground="{StaticResource TextPrimaryBrush}"
                                                                FontSize="13"
-                                                               TextWrapping="Wrap">
+                                                               TextWrapping="Wrap"
+                                                               Visibility="{Binding SelectedLibraryMod.Summary, Converter={StaticResource NonEmptyVis}}">
                                                         <Run Text="{Binding Ui.LabelSummary, Mode=OneWay}" />
                                                         <Run Text="：" />
                                                         <Run Text="{Binding SelectedLibraryMod.Summary, Mode=OneWay}" />

@@ -206,7 +206,7 @@
     <value>Display name</value>
   </data>
   <data name="DirectUploadSummary" xml:space="preserve">
-    <value>Summary</value>
+    <value>Как пользоваться</value>
   </data>
   <data name="DirectUploadVersion" xml:space="preserve">
     <value>Version</value>
@@ -329,9 +329,14 @@
     <value>Gmail</value>
   </data>
   <data name="DiagnosticsMailHint" xml:space="preserve"><value>QQ Mail или Gmail копируют черновик и открывают почту. Discord открывает GODOG Battalion и ничего не копирует. Отмена оставляет только сохранённый zip.</value></data>
+  <data name="DiagnosticsMailHintCn" xml:space="preserve"><value>QQ Mail или Gmail копируют черновик и открывают почту. Кнопка группы QQ открывает страницу вступления в группу {0} и не копирует письмо. Отмена оставляет только сохранённый zip.</value></data>
   <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
   <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>Открыт Discord (GODOG Battalion). Напишите в канале и приложите zip вручную. Черновик письма не копировался.</value></data>
   <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>Не удалось открыть Discord. Откройте https://discord.gg/CQDkCfDTA вручную и приложите zip.</value></data>
+  <data name="DiagnosticsMailQqGroup" xml:space="preserve"><value>Группа QQ {0}</value></data>
+  <data name="DiagnosticsQqGroupCopied" xml:space="preserve"><value>Номер группы QQ {0} скопирован. Найдите его в QQ, чтобы вступить, и отправьте ZIP сами. Черновик письма не скопирован.</value></data>
+  <data name="DiagnosticsQqGroupOpened" xml:space="preserve"><value>Открыта страница группы QQ. Опишите проблему там и отправьте ZIP сами. Черновик письма не скопирован.</value></data>
+  <data name="DiagnosticsQqGroupOpenFailed" xml:space="preserve"><value>Не удалось открыть страницу группы QQ. Отправьте ZIP с диагностикой по почте.</value></data>
   <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>Отменено. Zip сохранён. Письмо не копировалось, Discord не открывался.</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>Отзыв</value>
@@ -593,7 +598,19 @@
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>Можно обновить модов: {0} — {1}. Обновите их в разделе «Обзор модов».</value></data>
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>Проверка при запуске: все установленные моды актуальны.</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>Не удалось проверить обновления модов при запуске: {0}</value></data>
+  <data name="LogModRemovedByCatalog" xml:space="preserve"><value>{0} удалён: мод снят с каталога. Причина: {1}</value></data>
+  <data name="LogModRemovedByCatalogNoReason" xml:space="preserve"><value>{0} удалён: мод снят с каталога.</value></data>
+  <data name="NotifyModsRemovedByCatalog" xml:space="preserve"><value>Снято с каталога и удалено из библиотеки, профилей и папки игры модов: {0} — {1}. Причина указана в журнале.</value></data>
+  <data name="LogModRemovalDeferred" xml:space="preserve"><value>{0} снят с каталога, но игра запущена или файл занят. Мод будет удалён при следующем обновлении каталога.</value></data>
+  <data name="LogModRemovalFailed" xml:space="preserve"><value>Не удалось удалить снятый мод {0}: {1}</value></data>
+  <data name="LogCatalogIdBothListedAndRemoved" xml:space="preserve"><value>Каталог одновременно публикует и снимает {0}; мод считается снятым.</value></data>
+  <data name="LogRemovalListNoKey" xml:space="preserve"><value>В этой сборке менеджера нет ключа подписи списка снятых модов, поэтому список не применяется.</value></data>
+  <data name="LogRemovalListRejected" xml:space="preserve"><value>Список снятых модов не прошёл проверку подписи ({0}) и был проигнорирован. Моды не удалялись.</value></data>
+  <data name="LogRemovalListOlder" xml:space="preserve"><value>Полученный список снятых модов старше текущего (зеркало могло ещё не синхронизироваться). Используется текущий список.</value></data>
+  <data name="LogRemovalHashIgnored" xml:space="preserve"><value>Хеш в списке снятых модов пропущен: {0}</value></data>
+  <data name="LogModRemovalRunFailed" xml:space="preserve"><value>Не удалось применить список снятых модов: {0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>Проверять обновления модов при запуске</value></data>
+  <data name="CheckModUpdatesOnStartupTip" xml:space="preserve"><value>Если выключено, уведомления об обновлениях модов не показываются. Каталог всё равно загружается при запуске, чтобы удалять снятые моды.</value></data>
 <data name="HideMelonConsole" xml:space="preserve"><value>Скрыть консоль Melon</value></data>
 <data name="HideMelonConsoleTip" xml:space="preserve"><value>Пишет UserData\Loader.cfg (hide_console). Действует после следующего запуска; логи в MelonLoader\Latest.log. Не закрывайте консоль крестиком (закроется игра).</value></data>
 <data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>Настройка скрытия консоли записана; перезапустите игру.</value></data>
@@ -700,7 +717,7 @@
   <data name="AppVersionFormat" xml:space="preserve"><value>Версия {0}</value></data>
   <data name="PromptBetaBranchName" xml:space="preserve"><value>Имя тестовой/бета-ветки Steam (обычно public_test; не путь к папке). Меняйте только если отличается от Steam → Свойства → Бета.</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>Имя тестовой ветки не указано; мастер отменён.</value></data>
-  <data name="LabelSummary" xml:space="preserve"><value>Описание</value></data>
+  <data name="LabelSummary" xml:space="preserve"><value>Как пользоваться</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Путь к игре должен быть в steamapps\common\Mechabellum.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>Текущий путь к игре недействителен; мастер двух каталогов нельзя начать.</value></data>
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Отдельная папка другой ветки уже существует; архивирование невозможно: {0}. Сначала «Восстановить официальную папку» или при чистом восстановлении отметьте «удалить другой склад» (необратимо).</value></data>
@@ -818,6 +835,22 @@
   <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>Всегда внутреннее зеркало</value></data>
   <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>Всегда GitHub</value></data>
   <data name="DownloadRouteHint" xml:space="preserve"><value>Авто выбирает по региону. Если проверка не удалась, зеркало всё равно идёт первым.</value></data>
+  <data name="EditionLabel" xml:space="preserve"><value>Версия</value></data>
+  <data name="EditionCn" xml:space="preserve"><value>Версия для Китая</value></data>
+  <data name="EditionGlobal" xml:space="preserve"><value>Глобальная версия</value></data>
+  <data name="EditionShortCn" xml:space="preserve"><value>Китай</value></data>
+  <data name="EditionShortGlobal" xml:space="preserve"><value>Global</value></data>
+  <data name="WindowTitleFormat" xml:space="preserve"><value>Mechabellum Mod Manager ({0})</value></data>
+  <data name="EditionHint" xml:space="preserve"><value>При переключении маршрут загрузки меняется на значение этой версии; почта, ссылки сообщества и установщик для обновлений в приложении тоже переключаются.</value></data>
+  <data name="EditionAboutCn" xml:space="preserve"><value>Это версия для Китая: загрузки идут через внутреннее зеркало, отзывы по умолчанию через QQ Mail, номер группы QQ — {0}, обновления в приложении ставят китайский установщик. Версию можно сменить в настройках.</value></data>
+  <data name="EditionAboutGlobal" xml:space="preserve"><value>Это глобальная версия: загрузки идут через GitHub, отзывы по умолчанию через Gmail, сообщество в Discord, обновления в приложении ставят глобальный установщик. Версию можно сменить в настройках.</value></data>
+  <data name="CommunityBarQq" xml:space="preserve"><value>Группа QQ</value></data>
+  <data name="CommunityBarDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="CommunityBarQqTip" xml:space="preserve"><value>Вступить в группу QQ {0}</value></data>
+  <data name="CommunityBarDiscordTip" xml:space="preserve"><value>Открыть Discord (GODOG Battalion)</value></data>
+  <data name="CommunityBarOpenFailed" xml:space="preserve"><value>Не удалось открыть ссылку сообщества.</value></data>
+  <data name="LogEditionStartup" xml:space="preserve"><value>Версия менеджера: {0} (v{1})</value></data>
+  <data name="LogEditionSwitched" xml:space="preserve"><value>Переключено: {0}. Маршрут загрузки теперь по умолчанию для этой версии.</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>Дополнительно</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>CDN-зеркало: включено (заводское)</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>CDN-зеркало: своё</value></data>
@@ -1027,5 +1060,5 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="AuthorHookTitle" xml:space="preserve"><value>Хук оценивают по цели, не по имени</value></data>
   <data name="AuthorHookBody" xml:space="preserve"><value>Интерфейс, камера и список друзей не должны вешаться на точки урона, снабжения и конца боя. Prefix с типом возврата bool считается высоким, даже если тело ни разу не пропускает исходный метод. В живом матче можно отправлять только действия, которые у игры уже есть. Время размещения можно менять только в повторе и только за проверкой «это повтор».</value></data>
   <data name="AuthorCatalogTitle" xml:space="preserve"><value>Что писать в каталог</value></data>
-  <data name="AuthorCatalogBody" xml:space="preserve"><value>В кратком описании: что может игрок, какая клавиша, и это официальный сервер, тестовый или оба. Номер версии менеджера туда не пишите. «Нужна 1.3.13» в старых описаниях — устаревшая фраза. Новый мод ставит minManagerVersion 1.3.14 и повышает её, только если ему правда нужно более новое поведение менеджера. Место установки по умолчанию — MelonMod. Пишите под MelonLoader 0.7.3.</value></data>
+  <data name="AuthorCatalogBody" xml:space="preserve"><value>Первое предложение — что может игрок и какая клавиша или действие. Дальше можно указать официальный сервер, тестовый или оба. Номер версии менеджера, список изменений и заметки о реализации в описание не пишите. Требование к версии — в minManagerVersion. Новый мод ставит 1.3.14 и повышает её, только если ему правда нужно более новое поведение менеджера. Место установки по умолчанию — MelonMod. Пишите под MelonLoader 0.7.3.</value></data>
 </root>

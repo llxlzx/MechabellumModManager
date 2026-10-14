@@ -39,6 +39,7 @@ public static class DiagnosticsProbeBuilder
         var probe = new Dictionary<string, object?>
         {
             ["exportedAt"] = exportedAt.ToString("o"),
+            ["edition"] = request.Edition,
             ["launchMode"] = request.LaunchMode,
             ["gameRunning"] = request.GameRunning,
             ["steamRunning"] = request.SteamRunning,

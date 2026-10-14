@@ -175,4 +175,46 @@ public class MailComposeFlowTests
                 File.Delete(zipPath);
         }
     }
+
+    [Fact]
+    public void ExportDiagnostics_qq_group_opens_the_group_only_when_one_is_configured()
+    {
+        using var fx = Fixture.CreateReady();
+        var zipPath = Path.Combine(Path.GetTempPath(), "mmm-mail-" + Guid.NewGuid().ToString("N") + ".zip");
+        string? opened = null;
+        string? copied = null;
+        string? notified = null;
+        var vm = fx.CreateVm(
+            promptExportDiagnostics: () => DiagnosticsRedactionMode.None,
+            saveZipFile: _ => zipPath,
+            promptDiagnosticsMail: () => DiagnosticsFollowUp.QqGroup,
+            copyText: text => copied = text,
+            notify: text => notified = text,
+            tryOpenExternal: url =>
+            {
+                opened = url;
+                return true;
+            });
+
+        try
+        {
+            vm.ExportDiagnosticsCommand.Execute(null);
+
+            if (ExternalUrlPolicy.IsHttpsUrl(GitHubCommunityLinks.QqGroupUrl))
+            {
+                opened.Should().Be(GitHubCommunityLinks.QqGroupUrl);
+            }
+            else
+            {
+                opened.Should().BeNull();
+                copied.Should().Be(GitHubCommunityLinks.QqGroupNumber);
+                notified.Should().Contain(GitHubCommunityLinks.QqGroupNumber);
+            }
+        }
+        finally
+        {
+            if (File.Exists(zipPath))
+                File.Delete(zipPath);
+        }
+    }
 }

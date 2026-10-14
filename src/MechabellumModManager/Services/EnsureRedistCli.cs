@@ -5,6 +5,8 @@ namespace MechabellumModManager.Services;
 /// <summary>
 /// Headless redist fill for thin Setup:
 /// MechabellumModManager.exe --ensure-redist --redist-dir "..." [--mirror-base-url "..."] [--ids a,b] [--progress-file "..."]
+///   [--no-mirror | --route-mirror]
+/// --route-mirror is the player's "always the domestic mirror" choice: mirror first, no region probe.
 /// </summary>
 public static class EnsureRedistCli
 {
@@ -16,13 +18,15 @@ public static class EnsureRedistCli
         out string? mirrorBaseUrl,
         out string[]? ids,
         out bool noMirror,
-        out string? progressFile)
+        out string? progressFile,
+        out bool routeMirror)
     {
         redistDir = null;
         mirrorBaseUrl = null;
         ids = null;
         noMirror = false;
         progressFile = null;
+        routeMirror = false;
         if (args is null || args.Length == 0)
             return false;
         if (!args.Any(a => string.Equals(a, Arg, StringComparison.OrdinalIgnoreCase)))
@@ -44,6 +48,8 @@ public static class EnsureRedistCli
             }
             else if (string.Equals(args[i], "--no-mirror", StringComparison.OrdinalIgnoreCase))
                 noMirror = true;
+            else if (string.Equals(args[i], "--route-mirror", StringComparison.OrdinalIgnoreCase))
+                routeMirror = true;
             else if (string.Equals(args[i], "--progress-file", StringComparison.OrdinalIgnoreCase)
                      && i + 1 < args.Length)
                 progressFile = args[++i];
@@ -52,13 +58,22 @@ public static class EnsureRedistCli
         return !string.IsNullOrWhiteSpace(redistDir);
     }
 
+    public static DownloadRouteKind ResolveRoute(bool noMirror, bool routeMirror, Func<DownloadRouteKind> autoProbe)
+    {
+        ArgumentNullException.ThrowIfNull(autoProbe);
+        if (noMirror)
+            return DownloadRouteKind.GitHubOnly;
+        return routeMirror ? DownloadRouteKind.MirrorFirst : autoProbe();
+    }
+
     /// <returns>0 ok, 1 fail, 4 bad args</returns>
     public static int Run(
         string redistDir,
         string? mirrorBaseUrl,
         string[]? ids,
         bool noMirror,
-        string? progressFile = null)
+        string? progressFile = null,
+        bool routeMirror = false)
     {
         try
         {
@@ -88,10 +103,9 @@ public static class EnsureRedistCli
 
             var svc = new RedistEnsureService
             {
-                Route = noMirror
-                    ? DownloadRouteKind.GitHubOnly
-                    : DownloadRoutePolicy.ResolveAuto(null)
+                Route = ResolveRoute(noMirror, routeMirror, () => DownloadRoutePolicy.ResolveAuto(null))
             };
+            Log($"route={svc.Route}");
             var result = svc.EnsureAsync(redistDir.Trim(), mirror, ids, progress: progress)
                 .GetAwaiter()
                 .GetResult();

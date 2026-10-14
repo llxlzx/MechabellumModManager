@@ -18,27 +18,23 @@ public class GitHubCommunityLinksTests
         GitHubCommunityLinks.Inbox.Should().Be("llxmod@foxmail.com");
     }
 
-    [Theory]
-    [InlineData("zh-CN", true)]
-    [InlineData("zh-Hans", true)]
-    [InlineData("zh", true)]
-    [InlineData("en", false)]
-    [InlineData("en-US", false)]
-    [InlineData("ja", false)]
-    [InlineData("de", false)]
-    [InlineData("ru", false)]
-    public void PreferDomesticWebMail_follows_current_ui_culture(string culture, bool expected)
+    [Fact]
+    public void QqGroup_entry_opens_the_shared_join_link_for_this_group()
     {
-        var previous = CultureInfo.CurrentUICulture;
-        try
-        {
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
-            GitHubCommunityLinks.PreferDomesticWebMail().Should().Be(expected);
-        }
-        finally
-        {
-            CultureInfo.CurrentUICulture = previous;
-        }
+        GitHubCommunityLinks.QqGroupNumber.Should().Be("1127809375");
+        GitHubCommunityLinks.IsQqGroupNumber(GitHubCommunityLinks.QqGroupNumber).Should().BeTrue();
+        GitHubCommunityLinks.QqGroupUrl.Should().Be("https://qm.qq.com/q/gLdHoBqp58");
+        ExternalUrlPolicy.IsHttpsUrl(GitHubCommunityLinks.QqGroupUrl).Should().BeTrue();
+        GitHubCommunityLinks.HasQqGroup.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Inbox_page_follows_the_mail_service()
+    {
+        GitHubCommunityLinks.InboxWebMailUrl(MailProvider.Qq).Should().Be(GitHubCommunityLinks.DomesticWebMailUrl);
+        GitHubCommunityLinks.InboxWebMailUrl(MailProvider.Gmail).Should()
+            .StartWith("https://mail.google.com/")
+            .And.Contain(Uri.EscapeDataString(GitHubCommunityLinks.Inbox));
     }
 
     [Fact]
@@ -84,6 +80,16 @@ public class GitHubCommunityLinksTests
         body.Should().Contain("Category");
         body.Should().Contain("Tags");
         body.Should().Contain("OverlayUI");
+    }
+
+    [Fact]
+    public void BuildSubmitBody_asks_for_usage_first()
+    {
+        var body = GitHubCommunityLinks.BuildSubmitBody("Demo");
+        body.Should().Contain(
+            "【功能与用法 / How to use】第一句写能做什么、怎么操作，不要写管理器版本或更新日志。" +
+            "First sentence: what it does and how to use it. No manager version or changelog.\n");
+        body.Should().NotContain("一句话简介");
     }
 
     [Fact]

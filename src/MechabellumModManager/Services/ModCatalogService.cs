@@ -71,6 +71,13 @@ public sealed class CatalogRoot
 
     [JsonPropertyName("mods")]
     public List<CatalogMod> Mods { get; set; } = new();
+
+    /// <summary>
+    /// Maintainer-signed takedown list (see <see cref="RemovalListVerifier"/>). Only a list that
+    /// verifies against the shipped public key is ever enforced; mirrors cannot add entries.
+    /// </summary>
+    [JsonPropertyName("removedSigned")]
+    public CatalogSignedBlob? RemovedSigned { get; set; }
 }
 
 public sealed class CatalogMod

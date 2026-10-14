@@ -181,6 +181,8 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 .\packaging\installer\build-installer.ps1
 ```
 
+> **v2.0.1 起（国内包 / 国际包）：** 默认同时产出 `dist\MechabellumModManager_Setup_vX.Y.Z_CN.exe` 与 `dist\MechabellumModManager_Setup_vX.Y.Z_Global.exe`，两个都上传到 Release。`latest.json` 的 `setupUrl` 指向 `_Global.exe`；`sync-mirror.ps1 -IncludeSetup` 会优先上传 `_CN.exe` 并改写镜像那份的 `setupUrl`。两包差别与升级规则见 [`releasing.md` §2.1](releasing.md#21-国内包与国际包-中文)。国内版和国际版的应用内更新分别读取 `setupUrlCn` / `setupUrlGlobal`，两个都要写进 `latest.json`，见 [`releasing.md` §2.2](releasing.md#22-管理器的国内版--国际版-中文) 与模板 `latest.example.json`。
+
 寰楀埌锛歚dist\MechabellumModManager_Setup_v1.1.8.exe`  
 锛堜綋绉ぇ绾︿簩鍗佸 MB 鎵嶆甯革紝鍥犱负鍐呭祵浜?Melon銆傦級
 
@@ -293,6 +295,8 @@ https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json
 鐜╁鍦ㄧ鐞嗗櫒閲岀偣 **Mod 娴忚 鈫?鍒锋柊鐩綍** 鍗冲彲锛?*涓嶅繀**閲嶅彂 Setup銆傜洰褰曢噷鎹簡鏂扮増 Mod 鐨勮瘽锛屽凡瑁呮棫鐗堢殑鐜╁浼氬湪鐘舵€佸垪鐪嬪埌銆屾湁鏂扮増鏈€嶃€?
 
 浣滆€呮彁浜ゆ柟寮忚锛歚MechabellumMods` 浠撳簱鍐呯殑 `README.md`锛堣嫳姹夊弻璇柊鎵嬫暀绋嬶級銆?
+
+> **下架一个 Mod：** 把条目从 `mods` 移到 MechabellumMods 根目录的 `removed.json`（id、发过的全部 sha256、原因），再用 `tools/sign-removed.ps1` 和维护者私钥签进 `catalog.json`。管理器校验签名后，把它从玩家的本地库、方案和能确认字节的游戏目录副本中删掉；没有签名的名单一律忽略。步骤与一次性密钥准备见 [`releasing.md` §5.1](releasing.md#51-下架一个-mod-中文)。
 
 ---
 
@@ -419,6 +423,8 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 Output: `dist\MechabellumModManager_Setup_v1.1.8.exe`  
 (~20+ MB is normal; Melon is embedded.)
 
+> **From v2.0.1 (China / Global packages):** the build produces both `dist\MechabellumModManager_Setup_vX.Y.Z_CN.exe` and `dist\MechabellumModManager_Setup_vX.Y.Z_Global.exe`; attach both to the Release. In `latest.json`, `setupUrlCn` / `setupUrlGlobal` name each edition's Setup and `setupUrl` points at `_Global.exe` for older managers; `sync-mirror.ps1 -IncludeSetup` prefers `_CN.exe` and repoints the mirror copy's `setupUrl` and `setupUrlCn`. How the two differ and what a reinstall keeps: [`releasing.md` §2.1–2.2](releasing.md#21-china-and-global-packages-english). Each edition's in-app updates read `setupUrlCn` / `setupUrlGlobal`, so put both in `latest.json` ([`releasing.md` 2.2](releasing.md#22-china-and-global-editions-of-the-manager-english), template `latest.example.json`).
+
 Copy into `release/v1.1.8/瀹夎鍖?` and `release/v1.1.8/鏈綋/`, and write `latest.json`.
 
 Wizard order should be: **Select destination** (manager install dir) 鈫?**Select game folder**. If the first page is missing, rebuild with `DisableDirPage=no`.
@@ -471,7 +477,8 @@ After publishing the Release:
 
 If the mirror also hosts the installer, add `-IncludeSetup -MirrorBaseUrl https://<bucket-domain>`.
 The client opens `setupUrl` in the browser rather than downloading it, so the script repoints
-`setupUrl` in the mirror's copy of `latest.json`; the local file is left alone.
+`setupUrl` in the mirror's copy of `latest.json`; the local file is left alone. When the release
+folder holds both flavors, the `_CN.exe` one is uploaded.
 
 Skip it and players who configured the mirror keep seeing the old version, because the
 mirror is tried before GitHub.
@@ -529,6 +536,12 @@ If a domestic mirror is live, sync it too (no `-ReleaseDir` needed):
 
 Players only need **Browse mods 鈫?Refresh catalog**. No new Setup required. Anyone still on
 an older build of a mod sees "Update available" in the status column.
+
+To take a mod down, move it from `mods` into `removed.json` (id, every published sha256, reason)
+and sign that list into `catalog.json` with `tools/sign-removed.ps1` and the maintainer key. The
+manager verifies the signature, then removes the mod from players' libraries, profiles and known
+game-folder copies. Unsigned lists are ignored. Steps and one-time key setup:
+[`releasing.md` §5.1](releasing.md#51-taking-a-mod-down-english).
 
 Author flow: bilingual beginner guide in the MechabellumMods `README.md`.
 

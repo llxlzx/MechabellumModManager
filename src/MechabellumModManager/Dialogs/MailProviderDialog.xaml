@@ -28,12 +28,12 @@
                         MinHeight="36"
                         Margin="0,0,8,0"
                         Click="Gmail_Click" />
-                <Button x:Name="DiscordButton"
+                <Button x:Name="CommunityButton"
                         MinWidth="96"
                         MinHeight="36"
                         Margin="0,0,8,0"
                         Visibility="Collapsed"
-                        Click="Discord_Click" />
+                        Click="Community_Click" />
                 <Button x:Name="CancelButton"
                         MinWidth="96"
                         MinHeight="36"

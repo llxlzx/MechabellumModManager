@@ -17,19 +17,25 @@ public static class LocalizationService
     /// </summary>
     internal static Func<CultureInfo>? SystemUiCultureProvider { get; set; }
 
-    public static string ResolveSystemLanguage()
+    public const string DefaultFallback = "zh-CN";
+
+    /// <param name="fallback">Language when Windows uses one the manager does not ship; set by edition.</param>
+    public static string ResolveSystemLanguage(string fallback = DefaultFallback)
     {
         var ui = SystemUiCultureProvider?.Invoke() ?? GetOsUiCulture();
-        return MatchSupported(ui) ?? MatchSupported(ui.Parent) ?? "zh-CN";
+        return MatchOrFallback(ui, fallback);
     }
 
-    public static string ResolveConfiguredLanguage(string? uiLanguage)
+    public static string MatchOrFallback(CultureInfo culture, string fallback) =>
+        MatchSupported(culture) ?? MatchSupported(culture.Parent) ?? fallback;
+
+    public static string ResolveConfiguredLanguage(string? uiLanguage, string fallback = DefaultFallback)
     {
         if (string.IsNullOrWhiteSpace(uiLanguage) ||
             string.Equals(uiLanguage, "system", StringComparison.OrdinalIgnoreCase))
-            return ResolveSystemLanguage();
+            return ResolveSystemLanguage(fallback);
 
-        return MatchSupported(new CultureInfo(uiLanguage.Trim())) ?? "zh-CN";
+        return MatchSupported(new CultureInfo(uiLanguage.Trim())) ?? fallback;
     }
 
     public static void Apply(string cultureName)

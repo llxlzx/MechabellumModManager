@@ -247,7 +247,8 @@ public sealed class MainViewModelFixture : IDisposable
         Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null,
         Func<DiagnosticsFollowUp>? promptDiagnosticsMail = null,
         Func<string, bool>? tryOpenExternal = null,
-        Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)?>? promptEditTaxonomy = null)
+        Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)?>? promptEditTaxonomy = null,
+        string? removalPublicKey = null)
     {
         var processStarter = starter ?? new RecordingProcessStarter();
         var launcher = new GameLauncher(processStarter, () => false);
@@ -303,6 +304,8 @@ public sealed class MainViewModelFixture : IDisposable
             tryOpenExternal: tryOpenExternal,
             promptEditTaxonomy: promptEditTaxonomy);
         vm.LaunchFollowUpPolls = 0;
+        if (removalPublicKey is not null)
+            vm.RemovalPublicKey = removalPublicKey;
         return vm;
     }
 

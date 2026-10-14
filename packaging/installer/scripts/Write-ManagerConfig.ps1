@@ -1,7 +1,9 @@
 param(
     [Parameter(Mandatory = $true)]
     [string] $GamePath,
-    [string] $UiLanguage = ""
+    [string] $UiLanguage = "",
+    # Setup flavor preset: 1 = CN (mirror), 2 = Global (GitHub). Written only when config lacks the key.
+    [int] $DownloadRoute = -1
 )
 
 $ErrorActionPreference = "Stop"
@@ -49,6 +51,10 @@ if ($UiLanguage) {
     $obj.uiLanguage = $UiLanguage
 }
 
+if ($DownloadRoute -ge 0 -and $DownloadRoute -le 2 -and -not ($obj.Keys -contains "downloadRoutePreference")) {
+    $obj["downloadRoutePreference"] = $DownloadRoute
+}
+
 $json = ($obj | ConvertTo-Json -Depth 5)
 [IO.File]::WriteAllText($configPath, $json, [Text.UTF8Encoding]::new($false))
 
@@ -58,6 +64,7 @@ New-Item -ItemType Directory -Force -Path $seedRoot | Out-Null
 $seed = [ordered]@{ gamePath = $GamePath }
 if ($obj.uiLanguage) { $seed.uiLanguage = [string]$obj.uiLanguage }
 elseif ($UiLanguage) { $seed.uiLanguage = $UiLanguage }
+if ($obj.Keys -contains "downloadRoutePreference") { $seed.downloadRoutePreference = [int]$obj["downloadRoutePreference"] }
 [IO.File]::WriteAllText(
     (Join-Path $seedRoot "install-defaults.json"),
     ($seed | ConvertTo-Json -Depth 5),

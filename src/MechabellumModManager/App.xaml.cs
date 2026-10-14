@@ -19,11 +19,11 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        if (InstallConfigSeeder.TryParseArgs(e.Args, out var seedGamePath, out var seedUiLanguage))
+        if (InstallConfigSeeder.TryParseArgs(e.Args, out var seedGamePath, out var seedUiLanguage, out var seedRoute, out var seedEdition))
         {
             try
             {
-                InstallConfigSeeder.Seed(seedGamePath!, seedUiLanguage);
+                InstallConfigSeeder.Seed(seedGamePath!, seedUiLanguage, seedRoute, edition: seedEdition);
                 Shutdown(0);
             }
             catch (Exception ex)
@@ -52,14 +52,16 @@ public partial class App : Application
                 out var ensureMirror,
                 out var ensureIds,
                 out var ensureNoMirror,
-                out var ensureProgressFile))
+                out var ensureProgressFile,
+                out var ensureRouteMirror))
         {
             var code = EnsureRedistCli.Run(
                 ensureRedistDir!,
                 ensureMirror,
                 ensureIds,
                 ensureNoMirror,
-                ensureProgressFile);
+                ensureProgressFile,
+                ensureRouteMirror);
             Shutdown(code);
             return;
         }
@@ -119,7 +121,7 @@ public partial class App : Application
         };
 
         // UI single-instance only (CLI helpers above skip this).
-        LocalizationService.Apply(LocalizationService.ResolveSystemLanguage());
+        LocalizationService.Apply(LocalizationService.ResolveSystemLanguage(StartupLanguageFallback()));
         if (!SingleInstanceGate.TryAcquire(out _singleInstanceMutex))
         {
             MessageBox.Show(
@@ -154,6 +156,23 @@ public partial class App : Application
         window.Show();
         OfferCriticalOpRecovery(window, vm, criticalOp);
         _ = vm.BeginStartupChecksAsync();
+    }
+
+    /// <summary>Fallback language of the saved edition, for messages shown before the view model exists.</summary>
+    static string StartupLanguageFallback()
+    {
+        try
+        {
+            var config = new JsonStore().LoadOrDefault(new PathsService().ConfigPath, () => new AppConfig());
+            if (EditionPolicy.TryParse(config.Edition, out var edition))
+                return EditionPolicy.LanguageFallback(edition);
+        }
+        catch
+        {
+            // Unreadable config: the view model reports it later.
+        }
+
+        return LocalizationService.DefaultFallback;
     }
 
     static void OfferCriticalOpRecovery(Window owner, MainViewModel vm, CriticalOpGuard criticalOp)
@@ -271,10 +290,15 @@ public partial class App : Application
             processProbe: probe,
             processStarter: starter,
             promptExportDiagnostics: () => PromptExportDiagnostics(window),
-            promptMailProvider: () => MailProviderDialog.Prompt(window),
-            promptDiagnosticsMail: () => MailProviderDialog.PromptDiagnostics(
-                window,
-                LocalizationService.T("DiagnosticsMailHint")),
+            promptMailProvider: () => MailProviderDialog.Prompt(window, EditionOf(window)),
+            promptDiagnosticsMail: () =>
+            {
+                var edition = EditionOf(window);
+                var hint = edition == AppEdition.Cn
+                    ? string.Format(LocalizationService.T("DiagnosticsMailHintCn"), GitHubCommunityLinks.QqGroupNumber)
+                    : LocalizationService.T("DiagnosticsMailHint");
+                return MailProviderDialog.PromptDiagnostics(window, hint, edition);
+            },
             saveZipFile: suggestedName => SaveZipFile(window, suggestedName),
             revealInExplorer: RevealInExplorer,
             beginBusy: (title, msg) => BeginBusy(window, title, msg),
@@ -420,9 +444,19 @@ public partial class App : Application
         return (dialog.Category, dialog.Notes);
     }
 
+    /// <summary>Edition at the moment a dialog opens; Settings can switch it while the app runs.</summary>
+    static AppEdition EditionOf(Window window) =>
+        (window.DataContext as MainViewModel)?.Edition ?? AppEdition.Cn;
+
     static bool PromptSubmitGuide(Window owner)
     {
-        var dialog = new SubmitGuideDialog { Owner = owner };
+        var vm = owner.DataContext as MainViewModel;
+        var dialog = new SubmitGuideDialog(
+            vm?.Edition ?? AppEdition.Cn,
+            vm?.ContributeGuideUrl ?? GitHubCommunityLinks.ContributeGuideUrl)
+        {
+            Owner = owner
+        };
         return dialog.ShowDialog() == true;
     }
 

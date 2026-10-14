@@ -64,6 +64,9 @@ public static class DownloadRoutePolicy
         return false;
     }
 
+    public static bool IsKnownPreference(int? value) =>
+        value is { } v && Enum.IsDefined(typeof(DownloadRoutePreference), v);
+
     public static bool IsMainlandChina(string country) =>
         string.Equals(country, "CN", StringComparison.OrdinalIgnoreCase);
 

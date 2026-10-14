@@ -23,6 +23,9 @@
 
 版本相同则保留镜像那份（国内玩家仍走镜像下载）；仅当两侧都带 `publishedAt` 且另一侧更新时才改判。版本号无法解析的 manifest 直接丢弃。三处都失败时回退 API / Fallback API：`/repos/llxlzx/MechabellumModManager/releases/latest`。
 
+自 **v2.0.1** 起每版出两个 Setup：国内包 `_CN.exe` 与国际包 `_Global.exe`（见 [§2.1](#21-国内包与国际包-中文)）。GitHub 上的 `latest.json` 指向 `_Global.exe`，镜像上的 `latest.json` 只有用 `-IncludeSetup` 同步时才指向 COS 上的 `_CN.exe`。
+From **v2.0.1** each release ships two Setups, `_CN.exe` and `_Global.exe` (see [§2.1](#21-china-and-global-packages-english)). The GitHub `latest.json` points at `_Global.exe`; the mirror copy points at the COS `_CN.exe` only when synced with `-IncludeSetup`.
+
 自 **v1.2.1** 起仓库根目录的 `release/latest.json` 是发版指针，**每次发版都要更新它**。它只负责「宣告」，`setupUrl` 仍必须指向可访问的 https（Release 资产，或 `sync-mirror.ps1 -IncludeSetup` 镜像出来的地址）。
 
 > **⚠️ 指针必须最后推送。** 它一进 master 就会被所有玩家读到，若此时 `setupUrl` 指向的 Release 资产还不存在，玩家会被告知有新版本却下载 404。所以仓库里的 `release/latest.json` 始终指向**当前已经能下载**的那一版；发新版时把它留到最后一步（见 [第 8 节](#8-最后一步推送仓库指针-中文)）再改。
@@ -94,14 +97,47 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 .\packaging\installer\build-installer.ps1
 ```
 
-产物：`dist\MechabellumModManager_Setup_vX.Y.Z.exe`（应明显大于仅程序体积，因内嵌 Melon zip）。
+产物：`dist\MechabellumModManager_Setup_vX.Y.Z_CN.exe` 与 `dist\MechabellumModManager_Setup_vX.Y.Z_Global.exe`。默认两个都编；只编一个用 `-Flavor cn` 或 `-Flavor global`（`build-installer.bat` 用第一个参数或 `MMM_FLAVOR` 环境变量）。
+
+### 2.1 国内包与国际包 (中文)
+
+两个包同一 `AppId`，装出的程序完全相同，可以互相覆盖升级。区别只在：
+
+| 包 | 全新安装写入的下载线路 | 全新安装时运行时组件（Melon / .NET 等）来源 |
+|----|------------------------|---------------------------------------------|
+| `_CN.exe` | 始终使用国内镜像（`downloadRoutePreference = 1`，镜像不可用时改用 GitHub） | 国内镜像优先 |
+| `_Global.exe` | 始终使用 GitHub（`downloadRoutePreference = 2`，不产生 COS 流量） | 只用官方源（`--no-mirror`） |
+
+- 覆盖安装时保留玩家已有的线路和镜像地址，两个包都一样。运行时组件的来源也跟随已有线路，没有配置时才按包的口味。
+- 所以国内玩家通过应用内更新拿到 Global 包也不会被切到 GitHub。
+- 准备安装页会写明本包的预设。玩家装错了包，也可以在管理器「设置 → 下载线路」里改。
+- 设计说明：`docs/03-程序开发/历史规格/specs/2026-10-14-installer-flavor-presets-design.md`。
+
+### 2.2 管理器的「国内版 / 国际版」 (中文)
+
+全新安装时，安装包还会把版本（`edition`）写进配置；设置页可以随时切换。版本决定：
+
+| | 国内版 | 国际版 |
+|--|--------|--------|
+| 标识 | 窗口标题、标题栏徽标、关于页、安装向导和卸载列表都标「国内版」 | 都标「国际版」 |
+| 默认下载线路 | 始终国内镜像 | 始终 GitHub |
+| 系统语言不受支持时 | 简体中文 | 英文 |
+| 首选邮箱 | QQ 邮箱 | Gmail |
+| 诊断包的社区入口 | QQ 群 `1127809375`，打开 `https://qm.qq.com/q/gLdHoBqp58` | Discord |
+| 投稿说明、下载页 | 镜像上的 `submit.html` / `download.html` | GitHub |
+| 应用内更新安装的包 | `setupUrlCn` | `setupUrlGlobal` |
+
+- 覆盖安装不会改动已有配置里的版本；升级上来、还没有版本的老配置由程序推断一次（线路 2 为国际版，线路 1 为国内版，否则看系统语言）。这样国内老玩家通过旧的更新源拿到国际包时，不会被改成国际版。
+- 在设置里切换版本，会把下载线路改为该版本的默认值。
+- 设计说明：`docs/03-程序开发/历史规格/specs/2026-10-14-edition-distinction-design.md`。
 
 整理到仓库对照目录：
 
 ```
 release/vX.Y.Z/
   安装包/
-    MechabellumModManager_Setup_vX.Y.Z.exe
+    MechabellumModManager_Setup_vX.Y.Z_CN.exe
+    MechabellumModManager_Setup_vX.Y.Z_Global.exe
     README.txt
   本体/
     MechabellumModManager.exe
@@ -122,16 +158,21 @@ release/vX.Y.Z/
 Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_portable_vX.Y.Z.zip" -Force
 ```
 
-`latest.json` 示例：
+`latest.json` 示例。`setupUrlCn` / `setupUrlGlobal` 分别给国内版和国际版的应用内更新使用；`setupUrl` 留给还不认识版本的旧管理器，指向国际包。`sync-mirror.ps1 -IncludeSetup` 会把镜像那份的 `setupUrl` 和 `setupUrlCn` 改写为 COS 上的国内包；`setupUrlGlobal` 保持 GitHub：
 
 ```json
 {
-  "version": "1.1.6",
+  "version": "X.Y.Z",
   "notes": "本版更新说明……",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v1.1.6/MechabellumModManager_Setup_v1.1.6.exe",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z_Global.exe",
+  "setupUrlCn": "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z_CN.exe",
+  "setupUrlGlobal": "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z_Global.exe",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_portable_vX.Y.Z.zip",
   "publishedAt": "2026-09-03T00:00:00Z"
 }
 ```
+
+同步镜像时，`sync-mirror.ps1` 还会：上传 MechabellumMods 的 `docs/submit.html`；按镜像那份 `latest.json` 生成 `MechabellumModManager/download.html` 并上传（国内版的「打开下载页」会打开它）。首次同步后，用浏览器打开 `{镜像}/MechabellumModManager/download.html` 和 `{镜像}/MechabellumMods/docs/submit.html`，确认是直接显示网页而不是下载文件。
 
 把 `release/vX.Y.Z/` 提交并推送到管理器仓库（可选但建议，便于对照）。
 
@@ -147,7 +188,8 @@ Compress-Archive -Path ".\本体\*" -DestinationPath ".\MechabellumModManager_po
 
 | 资源 | 本地来源 | 上传后文件名 |
 |------|----------|----------------|
-| 安装包（必传） | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe` | 保持原名 |
+| 国内包（必传） | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_CN.exe` | 保持原名 |
+| 国际包（必传） | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_Global.exe` | 保持原名 |
 | 更新元数据（必传） | `release/vX.Y.Z/latest.json` | **必须仍是 `latest.json`** |
 | 本体便携包（推荐） | `MechabellumModManager_portable_vX.Y.Z.zip` | 建议带版本号 |
 
@@ -171,7 +213,8 @@ $env:HTTPS_PROXY = 'http://127.0.0.1:<PORT>'
 $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 
 gh release create vX.Y.Z `
-  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_CN.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_Global.exe" `
   "release/vX.Y.Z/latest.json" `
   "release/vX.Y.Z/MechabellumModManager_portable_vX.Y.Z.zip" `
   --title "vX.Y.Z" `
@@ -183,7 +226,8 @@ gh release create vX.Y.Z `
 
 ```powershell
 gh release upload vX.Y.Z `
-  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_CN.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_Global.exe" `
   "release/vX.Y.Z/latest.json" `
   --clobber
 ```
@@ -205,6 +249,70 @@ git push origin master
 `https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json`
 
 管理器「Mod 浏览 → 刷新目录」应能看到更新。作者提交流程见该仓库 `README.md`。
+
+### 5.1 下架一个 Mod (中文)
+
+下架名单必须用维护者私钥签名。玩家下次启动、刷新目录、导入或应用方案时，管理器校验签名，再把命中的 Mod 从本地库、所有方案的勾选、以及游戏目录里能确认字节的副本中删掉，并在日志和提示里写明原因。「启动时检查 Mod 更新」关掉的玩家同样会执行。没有签名、签名不对或比已采用的名单旧的名单一律忽略，所以镜像被攻破也无法借此删除玩家的 Mod。
+
+**一次性准备（只做一次）：**
+
+```powershell
+# 私钥必须放在任何 git 仓库之外；工具会拒绝写进仓库，并把文件权限收紧到当前用户
+.\tools\sign-removed.ps1 -NewKey -KeyFile D:\keys\mmm-removal-key.json
+```
+
+把输出的 `PublicKey:` 填进 `src/MechabellumModManager/Services/RemovalListVerifier.cs` 的 `PublicKey`，发布这个版本的管理器。在此之前，任何名单都不会生效。私钥离线备份：丢了要换公钥重新发版，泄露则任何人都能下架。
+
+**每次下架：**
+
+1. 下架前先收集这个 Mod 发过的所有 `sha256`（在 MechabellumMods 本地克隆里运行）：
+
+   ```powershell
+   $id = "opponent-economy"
+   git log --format=%H -- catalog.json | ForEach-Object {
+       ((git show "$($_):catalog.json") -join "`n" | ConvertFrom-Json).mods |
+           Where-Object id -eq $id | ForEach-Object { $_.sha256 }
+   } | Sort-Object -Unique
+   ```
+
+2. 把条目从 `catalog.json` 的 `mods` 移走，在 MechabellumMods 根目录的 `removed.json`（JSON 数组，保留全部历史下架项）里加一条：
+
+   ```json
+   [
+     {
+       "id": "opponent-economy",
+       "name": "Opponent Economy",
+       "sha256": ["<上一步列出的全部哈希>"],
+       "reason": "影响对局公平，已下架",
+       "since": "2026-10-14",
+       "locales": {
+         "en": { "reason": "Affects match fairness; removed" },
+         "de": { "reason": "…" }, "ja": { "reason": "…" }, "ru": { "reason": "…" }
+       }
+     }
+   ]
+   ```
+
+3. 签名，写进 `catalog.json` 顶层的 `removedSigned`（目录其余内容不变）：
+
+   ```powershell
+   .\tools\sign-removed.ps1 -ModsRepo <MechabellumMods 本地克隆> -KeyFile D:\keys\mmm-removal-key.json
+   ```
+
+   公钥与本仓库 `RemovalListVerifier.PublicKey` 不一致时脚本会警告。
+
+4. 照常 `validate_catalog.py`、提交 `catalog.json` 与 `removed.json`、推送、`sync-mirror.ps1`（`removedSigned` 随 `catalog.json` 一起同步）。
+
+规则：
+
+- **匹配**：本地包的目录 id 等于 `id`，或任一文件哈希在 `sha256` 列表里。不按名称匹配。游戏目录里的文件只有字节能确认（部署记录、包自身哈希或名单哈希）才删，玩家自己改过的同名 DLL 不会被删。
+- **哈希清洗**：只接受 64 位十六进制；空文件哈希一律忽略；仍在 `mods` 里上架的 Mod 的哈希会被扣掉并在日志里警告，所以改名迁移时可以放心把旧 id 的全部历史哈希都列上。
+- **延后**：游戏在运行、文件被占用、双服的某个仓不可达，或分支向导、恢复门进行中时，本次不动，之后自动重试；应用方案时也不会把被下架的 Mod 部署出去。
+- **签名时间**：默认取当前 UTC 时间（与系统区域格式无关）。脚本会拒绝不晚于 `catalog.json` 里已发布名单的时间、超过当前时间 10 分钟以上的未来时间（否则在那之前签的名单都会被忽略），以及格式不是 `2026-10-14T09:30:00Z` 的 `-IssuedAt`。
+- **签名前检查**：`id` 仍在 `mods` 里、哈希仍是某个上架 Mod 正在发的字节、空文件哈希、格式不对的哈希、或签名后超过 1 MiB，脚本都会报错且不改动 `catalog.json`。
+- **重新上架**：被下架的 `id` 不要再出现在 `mods` 里；两处都有时按下架处理。要重新上架，先从 `removed.json` 删掉它并重新签名。
+
+设计说明：`docs/03-程序开发/历史规格/specs/2026-10-14-catalog-forced-removal-design.md`。
 
 ---
 
@@ -229,7 +337,7 @@ git push origin master
 
 ```powershell
 # 1) 确认 setupUrl 可下载（应返回 200）
-curl.exe -I -L "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z.exe"
+curl.exe -I -L "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z_Global.exe"
 
 # 2) 把 release/latest.json 改成与 release/vX.Y.Z/latest.json 相同的内容
 # 3) 单独提交并推送
@@ -304,14 +412,49 @@ $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 .\packaging\installer\build-installer.ps1
 ```
 
-Output: `dist\MechabellumModManager_Setup_vX.Y.Z.exe` (should be clearly larger than app-only; Melon zip is embedded).
+Output: `dist\MechabellumModManager_Setup_vX.Y.Z_CN.exe` and `dist\MechabellumModManager_Setup_vX.Y.Z_Global.exe`. Both are built by default; build one with `-Flavor cn` or `-Flavor global` (`build-installer.bat` takes the first argument or the `MMM_FLAVOR` environment variable).
+
+### 2.1 China and Global packages (English)
+
+Both packages share one `AppId`, install identical files, and upgrade over each other. They differ only in:
+
+| Package | Download route written on a fresh install | Runtime packages (Melon / .NET, etc.) on a fresh install |
+|---------|-------------------------------------------|----------------------------------------------------------|
+| `_CN.exe` | Always the domestic mirror (`downloadRoutePreference = 1`; GitHub if the mirror fails) | Domestic mirror first |
+| `_Global.exe` | Always GitHub (`downloadRoutePreference = 2`; no COS egress) | Official sources only (`--no-mirror`) |
+
+- A reinstall with either package keeps the player's saved route and mirror URL. Runtime packages follow that saved route too; only a machine without a config uses the package flavor.
+- So a mainland player who receives the Global package through the in-app updater is not moved onto GitHub.
+- The Ready page states the package preset. A player who picked the wrong package can change it under Settings → Download route.
+- Design: `docs/03-程序开发/历史规格/specs/2026-10-14-installer-flavor-presets-design.md`.
+
+### 2.2 China and Global editions of the manager (English)
+
+A fresh install also writes the edition (`edition`) into the config; Settings can switch it at any time. The edition decides:
+
+| | China edition | Global edition |
+|--|---------------|----------------|
+| Labels | Window title, title-bar badge, About, Setup wizard and uninstall list say "China" | They say "Global" |
+| Default download route | Always the domestic mirror | Always GitHub |
+| Windows language not shipped | Simplified Chinese | English |
+| Preferred mail | QQ Mail | Gmail |
+| Diagnostics community link | QQ group `1127809375`, opens `https://qm.qq.com/q/gLdHoBqp58` | Discord |
+| Submission guide, download page | Mirror copies `submit.html` / `download.html` | GitHub |
+| Setup installed by in-app updates | `setupUrlCn` | `setupUrlGlobal` |
+
+- A reinstall never changes the edition already in a config. An older config without one gets it inferred once (route 2 means Global, route 1 means China, otherwise the Windows language decides), so a mainland player who receives the Global package through the old update feed stays on the China edition.
+- Switching the edition in Settings sets the download route to that edition's default.
+- `latest.json` carries `setupUrlCn` and `setupUrlGlobal` for the two editions, plus `setupUrl` (Global) for managers that predate editions; see `docs/05-版本分析/latest.example.json`. `sync-mirror.ps1 -IncludeSetup` repoints the mirror copy's `setupUrl` and `setupUrlCn` at the COS China package and leaves `setupUrlGlobal` on GitHub.
+- `sync-mirror.ps1` also uploads MechabellumMods' `docs/submit.html` and generates `MechabellumModManager/download.html` from the mirror's `latest.json`. After the first sync, open both in a browser and confirm they display instead of downloading.
+- Design: `docs/03-程序开发/历史规格/specs/2026-10-14-edition-distinction-design.md`.
 
 Layout under the repo:
 
 ```
 release/vX.Y.Z/
   安装包/
-    MechabellumModManager_Setup_vX.Y.Z.exe
+    MechabellumModManager_Setup_vX.Y.Z_CN.exe
+    MechabellumModManager_Setup_vX.Y.Z_Global.exe
     README.txt
   本体/
     MechabellumModManager.exe
@@ -346,7 +489,8 @@ Commit/push `release/vX.Y.Z/` to the manager repo (optional but recommended).
 
 | Asset | Local source | Upload name |
 |-------|--------------|-------------|
-| Setup (required) | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe` | keep filename |
+| China Setup (required) | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_CN.exe` | keep filename |
+| Global Setup (required) | `release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_Global.exe` | keep filename |
 | Metadata (required) | `release/vX.Y.Z/latest.json` | **must stay `latest.json`** |
 | Portable (recommended) | `MechabellumModManager_portable_vX.Y.Z.zip` | prefer versioned name |
 
@@ -365,7 +509,8 @@ $env:HTTPS_PROXY = 'http://127.0.0.1:<PORT>'
 $env:HTTP_PROXY  = 'http://127.0.0.1:<PORT>'
 
 gh release create vX.Y.Z `
-  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_CN.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_Global.exe" `
   "release/vX.Y.Z/latest.json" `
   "release/vX.Y.Z/MechabellumModManager_portable_vX.Y.Z.zip" `
   --title "vX.Y.Z" `
@@ -377,7 +522,8 @@ Update assets on an existing Release:
 
 ```powershell
 gh release upload vX.Y.Z `
-  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_CN.exe" `
+  "release/vX.Y.Z/安装包/MechabellumModManager_Setup_vX.Y.Z_Global.exe" `
   "release/vX.Y.Z/latest.json" `
   --clobber
 ```
@@ -399,6 +545,67 @@ Confirm:
 `https://raw.githubusercontent.com/llxlzx/MechabellumMods/master/catalog.json`
 
 Players: **Browse mods → Refresh catalog**. Author flow: that repo’s `README.md`.
+
+### 5.1 Taking a mod down (English)
+
+The takedown list must be signed with the maintainer key. On the player's next launch, catalog refresh, import or profile apply, the manager verifies the signature and then removes matching mods from the library, from every profile, and from game-folder copies whose bytes it can identify, stating the reason in the log and a notice. It runs even for players who turned off "Check for mod updates on launch". A list that is unsigned, signed by another key, or older than the one already accepted is ignored, so a compromised mirror cannot use it to delete players' mods.
+
+**One-time setup:**
+
+```powershell
+# The private key must live outside every git repository; the tool refuses otherwise and limits the file to the current user
+.\tools\sign-removed.ps1 -NewKey -KeyFile D:\keys\mmm-removal-key.json
+```
+
+Put the printed `PublicKey:` into `PublicKey` in `src/MechabellumModManager/Services/RemovalListVerifier.cs` and ship that manager release. Until then no list takes effect. Back the private key up offline: losing it means a new key and a new release; leaking it lets anyone take mods down.
+
+**Each takedown:**
+
+1. Before taking it down, collect every `sha256` the mod was ever published with (run in your MechabellumMods clone):
+
+   ```powershell
+   $id = "opponent-economy"
+   git log --format=%H -- catalog.json | ForEach-Object {
+       ((git show "$($_):catalog.json") -join "`n" | ConvertFrom-Json).mods |
+           Where-Object id -eq $id | ForEach-Object { $_.sha256 }
+   } | Sort-Object -Unique
+   ```
+
+2. Move the entry out of `mods` in `catalog.json` and add it to `removed.json` at the MechabellumMods root (a JSON array that keeps every takedown):
+
+   ```json
+   [
+     {
+       "id": "opponent-economy",
+       "name": "Opponent Economy",
+       "sha256": ["<every hash from step 1>"],
+       "reason": "影响对局公平，已下架",
+       "since": "2026-10-14",
+       "locales": { "en": { "reason": "Affects match fairness; removed" } }
+     }
+   ]
+   ```
+
+3. Sign it into the top-level `removedSigned` of `catalog.json` (the rest of the catalog is untouched):
+
+   ```powershell
+   .\tools\sign-removed.ps1 -ModsRepo <MechabellumMods clone> -KeyFile D:\keys\mmm-removal-key.json
+   ```
+
+   The script warns when the key does not match `RemovalListVerifier.PublicKey` in this checkout.
+
+4. Run `validate_catalog.py`, commit `catalog.json` and `removed.json`, push and run `sync-mirror.ps1` as usual (`removedSigned` travels with `catalog.json`).
+
+Rules:
+
+- **Matching**: a library package whose catalog id equals `id`, or any of whose file hashes is in the `sha256` list. Names never match. A game-folder file is only deleted when its bytes are known (deploy record, the package's own hash, or a listed hash), so a player's own same-named DLL is kept.
+- **Hash cleanup**: only 64-hex values count; the empty-file hash is ignored; hashes a mod still listed in `mods` ships are dropped with a log warning, so listing an old id's full history during a rename is safe.
+- **Deferral**: while the game runs, a file is in use, a dual-folder store is unreachable, or the branch wizard or recovery gate is active, nothing is removed and it retries later; profile apply also never deploys a taken-down mod.
+- **Signing time**: defaults to the current UTC time, independent of regional formats. The script refuses a time not later than the list already in `catalog.json`, a time more than 10 minutes in the future (it would make every list signed before then look stale), and an `-IssuedAt` not shaped like `2026-10-14T09:30:00Z`.
+- **Pre-signing checks**: an `id` still in `mods`, a hash a listed mod still ships, the empty-file hash, a malformed hash, or a signed list over 1 MiB all stop the script without touching `catalog.json`.
+- **Reinstating**: keep a taken-down `id` out of `mods`; if it is in both it stays taken down. To reinstate, remove it from `removed.json` and sign again.
+
+Design: `docs/03-程序开发/历史规格/specs/2026-10-14-catalog-forced-removal-design.md`.
 
 ---
 
@@ -424,7 +631,7 @@ version exists while its `setupUrl` still 404s.
 
 ```powershell
 # 1) Confirm setupUrl resolves (expect 200)
-curl.exe -I -L "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z.exe"
+curl.exe -I -L "https://github.com/llxlzx/MechabellumModManager/releases/download/vX.Y.Z/MechabellumModManager_Setup_vX.Y.Z_Global.exe"
 
 # 2) Copy release/vX.Y.Z/latest.json over release/latest.json
 # 3) Commit and push it on its own

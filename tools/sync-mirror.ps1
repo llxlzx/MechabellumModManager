@@ -48,6 +48,7 @@
 .PARAMETER IncludeSetup
   Also upload the installer, and repoint setupUrl in the mirror's copy of
   latest.json at it. Off by default: egress for the installer dwarfs everything else.
+  Picks the *_CN.exe flavor when the release folder has one, else any *Setup*.exe.
 
   Requires -MirrorBaseUrl. The client hands setupUrl straight to the browser rather
   than downloading it itself, so an installer uploaded without rewriting setupUrl is
@@ -234,6 +235,44 @@ function Set-SetupUrl {
     return $rewritten
 }
 
+# Same in-place rewrite for a key that older manifests do not carry; an absent key stays absent.
+function Set-OptionalUrl {
+    param([string]$Text, [string]$Key, [string]$Url)
+
+    $pattern = '("' + [regex]::Escape($Key) + '"\s*:\s*")([^"]*)(")'
+    if ([regex]::Matches($Text, $pattern).Count -ne 1) { return $Text }
+    $rewritten = [regex]::Replace($Text, $pattern, { param($m) $m.Groups[1].Value + $Url + $m.Groups[3].Value })
+    if (($rewritten | ConvertFrom-Json).$Key -ne $Url) {
+        throw "$Key rewrite did not take"
+    }
+    return $rewritten
+}
+
+# The China edition opens this page instead of GitHub Releases, which often does not load in
+# mainland China. Only https links reach it, and every value is HTML-encoded.
+function New-DownloadPage {
+    param([string]$LatestText, [string]$TemplatePath)
+
+    $latest = $LatestText | ConvertFrom-Json
+    $encode = { param($value) [System.Net.WebUtility]::HtmlEncode("$value") }
+    $cn = if ($latest.setupUrlCn) { $latest.setupUrlCn } else { $latest.setupUrl }
+    $links = New-Object System.Collections.Generic.List[string]
+    foreach ($item in @(
+            @{ Url = $cn; Label = "China edition / &#x56FD;&#x5185;&#x7248;"; Class = "button" },
+            @{ Url = $latest.setupUrlGlobal; Label = "Global edition / &#x56FD;&#x9645;&#x7248;"; Class = "button secondary" },
+            @{ Url = $latest.portableUrl; Label = "Portable zip"; Class = "button secondary" })) {
+        if ("$($item.Url)" -match '^https://[^\s"<>]+$') {
+            $links.Add('<a class="' + $item.Class + '" href="' + (& $encode $item.Url) + '">' + $item.Label + '</a>')
+        }
+    }
+    if ($links.Count -eq 0) { throw "latest.json has no https Setup link for download.html" }
+
+    $template = [System.IO.File]::ReadAllText($TemplatePath, [System.Text.Encoding]::UTF8)
+    return $template.Replace("{{version}}", (& $encode $latest.version)).
+        Replace("{{notes}}", (& $encode $latest.notes)).
+        Replace("{{links}}", ($links -join "`n"))
+}
+
 Assert-Coscli
 
 if ($IncludeSetup) {
@@ -353,7 +392,11 @@ if ($ReleaseDir) {
     $ReleaseDir = (Resolve-Path -LiteralPath $ReleaseDir).Path
     if ($IncludeSetup) {
         Write-Output "== installer =="
-        $setup = Get-ChildItem -LiteralPath $ReleaseDir -Filter "*Setup*.exe" | Select-Object -First 1
+        # Mirror readers are mainland players, so the CN flavor is the one worth paying egress for.
+        $setup = Get-ChildItem -LiteralPath $ReleaseDir -Filter "*Setup*_CN.exe" | Select-Object -First 1
+        if (-not $setup) {
+            $setup = Get-ChildItem -LiteralPath $ReleaseDir -Filter "*Setup*.exe" | Select-Object -First 1
+        }
         if (-not $setup) { throw "no *Setup*.exe under $ReleaseDir" }
         $setupName = $setup.Name
         Push-File -LocalPath $setup.FullName -RemoteKey "MechabellumModManager/$setupName"
@@ -427,6 +470,13 @@ if (Test-Path -LiteralPath $noticePath) {
     Push-File -LocalPath $noticePath -RemoteKey "MechabellumMods/notice.json"
 }
 
+$submitPagePath = Join-Path $ModsRepo "docs\submit.html"
+if (Test-Path -LiteralPath $submitPagePath) {
+    # The China edition's "submission guide" button opens this copy instead of GitHub.
+    Write-Output "== submit.html =="
+    Push-File -LocalPath $submitPagePath -RemoteKey "MechabellumMods/docs/submit.html" -ExtraMeta "Content-Type:text/html"
+}
+
 $authorStandardPath = Join-Path $ModsRepo "docs\ai-mod-standard.md"
 if (Test-Path -LiteralPath $authorStandardPath) {
     Write-Output "== ai-mod-standard.md =="
@@ -471,26 +521,30 @@ if ($ReleaseDir) {
         throw "missing local file: $latest"
     }
 
+    $mirrorLatest = [System.IO.File]::ReadAllText($latest, [System.Text.Encoding]::UTF8)
     if ($setupName) {
         # The mirror's latest.json points at the mirror's installer; the GitHub copy on
         # disk is left untouched so the two origins each serve their own download.
+        # Mirror readers are China-edition players, so setupUrlCn moves too; setupUrlGlobal stays on GitHub.
         $setupUrl = "$MirrorBaseUrl/MechabellumModManager/$([Uri]::EscapeDataString($setupName))"
-        $original = [System.IO.File]::ReadAllText($latest, [System.Text.Encoding]::UTF8)
-        $patched = Set-SetupUrl -Text $original -Url $setupUrl
-
-        $temp = Join-Path ([System.IO.Path]::GetTempPath()) "latest-mirror-$([Guid]::NewGuid()).json"
-        try {
-            [System.IO.File]::WriteAllText($temp, $patched, (New-Object System.Text.UTF8Encoding($false)))
-            Write-Output "  setupUrl -> $setupUrl"
-            Push-File -LocalPath $temp -RemoteKey "MechabellumModManager/latest.json"
-        }
-        finally {
-            # -WhatIf would otherwise propagate here and leak the temp file.
-            Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue -WhatIf:$false
-        }
+        $mirrorLatest = Set-SetupUrl -Text $mirrorLatest -Url $setupUrl
+        $mirrorLatest = Set-OptionalUrl -Text $mirrorLatest -Key "setupUrlCn" -Url $setupUrl
+        Write-Output "  setupUrl / setupUrlCn -> $setupUrl"
     }
-    else {
-        Push-File -LocalPath $latest -RemoteKey "MechabellumModManager/latest.json"
+
+    $temp = Join-Path ([System.IO.Path]::GetTempPath()) "latest-mirror-$([Guid]::NewGuid()).json"
+    $page = Join-Path ([System.IO.Path]::GetTempPath()) "download-$([Guid]::NewGuid()).html"
+    try {
+        [System.IO.File]::WriteAllText($temp, $mirrorLatest, (New-Object System.Text.UTF8Encoding($false)))
+        $html = New-DownloadPage -LatestText $mirrorLatest -TemplatePath (Join-Path $PSScriptRoot "download-page.template.html")
+        [System.IO.File]::WriteAllText($page, $html, (New-Object System.Text.UTF8Encoding($false)))
+        Push-File -LocalPath $page -RemoteKey "MechabellumModManager/download.html" -ExtraMeta "Content-Type:text/html"
+        # latest.json last: it announces the version the page above already offers.
+        Push-File -LocalPath $temp -RemoteKey "MechabellumModManager/latest.json"
+    }
+    finally {
+        # -WhatIf would otherwise propagate here and leak the temp files.
+        Remove-Item -LiteralPath $temp, $page -Force -ErrorAction SilentlyContinue -WhatIf:$false
     }
 }
 

@@ -6,8 +6,8 @@ public static class InstallDefaultsMerger
 {
     /// <summary>
     /// Fills blank user config fields from the machine-wide install seed.
-    /// UiLanguage is applied only when the user config file did not exist yet
-    /// (so an existing "system" preference is not overwritten).
+    /// UiLanguage and DownloadRoutePreference are applied only when the user config file did not
+    /// exist yet, so a preference the player already saved is not overwritten.
     /// </summary>
     public static bool TryMerge(AppConfig user, InstallDefaults? seed, bool userConfigExisted)
     {
@@ -26,6 +26,18 @@ public static class InstallDefaultsMerger
         if (!userConfigExisted && !string.IsNullOrWhiteSpace(seed.UiLanguage))
         {
             user.UiLanguage = seed.UiLanguage.Trim();
+            changed = true;
+        }
+
+        if (!userConfigExisted && DownloadRoutePolicy.IsKnownPreference(seed.DownloadRoutePreference))
+        {
+            user.DownloadRoutePreference = seed.DownloadRoutePreference!.Value;
+            changed = true;
+        }
+
+        if (!userConfigExisted && EditionPolicy.TryParse(seed.Edition, out var edition))
+        {
+            user.Edition = EditionPolicy.Format(edition);
             changed = true;
         }
 

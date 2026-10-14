@@ -1,10 +1,9 @@
 {
-  "version": "2.0.0",
-  "notes": "打开「Mod 创作标准」时，如果网上的标准和上次保存的不同，会提示重新下载。普通 Mod 的版本门槛仍是 1.3.14，没有抬到 2.0.0。\nOpening the mod authoring standard page reports when the online document differs from the last saved copy. Ordinary mods still use the 1.3.14 manager floor.",
-  "setupSha256": "c3a20aced7707b84050b04b9624d2877c235cfbc3c9930c7fe74194aa56ff032",
-  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.0/MechabellumModManager_portable_v2.0.0.zip",
-  "portableSha256": "a7b109b989fa4589520510f4daac5046287b6a4d606ec49c386e0358444829d3",
-  "publishedAt": "2026-10-08T11:02:04Z",
-  "build": "v2.0.0",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.0/MechabellumModManager_Setup_v2.0.0.exe"
+  "version": "2.0.1",
+  "notes": "v2.0.1\n- 国内版 / 国际版：安装包与应用内更新分流（setupUrlCn / setupUrlGlobal）；设置里可切换\n- 顶栏增加 QQ 群（国内版）与 Discord（国际版）入口\n- 目录强制下架：签名名单可从本地库与游戏目录移除已下架 Mod（需本版公钥）\n- Mod 简介改为「功能与用法」优先，并去掉开头的管理器版本要求句",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_Setup_v2.0.1_Global.exe",
+  "setupUrlCn": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_Setup_v2.0.1_CN.exe",
+  "setupUrlGlobal": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_Setup_v2.0.1_Global.exe",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_portable_v2.0.1.zip",
+  "publishedAt": "2026-10-14T11:47:21Z"
 }

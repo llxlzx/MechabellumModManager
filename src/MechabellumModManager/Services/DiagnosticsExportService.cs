@@ -14,6 +14,7 @@ public sealed class DiagnosticsExportRequest
     public string GamePath { get; init; } = "";
     public string SessionLogText { get; init; } = "";
     public string AppVersion { get; init; } = "";
+    public string? Edition { get; init; }
     public string? GameStatusKind { get; init; }
     public string? GameStatusMessage { get; init; }
     public bool BranchSwitchEnabled { get; init; }

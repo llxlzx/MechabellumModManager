@@ -206,7 +206,7 @@
     <value>Display name</value>
   </data>
   <data name="DirectUploadSummary" xml:space="preserve">
-    <value>Summary</value>
+    <value>How to use</value>
   </data>
   <data name="DirectUploadVersion" xml:space="preserve">
     <value>Version</value>
@@ -329,9 +329,14 @@
     <value>Gmail</value>
   </data>
   <data name="DiagnosticsMailHint" xml:space="preserve"><value>QQ Mail or Gmail copies the draft and opens webmail. Discord opens GODOG Battalion and does not copy the mail. Cancel keeps only the saved zip.</value></data>
+  <data name="DiagnosticsMailHintCn" xml:space="preserve"><value>QQ Mail or Gmail copies the draft and opens webmail. QQ group opens the join page for group {0} and does not copy the mail. Cancel keeps only the saved zip.</value></data>
   <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
   <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>Opened Discord (GODOG Battalion). Report there and attach the zip yourself. The mail draft was not copied.</value></data>
   <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>Could not open Discord. Open https://discord.gg/CQDkCfDTA yourself and attach the zip.</value></data>
+  <data name="DiagnosticsMailQqGroup" xml:space="preserve"><value>QQ group {0}</value></data>
+  <data name="DiagnosticsQqGroupCopied" xml:space="preserve"><value>Copied QQ group number {0}. Search it in QQ to join, and send the exported zip yourself. The mail draft was not copied.</value></data>
+  <data name="DiagnosticsQqGroupOpened" xml:space="preserve"><value>Opened the QQ group page. Report there and send the zip yourself. The mail draft was not copied.</value></data>
+  <data name="DiagnosticsQqGroupOpenFailed" xml:space="preserve"><value>Could not open the QQ group page. Send the diagnostics zip by mail instead.</value></data>
   <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>Cancelled. The zip is saved. No mail was copied and Discord was not opened.</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>Feedback</value>
@@ -593,7 +598,19 @@ One email = one request. Maintainers review and upload to the catalog — no For
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>{0} installed mod(s) can be updated: {1}. Update them under Browse Mods.</value></data>
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>Startup check: every installed mod is current.</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>Startup mod update check failed: {0}</value></data>
+  <data name="LogModRemovedByCatalog" xml:space="preserve"><value>Removed {0}; it was taken down from the catalog: {1}</value></data>
+  <data name="LogModRemovedByCatalogNoReason" xml:space="preserve"><value>Removed {0}; it was taken down from the catalog.</value></data>
+  <data name="NotifyModsRemovedByCatalog" xml:space="preserve"><value>{0} mod(s) were taken down from the catalog and removed from your library, profiles and game folder: {1}. See the log for the reason.</value></data>
+  <data name="LogModRemovalDeferred" xml:space="preserve"><value>{0} was taken down from the catalog, but the game is running or a file is in use. It will be removed on the next catalog refresh.</value></data>
+  <data name="LogModRemovalFailed" xml:space="preserve"><value>Could not remove taken-down mod {0}: {1}</value></data>
+  <data name="LogCatalogIdBothListedAndRemoved" xml:space="preserve"><value>The catalog both lists and takes down {0}; treating it as taken down.</value></data>
+  <data name="LogRemovalListNoKey" xml:space="preserve"><value>This manager build has no takedown signing key, so the catalog&apos;s takedown list is not applied.</value></data>
+  <data name="LogRemovalListRejected" xml:space="preserve"><value>The catalog&apos;s takedown list failed signature verification ({0}) and was ignored. No mod was removed.</value></data>
+  <data name="LogRemovalListOlder" xml:space="preserve"><value>The takedown list received is older than the one already in use (the mirror may not have synced yet). Keeping the current list.</value></data>
+  <data name="LogRemovalHashIgnored" xml:space="preserve"><value>Ignored a hash in the takedown list: {0}</value></data>
+  <data name="LogModRemovalRunFailed" xml:space="preserve"><value>Applying the catalog takedown list failed: {0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>Check for mod updates on launch</value></data>
+  <data name="CheckModUpdatesOnStartupTip" xml:space="preserve"><value>When off, you are no longer told about mod updates. The catalog is still fetched on launch so taken-down mods can be removed.</value></data>
 <data name="HideMelonConsole" xml:space="preserve"><value>Hide Melon console</value></data>
 <data name="HideMelonConsoleTip" xml:space="preserve"><value>Writes UserData\Loader.cfg (hide_console). Applies on next game launch; logs stay in MelonLoader\Latest.log. Do not close the console with X (that exits the game).</value></data>
 <data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>Hide-console setting written; restart the game for it to take effect.</value></data>
@@ -704,7 +721,7 @@ When finished, exit Steam, then click Yes. No pauses the wizard (you can resume 
   <data name="AppVersionFormat" xml:space="preserve"><value>Version {0}</value></data>
   <data name="PromptBetaBranchName" xml:space="preserve"><value>Enter the Steam beta/test branch name (usually public_test; not a folder path). Change only if it differs from Steam → Properties → Betas.</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>No test branch name entered; the wizard was cancelled.</value></data>
-  <data name="LabelSummary" xml:space="preserve"><value>Summary</value></data>
+  <data name="LabelSummary" xml:space="preserve"><value>How to use</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>The game path must be under steamapps\common\Mechabellum.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>The current game path is invalid; cannot start the dual-folder wizard.</value></data>
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>The other branch’s separate folder already exists; cannot archive: {0}. Use Restore Official folder first, or check “also delete the other store” on a pure restore (cannot undo).</value></data>
@@ -839,6 +856,22 @@ Start the game briefly now to generate them? (About 1–2 minutes the first time
   <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>Always use the domestic mirror</value></data>
   <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>Always use GitHub</value></data>
   <data name="DownloadRouteHint" xml:space="preserve"><value>Automatic follows region. If the check fails, the domestic mirror is still tried first.</value></data>
+  <data name="EditionLabel" xml:space="preserve"><value>Edition</value></data>
+  <data name="EditionCn" xml:space="preserve"><value>China edition</value></data>
+  <data name="EditionGlobal" xml:space="preserve"><value>Global edition</value></data>
+  <data name="EditionShortCn" xml:space="preserve"><value>China</value></data>
+  <data name="EditionShortGlobal" xml:space="preserve"><value>Global</value></data>
+  <data name="WindowTitleFormat" xml:space="preserve"><value>Mechabellum Mod Manager ({0})</value></data>
+  <data name="EditionHint" xml:space="preserve"><value>Switching sets the download route to that edition&apos;s default, and changes the mail service, community links and the Setup that in-app updates install.</value></data>
+  <data name="EditionAboutCn" xml:space="preserve"><value>This is the China edition: downloads use the domestic mirror, feedback defaults to QQ Mail, the QQ group number is {0}, and in-app updates install the China Setup. You can switch editions in Settings.</value></data>
+  <data name="EditionAboutGlobal" xml:space="preserve"><value>This is the Global edition: downloads use GitHub, feedback defaults to Gmail, the community is on Discord, and in-app updates install the Global Setup. You can switch editions in Settings.</value></data>
+  <data name="CommunityBarQq" xml:space="preserve"><value>QQ group</value></data>
+  <data name="CommunityBarDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="CommunityBarQqTip" xml:space="preserve"><value>Join QQ group {0}</value></data>
+  <data name="CommunityBarDiscordTip" xml:space="preserve"><value>Open Discord (GODOG Battalion)</value></data>
+  <data name="CommunityBarOpenFailed" xml:space="preserve"><value>Could not open the community link.</value></data>
+  <data name="LogEditionStartup" xml:space="preserve"><value>Manager edition: {0} (v{1})</value></data>
+  <data name="LogEditionSwitched" xml:space="preserve"><value>Switched to the {0}; the download route now uses that edition&apos;s default.</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>Advanced</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>Content mirror: on (factory default)</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>Content mirror: custom</value></data>
@@ -1032,5 +1065,5 @@ GitHub fallback: https://github.com/llxlzx/MechabellumModManager/releases/latest
   <data name="AuthorHookTitle" xml:space="preserve"><value>Hooks are graded by target, not by name</value></data>
   <data name="AuthorHookBody" xml:space="preserve"><value>UI, camera, and friend-list mods must not hook damage, supply, or fight-end observe points. A prefix whose return type is bool is graded high even when the body never skips the original method. A live match may only submit actions the game already has. Changing deploy time is allowed only in replay, and only behind a "is this a replay" gate.</value></data>
   <data name="AuthorCatalogTitle" xml:space="preserve"><value>What goes in the catalog</value></data>
-  <data name="AuthorCatalogBody" xml:space="preserve"><value>The summary says what the player can do, which key, and whether it is for the live server, the test server, or both. Do not put a manager version in the summary. "Requires 1.3.13" in old summaries is outdated copy. A new mod uses minManagerVersion 1.3.14 unless it truly needs a newer manager behavior. The install location defaults to MelonMod. Write against MelonLoader 0.7.3.</value></data>
+  <data name="AuthorCatalogBody" xml:space="preserve"><value>The first sentence says what the player can do and which key or action to use. The live server, the test server, or both may follow. Do not put a manager version, a changelog, or implementation notes in the summary. The version requirement belongs in minManagerVersion. A new mod uses 1.3.14 unless it truly needs a newer manager behavior. The install location defaults to MelonMod. Write against MelonLoader 0.7.3.</value></data>
 </root>

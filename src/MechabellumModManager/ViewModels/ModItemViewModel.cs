@@ -48,10 +48,10 @@ public sealed partial class ModItemViewModel : ObservableObject
             : Package.DisplayName;
     public string? Version => Package.Version;
     public string? Author => Package.Author;
-    public string? Summary =>
+    public string? Summary => SummaryDisplay.StripManagerFloorPrefix(
         Package.CatalogLocales is not null
             ? CatalogLocaleResolver.ResolveSummary(Package.Summary, Package.CatalogLocales)
-            : Package.Summary;
+            : Package.Summary);
     public string? CatalogUpdatedAt => Package.CatalogUpdatedAt;
     public string? Preview => Package.Preview;
     public string? PreviewUrl { get; private set; }

@@ -2,6 +2,15 @@
 setlocal
 cd /d "%~dp0\..\.."
 
+rem Setup flavor: first argument or MMM_FLAVOR env var; cn, global or both (default both).
+set "FLAVOR=%~1"
+if "%FLAVOR%"=="" set "FLAVOR=%MMM_FLAVOR%"
+if "%FLAVOR%"=="" set "FLAVOR=both"
+if /I not "%FLAVOR%"=="cn" if /I not "%FLAVOR%"=="global" if /I not "%FLAVOR%"=="both" (
+  echo Unknown flavor "%FLAVOR%". Use cn, global or both.
+  exit /b 4
+)
+
 echo [1/3] Publishing manager...
 dotnet publish "src\MechabellumModManager\MechabellumModManager.csproj" -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o "publish"
 if errorlevel 1 (
@@ -91,12 +100,22 @@ if not defined ISCC (
 )
 
 echo Using ISCC: %ISCC%
-"%ISCC%" "packaging\installer\MechabellumModManager.iss"
-if errorlevel 1 (
-  echo ISCC failed.
-  exit /b 1
+if /I "%FLAVOR%"=="both" (
+  call :compile cn || exit /b 1
+  call :compile global || exit /b 1
+) else (
+  call :compile %FLAVOR% || exit /b 1
 )
 
 echo Done. Output under dist\
 dir /b "dist\*Setup*.exe" 2>nul
+exit /b 0
+
+:compile
+echo Compiling flavor: %1
+"%ISCC%" "/DMMM_FLAVOR=%1" "packaging\installer\MechabellumModManager.iss"
+if errorlevel 1 (
+  echo ISCC failed for flavor %1.
+  exit /b 1
+)
 exit /b 0

@@ -1,13 +1,20 @@
 using System.Windows;
 using System.Windows.Navigation;
+using MechabellumModManager.Models;
 using MechabellumModManager.Services;
 
 namespace MechabellumModManager.Dialogs;
 
 public partial class SubmitGuideDialog : Window
 {
-    public SubmitGuideDialog()
+    readonly AppEdition _edition;
+    readonly string _contributeGuideUrl;
+
+    /// <param name="contributeGuideUrl">Submission guide for this edition (mirror copy or GitHub).</param>
+    public SubmitGuideDialog(AppEdition edition, string contributeGuideUrl)
     {
+        _edition = edition;
+        _contributeGuideUrl = contributeGuideUrl;
         InitializeComponent();
         Title = LocalizationService.T("SubmitGuideTitle");
         IntroLabel.Text = LocalizationService.T("SubmitGuideIntro");
@@ -19,13 +26,13 @@ public partial class SubmitGuideDialog : Window
         OkButton.Content = LocalizationService.T("SubmitGuideOpenEmail");
 
         // NavigateUri is required for Hyperlink styling; actual open goes through the mail chooser.
-        InboxLink.NavigateUri = new Uri(GitHubCommunityLinks.DomesticWebMailUrl);
+        InboxLink.NavigateUri = new Uri(GitHubCommunityLinks.InboxWebMailUrl(EditionPolicy.PreferredMail(edition)));
         InboxLinkText.Text = GitHubCommunityLinks.Inbox;
     }
 
     void InboxLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {
-        var picked = MailProviderDialog.Prompt(this);
+        var picked = MailProviderDialog.Prompt(this, _edition);
         GitHubCommunityLinks.TryOpenInboxWebMail(text =>
         {
             try
@@ -41,7 +48,7 @@ public partial class SubmitGuideDialog : Window
     }
 
     void Guide_Click(object sender, RoutedEventArgs e) =>
-        TryOpen(GitHubCommunityLinks.ContributeGuideUrl);
+        TryOpen(_contributeGuideUrl);
 
     void Ok_Click(object sender, RoutedEventArgs e) => DialogResult = true;
 

@@ -206,7 +206,7 @@
     <value>Display name</value>
   </data>
   <data name="DirectUploadSummary" xml:space="preserve">
-    <value>Summary</value>
+    <value>Bedienung</value>
   </data>
   <data name="DirectUploadVersion" xml:space="preserve">
     <value>Version</value>
@@ -329,9 +329,14 @@
     <value>Gmail</value>
   </data>
   <data name="DiagnosticsMailHint" xml:space="preserve"><value>QQ-Mail oder Gmail kopiert den Entwurf und öffnet Webmail. Discord öffnet GODOG Battalion und kopiert keine Mail. Abbrechen behält nur die gespeicherte ZIP.</value></data>
+  <data name="DiagnosticsMailHintCn" xml:space="preserve"><value>QQ-Mail oder Gmail kopiert den Entwurf und öffnet Webmail. QQ-Gruppe öffnet die Beitrittsseite für Gruppe {0} und kopiert keine Mail. Abbrechen behält nur die gespeicherte ZIP.</value></data>
   <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
   <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>Discord (GODOG Battalion) geöffnet. Bitte dort melden und die ZIP manuell anhängen. Der Mail-Entwurf wurde nicht kopiert.</value></data>
   <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>Discord konnte nicht geöffnet werden. Öffnen Sie https://discord.gg/CQDkCfDTA manuell und hängen Sie die ZIP an.</value></data>
+  <data name="DiagnosticsMailQqGroup" xml:space="preserve"><value>QQ-Gruppe {0}</value></data>
+  <data name="DiagnosticsQqGroupCopied" xml:space="preserve"><value>QQ-Gruppennummer {0} kopiert. In QQ danach suchen, um beizutreten, und die exportierte ZIP selbst senden. Der Mailentwurf wurde nicht kopiert.</value></data>
+  <data name="DiagnosticsQqGroupOpened" xml:space="preserve"><value>QQ-Gruppenseite geöffnet. Melden Sie das Problem dort und senden Sie die ZIP selbst. Der Mailentwurf wurde nicht kopiert.</value></data>
+  <data name="DiagnosticsQqGroupOpenFailed" xml:space="preserve"><value>QQ-Gruppenseite konnte nicht geöffnet werden. Senden Sie die Diagnose-ZIP stattdessen per Mail.</value></data>
   <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>Abgebrochen. Die ZIP ist gespeichert. Keine Mail kopiert und Discord nicht geöffnet.</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>Feedback</value>
@@ -593,7 +598,19 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>{0} installierte Mod(s) können aktualisiert werden: {1}. Aktualisieren Sie sie unter Mods durchsuchen.</value></data>
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>Start-Prüfung: Alle installierten Mods sind aktuell.</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>Mod-Update-Prüfung beim Start fehlgeschlagen: {0}</value></data>
+  <data name="LogModRemovedByCatalog" xml:space="preserve"><value>{0} wurde entfernt, weil es aus dem Katalog genommen wurde: {1}</value></data>
+  <data name="LogModRemovedByCatalogNoReason" xml:space="preserve"><value>{0} wurde entfernt, weil es aus dem Katalog genommen wurde.</value></data>
+  <data name="NotifyModsRemovedByCatalog" xml:space="preserve"><value>{0} Mod(s) wurden aus dem Katalog genommen und aus Bibliothek, Profilen und Spielordner entfernt: {1}. Den Grund finden Sie im Protokoll.</value></data>
+  <data name="LogModRemovalDeferred" xml:space="preserve"><value>{0} wurde aus dem Katalog genommen, aber das Spiel läuft oder eine Datei ist in Verwendung. Es wird beim nächsten Aktualisieren des Katalogs entfernt.</value></data>
+  <data name="LogModRemovalFailed" xml:space="preserve"><value>Aus dem Katalog genommene Mod {0} konnte nicht entfernt werden: {1}</value></data>
+  <data name="LogCatalogIdBothListedAndRemoved" xml:space="preserve"><value>Der Katalog führt {0} und nimmt es zugleich heraus; es wird als entfernt behandelt.</value></data>
+  <data name="LogRemovalListNoKey" xml:space="preserve"><value>Diese Manager-Version hat keinen Signaturschlüssel für Entfernungen; die Entfernungsliste des Katalogs wird nicht angewendet.</value></data>
+  <data name="LogRemovalListRejected" xml:space="preserve"><value>Die Entfernungsliste des Katalogs hat die Signaturprüfung nicht bestanden ({0}) und wurde ignoriert. Es wurde keine Mod entfernt.</value></data>
+  <data name="LogRemovalListOlder" xml:space="preserve"><value>Die empfangene Entfernungsliste ist älter als die bereits verwendete (der Spiegel ist evtl. noch nicht synchronisiert). Die aktuelle Liste bleibt in Gebrauch.</value></data>
+  <data name="LogRemovalHashIgnored" xml:space="preserve"><value>Ein Hash in der Entfernungsliste wurde ignoriert: {0}</value></data>
+  <data name="LogModRemovalRunFailed" xml:space="preserve"><value>Anwenden der Entfernungsliste des Katalogs fehlgeschlagen: {0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>Beim Start nach Mod-Updates suchen</value></data>
+  <data name="CheckModUpdatesOnStartupTip" xml:space="preserve"><value>Wenn deaktiviert, werden Sie nicht mehr über Mod-Updates informiert. Der Katalog wird beim Start trotzdem geladen, damit aus dem Katalog genommene Mods entfernt werden können.</value></data>
 <data name="HideMelonConsole" xml:space="preserve"><value>Melon-Konsole ausblenden</value></data>
 <data name="HideMelonConsoleTip" xml:space="preserve"><value>Schreibt UserData\Loader.cfg (hide_console). Wirkt beim nächsten Start; Logs in MelonLoader\Latest.log. Konsole nicht mit X schließen (beendet das Spiel).</value></data>
 <data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>Ausblenden geschrieben; Spiel neu starten, damit es greift.</value></data>
@@ -700,7 +717,7 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="AppVersionFormat" xml:space="preserve"><value>Version {0}</value></data>
   <data name="PromptBetaBranchName" xml:space="preserve"><value>Steam-Beta-/Testzweig-Name (meist public_test; kein Ordnerpfad). Nur ändern, wenn abweichend von Steam → Eigenschaften → Betas.</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>Kein Testzweig-Name; Assistent abgebrochen.</value></data>
-  <data name="LabelSummary" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="LabelSummary" xml:space="preserve"><value>Bedienung</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Der Spielepfad muss unter steamapps\common\Mechabellum liegen.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>Aktueller Spielepfad ungültig; Doppelordner-Assistent nicht startbar.</value></data>
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Separater Ordner des anderen Zweigs existiert bereits; Archivieren nicht möglich: {0}. Zuerst „Offiziellen Ordner wiederherstellen“, oder bei sauberer Wiederherstellung „anderen Store löschen“ (unwiderruflich).</value></data>
@@ -818,6 +835,22 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>Immer den inländischen Spiegel</value></data>
   <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>Immer GitHub</value></data>
   <data name="DownloadRouteHint" xml:space="preserve"><value>Automatisch folgt der Region. Schlägt die Prüfung fehl, wird der Spiegel trotzdem zuerst versucht.</value></data>
+  <data name="EditionLabel" xml:space="preserve"><value>Edition</value></data>
+  <data name="EditionCn" xml:space="preserve"><value>China-Edition</value></data>
+  <data name="EditionGlobal" xml:space="preserve"><value>Globale Edition</value></data>
+  <data name="EditionShortCn" xml:space="preserve"><value>China</value></data>
+  <data name="EditionShortGlobal" xml:space="preserve"><value>Global</value></data>
+  <data name="WindowTitleFormat" xml:space="preserve"><value>Mechabellum Mod Manager ({0})</value></data>
+  <data name="EditionHint" xml:space="preserve"><value>Beim Wechsel wird die Download-Route auf den Standard dieser Edition gesetzt; Mail-Dienst, Community-Links und das Setup für Updates in der App wechseln mit.</value></data>
+  <data name="EditionAboutCn" xml:space="preserve"><value>Dies ist die China-Edition: Downloads nutzen den inländischen Spiegel, Feedback standardmäßig QQ Mail, die QQ-Gruppennummer ist {0}, Updates in der App installieren das China-Setup. Die Edition lässt sich in den Einstellungen wechseln.</value></data>
+  <data name="EditionAboutGlobal" xml:space="preserve"><value>Dies ist die globale Edition: Downloads nutzen GitHub, Feedback standardmäßig Gmail, die Community ist auf Discord, Updates in der App installieren das globale Setup. Die Edition lässt sich in den Einstellungen wechseln.</value></data>
+  <data name="CommunityBarQq" xml:space="preserve"><value>QQ-Gruppe</value></data>
+  <data name="CommunityBarDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="CommunityBarQqTip" xml:space="preserve"><value>QQ-Gruppe {0} beitreten</value></data>
+  <data name="CommunityBarDiscordTip" xml:space="preserve"><value>Discord (GODOG Battalion) öffnen</value></data>
+  <data name="CommunityBarOpenFailed" xml:space="preserve"><value>Community-Link konnte nicht geöffnet werden.</value></data>
+  <data name="LogEditionStartup" xml:space="preserve"><value>Manager-Edition: {0} (v{1})</value></data>
+  <data name="LogEditionSwitched" xml:space="preserve"><value>Zur {0} gewechselt; die Download-Route nutzt jetzt deren Standard.</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>Erweitert</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>Content-Spiegel: an (Werkseinstellung)</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>Content-Spiegel: benutzerdefiniert</value></data>
@@ -1027,5 +1060,5 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="AuthorHookTitle" xml:space="preserve"><value>Hooks zählen nach Ziel, nicht nach Namen</value></data>
   <data name="AuthorHookBody" xml:space="preserve"><value>Oberfläche, Kamera und Freundesliste dürfen nicht an Schaden, Vorrat oder Kampfende hängen. Ein Prefix mit Rückgabetyp bool gilt als hoch, auch wenn der Rumpf die Originalmethode nie überspringt. Ein laufendes Match darf nur Aktionen senden, die das Spiel schon hat. Die Einsatzzeit darf nur in der Wiederholung geändert werden, und nur hinter einer Prüfung „ist das eine Wiederholung“.</value></data>
   <data name="AuthorCatalogTitle" xml:space="preserve"><value>Was in den Katalog gehört</value></data>
-  <data name="AuthorCatalogBody" xml:space="preserve"><value>Die Kurzbeschreibung sagt, was der Spieler tun kann, welche Taste, und ob es für den Live-Server, den Testserver oder beide gilt. Schreib keine Manager-Version hinein. „Benötigt 1.3.13“ in alten Texten ist veraltet. Ein neuer Mod nutzt minManagerVersion 1.3.14, außer er braucht wirklich ein neueres Manager-Verhalten. Der Installationsort ist standardmäßig MelonMod. Schreibe gegen MelonLoader 0.7.3.</value></data>
+  <data name="AuthorCatalogBody" xml:space="preserve"><value>Der erste Satz sagt, was der Spieler tun kann und welche Taste oder Aktion das ist. Live-Server, Testserver oder beide dürfen danach stehen. Keine Manager-Version, kein Änderungsprotokoll und keine Implementierungsnotizen in die Kurzbeschreibung. Die Versionsanforderung steht in minManagerVersion. Ein neuer Mod nutzt 1.3.14, außer er braucht wirklich ein neueres Manager-Verhalten. Der Installationsort ist standardmäßig MelonMod. Schreibe gegen MelonLoader 0.7.3.</value></data>
 </root>

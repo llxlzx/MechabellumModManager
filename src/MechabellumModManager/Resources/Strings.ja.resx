@@ -206,7 +206,7 @@
     <value>Display name</value>
   </data>
   <data name="DirectUploadSummary" xml:space="preserve">
-    <value>Summary</value>
+    <value>機能と使い方</value>
   </data>
   <data name="DirectUploadVersion" xml:space="preserve">
     <value>Version</value>
@@ -329,9 +329,14 @@
     <value>Gmail</value>
   </data>
   <data name="DiagnosticsMailHint" xml:space="preserve"><value>QQ メールか Gmail を選ぶと下書きをコピーしてウェブメールを開きます。Discord は GODOG Battalion を開き、メールはコピーしません。キャンセルは保存した zip だけ残します。</value></data>
+  <data name="DiagnosticsMailHintCn" xml:space="preserve"><value>QQ メールか Gmail を選ぶと下書きをコピーしてウェブメールを開きます。QQ グループは群番号 {0} の参加ページを開き、メールはコピーしません。キャンセルは保存した zip だけ残します。</value></data>
   <data name="DiagnosticsMailDiscord" xml:space="preserve"><value>Discord</value></data>
   <data name="DiagnosticsDiscordOpened" xml:space="preserve"><value>Discord（GODOG Battalion）を開きました。チャンネルで報告し、zip を手動で添付してください。メールはコピーしていません。</value></data>
   <data name="DiagnosticsDiscordOpenFailed" xml:space="preserve"><value>Discord を開けませんでした。https://discord.gg/CQDkCfDTA を手動で開き、zip を添付してください。</value></data>
+  <data name="DiagnosticsMailQqGroup" xml:space="preserve"><value>QQ グループ {0}</value></data>
+  <data name="DiagnosticsQqGroupCopied" xml:space="preserve"><value>QQ 群番号 {0} をコピーしました。QQ でこの番号を検索して参加し、書き出した zip はご自身で送ってください。メールの下書きはコピーしていません。</value></data>
+  <data name="DiagnosticsQqGroupOpened" xml:space="preserve"><value>QQ グループのページを開きました。そこで報告し、ZIP はご自身で送ってください。メールの下書きはコピーしていません。</value></data>
+  <data name="DiagnosticsQqGroupOpenFailed" xml:space="preserve"><value>QQ グループのページを開けませんでした。診断 ZIP はメールで送ってください。</value></data>
   <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>キャンセルしました。診断 zip は保存済みです。メールはコピーせず、Discord も開いていません。</value></data>
   <data name="FeedbackButton" xml:space="preserve">
     <value>フィードバック</value>
@@ -593,7 +598,19 @@
   <data name="NotifyModUpdatesAvailable" xml:space="preserve"><value>{0} 個のインストール済み Mod を更新できます：{1}。「Mod 一覧」から更新してください。</value></data>
   <data name="LogModUpdateCheckAllCurrent" xml:space="preserve"><value>起動時チェック：インストール済みの Mod はすべて最新です。</value></data>
   <data name="LogModUpdateCheckFailed" xml:space="preserve"><value>起動時の Mod 更新チェックに失敗しました：{0}</value></data>
+  <data name="LogModRemovedByCatalog" xml:space="preserve"><value>{0} はカタログから取り下げられたため削除しました：{1}</value></data>
+  <data name="LogModRemovedByCatalogNoReason" xml:space="preserve"><value>{0} はカタログから取り下げられたため削除しました。</value></data>
+  <data name="NotifyModsRemovedByCatalog" xml:space="preserve"><value>{0} 個の Mod がカタログから取り下げられ、ライブラリ・プロファイル・ゲームフォルダから削除されました：{1}。理由はログを参照してください。</value></data>
+  <data name="LogModRemovalDeferred" xml:space="preserve"><value>{0} はカタログから取り下げられましたが、ゲームが実行中かファイルが使用中です。次にカタログを更新したときに削除します。</value></data>
+  <data name="LogModRemovalFailed" xml:space="preserve"><value>取り下げられた Mod {0} を削除できませんでした：{1}</value></data>
+  <data name="LogCatalogIdBothListedAndRemoved" xml:space="preserve"><value>カタログで {0} が掲載と取り下げの両方に載っています。取り下げとして扱います。</value></data>
+  <data name="LogRemovalListNoKey" xml:space="preserve"><value>このマネージャーには取り下げ署名用の公開鍵がないため、カタログの取り下げリストは適用されません。</value></data>
+  <data name="LogRemovalListRejected" xml:space="preserve"><value>カタログの取り下げリストは署名の検証に失敗したため（{0}）無視しました。Mod は削除していません。</value></data>
+  <data name="LogRemovalListOlder" xml:space="preserve"><value>受け取った取り下げリストは使用中のものより古いため（ミラーが未同期の可能性）、現在のリストを使い続けます。</value></data>
+  <data name="LogRemovalHashIgnored" xml:space="preserve"><value>取り下げリストのハッシュを無視しました：{0}</value></data>
+  <data name="LogModRemovalRunFailed" xml:space="preserve"><value>カタログの取り下げリストの適用に失敗しました：{0}</value></data>
   <data name="CheckModUpdatesOnStartup" xml:space="preserve"><value>起動時に Mod の更新を確認</value></data>
+  <data name="CheckModUpdatesOnStartupTip" xml:space="preserve"><value>オフにすると Mod の更新は通知されません。取り下げられた Mod を削除するため、起動時のカタログ取得は続けます。</value></data>
 <data name="HideMelonConsole" xml:space="preserve"><value>Melon コンソールを隠す</value></data>
 <data name="HideMelonConsoleTip" xml:space="preserve"><value>UserData\Loader.cfg の hide_console を書き込みます。次回起動から有効。ログは MelonLoader\Latest.log。コンソールの×で閉じないでください（ゲームも終了します）。</value></data>
 <data name="LogHideMelonConsoleRestartHint" xml:space="preserve"><value>コンソール非表示を書き込みました。ゲームを再起動してください。</value></data>
@@ -700,7 +717,7 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="AppVersionFormat" xml:space="preserve"><value>バージョン {0}</value></data>
   <data name="PromptBetaBranchName" xml:space="preserve"><value>Steam のテスト/ベータ分岐名（通常は public_test。フォルダパスではない）。Steam「プロパティ → ベータ」と違う場合のみ変更。</value></data>
   <data name="FailWizardNoBetaName" xml:space="preserve"><value>テスト版ブランチ名が未入力のためウィザードを中止しました。</value></data>
-  <data name="LabelSummary" xml:space="preserve"><value>機能</value></data>
+  <data name="LabelSummary" xml:space="preserve"><value>機能と使い方</value></data>
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>ゲームパスは steamapps\common\Mechabellum 配下である必要があります。</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>現在のゲームパスが無効なため、二系統ウィザードを開始できません。</value></data>
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>他方の独立フォルダが既に存在するためアーカイブできません：{0}。先に「公式フォルダに戻す」か、クリーン復元で「もう一方の倉庫も削除」（元に戻せません）を選んでください。</value></data>
@@ -818,6 +835,22 @@ Steam の分岐名は既定で public_test（設定で変更可）。
   <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>常に国内ミラー</value></data>
   <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>常に GitHub</value></data>
   <data name="DownloadRouteHint" xml:space="preserve"><value>自動は地域で選びます。判定に失敗したときは国内ミラーを先に使います。</value></data>
+  <data name="EditionLabel" xml:space="preserve"><value>エディション</value></data>
+  <data name="EditionCn" xml:space="preserve"><value>中国版</value></data>
+  <data name="EditionGlobal" xml:space="preserve"><value>グローバル版</value></data>
+  <data name="EditionShortCn" xml:space="preserve"><value>中国版</value></data>
+  <data name="EditionShortGlobal" xml:space="preserve"><value>グローバル版</value></data>
+  <data name="WindowTitleFormat" xml:space="preserve"><value>Mechabellum Mod Manager（{0}）</value></data>
+  <data name="EditionHint" xml:space="preserve"><value>切り替えるとダウンロード経路がそのエディションの既定値になり、メール、コミュニティ、アプリ内更新でインストールするセットアップも切り替わります。</value></data>
+  <data name="EditionAboutCn" xml:space="preserve"><value>現在は中国版です。ダウンロードは国内ミラー、フィードバックは QQ メール、QQ 群番号は {0}、アプリ内更新は中国版セットアップを使います。設定でエディションを切り替えられます。</value></data>
+  <data name="EditionAboutGlobal" xml:space="preserve"><value>現在はグローバル版です。ダウンロードは GitHub、フィードバックは Gmail、コミュニティは Discord、アプリ内更新はグローバル版セットアップを使います。設定でエディションを切り替えられます。</value></data>
+  <data name="CommunityBarQq" xml:space="preserve"><value>QQ グループ</value></data>
+  <data name="CommunityBarDiscord" xml:space="preserve"><value>Discord</value></data>
+  <data name="CommunityBarQqTip" xml:space="preserve"><value>QQ グループ {0} に参加する</value></data>
+  <data name="CommunityBarDiscordTip" xml:space="preserve"><value>Discord（GODOG Battalion）を開く</value></data>
+  <data name="CommunityBarOpenFailed" xml:space="preserve"><value>コミュニティのリンクを開けませんでした。</value></data>
+  <data name="LogEditionStartup" xml:space="preserve"><value>マネージャーのエディション：{0}（v{1}）</value></data>
+  <data name="LogEditionSwitched" xml:space="preserve"><value>{0}に切り替えました。ダウンロード経路はそのエディションの既定値になりました。</value></data>
 <data name="SettingsAdvanced" xml:space="preserve"><value>詳細設定</value></data>
 <data name="MirrorSummaryOnDefault" xml:space="preserve"><value>コンテンツミラー：オン（出荷時既定）</value></data>
 <data name="MirrorSummaryCustom" xml:space="preserve"><value>コンテンツミラー：カスタム</value></data>
@@ -1027,5 +1060,5 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="AuthorHookTitle" xml:space="preserve"><value>フックは名前ではなく対象で見る</value></data>
   <data name="AuthorHookBody" xml:space="preserve"><value>画面、カメラ、フレンド一覧は、ダメージ、補給、決着の観測点に掛けないでください。戻り値が bool の Prefix は、本体が元の関数を飛ばさなくても高になります。本番の対局では、ゲームがもともと持っている操作だけを送ってください。配置時間の変更はリプレイの中だけで、しかも「今がリプレイか」の門を通したときだけです。</value></data>
   <data name="AuthorCatalogTitle" xml:space="preserve"><value>カタログに書くこと</value></data>
-  <data name="AuthorCatalogBody" xml:space="preserve"><value>概要には、プレイヤーができること、使うキー、正式サーバーかテストサーバーか両方かを書きます。マネージャーの版番号は書かないでください。古い概要の「1.3.13 が必要」は古い文です。新しい Mod の minManagerVersion は 1.3.14 です。より新しいマネージャーの動作に本当に依存するときだけ上げます。インストール先は既定で MelonMod です。MelonLoader 0.7.3 向けに書いてください。</value></data>
+  <data name="AuthorCatalogBody" xml:space="preserve"><value>概要の最初の文には、プレイヤーができることと、使うキーまたは操作を書きます。正式サーバーかテストサーバーか両方かは続けて書いてかまいません。マネージャーの版番号、更新履歴、実装の詳細は書かないでください。版の要件は minManagerVersion に書きます。新しい Mod は 1.3.14 です。より新しいマネージャーの動作に本当に依存するときだけ上げます。インストール先は既定で MelonMod です。MelonLoader 0.7.3 向けに書いてください。</value></data>
 </root>

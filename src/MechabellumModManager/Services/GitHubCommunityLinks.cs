@@ -23,7 +23,8 @@ public enum DiagnosticsFollowUp
     Cancel,
     Discord,
     Qq,
-    Gmail
+    Gmail,
+    QqGroup
 }
 
 public readonly record struct MailComposePayload(string Subject, string Body, string MailtoUrl);
@@ -40,8 +41,36 @@ public static class GitHubCommunityLinks
     /// <summary>GODOG Battalion invite. Cancel on a diagnostics export opens this instead of copying mail.</summary>
     public const string DiscordFeedbackUrl = "https://discord.gg/CQDkCfDTA";
 
+    /// <summary>China-edition QQ group number. Players search this number inside QQ.</summary>
+    public const string QqGroupNumber = "1127809375";
+
+    /// <summary>
+    /// https join link from the group's own share menu. Empty falls back to copying <see cref="QqGroupNumber"/>.
+    /// </summary>
+    public const string QqGroupUrl = "https://qm.qq.com/q/gLdHoBqp58";
+
+    public static bool HasQqGroup =>
+        ExternalUrlPolicy.IsHttpsUrl(QqGroupUrl) || IsQqGroupNumber(QqGroupNumber);
+
+    public static bool IsQqGroupNumber(string? value)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length is < 5 or > 12)
+            return false;
+        foreach (var ch in value)
+        {
+            if (ch is < '0' or > '9')
+                return false;
+        }
+
+        return true;
+    }
+
     /// <summary>QQ / Foxmail webmail home (CN-friendly).</summary>
     public static string DomesticWebMailUrl => "https://wx.mail.qq.com/";
+
+    /// <summary>Webmail page that writes to the inbox, for the chosen service.</summary>
+    public static string InboxWebMailUrl(MailProvider provider) =>
+        provider == MailProvider.Qq ? DomesticWebMailUrl : BuildGmailComposeUrl("", "");
 
     public static string Owner => ModCatalogService.Owner;
     public static string Repo => ModCatalogService.Repo;
@@ -57,16 +86,6 @@ public static class GitHubCommunityLinks
     /// <summary>Static bilingual mailto helper page on the mods repo.</summary>
     public static string SubmitPageUrl =>
         $"{RepositoryUrl}/blob/main/docs/submit.html";
-
-    /// <summary>
-    /// Prefer QQ webmail when the effective UI language is Chinese
-    /// (includes Follow System when OS UI culture is zh*).
-    /// </summary>
-    public static bool PreferDomesticWebMail()
-    {
-        var culture = CultureInfo.CurrentUICulture;
-        return culture.TwoLetterISOLanguageName.Equals("zh", StringComparison.OrdinalIgnoreCase);
-    }
 
     public static string TruncateForUrl(string? text, int maxBodyChars = 1200)
     {
@@ -219,7 +238,8 @@ public static class GitHubCommunityLinks
             $"【Mod 名称 / Name】{name}\n" +
             "【作者 / Author】\n" +
             "【版本 / Version】\n" +
-            "【一句话简介 / Summary】\n" +
+            "【功能与用法 / How to use】第一句写能做什么、怎么操作，不要写管理器版本或更新日志。" +
+            "First sentence: what it does and how to use it. No manager version or changelog.\n" +
             "【游戏端 / Game】正式服 / 测试服 / 两者（Official / Test / Both）\n" +
             "【分类 / Category】（OverlayUI / QoL / Camera / CombatAssist / Economy / ReplayDebug / Misc，可空）\n" +
             "【标签 / Tags】（逗号分隔，可空）\n" +

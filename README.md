@@ -22,7 +22,9 @@ Use the links below to jump within this page (Chinese and English sections share
 | **本仓库** [llxlzx/MechabellumModManager](https://github.com/llxlzx/MechabellumModManager) | 管理器程序、安装包、更新检查 |
 | [llxlzx/MechabellumMods](https://github.com/llxlzx/MechabellumMods) | 社区 Mod 目录（`catalog.json` + DLL） |
 
-最新安装包请到本仓库 **[Releases](https://github.com/llxlzx/MechabellumModManager/releases/latest)** 下载。
+最新安装包请到本仓库 **[Releases](https://github.com/llxlzx/MechabellumModManager/releases/latest)** 下载：中国大陆玩家选 `_CN.exe`（国内包），其他地区选 `_Global.exe`（国际包）。
+
+Download the latest Setup from **[Releases](https://github.com/llxlzx/MechabellumModManager/releases/latest)**: `_CN.exe` for mainland China, `_Global.exe` everywhere else.
 
 ---
 
@@ -49,7 +51,7 @@ Use the links below to jump within this page (Chinese and English sections share
 
 ### 安装
 
-1. 下载并运行 `MechabellumModManager_Setup_v*.exe`（或中文文件名的同内容安装包），**以管理员身份**运行。  
+1. 下载并运行安装包，**以管理员身份**运行。中国大陆选国内包 `MechabellumModManager_Setup_v*_CN.exe`，其他地区选国际包 `MechabellumModManager_Setup_v*_Global.exe`。两个包装出的程序相同，全新安装时分别成为「国内版」和「国际版」：国内版走国内镜像、默认 QQ 邮箱、应用内更新安装国内包；国际版走 GitHub、默认 Gmail 和 Discord、应用内更新安装国际包。窗口标题会标明当前版本。覆盖安装保留原有设置，装错了可以在「设置 → 版本」里切换。  
 2. **选择管理器安装位置**（程序装到哪里）。  
 3. **选择游戏目录**：需包含 `Mechabellum.exe` 与 `GameAssembly.dll`（可自动探测 Steam 路径）。  
 4. 组件建议：
@@ -111,7 +113,7 @@ Use the links below to jump within this page (Chinese and English sections share
 .\packaging\installer\build-installer.bat
 ```
 
-产物：`dist\MechabellumModManager_Setup_v*.exe`。整理与发版步骤见 [docs/05-版本分析/GitHub-Release更新说明.md（中文）](docs/05-版本分析/GitHub-Release更新说明.md#1-两个仓库分别干什么-中文)。
+产物：`dist\MechabellumModManager_Setup_v*_CN.exe` 与 `dist\MechabellumModManager_Setup_v*_Global.exe`（默认两个都编；只编一个用 `-Flavor cn` 或 `-Flavor global`）。整理与发版步骤见 [docs/05-版本分析/GitHub-Release更新说明.md（中文）](docs/05-版本分析/GitHub-Release更新说明.md#1-两个仓库分别干什么-中文)。
 
 ### 开发命令
 
@@ -160,7 +162,7 @@ See also [docs/04-Guide新手指南/分发-使用说明.md](docs/04-Guide新手�
 
 ### Install
 
-1. Run `MechabellumModManager_Setup_v*.exe` as **Administrator**.  
+1. Run the Setup as **Administrator**: `MechabellumModManager_Setup_v*_Global.exe` outside mainland China, `MechabellumModManager_Setup_v*_CN.exe` in mainland China. Both install the same app; a fresh install becomes the Global edition (GitHub downloads, Gmail and Discord, in-app updates install the Global Setup) or the China edition (domestic mirror, QQ Mail, China Setup). The window title shows which one you have. Reinstalls keep your settings, and you can switch under Settings → Edition.  
 2. Choose **where to install the manager**.  
 3. Choose the **game folder** (must contain `Mechabellum.exe` and `GameAssembly.dll`; Steam path can be auto-detected).  
 4. Components (recommended defaults):
@@ -218,7 +220,7 @@ Install [Inno Setup 6](https://jrsoftware.org/isinfo.php). Release builds **requ
 .\packaging\installer\build-installer.ps1
 ```
 
-Output: `dist\MechabellumModManager_Setup_v*.exe`. Packaging / Release steps: [GitHub Release guide (English)](docs/05-版本分析/GitHub-Release更新说明.md#1-what-the-two-repos-are-for-english).
+Output: `dist\MechabellumModManager_Setup_v*_CN.exe` and `dist\MechabellumModManager_Setup_v*_Global.exe` (both by default; `-Flavor cn` or `-Flavor global` builds one). Packaging / Release steps: [GitHub Release guide (English)](docs/05-版本分析/GitHub-Release更新说明.md#1-what-the-two-repos-are-for-english).
 
 ### Dev commands
 
@@ -230,7 +232,7 @@ dotnet publish src\MechabellumModManager -c Release -r win-x64 --self-contained 
 
 End users should run the **Setup** or Start Menu shortcut—not ad-hoc bat/exe copies in the repo root.
 
-Release checklist: upload Setup + `latest.json` + portable zip; see [Shipping steps (English)](docs/05-版本分析/GitHub-Release更新说明.md#3-shipping-a-new-manager-version-english). Compact summary: [docs/05-版本分析/releasing.md](docs/05-版本分析/releasing.md).
+Release checklist: upload both Setups (`_CN.exe`, `_Global.exe`) + `latest.json` + portable zip; see [Shipping steps (English)](docs/05-版本分析/GitHub-Release更新说明.md#3-shipping-a-new-manager-version-english). Compact summary: [docs/05-版本分析/releasing.md](docs/05-版本分析/releasing.md).
 
 ---
 

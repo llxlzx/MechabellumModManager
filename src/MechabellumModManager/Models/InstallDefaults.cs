@@ -8,4 +8,10 @@ public sealed class InstallDefaults
 {
     public string? GamePath { get; set; }
     public string? UiLanguage { get; set; }
+
+    /// <summary>Route preset of the Setup flavor (1 = CN, 2 = Global). Null from older installers.</summary>
+    public int? DownloadRoutePreference { get; set; }
+
+    /// <summary>"cn" or "global" from the Setup flavor. Null from older installers.</summary>
+    public string? Edition { get; set; }
 }

@@ -120,7 +120,7 @@ public class UiScaleHostTests
             UiScaleHost.EnsureHooked();
             UiScaleHost.SetConfigured("1.5");
 
-            var dialog = new MailProviderDialog(showDiscord: true)
+            var dialog = new MailProviderDialog(null, MechabellumModManager.Models.AppEdition.Global, showCommunity: true)
             {
                 ShowActivated = false,
                 ShowInTaskbar = false,

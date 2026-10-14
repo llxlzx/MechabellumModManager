@@ -18,6 +18,20 @@ public sealed class UpdateManifest
     [JsonPropertyName("setupUrl")]
     public string SetupUrl { get; set; } = "";
 
+    /// <summary>China-edition Setup. Missing on manifests published before editions; falls back to <see cref="SetupUrl"/>.</summary>
+    [JsonPropertyName("setupUrlCn")]
+    public string? SetupUrlCn { get; set; }
+
+    /// <summary>Global-edition Setup. Falls back to <see cref="SetupUrl"/>.</summary>
+    [JsonPropertyName("setupUrlGlobal")]
+    public string? SetupUrlGlobal { get; set; }
+
+    public string SetupUrlFor(Models.AppEdition edition)
+    {
+        var specific = edition == Models.AppEdition.Cn ? SetupUrlCn : SetupUrlGlobal;
+        return string.IsNullOrWhiteSpace(specific) ? SetupUrl : specific.Trim();
+    }
+
     [JsonPropertyName("publishedAt")]
     public string? PublishedAt { get; set; }
 }
@@ -79,6 +93,9 @@ public sealed class UpdateChecker
 
     /// <summary>Domestic installs try the mirror first. A GitHub-only route omits the mirror.</summary>
     public DownloadRouteKind Route { get; set; } = DownloadRouteKind.MirrorFirst;
+
+    /// <summary>Which Setup an update installs: the China or the Global package.</summary>
+    public Models.AppEdition Edition { get; set; } = Models.AppEdition.Cn;
 
     /// <summary>How long a successful update check is trusted before the next startup asks again.</summary>
     public static readonly TimeSpan QuietPeriod = TimeSpan.FromHours(6);
@@ -165,10 +182,11 @@ public sealed class UpdateChecker
 
             // Installer link must be a real https .exe. Non-downloadable values (Release pages,
             // mailto, http) become BrowseUrl only — never handed to the downloader as Setup.
-            string? setup = ExternalUrlPolicy.IsDownloadableSetupUrl(manifest.SetupUrl)
-                ? manifest.SetupUrl!.Trim()
+            var setupUrl = manifest.SetupUrlFor(Edition);
+            string? setup = ExternalUrlPolicy.IsDownloadableSetupUrl(setupUrl)
+                ? setupUrl.Trim()
                 : null;
-            var browse = DefaultBrowseUrl;
+            var browse = EditionLinks.ReleasesPage(Edition, MirrorBaseUrl, Route);
 
             if (IsNewer(remote, local))
             {
@@ -367,21 +385,31 @@ public sealed class UpdateChecker
         var body = root.TryGetProperty("body", out var b) ? b.GetString() : null;
         var html = root.TryGetProperty("html_url", out var h) ? h.GetString() : null;
         string? setupUrl = html;
+        string? anySetup = null;
+        // Release assets are named ..._CN.exe / ..._Global.exe; older releases have one unsuffixed Setup.
+        var editionMarker = Edition == Models.AppEdition.Cn ? "_CN." : "_Global.";
         if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
         {
             foreach (var asset in assets.EnumerateArray())
             {
                 var name = asset.TryGetProperty("name", out var n) ? n.GetString() : null;
                 if (name is null) continue;
-                if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
-                    name.Contains("Setup", StringComparison.OrdinalIgnoreCase) &&
-                    asset.TryGetProperty("browser_download_url", out var url))
+                if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
+                    !name.Contains("Setup", StringComparison.OrdinalIgnoreCase) ||
+                    !asset.TryGetProperty("browser_download_url", out var url))
+                    continue;
+
+                var link = url.GetString();
+                anySetup ??= link;
+                if (name.Contains(editionMarker, StringComparison.OrdinalIgnoreCase))
                 {
-                    setupUrl = url.GetString() ?? setupUrl;
+                    anySetup = link;
                     break;
                 }
             }
         }
+
+        setupUrl = anySetup ?? setupUrl;
 
         if (string.IsNullOrWhiteSpace(tag)) return null;
         return new UpdateManifest

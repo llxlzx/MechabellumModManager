@@ -199,7 +199,10 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string ProfileDuplicate => T("ProfileDuplicate");
     public string ProfileDelete => T("ActionDelete");
     public string PortableDataRoot => T("PortableDataRoot");
+    public string EditionLabel => T("EditionLabel");
+    public string EditionHint => T("EditionHint");
     public string CheckModUpdatesOnStartup => T("CheckModUpdatesOnStartup");
+    public string CheckModUpdatesOnStartupTip => T("CheckModUpdatesOnStartupTip");
     public string HideMelonConsole => T("HideMelonConsole");
     public string HideMelonConsoleTip => T("HideMelonConsoleTip");
     public string SettingsAdvanced => T("SettingsAdvanced");

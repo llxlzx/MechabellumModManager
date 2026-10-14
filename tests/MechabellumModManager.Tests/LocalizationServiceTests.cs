@@ -26,6 +26,18 @@ public class LocalizationServiceTests
         }
     }
 
+    [Theory]
+    [InlineData("fr-FR", "en", "en")]
+    [InlineData("fr-FR", "zh-CN", "zh-CN")]
+    [InlineData("ko-KR", "en", "en")]
+    [InlineData("de-AT", "en", "de")]
+    [InlineData("zh-TW", "en", "zh-CN")]
+    public void An_unsupported_system_language_falls_back_to_the_edition_default(
+        string culture, string fallback, string expected)
+    {
+        LocalizationService.MatchOrFallback(CultureInfo.GetCultureInfo(culture), fallback).Should().Be(expected);
+    }
+
     [Fact]
     public void ResolveSystemLanguage_ignores_thread_culture_after_Apply()
     {

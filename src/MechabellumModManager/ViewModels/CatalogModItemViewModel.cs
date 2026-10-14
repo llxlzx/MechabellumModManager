@@ -47,7 +47,7 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     /// <summary>True for the first card in the curated workshop strip.</summary>
     public bool IsFeaturedLead { get; set; }
 
-    public string? Summary => CatalogLocaleResolver.ResolveSummary(Mod);
+    public string? Summary => SummaryDisplay.StripManagerFloorPrefix(CatalogLocaleResolver.ResolveSummary(Mod));
 
     public string ManagerFloorText
     {
