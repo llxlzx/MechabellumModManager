@@ -19,6 +19,8 @@ public class DirectUploadDialogSourceTests
         foreach (var name in Banned)
             text.Should().NotContain(name);
 
+        text.Should().Contain("x:Name=\"FeedbackBox\"");
+        text.Should().Contain("FeedbackChannel.Classify");
         text.Should().Contain("x:Name=\"KindBox\"");
         text.Should().Contain("x:Name=\"FileList\"");
         text.Should().Contain("InboxSubmission.Build");

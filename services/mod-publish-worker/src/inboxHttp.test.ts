@@ -50,6 +50,7 @@ function singleGrantBody() {
     summary: "marks things",
     version: "1.2.3",
     kind: "single",
+    feedback: "author@example.com",
     files: [{ role: "dll", name: "QuickMark.dll", size: 10, sha256: SHA_DLL }],
   };
 }
@@ -465,6 +466,22 @@ describe("inbox http", () => {
     expect(headers.get("X-TC-Region")).toBe("ap-shanghai");
     expect(headers.get("X-TC-Timestamp")).toBe(String(timestamp));
     expect(headers.get("Authorization")).toBe(await expectedAuthorization("sid", "skey", timestamp, body));
+  });
+
+  it.each([
+    ["omits feedback", () => {
+      const body = singleGrantBody() as { feedback?: string };
+      delete body.feedback;
+      return body;
+    }],
+    ["sends blank feedback", () => ({ ...singleGrantBody(), feedback: "" })],
+    ["sends http feedback", () => ({ ...singleGrantBody(), feedback: "http://example.com" })],
+  ] as const)("rejects a grant that %s", async (_name, buildBody) => {
+    const kv = memoryKv();
+    await seedInvite(kv);
+    const response = await worker.fetch(post("/v1/inbox/grant", buildBody()), testEnv(kv));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "validation_failed" });
   });
 });
 

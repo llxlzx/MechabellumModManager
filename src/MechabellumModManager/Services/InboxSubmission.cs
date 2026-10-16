@@ -26,7 +26,8 @@ public sealed record InboxGrantRequest(
     [property: JsonPropertyName("summary")] string Summary,
     [property: JsonPropertyName("version")] string Version,
     [property: JsonPropertyName("kind")] string Kind,
-    [property: JsonPropertyName("files")] IReadOnlyList<InboxGrantRequestFile> Files);
+    [property: JsonPropertyName("files")] IReadOnlyList<InboxGrantRequestFile> Files,
+    [property: JsonPropertyName("feedback")] string Feedback);
 
 public sealed record InboxBuildResult(bool Ok, DirectUploadErrorCode Error, InboxGrantRequest? Request);
 
@@ -60,7 +61,8 @@ public static class InboxSubmission
         string name,
         string? summary,
         string? version,
-        IReadOnlyList<InboxSubmissionFile> files)
+        IReadOnlyList<InboxSubmissionFile> files,
+        string? feedback)
     {
         if (kind is not ("single" or "parts" or "bundle"))
             return Fail(DirectUploadErrorCode.ValidationFailed);
@@ -77,6 +79,10 @@ public static class InboxSubmission
         if (version is null)
             version = "";
         else if (version.Length > 32)
+            return Fail(DirectUploadErrorCode.ValidationFailed);
+
+        var channel = FeedbackChannel.Classify(feedback);
+        if (channel.Kind == FeedbackKind.Hidden)
             return Fail(DirectUploadErrorCode.ValidationFailed);
 
         if (files is null)
@@ -112,7 +118,7 @@ public static class InboxSubmission
         return new InboxBuildResult(
             true,
             DirectUploadErrorCode.None,
-            new InboxGrantRequest(id, name, summary, version, kind, parsed));
+            new InboxGrantRequest(id, name, summary, version, kind, parsed, channel.Original));
     }
 
     public static string HashFile(string path)

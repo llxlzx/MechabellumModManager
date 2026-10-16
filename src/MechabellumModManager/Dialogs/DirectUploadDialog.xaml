@@ -33,6 +33,9 @@
             <TextBlock Text="{Binding SummaryLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
             <TextBox x:Name="SummaryBox" MinHeight="56" Margin="0,0,0,8" TextWrapping="Wrap" AcceptsReturn="True" />
 
+            <TextBlock Text="{Binding FeedbackLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
+            <TextBox x:Name="FeedbackBox" MinHeight="36" Margin="0,0,0,8" VerticalContentAlignment="Center" />
+
             <TextBlock Text="{Binding VersionLabel}" Margin="0,0,0,4" Foreground="{StaticResource TextMutedBrush}" />
             <TextBox x:Name="VersionBox" MinHeight="36" Margin="0,0,0,8" VerticalContentAlignment="Center" />
 

@@ -8,6 +8,7 @@ describe("inspectGrant", () => {
     const result = inspectGrant({
       id: "quick-mark",
       name: "Quick Mark",
+      feedback: "author@example.com",
       kind: "single",
       files: [{ role: "dll", name: "QuickMark.dll", size: 100 * 1024 * 1024, sha256: sha }],
     });
@@ -19,6 +20,7 @@ describe("inspectGrant", () => {
     const result = inspectGrant({
       id: "quick-mark",
       name: "Quick Mark",
+      feedback: "author@example.com",
       kind: "parts",
       files: [
         { role: "part", name: "0000", size: 10, sha256: sha },
@@ -32,6 +34,7 @@ describe("inspectGrant", () => {
     const result = inspectGrant({
       id: "QuickMark",
       name: "Quick Mark",
+      feedback: "author@example.com",
       kind: "single",
       files: [{ role: "dll", name: "QuickMark.dll", size: 10, sha256: sha }],
     });
@@ -42,6 +45,7 @@ describe("inspectGrant", () => {
     const result = inspectGrant({
       id: "quick-mark",
       name: "Quick Mark",
+      feedback: "author@example.com",
       kind: "parts",
       files: [
         { role: "part", name: "0000", size: 10, sha256: sha },
@@ -50,9 +54,54 @@ describe("inspectGrant", () => {
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+    expect(result.value.feedback).toBe("author@example.com");
     expect(assignKeys("author1", result.value).map((item) => item.key)).toEqual([
       "inbox/author1/quick-mark/parts/0000",
       "inbox/author1/quick-mark/parts/0001",
     ]);
   });
+
+  it("rejects a grant that omits feedback", () => {
+    const result = inspectGrant({
+      id: "quick-mark",
+      name: "Quick Mark",
+      kind: "single",
+      files: [{ role: "dll", name: "QuickMark.dll", size: 10, sha256: sha }],
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("validation_failed");
+  });
+
+  it.each(["", "   ", "http://example.com", "javascript:alert(1)", "mailto:not-an-email", "https://user@evil.example/form"])(
+    "rejects feedback %j",
+    (feedback) => {
+      const result = inspectGrant({
+        id: "quick-mark",
+        name: "Quick Mark",
+        feedback,
+        kind: "single",
+        files: [{ role: "dll", name: "QuickMark.dll", size: 10, sha256: sha }],
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.error).toBe("validation_failed");
+    },
+  );
+
+  it.each(["author@example.com", "https://example.com/form", "QQ 12345"])(
+    "accepts feedback %j",
+    (feedback) => {
+      const result = inspectGrant({
+        id: "quick-mark",
+        name: "Quick Mark",
+        feedback,
+        kind: "single",
+        files: [{ role: "dll", name: "QuickMark.dll", size: 10, sha256: sha }],
+      });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.feedback).toBe(feedback);
+    },
+  );
 });

@@ -66,6 +66,68 @@ public class InboxGrantClientTests
     }
 
     [Fact]
+    public async Task Blank_feedback_is_not_sent()
+    {
+        var calls = 0;
+        var handler = new AsyncHandler((_, _) =>
+        {
+            calls++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        });
+        var client = new InboxGrantClient(new HttpClient(handler), "https://example.test");
+        var built = InboxSubmission.Build(
+            "single",
+            "quick-mark",
+            "Quick Mark",
+            "a mark",
+            "1.0",
+            new[]
+            {
+                new InboxSubmissionFile("dll", "QuickMark.dll", @"C:\mods\QuickMark.dll", 10, Sha, false)
+            },
+            "   ");
+
+        built.Ok.Should().BeFalse();
+        built.Error.Should().Be(DirectUploadErrorCode.ValidationFailed);
+        built.Request.Should().BeNull();
+        if (built.Ok && built.Request is not null)
+            await client.RequestAsync("invite-plaintext-9f3a", built.Request);
+
+        calls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RequestAsync_posts_usable_feedback()
+    {
+        string? posted = null;
+        var handler = new AsyncHandler(async (req, ct) =>
+        {
+            posted = await req.Content!.ReadAsStringAsync(ct);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(GrantJson, Encoding.UTF8, "application/json")
+            };
+        });
+        var client = new InboxGrantClient(new HttpClient(handler), "https://example.test");
+        var built = InboxSubmission.Build(
+            "single",
+            "quick-mark",
+            "Quick Mark",
+            "a mark",
+            "1.0",
+            new[]
+            {
+                new InboxSubmissionFile("dll", "QuickMark.dll", @"C:\mods\QuickMark.dll", 10, Sha, false)
+            },
+            "author@example.com");
+
+        built.Ok.Should().BeTrue();
+        await client.RequestAsync("invite-plaintext-9f3a", built.Request!);
+
+        posted.Should().Contain("\"feedback\":\"author@example.com\"");
+    }
+
+    [Fact]
     public async Task RequestAsync_error_detail_omits_secret_and_discards_body()
     {
         const string secret = "LEAKED-SECRET-KEY";
@@ -151,6 +213,8 @@ public class InboxGrantClientTests
         result.Credentials.Should().BeNull();
         result.Objects.Should().BeEmpty();
     }
+
+    const string Sha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
     const string GrantJson =
         """

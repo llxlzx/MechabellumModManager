@@ -106,6 +106,13 @@ public partial class DirectUploadDialog : Window
             return;
         }
 
+        var feedback = FeedbackBox.Text;
+        if (FeedbackChannel.Classify(feedback).Kind == FeedbackKind.Hidden)
+        {
+            StatusText.Text = _ui.DirectUploadErrValidation;
+            return;
+        }
+
         _config.AuthorInviteCode = InviteBox.Text?.Trim() ?? "";
         _saveConfig(_config);
 
@@ -142,7 +149,8 @@ public partial class DirectUploadDialog : Window
                 name,
                 string.IsNullOrWhiteSpace(SummaryBox.Text) ? null : SummaryBox.Text.Trim(),
                 string.IsNullOrWhiteSpace(VersionBox.Text) ? null : VersionBox.Text.Trim(),
-                submissionFiles);
+                submissionFiles,
+                feedback);
             if (!built.Ok || built.Request is null)
             {
                 StatusText.Text = MapError(built.Error);
@@ -405,6 +413,7 @@ public partial class DirectUploadDialog : Window
         public string ModIdLabel => _ui.DirectUploadModId;
         public string NameLabel => _ui.DirectUploadName;
         public string SummaryLabel => _ui.DirectUploadSummary;
+        public string FeedbackLabel => _ui.Feedback;
         public string VersionLabel => _ui.DirectUploadVersion;
         public string KindLabel => _ui.DirectUploadKind;
         public string AddFileLabel => _ui.DirectUploadPickDll;

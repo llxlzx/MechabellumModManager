@@ -1,3 +1,5 @@
+import { classifyFeedback } from "./catalog";
+
 export type GrantKind = "single" | "parts" | "bundle";
 
 export type GrantRole = "dll" | "part" | "bundle" | "preview";
@@ -17,6 +19,7 @@ export interface GrantRequest {
   version: string;
   kind: GrantKind;
   files: GrantFile[];
+  feedback: string;
 }
 
 export interface AssignedKey {
@@ -74,6 +77,9 @@ export function inspectGrant(body: unknown): InspectGrantResult {
   const summary = optionalText(body.summary, 400);
   const version = optionalText(body.version, 32);
   if (summary === null || version === null) return failed("validation_failed");
+  if (typeof body.feedback !== "string" || classifyFeedback(body.feedback) !== "ok")
+    return failed("validation_failed");
+  const feedback = body.feedback.trim();
   if (!Array.isArray(body.files)) return failed("validation_failed");
 
   const files: GrantFile[] = [];
@@ -96,7 +102,7 @@ export function inspectGrant(body: unknown): InspectGrantResult {
 
   return {
     ok: true,
-    value: { id: body.id, name: body.name, summary, version, kind, files },
+    value: { id: body.id, name: body.name, summary, version, kind, files, feedback },
   };
 }
 
