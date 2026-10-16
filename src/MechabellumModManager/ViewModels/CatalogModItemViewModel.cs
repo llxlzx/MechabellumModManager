@@ -69,6 +69,9 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public string File => Mod.File;
     public string? Type => Mod.Type;
 
+    public bool ShowModFeedback =>
+        FeedbackChannel.Classify(Mod.Feedback).Kind != FeedbackKind.Hidden;
+
     public ModCategory EffectiveCategory =>
         ModTaxonomy.ParseCategoryOrUncategorized(Mod.Category);
 

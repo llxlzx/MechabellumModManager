@@ -177,6 +177,9 @@ public sealed class CatalogMod
     /// </summary>
     [JsonPropertyName("minManagerVersion")]
     public string? MinManagerVersion { get; set; }
+
+    [JsonPropertyName("feedback")]
+    public string? Feedback { get; set; }
 }
 
 /// <summary>

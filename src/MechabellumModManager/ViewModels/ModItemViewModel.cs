@@ -12,6 +12,7 @@ public sealed partial class ModItemViewModel : ObservableObject
     CancellationTokenSource? _previewCts;
     string? _previewLoadUrl;
     CatalogMod? _boundCatalog;
+    FeedbackDecision? _modFeedbackDecision;
 
     public ModPackage Package { get; }
     public bool IsMissing { get; }
@@ -112,6 +113,25 @@ public sealed partial class ModItemViewModel : ObservableObject
     private string? _latestVersion;
 
     public bool ShowCatalogUpdateButton => HasUpdate && !UpdateBlockedByManager;
+
+    public FeedbackDecision ModFeedbackDecision =>
+        _modFeedbackDecision ?? new FeedbackDecision(FeedbackKind.Hidden, null, "");
+
+    public bool ShowModFeedback => ModFeedbackDecision.Kind != FeedbackKind.Hidden;
+
+    public void SetCatalogFeedback(string? raw)
+    {
+        _modFeedbackDecision = FeedbackChannel.Classify(raw);
+        OnPropertyChanged(nameof(ModFeedbackDecision));
+        OnPropertyChanged(nameof(ShowModFeedback));
+    }
+
+    public void ClearCatalogFeedback()
+    {
+        _modFeedbackDecision = null;
+        OnPropertyChanged(nameof(ModFeedbackDecision));
+        OnPropertyChanged(nameof(ShowModFeedback));
+    }
 
     public string UpdateStatusText
     {
@@ -250,6 +270,7 @@ public sealed partial class ModItemViewModel : ObservableObject
                 : string.Format(LocalizationService.T("ManagerFloorBlocked"), floor.Required, floor.Local)
             : "";
         CatalogMatched = true;
+        SetCatalogFeedback(catalog.Feedback);
         RefreshCatalogFieldsFromPackage();
     }
 

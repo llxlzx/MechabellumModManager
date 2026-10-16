@@ -4769,6 +4769,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             foreach (var mod in Mods)
             {
+                mod.ClearCatalogFeedback();
                 if (!mod.HasUpdate && mod.LatestVersion is null && !mod.CatalogMatched && !mod.IsStaleDuplicate) continue;
                 mod.HasUpdate = false;
                 mod.IsStaleDuplicate = false;
@@ -4782,7 +4783,11 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 if (mod.IsMissing) continue;
                 var match = FindCatalogMatch(mod);
-                if (match is null) continue;
+                if (match is null)
+                {
+                    mod.ClearCatalogFeedback();
+                    continue;
+                }
                 mod.ApplyCatalogEnrichment(match.Mod, _library.List());
             }
         }
