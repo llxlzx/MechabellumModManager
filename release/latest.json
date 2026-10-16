@@ -1,6 +1,6 @@
 {
   "version": "2.0.2",
-  "notes": "v2.0.2\n- 已装 Mod 和 Mod 工坊每一行都有「反馈」。作者留下联系方式就能打开；没留下会提示。\n- 给管理器提建议仍然发给维护者。\n- 新上架：信用点助手、隐藏操作提示、升级助手、网格标尺。\n- 信用点助手、好友列表叠加面板、回放功能重置、排行榜卡顿修复的反馈会发到维护者邮箱。",
+  "notes": "v2.0.2\n- 已装 Mod 和 Mod 工坊每一行都有「反馈」。\n- 大部分作者的详细联系方式还没有收集完，之后会逐渐补上。之后投稿的作者请留下自己接收反馈的联系方式。\n- 新上架：信用点助手、隐藏操作提示、升级助手、网格标尺。",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_Global.exe",
   "setupUrlCn": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_CN.exe",
   "setupUrlGlobal": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_Global.exe",
