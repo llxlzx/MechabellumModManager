@@ -1,9 +1,9 @@
 {
-  "version": "2.0.1",
-  "notes": "v2.0.1\n- 国内版 / 国际版：安装包与应用内更新分流（setupUrlCn / setupUrlGlobal）；设置里可切换\n- 顶栏增加 QQ 群（国内版）与 Discord（国际版）入口\n- 目录强制下架：签名名单可从本地库与游戏目录移除已下架 Mod（需本版公钥）\n- Mod 简介改为「功能与用法」优先，并去掉开头的管理器版本要求句",
-  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_Setup_v2.0.1_Global.exe",
-  "setupUrlCn": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_Setup_v2.0.1_CN.exe",
-  "setupUrlGlobal": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_Setup_v2.0.1_Global.exe",
-  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.1/MechabellumModManager_portable_v2.0.1.zip",
-  "publishedAt": "2026-10-14T11:47:21Z"
+  "version": "2.0.2",
+  "notes": "v2.0.2\n- 已装 Mod 和 Mod 工坊每一行都有「反馈」。作者留下联系方式就能打开；没留下会提示。\n- 给管理器提建议仍然发给维护者。\n- 新上架：信用点助手、隐藏操作提示、升级助手、网格标尺。\n- 信用点助手、好友列表叠加面板、回放功能重置、排行榜卡顿修复的反馈会发到维护者邮箱。",
+  "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_Global.exe",
+  "setupUrlCn": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_CN.exe",
+  "setupUrlGlobal": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_Global.exe",
+  "portableUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_portable_v2.0.2.zip",
+  "publishedAt": "2026-10-17T00:00:00Z"
 }
