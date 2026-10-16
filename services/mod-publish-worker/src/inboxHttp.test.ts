@@ -183,11 +183,13 @@ describe("inbox http", () => {
       name: string;
       summary: string;
       version: string;
+      feedback: string;
       objects: { sha256: string; size: number; main: boolean }[];
     };
     expect(stored.kind).toBe("single");
     expect(stored.name).toBe("Quick Mark");
     expect(stored.summary).toBe("marks things");
+    expect(stored.feedback).toBe("author@example.com");
     expect(stored.version).toBe("1.2.3");
     expect(stored.objects[0]).toMatchObject({ sha256: SHA_DLL, size: 10, main: false });
     expect(raw).not.toContain("inviteCode");

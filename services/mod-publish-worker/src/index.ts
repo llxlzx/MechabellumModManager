@@ -169,6 +169,7 @@ async function handleGrant(request: Request, env: Env): Promise<Response> {
     name: grant.name,
     summary: grant.summary,
     version: grant.version,
+    feedback: grant.feedback,
     status: "issued",
     objects,
   };
