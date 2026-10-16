@@ -3299,7 +3299,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             case FeedbackKind.OpenHttps:
                 if (string.IsNullOrWhiteSpace(decision.Target) || !TryOpenUrl(decision.Target))
-                    _notify(Ui.MailOpenFailed);
+                    _notify(Ui.FeedbackOpenFailed);
                 else
                     AppendLog("已打开模组反馈");
                 return;
@@ -3319,7 +3319,7 @@ public sealed partial class MainViewModel : ObservableObject
                 if (picked == MailProvider.Gmail)
                 {
                     if (!TryOpenUrl(mail.GmailUrl))
-                        _notify(Ui.MailOpenFailed);
+                        _notify(Ui.FeedbackOpenFailed);
                     else
                         AppendLog("已打开模组反馈");
                     return;
@@ -3331,7 +3331,7 @@ public sealed partial class MainViewModel : ObservableObject
                     AppendLog("已复制模组反馈");
                     if (!TryOpenUrl(ModFeedbackMail.QqWebMail))
                     {
-                        _notify(Ui.MailOpenFailed);
+                        _notify(Ui.FeedbackOpenFailed);
                         return;
                     }
 

@@ -347,6 +347,9 @@
   <data name="FeedbackCopied" xml:space="preserve">
     <value>Copied the author's feedback channel</value>
   </data>
+  <data name="FeedbackOpenFailed" xml:space="preserve">
+    <value>Could not open feedback.</value>
+  </data>
   <data name="FeedbackPasteMail" xml:space="preserve">
     <value>Copied the recipient, subject, and body. Paste them into the mail.</value>
   </data>

@@ -165,6 +165,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string FeedbackButton => T("FeedbackButton");
     public string Feedback => T("Feedback");
     public string FeedbackCopied => T("FeedbackCopied");
+    public string FeedbackOpenFailed => T("FeedbackOpenFailed");
     public string FeedbackPasteMail => T("FeedbackPasteMail");
     public string SubmitGuideTitle => T("SubmitGuideTitle");
     public string SubmitGuideIntro => T("SubmitGuideIntro");
