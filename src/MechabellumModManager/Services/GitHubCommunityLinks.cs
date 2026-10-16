@@ -243,7 +243,7 @@ public static class GitHubCommunityLinks
             "【游戏端 / Game】正式服 / 测试服 / 两者（Official / Test / Both）\n" +
             "【分类 / Category】（OverlayUI / QoL / Camera / CombatAssist / Economy / ReplayDebug / Misc，可空）\n" +
             "【标签 / Tags】（逗号分隔，可空）\n" +
-            "【联系方式 / Contact】（可选）\n" +
+            "【反馈渠道 / Feedback】（必填。作者自己提供，玩家要能据此联系上作者。会打开的只有不带用户信息的 https。这是把使用问题送回作者的渠道，中文和英文玩家都要能用。）\n" +
             "【备注 / Notes】\n";
     }
 
@@ -256,7 +256,7 @@ public static class GitHubCommunityLinks
             "【作者 / Author】\n" +
             "【原版本 → 新版本 / Version】\n" +
             "【更新说明 / Changelog】\n" +
-            "【联系方式 / Contact】（可选）\n";
+            "【反馈渠道 / Feedback】（必填。作者自己提供，玩家要能据此联系上作者。会打开的只有不带用户信息的 https。这是把使用问题送回作者的渠道，中文和英文玩家都要能用。）\n";
     }
 
     public static string BuildReportBody(

@@ -5,6 +5,10 @@ using MechabellumModManager.Services;
 
 public class GitHubCommunityLinksTests
 {
+    const string RequiredFeedbackChannelLine =
+        "【反馈渠道 / Feedback】（必填。作者自己提供，玩家要能据此联系上作者。会打开的只有不带用户信息的 https。这是把使用问题送回作者的渠道，中文和英文玩家都要能用。）";
+
+    const string OptionalContactLine = "【联系方式 / Contact】（可选）";
     [Fact]
     public void ContributeGuideUrl_points_at_email_readme_section()
     {
@@ -90,6 +94,24 @@ public class GitHubCommunityLinksTests
             "【功能与用法 / How to use】第一句写能做什么、怎么操作，不要写管理器版本或更新日志。" +
             "First sentence: what it does and how to use it. No manager version or changelog.\n");
         body.Should().NotContain("一句话简介");
+    }
+
+    [Fact]
+    public void BuildSubmitBody_requires_author_feedback_channel()
+    {
+        var body = GitHubCommunityLinks.BuildSubmitBody("Demo");
+        body.Should().Contain(RequiredFeedbackChannelLine);
+        body.Should().NotContain(OptionalContactLine);
+        GitHubCommunityLinks.Inbox.Should().Be("llxmod@foxmail.com");
+    }
+
+    [Fact]
+    public void BuildUpdateBody_requires_author_feedback_channel()
+    {
+        var body = GitHubCommunityLinks.BuildUpdateBody("Demo");
+        body.Should().Contain(RequiredFeedbackChannelLine);
+        body.Should().NotContain(OptionalContactLine);
+        GitHubCommunityLinks.Inbox.Should().Be("llxmod@foxmail.com");
     }
 
     [Fact]
