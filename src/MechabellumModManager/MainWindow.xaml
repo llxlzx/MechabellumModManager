@@ -1489,6 +1489,22 @@
                                                     ElementStyle="{StaticResource GridCellTextStyle}"
                                                     Width="120"
                                                     MinWidth="100" />
+                                <DataGridTemplateColumn Header="{Binding Data.Ui.Feedback, Source={StaticResource Proxy}}"
+                                                        Width="84"
+                                                        MinWidth="76"
+                                                        CanUserSort="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding DataContext.Ui.Feedback, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Command="{Binding DataContext.SendCatalogModFeedbackCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="8,4"
+                                                    MinHeight="32"
+                                                    MinWidth="64"
+                                                    Style="{StaticResource AccentButtonStyle}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                         <TextBlock Text="{Binding Ui.CatalogEmptyHint}"
@@ -1515,8 +1531,7 @@
                                         MinHeight="30"
                                         FontSize="13"
                                         Margin="0,0,0,6"
-                                        Style="{StaticResource GhostButtonStyle}"
-                                        Visibility="{Binding SelectedCatalogMod.ShowModFeedback, Converter={StaticResource BoolToVis}}" />
+                                        Style="{StaticResource AccentButtonStyle}" />
                                 <Button Command="{Binding ReportCatalogModCommand}"
                                         MinWidth="72"
                                         Padding="10,6"
@@ -1987,6 +2002,22 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="{Binding Data.Ui.Feedback, Source={StaticResource Proxy}}"
+                                                        Width="84"
+                                                        MinWidth="76"
+                                                        CanUserSort="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding DataContext.Ui.Feedback, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Command="{Binding DataContext.SendLibraryModFeedbackCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="8,4"
+                                                    MinHeight="32"
+                                                    MinWidth="64"
+                                                    Style="{StaticResource AccentButtonStyle}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="" Width="72" MinWidth="64" CanUserSort="False">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -2025,8 +2056,7 @@
                                                     MinHeight="30"
                                                     FontSize="13"
                                                     Margin="0,0,0,6"
-                                                    Style="{StaticResource GhostButtonStyle}"
-                                                    Visibility="{Binding SelectedLibraryMod.ShowModFeedback, Converter={StaticResource BoolToVis}}" />
+                                                    Style="{StaticResource AccentButtonStyle}" />
                                             <Button Command="{Binding ReportLibraryModCommand}"
                                                     MinWidth="72"
                                                     Padding="10,6"

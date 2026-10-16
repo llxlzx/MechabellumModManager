@@ -344,6 +344,9 @@
   <data name="Feedback" xml:space="preserve">
     <value>Feedback</value>
   </data>
+  <data name="FeedbackMissing" xml:space="preserve">
+    <value>This author has not left a feedback method yet.</value>
+  </data>
   <data name="FeedbackCopied" xml:space="preserve">
     <value>Copied the author's feedback channel</value>
   </data>

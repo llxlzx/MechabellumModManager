@@ -3271,29 +3271,34 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    void SendCatalogModFeedback()
+    void SendCatalogModFeedback(CatalogModItemViewModel? mod)
     {
-        if (SelectedCatalogMod is null) return;
+        mod ??= SelectedCatalogMod;
+        if (mod is null) return;
         SendModFeedback(
-            FeedbackChannel.Classify(SelectedCatalogMod.Mod.Feedback),
-            SelectedCatalogMod.Name,
-            SelectedCatalogMod.Version);
+            FeedbackChannel.Classify(mod.Mod.Feedback),
+            mod.Name,
+            mod.Version);
     }
 
     [RelayCommand]
-    void SendLibraryModFeedback()
+    void SendLibraryModFeedback(ModItemViewModel? mod)
     {
-        if (SelectedLibraryMod is null) return;
+        mod ??= SelectedLibraryMod;
+        if (mod is null || mod.IsMissing) return;
         SendModFeedback(
-            SelectedLibraryMod.ModFeedbackDecision,
-            SelectedLibraryMod.DisplayName,
-            SelectedLibraryMod.Version);
+            mod.ModFeedbackDecision,
+            mod.DisplayName,
+            mod.Version);
     }
 
     void SendModFeedback(FeedbackDecision decision, string visibleName, string? version)
     {
         if (decision.Kind == FeedbackKind.Hidden)
+        {
+            _notify(Ui.FeedbackMissing);
             return;
+        }
 
         switch (decision.Kind)
         {

@@ -344,6 +344,9 @@
   <data name="Feedback" xml:space="preserve">
     <value>反馈</value>
   </data>
+  <data name="FeedbackMissing" xml:space="preserve">
+    <value>这位作者还没有留下反馈方式。</value>
+  </data>
   <data name="FeedbackCopied" xml:space="preserve">
     <value>已复制作者留下的反馈方式</value>
   </data>

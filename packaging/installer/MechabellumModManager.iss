@@ -3,7 +3,7 @@
 ; Or run: build-installer.bat
 
 #define MyAppName "Mechabellum Mod Manager"
-#define MyAppVersion "2.0.1"
+#define MyAppVersion "2.0.2"
 #define MyAppPublisher "Mechabellum Mod Manager"
 #define MyAppExeName "MechabellumModManager.exe"
 #define MyAppId "MechabellumModManager"

@@ -164,6 +164,7 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string MailOpenFailed => T("MailOpenFailed");
     public string FeedbackButton => T("FeedbackButton");
     public string Feedback => T("Feedback");
+    public string FeedbackMissing => T("FeedbackMissing");
     public string FeedbackCopied => T("FeedbackCopied");
     public string FeedbackOpenFailed => T("FeedbackOpenFailed");
     public string FeedbackPasteMail => T("FeedbackPasteMail");

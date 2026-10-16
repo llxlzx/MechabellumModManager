@@ -128,7 +128,7 @@
     <value>Cheat</value>
   </data>
   <data name="ReportCategoryVirus" xml:space="preserve">
-    <value>Virus / Malware</value>
+    <value>Virus / Schadsoftware</value>
   </data>
   <data name="ReportCategoryUnrelated" xml:space="preserve">
     <value>Nicht spielbezogen</value>
@@ -179,10 +179,10 @@
     <value>In den Eingangsbereich hochgeladen. Spieler sehen es noch nicht. Es erscheint, nachdem der Betreuer es in den Katalog übernommen und den Spiegel abgeglichen hat.</value>
   </data>
   <data name="DirectUploadInviteCode" xml:space="preserve">
-    <value>Invite code</value>
+    <value>Einladungscode</value>
   </data>
   <data name="DirectUploadSaveCode" xml:space="preserve">
-    <value>Save</value>
+    <value>Speichern</value>
   </data>
   <data name="DirectUploadSecretId" xml:space="preserve">
     <value>SecretId</value>
@@ -200,10 +200,10 @@
     <value>Bitte SecretId und SecretKey zusammen eintragen.</value>
   </data>
   <data name="DirectUploadModId" xml:space="preserve">
-    <value>Mod Id (folder name)</value>
+    <value>Mod-Id (Ordnername)</value>
   </data>
   <data name="DirectUploadName" xml:space="preserve">
-    <value>Display name</value>
+    <value>Anzeigename</value>
   </data>
   <data name="DirectUploadSummary" xml:space="preserve">
     <value>Bedienung</value>
@@ -212,10 +212,10 @@
     <value>Version</value>
   </data>
   <data name="DirectUploadPickDll" xml:space="preserve">
-    <value>Pick DLL</value>
+    <value>DLL wählen</value>
   </data>
   <data name="DirectUploadPickPreview" xml:space="preserve">
-    <value>Preview</value>
+    <value>Vorschaubild</value>
   </data>
   <data name="DirectUploadPublish" xml:space="preserve">
     <value>Mod-Dateien hochladen</value>
@@ -260,37 +260,37 @@
     <value>Dieser PC kann nicht in den Inlandsspiegel schreiben. coscli installieren und mit einem Konto, das den Bucket schreiben darf, coscli config init ausführen.</value>
   </data>
   <data name="DirectUploadNeedInvite" xml:space="preserve">
-    <value>Enter an invite code first.</value>
+    <value>Zuerst einen Einladungscode eingeben.</value>
   </data>
   <data name="DirectUploadNeedFields" xml:space="preserve">
-    <value>Fill Id, name, and pick a DLL.</value>
+    <value>Id und Name ausfüllen und eine DLL wählen.</value>
   </data>
   <data name="DirectUploadCodeSaved" xml:space="preserve">
-    <value>Invite code saved.</value>
+    <value>Einladungscode gespeichert.</value>
   </data>
   <data name="DirectUploadPublishing" xml:space="preserve">
-    <value>Uploading and publishing…</value>
+    <value>Wird hochgeladen und veröffentlicht…</value>
   </data>
   <data name="DirectUploadErrInvalidInvite" xml:space="preserve">
-    <value>Invalid or revoked invite code.</value>
+    <value>Einladungscode ungültig oder widerrufen.</value>
   </data>
   <data name="DirectUploadErrForbidden" xml:space="preserve">
-    <value>Not allowed to update this mod (unowned or not yours).</value>
+    <value>Dieses Mod darf nicht aktualisiert werden (nicht beansprucht oder nicht deins).</value>
   </data>
   <data name="DirectUploadErrValidation" xml:space="preserve">
-    <value>Invalid fields or file.</value>
+    <value>Felder oder Datei sind ungültig.</value>
   </data>
   <data name="DirectUploadErrTooLarge" xml:space="preserve">
-    <value>File too large (limit ~95MB for now).</value>
+    <value>Datei zu groß (derzeit etwa 95 MB).</value>
   </data>
   <data name="DirectUploadErrConflict" xml:space="preserve">
-    <value>Catalog conflict — retry.</value>
+    <value>Katalogkonflikt. Bitte erneut versuchen.</value>
   </data>
   <data name="DirectUploadErrGithub" xml:space="preserve">
-    <value>GitHub write failed. Retry later or contact the maintainer.</value>
+    <value>Schreiben nach GitHub fehlgeschlagen. Später erneut versuchen oder den Betreuer kontaktieren.</value>
   </data>
   <data name="DirectUploadErrNetwork" xml:space="preserve">
-    <value>Network error. Check connection and retry.</value>
+    <value>Netzwerkfehler. Verbindung prüfen und erneut versuchen.</value>
   </data>>
   <data name="SubmitMailOpenedDomestic" xml:space="preserve">
     <value>Betreff &amp; Text kopiert; QQ-Mail-Web geöffnet — neue Nachricht erstellen, einfügen, anhängen und an llxmod@foxmail.com senden.</value>
@@ -339,19 +339,22 @@
   <data name="DiagnosticsQqGroupOpenFailed" xml:space="preserve"><value>QQ-Gruppenseite konnte nicht geöffnet werden. Senden Sie die Diagnose-ZIP stattdessen per Mail.</value></data>
   <data name="DiagnosticsFollowUpCancelled" xml:space="preserve"><value>Abgebrochen. Die ZIP ist gespeichert. Keine Mail kopiert und Discord nicht geöffnet.</value></data>
   <data name="FeedbackButton" xml:space="preserve">
-    <value>Feedback</value>
+    <value>Hinweis</value>
   </data>
   <data name="Feedback" xml:space="preserve">
-    <value>Feedback</value>
+    <value>Rückmeldung</value>
+  </data>
+  <data name="FeedbackMissing" xml:space="preserve">
+    <value>Dieser Autor hat noch keine Rückmeldung hinterlegt.</value>
   </data>
   <data name="FeedbackCopied" xml:space="preserve">
-    <value>Copied the author's feedback channel</value>
+    <value>Die Rückmeldung des Autors wurde kopiert</value>
   </data>
   <data name="FeedbackOpenFailed" xml:space="preserve">
-    <value>Could not open feedback.</value>
+    <value>Rückmeldung konnte nicht geöffnet werden.</value>
   </data>
   <data name="FeedbackPasteMail" xml:space="preserve">
-    <value>Copied the recipient, subject, and body. Paste them into the mail.</value>
+    <value>Empfänger, Betreff und Text wurden kopiert. Bitte in die E-Mail einfügen.</value>
   </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
     <value>Einreichen</value>
@@ -463,7 +466,7 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="GuideApplyBody" xml:space="preserve"><value>Ein Häkchen ändert nur das Profil, nicht sofort den Spielordner. Steht oben „Profil geändert; Spielordner nicht synchron — «Profil anwenden» klicken“, ist noch nichts geschrieben.</value></data>
   <data name="GuideNoteApply" xml:space="preserve"><value>Oben „Anwenden &amp; starten“ schreibt zuerst den Spielordner und startet dann. Nur schreiben, ohne Start: „Profil anwenden“.</value></data>
   <data name="GuideLaterTitle" xml:space="preserve"><value>Nach der ersten Runde</value></data>
-  <data name="GuideImportTitle" xml:space="preserve"><value>Import</value></data>
+  <data name="GuideImportTitle" xml:space="preserve"><value>Importieren</value></data>
   <data name="GuideImportBody" xml:space="preserve"><value>Unter Installiert lassen sich dll, zip oder Ordner importieren, oder Mods aus dem Spielordner zurückholen.</value></data>
   <data name="GuideUpdatesTitle" xml:space="preserve"><value>Updates und Konsole</value></data>
   <data name="GuideUpdatesBody" xml:space="preserve"><value>In den Einstellungen lassen sich Mod-Updates beim Start prüfen. Die Melon-Konsole auszublenden gilt erst beim nächsten Spielstart.</value></data>
@@ -495,34 +498,34 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
     <value>MelonLoader installieren/aktualisieren</value>
   </data>
   <data name="InstallMelonLoaderTip" xml:space="preserve">
-    <value>Writes MelonLoader from the offline zip shipped with Setup (no GitHub needed)</value>
+    <value>Schreibt MelonLoader aus dem Offline-Paket des Setup in den Spielordner (kein GitHub nötig)</value>
   </data>
   <data name="ConfirmInstallMelonLoader" xml:space="preserve">
-    <value>Install MelonLoader into the current game folder? Close the game first.</value>
+    <value>MelonLoader in den aktuellen Spielordner installieren? Schließe zuerst das Spiel.</value>
   </data>
   <data name="ConfirmUpgradeMelonLoader" xml:space="preserve">
     <value>MelonLoader ist älter als die mitgelieferte Version 0.7.3. Mit dem Offline-Paket im aktuellen Spielordner überschreiben und aktualisieren? Bitte zuerst das Spiel schließen.</value>
   </data>
   <data name="NotifyMelonInstallNeedGamePath" xml:space="preserve">
-    <value>Set a valid game path in Settings first.</value>
+    <value>Lege zuerst in den Einstellungen einen gültigen Spielpfad fest.</value>
   </data>
   <data name="NotifyMelonInstallCloseGame" xml:space="preserve">
-    <value>Close Mechabellum before installing MelonLoader.</value>
+    <value>Schließe Mechabellum, bevor MelonLoader installiert wird.</value>
   </data>
   <data name="LogMelonInstallStart" xml:space="preserve">
-    <value>Installing MelonLoader…</value>
+    <value>MelonLoader wird installiert…</value>
   </data>
   <data name="LogMelonInstallLocalZip" xml:space="preserve">
-    <value>Using local offline package: {0}</value>
+    <value>Lokales Offline-Paket wird verwendet: {0}</value>
   </data>
   <data name="LogMelonInstallDownload" xml:space="preserve">
-    <value>No local offline package; trying GitHub download…</value>
+    <value>Kein lokales Offline-Paket. GitHub-Download wird versucht…</value>
   </data>
   <data name="NotifyMelonInstallOk" xml:space="preserve">
-    <value>MelonLoader installed. If assemblies are still missing, generate them when applying a profile.</value>
+    <value>MelonLoader ist installiert. Fehlen noch Assemblys, können sie beim Anwenden eines Profils erzeugt werden.</value>
   </data>
   <data name="NotifyMelonInstallFailed" xml:space="preserve">
-    <value>MelonLoader install failed: {0}</value>
+    <value>MelonLoader-Installation fehlgeschlagen: {0}</value>
   </data>
 <data name="LogExpand" xml:space="preserve">
     <value>Protokoll öffnen</value>
@@ -563,15 +566,15 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="UsageFollowCatalog" xml:space="preserve"><value>Katalog folgen</value></data>
   <data name="ExtraTagsHint" xml:space="preserve"><value>Zusätzliche Stichwörter (kommagetrennt)</value></data>
   <data name="BranchSwitchTitle" xml:space="preserve"><value>Offiziell / Test</value></data>
-  <data name="BranchSwitchStatus" xml:space="preserve"><value>Current branch</value></data>
+  <data name="BranchSwitchStatus" xml:space="preserve"><value>Aktueller Zweig</value></data>
   <data name="BranchSwitchBetaName" xml:space="preserve"><value>Beta-Name (Standard public_test; nur bei Bedarf ändern)</value></data>
-  <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Official profile</value></data>
-  <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta profile</value></data>
-  <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Switch to Official</value></data>
-  <data name="BranchSwitchToBeta" xml:space="preserve"><value>Switch to Beta</value></data>
+  <data name="BranchSwitchOfficialProfile" xml:space="preserve"><value>Offizielles Profil</value></data>
+  <data name="BranchSwitchBetaProfile" xml:space="preserve"><value>Beta-Profil</value></data>
+  <data name="BranchSwitchToOfficial" xml:space="preserve"><value>Zu Offiziell wechseln</value></data>
+  <data name="BranchSwitchToBeta" xml:space="preserve"><value>Zu Beta wechseln</value></data>
   <data name="BranchSwitchStartWizard" xml:space="preserve"><value>Start dual-branch setup</value></data>
   <data name="BranchSwitchEmergencyRecover" xml:space="preserve"><value>Offiziellen Ordner wiederherstellen</value></data>
-  <data name="BranchSwitchTeardown" xml:space="preserve"><value>Remove dual-branch setup</value></data>
+  <data name="BranchSwitchTeardown" xml:space="preserve"><value>Zwei-Server-Einrichtung aufheben</value></data>
   <data name="BranchSwitchRepairOrphan" xml:space="preserve"><value>Einzelordner wiederherstellen</value></data>
   <data name="BranchSwitchConfirmManual" xml:space="preserve"><value>Testzweig in Steam gewählt — weiter</value></data>
   <data name="BranchSwitchConfirmSettle" xml:space="preserve"><value>Steam-Wechsel fertig — weiter</value></data>
@@ -666,8 +669,8 @@ Eine E-Mail = eine Anfrage. Maintainer prüfen und laden in den Katalog — kein
   <data name="ConfirmBranchDeleteOtherStore" xml:space="preserve"><value>Den separaten Spieleordner des anderen Zweigs auch löschen? Dateien werden dauerhaft entfernt. (Empfohlen: Nein)</value></data>
   <data name="NotifyBranchWizardFailed" xml:space="preserve"><value>Zweizweig-Assistent fehlgeschlagen: {0}</value></data>
   <data name="NotifyBranchTeardownFailed" xml:space="preserve"><value>Entfernen der Zweizweig-Einrichtung fehlgeschlagen: {0}</value></data>
-  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam is still running. If the download finished, you can confirm settle (snapshot only reads the manifest).</value></data>
-  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam is still running. After download finishes, settle usually works — continue?</value></data>
+  <data name="NotifySteamStillRunningSettle" xml:space="preserve"><value>Steam läuft noch. Ist der Download fertig, kann der Abschluss bestätigt werden. Der Schnappschuss liest nur das Manifest.</value></data>
+  <data name="ConfirmDeployWhileSteamRunning" xml:space="preserve"><value>Steam läuft noch. Nach dem Download lässt sich der Abschluss meist fortsetzen. Weiter?</value></data>
   <data name="ConfirmOpenDownloadLink" xml:space="preserve"><value>{0}
 
 {1}
@@ -716,7 +719,7 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="ColumnEnabled" xml:space="preserve"><value>An</value></data>
   <data name="ColumnType" xml:space="preserve"><value>Typ</value></data>
   <data name="ColumnRisk" xml:space="preserve"><value>Risiko</value></data>
-  <data name="ColumnLoader" xml:space="preserve"><value>Loader</value></data>
+  <data name="ColumnLoader" xml:space="preserve"><value>Lader</value></data>
   <data name="LabelAuthor" xml:space="preserve"><value>Autor</value></data>
   <data name="LabelVersion" xml:space="preserve"><value>Version</value></data>
   <data name="LabelUpdated" xml:space="preserve"><value>Aktualisiert</value></data>
@@ -733,9 +736,9 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="FailWizardGamePathNotSteamCommon" xml:space="preserve"><value>Der Spielepfad muss unter steamapps\common\Mechabellum liegen.</value></data>
   <data name="FailWizardInvalidGamePath" xml:space="preserve"><value>Aktueller Spielepfad ungültig; Doppelordner-Assistent nicht startbar.</value></data>
   <data name="FailWizardOtherStoreExists" xml:space="preserve"><value>Separater Ordner des anderen Zweigs existiert bereits; Archivieren nicht möglich: {0}. Zuerst „Offiziellen Ordner wiederherstellen“, oder bei sauberer Wiederherstellung „anderen Store löschen“ (unwiderruflich).</value></data>
-  <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>The other branch folder exists but is incomplete (missing GameAssembly etc.): {0}. Exit Steam, delete that incomplete folder, then continue the wizard — do not keep clicking Continue.</value></data>
-  <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>Other branch folder {0} is complete, but the Steam link path is still a real directory. The manager will not auto-delete game folders. Use Clear isolation in Settings, or exit Steam and resolve the leftover, then restart the wizard.</value></data>
-  <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Steam link path is still occupied (real folder or wrong junction); cannot create the directory link. Clear isolation in Settings, or exit Steam and fix …\common\Mechabellum, then continue.</value></data>
+  <data name="FailWizardOtherStoreIncomplete" xml:space="preserve"><value>Der andere Serverordner existiert, ist aber unvollständig (GameAssembly fehlt usw.): {0}. Beende Steam, lösche diesen unfertigen Ordner und setze den Assistenten fort. Nicht wiederholt auf Weiter klicken.</value></data>
+  <data name="FailWizardOtherStoreLinkConflict" xml:space="preserve"><value>Der andere Serverordner {0} ist vollständig, aber der Steam-Pfad ist noch ein echter Ordner. Der Manager löscht keine Spielordner. Unter Einstellungen „Isolation aufheben“ nutzen, oder Steam beenden und den Rest selbst entfernen, dann den Assistenten neu starten.</value></data>
+  <data name="FailWizardSteamLinkExists" xml:space="preserve"><value>Der Steam-Pfad ist noch belegt (echter Ordner oder falsche Verknüpfung). Die Ordnerverknüpfung kann nicht angelegt werden. Zuerst „Isolation aufheben“ oder nach dem Beenden von Steam …\common\Mechabellum bereinigen, dann fortsetzen.</value></data>
   <data name="FailWizardGamePathIsBranchStore" xml:space="preserve"><value>Spielpfad ist ein Dual-Branch-Store (Mechabellum_official / Mechabellum_beta) und der Steam-Link Mechabellum fehlt. Store nach …\common\Mechabellum zurücksetzen und Assistent erneut starten. Setup erneut ausführen kann automatisch reparieren.</value></data>
   <data name="LogWizardNormalizedStorePath" xml:space="preserve"><value>Spielpfad von Store „{0}“ auf Steam-Link „{1}“ normalisiert.</value></data>
   <data name="NotifyBranchTeardownLeftoverStores" xml:space="preserve"><value>Dual-Branch entfernt, aber Rest-Stores vorhanden (blockieren den Assistenten): {0}. Bei Nichtbedarf löschen oder Setup erneut ausführen zur Normalisierung auf Mechabellum.</value></data>
@@ -749,7 +752,7 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="FailWizardCreateLinkFailed" xml:space="preserve"><value>Verzeichnisverknüpfung fehlgeschlagen.</value></data>
   <data name="FailWizardTeardownFailed" xml:space="preserve"><value>Entfernen des Doppelordners fehlgeschlagen.</value></data>
   <data name="NotifyWizardDoneWaitingSteam" xml:space="preserve"><value>Dual-folder wizard finished. Open Steam yourself if needed (manager will not auto-start). When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
-  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Open Steam yourself to finish download/verify if needed. The manager will not auto-start Steam (avoids the account picker). When Steam shows Play, return to Settings and click the gold “…Continue” button to finish settle. OK only closes this tip.</value></data>
+  <data name="NotifyOpenSteamManuallyForSettle" xml:space="preserve"><value>Öffne Steam selbst, um Download oder Prüfung abzuschließen, falls nötig. Der Manager startet Steam nicht automatisch, damit keine Kontowahl erscheint. Wenn Steam „Spielen“ zeigt, zurück zu den Einstellungen und den goldenen „…Weiter“-Knopf für den Abschluss. OK schließt nur diesen Hinweis.</value></data>
   <data name="LogSettleSnapshotNoAutoSteam" xml:space="preserve"><value>Steam manifest snapshot restored; no need to auto-start Steam. When ready, click the gold “…Continue” button in Settings to finish settle.</value></data>
   <data name="LogSteamExitRequestFailed" xml:space="preserve"><value>Steam-Beenden fehlgeschlagen: {0}</value></data>
   <data name="LogSteamOrGameStillRunning" xml:space="preserve"><value>Steam oder Spiel läuft noch (inkl. steamwebhelper). Prozesse im Task-Manager beenden, dann erneut versuchen.</value></data>
@@ -761,7 +764,7 @@ Danach Steam beenden und Ja wählen. Nein pausiert den Assistenten.</value></dat
   <data name="FailBranchStoreIncompleteSteamDownload" xml:space="preserve"><value>Aktiver Ordner unvollständig (oft Steam-Download/Prüfung; GameAssembly.dll fehlt). Steam beenden, dann zum vollständigen anderen Ordner wechseln oder „Offiziellen Ordner wiederherstellen“ aus dem vollständigen Ordner — oder Download abwarten.</value></data>
   <data name="NotifySettleBlockedGameNotReady" xml:space="preserve"><value>Spielpfad nicht bereit; Settle-Deploy nicht möglich. Nach Steam-Download/Prüfung erneut bestätigen.</value></data>
   <data name="NotifySettleBlockedDeployFailed" xml:space="preserve"><value>Deploy beim Settle fehlgeschlagen; Settle bleibt offen. Problem beheben und erneut bestätigen.</value></data>
-  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Steam manifest is not stable yet (verify/write). After the download shows complete, wait a moment and confirm again; if it still fails, fully exit Steam and retry.</value></data>
+  <data name="NotifySettleBlockedAcfNotSettled" xml:space="preserve"><value>Das Steam-Manifest ist noch nicht stabil (Prüfung oder Schreiben). Wenn der Download fertig aussieht, kurz warten und erneut bestätigen. Wenn es weiter scheitert, Steam ganz beenden und erneut versuchen.</value></data>
   <data name="LogSettleKeptAwaiting" xml:space="preserve"><value>Steam-Settle wurde nicht beendet (später erneut bestätigen möglich).</value></data>
   <data name="LogMelonLaunchVerifyHint" xml:space="preserve"><value>Innerhalb ~30s sollte die schwarze MelonLoader-Konsole erscheinen. Sonst: Melon nicht geladen — version.dll / MelonLoader prüfen und Diagnose exportieren.</value></data>
   <data name="NotifyMelonLoaderDualStoreIncomplete" xml:space="preserve"><value>In einem Offiziell/Test-Ordner fehlt noch MelonLoader. Setup erneut mit MelonLoader, oder zuerst auf dem Ordner mit Loader installieren.</value></data>
@@ -788,58 +791,58 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="BusyCreatingJunction" xml:space="preserve"><value>Verzeichnisverknuepfung wird erstellt — Manager nicht schliessen…</value></data>
   <data name="BusyGeneratingMelonAssemblies" xml:space="preserve"><value>MelonLoader-Assemblies werden erzeugt — Manager nicht schliessen…</value></data>
   <data name="BusySwitchingSteamBranch" xml:space="preserve"><value>Steam-Branch-Informationen werden vorbereitet — Manager nicht schliessen…</value></data>
-  <data name="TaskMessageDiagnostics" xml:space="preserve"><value>Packaging logs and config…</value></data>
-  <data name="TaskMessageDeploy" xml:space="preserve"><value>Writing profile into the game folder…</value></data>
-  <data name="TaskTitleCatalogRefresh" xml:space="preserve"><value>Refreshing mod catalog</value></data>
-  <data name="TaskTitleMelonInstall" xml:space="preserve"><value>Installing MelonLoader</value></data>
-  <data name="TaskTitleDeploy" xml:space="preserve"><value>Deploying profile</value></data>
-  <data name="TaskMessageWizardInProgress" xml:space="preserve"><value>Dual-folder setup incomplete; write actions are locked</value></data>
-  <data name="TaskTitleDiagnostics" xml:space="preserve"><value>Exporting diagnostics</value></data>
-  <data name="TaskTitleCatalogDownload" xml:space="preserve"><value>Downloading mod</value></data>
-  <data name="TaskMessageMelonInstall" xml:space="preserve"><value>Installing or upgrading MelonLoader…</value></data>
-  <data name="TaskTitleBranchSettle" xml:space="preserve"><value>Waiting for Steam settle</value></data>
-  <data name="TaskMessageCatalogDownload" xml:space="preserve"><value>Downloading into the local library…</value></data>
-  <data name="TaskMessageBranchSettle" xml:space="preserve"><value>Confirm after Steam has switched to the target branch</value></data>
-  <data name="TaskTitleBranchWizard" xml:space="preserve"><value>Dual-folder wizard in progress</value></data>
-  <data name="TaskMessageCheckUpdate" xml:space="preserve"><value>Checking for a new manager version…</value></data>
-  <data name="TaskMessageMelonInstallLocal" xml:space="preserve"><value>Installing MelonLoader from offline package…</value></data>
-  <data name="NotifySessionLocked" xml:space="preserve"><value>A task is still in progress. Finish or cancel it first.</value></data>
-  <data name="TaskMessageCatalogRefresh" xml:space="preserve"><value>Fetching catalog from the network…</value></data>
-  <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>Download the other branch in Steam; fully exit Steam when done — the wizard continues automatically</value></data>
-  <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>Checking for updates</value></data>
+  <data name="TaskMessageDiagnostics" xml:space="preserve"><value>Protokolle und Konfiguration werden gepackt…</value></data>
+  <data name="TaskMessageDeploy" xml:space="preserve"><value>Profil wird in den Spielordner geschrieben…</value></data>
+  <data name="TaskTitleCatalogRefresh" xml:space="preserve"><value>Mod-Katalog wird aktualisiert</value></data>
+  <data name="TaskTitleMelonInstall" xml:space="preserve"><value>MelonLoader wird installiert</value></data>
+  <data name="TaskTitleDeploy" xml:space="preserve"><value>Profil wird bereitgestellt</value></data>
+  <data name="TaskMessageWizardInProgress" xml:space="preserve"><value>Die Zwei-Server-Einrichtung ist nicht fertig. Schreibvorgänge sind vorübergehend gesperrt.</value></data>
+  <data name="TaskTitleDiagnostics" xml:space="preserve"><value>Diagnosepaket wird exportiert</value></data>
+  <data name="TaskTitleCatalogDownload" xml:space="preserve"><value>Mod wird heruntergeladen</value></data>
+  <data name="TaskMessageMelonInstall" xml:space="preserve"><value>MelonLoader wird installiert oder aktualisiert…</value></data>
+  <data name="TaskTitleBranchSettle" xml:space="preserve"><value>Warte auf Steam-Abschluss</value></data>
+  <data name="TaskMessageCatalogDownload" xml:space="preserve"><value>Wird heruntergeladen und in die lokale Bibliothek gelegt…</value></data>
+  <data name="TaskMessageBranchSettle" xml:space="preserve"><value>Bestätige, nachdem Steam auf den Zielzweig umgeschaltet hat</value></data>
+  <data name="TaskTitleBranchWizard" xml:space="preserve"><value>Zwei-Ordner-Assistent läuft</value></data>
+  <data name="TaskMessageCheckUpdate" xml:space="preserve"><value>Es wird nach einer neuen Manager-Version gesucht…</value></data>
+  <data name="TaskMessageMelonInstallLocal" xml:space="preserve"><value>MelonLoader wird aus dem lokalen Offline-Paket installiert…</value></data>
+  <data name="NotifySessionLocked" xml:space="preserve"><value>Eine Aufgabe läuft noch. Zuerst beenden oder abbrechen.</value></data>
+  <data name="TaskMessageCatalogRefresh" xml:space="preserve"><value>Katalog wird aus dem Netz geladen…</value></data>
+  <data name="TaskMessageWizardWaitingDownload" xml:space="preserve"><value>Lade den anderen Server in Steam. Beende Steam danach ganz. Der Assistent macht automatisch weiter.</value></data>
+  <data name="TaskTitleCheckUpdate" xml:space="preserve"><value>Suche nach Updates</value></data>
 
-  <data name="BranchSwitchConfirmSettleWaiting" xml:space="preserve"><value>Wait until Steam finishes download/verify, then continue</value></data>
-  <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam switched to Official — continue</value></data>
-  <data name="BranchStatusWaitingSteamFmt" xml:space="preserve"><value>Waiting for Steam to finish switching to {0}</value></data>
-  <data name="BranchSwitchConfirmManualOfficial" xml:space="preserve"><value>I selected Official in Steam — continue</value></data>
-  <data name="BranchSwitchConfirmSettleBeta" xml:space="preserve"><value>Steam switched to Beta — continue</value></data>
-  <data name="TaskMessageBranchSettleFmt" xml:space="preserve"><value>Confirm after Steam has switched to {0} (path may be invalid while downloading)</value></data>
-  <data name="LogSettleKeptAwaitingDownloadFmt" xml:space="preserve"><value>Game folder not ready (may still be downloading {0}). Wait until Mechabellum.exe / GameAssembly.dll exist, then continue.</value></data>
-  <data name="ConfirmDeployWhileGameRunning" xml:space="preserve"><value>The game is still running. Deploy anyway? Files may be locked.</value></data>
-  <data name="NotifyGameStillRunningSettle" xml:space="preserve"><value>The game is still running and may lock files. Close it, then confirm settle.</value></data>
-  <data name="NotifySettleBlockedGameRunning" xml:space="preserve"><value>Game is running; cannot save the manifest snapshot. Close the game and confirm again.</value></data>
-  <data name="LogSteamOpenDuringSettleOk" xml:space="preserve"><value>Steam is open: settle will read the manifest and deploy; no need to exit Steam for this.</value></data>
-  <data name="NotifySettleClearedSnapshotDeferred" xml:space="preserve"><value>Settle deploy finished; snapshot will be saved later (this switch is done).</value></data>
-  <data name="NotifySettleBlockedSnapshotFailed" xml:space="preserve"><value>Deploy may have finished, but the Steam manifest snapshot was not saved — settle is not cleared. Wait until Steam can Start the game, then continue. Do not click Play in Steam.</value></data>
-  <data name="NotifySettleBlockedSnapshotNotAligned" xml:space="preserve"><value>The Steam manifest is not aligned with the current store (files may still be writing). Wait until Steam can Start the game, then continue. Do not click Play in Steam.</value></data>
-  <data name="NotifyHollowStoreDegraded" xml:space="preserve"><value>The active store is incomplete (not a valid game root). Left Ready and entered repair/settle: verify files in Steam; if the other store is complete you can switch there. Store folders are not deleted.</value></data>
+  <data name="BranchSwitchConfirmSettleWaiting" xml:space="preserve"><value>Warte, bis Steam Download und Prüfung beendet hat, dann weiter</value></data>
+  <data name="BranchSwitchConfirmSettleOfficial" xml:space="preserve"><value>Steam ist auf Offiziell umgeschaltet — weiter</value></data>
+  <data name="BranchStatusWaitingSteamFmt" xml:space="preserve"><value>Warte, bis Steam auf {0} umgeschaltet hat</value></data>
+  <data name="BranchSwitchConfirmManualOfficial" xml:space="preserve"><value>Ich habe in Steam Offiziell gewählt — weiter</value></data>
+  <data name="BranchSwitchConfirmSettleBeta" xml:space="preserve"><value>Steam ist auf Beta umgeschaltet — weiter</value></data>
+  <data name="TaskMessageBranchSettleFmt" xml:space="preserve"><value>Bestätige, nachdem Steam auf {0} umgeschaltet hat (der Pfad kann beim Download vorübergehend ungültig sein)</value></data>
+  <data name="LogSettleKeptAwaitingDownloadFmt" xml:space="preserve"><value>Spielordner noch nicht bereit (vielleicht wird {0} noch geladen). Warte, bis Mechabellum.exe und GameAssembly.dll da sind, dann weiter.</value></data>
+  <data name="ConfirmDeployWhileGameRunning" xml:space="preserve"><value>Das Spiel läuft noch. Trotzdem bereitstellen? Dateien können gesperrt sein.</value></data>
+  <data name="NotifyGameStillRunningSettle" xml:space="preserve"><value>Das Spiel läuft noch und kann Dateien sperren. Schließe es, dann den Abschluss bestätigen.</value></data>
+  <data name="NotifySettleBlockedGameRunning" xml:space="preserve"><value>Das Spiel läuft noch, der Manifest-Schnappschuss kann nicht gespeichert werden. Spiel schließen und erneut bestätigen.</value></data>
+  <data name="LogSteamOpenDuringSettleOk" xml:space="preserve"><value>Steam läuft: Der Abschluss liest das Manifest und stellt bereit. Steam muss dafür nicht beendet werden.</value></data>
+  <data name="NotifySettleClearedSnapshotDeferred" xml:space="preserve"><value>Abschluss-Bereitstellung fertig. Der Manifest-Schnappschuss wird später gespeichert. Dieser Wechsel ist abgeschlossen.</value></data>
+  <data name="NotifySettleBlockedSnapshotFailed" xml:space="preserve"><value>Die Bereitstellung ist vielleicht fertig, aber der Steam-Manifest-Schnappschuss fehlt. Der Abschluss ist nicht beendet. Warte, bis Steam das Spiel starten kann, dann weiter. In Steam nicht auf Spielen klicken.</value></data>
+  <data name="NotifySettleBlockedSnapshotNotAligned" xml:space="preserve"><value>Das Steam-Manifest passt noch nicht zum aktuellen Speicher (Dateien werden vielleicht noch geschrieben). Warte, bis Steam das Spiel starten kann, dann weiter. In Steam nicht auf Spielen klicken.</value></data>
+  <data name="NotifyHollowStoreDegraded" xml:space="preserve"><value>Der aktive Speicher ist unvollständig (keine gültige Spielwurzel). „Bereit“ wurde verlassen, Reparatur steht an: Dateien in Steam prüfen. Ist der andere Server vollständig, kannst du dorthin wechseln. Speicherordner werden nicht gelöscht.</value></data>
   <data name="NotifySwitchBlockedTargetHollow" xml:space="preserve"><value>Target store is not a complete game root (needs Mechabellum.exe and GameAssembly.dll). Finish download/verify in Steam, or pick the other complete store.</value></data>
   <data name="NotifyWizardWaitingDownloadAuto" xml:space="preserve"><value>Waiting for the other branch download: open Steam yourself and download. When finished, fully exit Steam (tray → Exit); the manager continues automatically. OK only closes this tip and does not cancel waiting.</value></data>
-  <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>Other branch download looks complete and Steam is closed; continuing dual-folder wizard automatically.</value></data>
-  <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>Other branch download complete: fully exit Steam (tray → Exit); the wizard continues automatically after exit</value></data>
+  <data name="LogWizardDownloadAutoContinue" xml:space="preserve"><value>Der andere Server ist geladen und Steam ist zu. Der Assistent für zwei Ordner läuft automatisch weiter.</value></data>
+  <data name="TaskMessageWizardWaitingExitSteam" xml:space="preserve"><value>Der andere Server ist geladen. Beende Steam ganz (Infobereich, Beenden). Danach macht der Assistent automatisch weiter.</value></data>
   <data name="WizardExitSteamContinue" xml:space="preserve"><value>Steam beendet, weiter</value></data>
-  <data name="LogSettleClearedSnapshotDeferred" xml:space="preserve"><value>Deploy succeeded but snapshot was skipped; settle cleared. Snapshot can be taken later.</value></data>
-  <data name="CriticalOpBlockUpdate" xml:space="preserve"><value>A disk write or critical operation is in progress. Check for updates after it finishes.</value></data>
-  <data name="CriticalOpBlockClose" xml:space="preserve"><value>A disk write or critical operation is in progress. Do not close the manager.</value></data>
-  <data name="CriticalOpSoftUpdateConfirm" xml:space="preserve"><value>Still waiting for Steam to switch or download ({0}). Updating the installer may interrupt the flow; open the download link anyway?</value></data>
+  <data name="LogSettleClearedSnapshotDeferred" xml:space="preserve"><value>Bereitstellung erfolgreich, aber der Manifest-Schnappschuss fehlt. Der Abschluss ist beendet. Der Schnappschuss kann später nachgeholt werden.</value></data>
+  <data name="CriticalOpBlockUpdate" xml:space="preserve"><value>Ein Schreibvorgang oder ein kritischer Schritt läuft. Suche erst danach nach Updates.</value></data>
+  <data name="CriticalOpBlockClose" xml:space="preserve"><value>Ein Schreibvorgang oder ein kritischer Schritt läuft. Den Manager nicht schließen.</value></data>
+  <data name="CriticalOpSoftUpdateConfirm" xml:space="preserve"><value>Es wird noch auf Steam-Wechsel oder Download gewartet ({0}). Ein Installer-Update kann den Ablauf unterbrechen. Download-Link trotzdem öffnen?</value></data>
   <data name="CriticalOpSoftCloseConfirm" xml:space="preserve"><value>Still waiting for Steam ({0}). Closing will abandon the unfinished dual-folder wizard / settle wait (game folders are not deleted). Close anyway?</value></data>
-  <data name="CriticalOpRecoveryTitle" xml:space="preserve"><value>Unfinished critical operation detected</value></data>
-  <data name="CriticalOpRecoveryBody" xml:space="preserve"><value>A mode switch, Melon install, or repair may have been interrupted. Continue, run repair, or abandon and clear residual state (game folders are not deleted).</value></data>
-  <data name="CriticalOpRecoveryContinue" xml:space="preserve"><value>Continue unfinished operation</value></data>
-  <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>Run repair / safe cleanup</value></data>
-  <data name="CriticalOpRecoveryAbandon" xml:space="preserve"><value>Abandon and clear</value></data>
-  <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Open diagnostics (does not lift restrictions)</value></data>
-  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Abandoned unfinished work and cleared state. Confirm the game path, then continue.</value></data>
+  <data name="CriticalOpRecoveryTitle" xml:space="preserve"><value>Unvollendeter kritischer Schritt erkannt</value></data>
+  <data name="CriticalOpRecoveryBody" xml:space="preserve"><value>Ein Moduswechsel, eine Melon-Installation oder eine Reparatur wurde vielleicht unterbrochen. Du kannst den offenen Schritt fortsetzen, eine Reparatur ausführen oder abbrechen und Reste löschen. Spielordner werden nicht gelöscht.</value></data>
+  <data name="CriticalOpRecoveryContinue" xml:space="preserve"><value>Offenen Schritt fortsetzen</value></data>
+  <data name="CriticalOpRecoveryRepair" xml:space="preserve"><value>Reparatur / sicheres Aufräumen</value></data>
+  <data name="CriticalOpRecoveryAbandon" xml:space="preserve"><value>Abbrechen und aufräumen</value></data>
+  <data name="CriticalOpRecoveryDiagnostics" xml:space="preserve"><value>Diagnose öffnen (hebt die Sperre nicht auf)</value></data>
+  <data name="NotifyRecoveryAbandoned" xml:space="preserve"><value>Der offene Schritt wurde abgebrochen und der Zustand geleert. Spielpfad prüfen und weiterverwenden.</value></data>
   <data name="MirrorBaseUrl" xml:space="preserve"><value>Inländische Spiegelbasis</value></data>
   <data name="MirrorBaseUrlHint" xml:space="preserve"><value>Werkseitig COS-Spiegel; leer = nur GitHub. Gleiches Layout wie die Repos.</value></data>
   <data name="DownloadRoute" xml:space="preserve"><value>Download-Route</value></data>
@@ -847,12 +850,12 @@ Spiel jetzt kurz starten, um sie zu erzeugen? (Beim ersten Mal ca. 1–2 Minuten
   <data name="DownloadRouteAlwaysMirror" xml:space="preserve"><value>Immer den inländischen Spiegel</value></data>
   <data name="DownloadRouteAlwaysGitHub" xml:space="preserve"><value>Immer GitHub</value></data>
   <data name="DownloadRouteHint" xml:space="preserve"><value>Automatisch folgt der Region. Schlägt die Prüfung fehl, wird der Spiegel trotzdem zuerst versucht.</value></data>
-  <data name="EditionLabel" xml:space="preserve"><value>Edition</value></data>
+  <data name="EditionLabel" xml:space="preserve"><value>Ausgabe</value></data>
   <data name="EditionCn" xml:space="preserve"><value>China-Edition</value></data>
   <data name="EditionGlobal" xml:space="preserve"><value>Globale Edition</value></data>
   <data name="EditionShortCn" xml:space="preserve"><value>China</value></data>
   <data name="EditionShortGlobal" xml:space="preserve"><value>Global</value></data>
-  <data name="WindowTitleFormat" xml:space="preserve"><value>Mechabellum Mod Manager ({0})</value></data>
+  <data name="WindowTitleFormat" xml:space="preserve"><value>Mechabellum-Mod-Manager ({0})</value></data>
   <data name="EditionHint" xml:space="preserve"><value>Beim Wechsel wird die Download-Route auf den Standard dieser Edition gesetzt; Mail-Dienst, Community-Links und das Setup für Updates in der App wechseln mit.</value></data>
   <data name="EditionAboutCn" xml:space="preserve"><value>Dies ist die China-Edition: Downloads nutzen den inländischen Spiegel, Feedback standardmäßig QQ Mail, die QQ-Gruppennummer ist {0}, Updates in der App installieren das China-Setup. Die Edition lässt sich in den Einstellungen wechseln.</value></data>
   <data name="EditionAboutGlobal" xml:space="preserve"><value>Dies ist die globale Edition: Downloads nutzen GitHub, Feedback standardmäßig Gmail, die Community ist auf Discord, Updates in der App installieren das globale Setup. Die Edition lässt sich in den Einstellungen wechseln.</value></data>
@@ -1034,12 +1037,12 @@ GitHub: https://github.com/llxlzx/MechabellumModManager/releases/latest</value><
   <data name="NotifyManagerUpdateMissingSetup" xml:space="preserve"><value>Setup-Pfad fehlt; Installer kann nicht gestartet werden.</value></data>
   <data name="NotifyManagerUpdateStartFailed" xml:space="preserve"><value>Installer konnte nicht gestartet werden: {0}</value></data>
   <data name="ConfirmCloseWhileManagerUpdating" xml:space="preserve"><value>Manager-Update wird heruntergeladen. Schließen bricht ab. Trotzdem schließen?</value></data>
-  <data name="LogicFrameLow" xml:space="preserve"><value>Low</value></data>
-  <data name="LogicFrameMedium" xml:space="preserve"><value>Medium</value></data>
-  <data name="LogicFrameHigh" xml:space="preserve"><value>High</value></data>
-  <data name="LogicFrameUnchecked" xml:space="preserve"><value>Not checked</value></data>
-  <data name="ConfirmLogicFrameMedium" xml:space="preserve"><value>"{0}" hooks health, supply, or fight-end. If the hook throws, the original method may not run, and this round's battle result can disagree with the server. Add it to the current profile?</value></data>
-  <data name="ConfirmLogicFrameHigh" xml:space="preserve"><value>"{0}" can skip a simulation method or replace its return value. This check cannot prove the change is replay-only. Add it to the current profile?</value></data>
+  <data name="LogicFrameLow" xml:space="preserve"><value>Niedrig</value></data>
+  <data name="LogicFrameMedium" xml:space="preserve"><value>Mittel</value></data>
+  <data name="LogicFrameHigh" xml:space="preserve"><value>Hoch</value></data>
+  <data name="LogicFrameUnchecked" xml:space="preserve"><value>Nicht geprüft</value></data>
+  <data name="ConfirmLogicFrameMedium" xml:space="preserve"><value>„{0}“ hängt an Leben, Nachschub oder Kampfende. Wirft der Haken, läuft die ursprüngliche Methode vielleicht nicht, und das Kampfergebnis dieser Runde kann vom Server abweichen. Zum aktuellen Profil hinzufügen?</value></data>
+  <data name="ConfirmLogicFrameHigh" xml:space="preserve"><value>„{0}“ kann eine Simulationsmethode überspringen oder ihren Rückgabewert ersetzen. Diese Prüfung beweist nicht, dass das nur in der Wiederholung passiert. Zum aktuellen Profil hinzufügen?</value></data>
   <data name="ConflictInstallInstalledReason" xml:space="preserve"><value>„{0}“ kann nicht installiert werden. Das installierte „{1}“ steht damit in Konflikt. {2}Bitte zuerst „{1}“ deinstallieren.</value></data>
   <data name="ConflictInstallInstalledGeneric" xml:space="preserve"><value>„{0}“ kann nicht installiert werden. Das installierte „{1}“ steht damit in Konflikt und darf nicht gleichzeitig installiert sein. Bitte zuerst „{1}“ deinstallieren.</value></data>
   <data name="ConflictInstallSelectionReason" xml:space="preserve"><value>„{0}“ und „{1}“ können nicht gleichzeitig installiert werden. {2}Bitte nur eines auswählen. Diesmal wurde keines installiert.</value></data>
