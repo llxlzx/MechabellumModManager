@@ -3270,6 +3270,79 @@ public sealed partial class MainViewModel : ObservableObject
             "library").ConfigureAwait(true);
     }
 
+    [RelayCommand]
+    void SendCatalogModFeedback()
+    {
+        if (SelectedCatalogMod is null) return;
+        SendModFeedback(
+            FeedbackChannel.Classify(SelectedCatalogMod.Mod.Feedback),
+            SelectedCatalogMod.Name,
+            SelectedCatalogMod.Version);
+    }
+
+    [RelayCommand]
+    void SendLibraryModFeedback()
+    {
+        if (SelectedLibraryMod is null) return;
+        SendModFeedback(
+            SelectedLibraryMod.ModFeedbackDecision,
+            SelectedLibraryMod.DisplayName,
+            SelectedLibraryMod.Version);
+    }
+
+    void SendModFeedback(FeedbackDecision decision, string visibleName, string? version)
+    {
+        if (decision.Kind == FeedbackKind.Hidden)
+            return;
+
+        switch (decision.Kind)
+        {
+            case FeedbackKind.OpenHttps:
+                if (string.IsNullOrWhiteSpace(decision.Target) || !TryOpenUrl(decision.Target))
+                    _notify(Ui.MailOpenFailed);
+                else
+                    AppendLog("已打开模组反馈");
+                return;
+
+            case FeedbackKind.Copy:
+                TryCopyText(decision.Original);
+                AppendLog("已复制模组反馈");
+                _notify(Ui.FeedbackCopied);
+                return;
+
+            case FeedbackKind.Mail:
+                var picked = _promptMailProvider?.Invoke();
+                if (picked is null || string.IsNullOrWhiteSpace(decision.Target))
+                    return;
+
+                var mail = ModFeedbackMail.Build(decision.Target, visibleName, version);
+                if (picked == MailProvider.Gmail)
+                {
+                    if (!TryOpenUrl(mail.GmailUrl))
+                        _notify(Ui.MailOpenFailed);
+                    else
+                        AppendLog("已打开模组反馈");
+                    return;
+                }
+
+                if (picked == MailProvider.Qq)
+                {
+                    TryCopyText(mail.QqClipboard);
+                    AppendLog("已复制模组反馈");
+                    if (!TryOpenUrl(ModFeedbackMail.QqWebMail))
+                    {
+                        _notify(Ui.MailOpenFailed);
+                        return;
+                    }
+
+                    AppendLog("已打开模组反馈");
+                    _notify(Ui.FeedbackPasteMail);
+                }
+
+                return;
+        }
+    }
+
     bool CanEditLibraryTaxonomy() =>
         SelectedLibraryMod is not null && !SelectedLibraryMod.IsMissing;
 

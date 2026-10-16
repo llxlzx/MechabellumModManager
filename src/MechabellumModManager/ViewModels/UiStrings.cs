@@ -163,6 +163,9 @@ public sealed class UiStrings : INotifyPropertyChanged
     public string MailCancelled => T("MailCancelled");
     public string MailOpenFailed => T("MailOpenFailed");
     public string FeedbackButton => T("FeedbackButton");
+    public string Feedback => T("Feedback");
+    public string FeedbackCopied => T("FeedbackCopied");
+    public string FeedbackPasteMail => T("FeedbackPasteMail");
     public string SubmitGuideTitle => T("SubmitGuideTitle");
     public string SubmitGuideIntro => T("SubmitGuideIntro");
     public string SubmitGuideBody => T("SubmitGuideBody");

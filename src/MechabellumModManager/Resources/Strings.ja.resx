@@ -341,6 +341,15 @@
   <data name="FeedbackButton" xml:space="preserve">
     <value>フィードバック</value>
   </data>
+  <data name="Feedback" xml:space="preserve">
+    <value>Feedback</value>
+  </data>
+  <data name="FeedbackCopied" xml:space="preserve">
+    <value>Copied the author's feedback channel</value>
+  </data>
+  <data name="FeedbackPasteMail" xml:space="preserve">
+    <value>Copied the recipient, subject, and body. Paste them into the mail.</value>
+  </data>
   <data name="SubmitGuideTitle" xml:space="preserve">
     <value>投稿</value>
   </data>

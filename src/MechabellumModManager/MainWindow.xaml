@@ -1508,6 +1508,15 @@
                             <StackPanel DockPanel.Dock="Right"
                                         VerticalAlignment="Top"
                                         Margin="8,0,0,0">
+                                <Button Content="{Binding Ui.Feedback}"
+                                        Command="{Binding SendCatalogModFeedbackCommand}"
+                                        MinWidth="72"
+                                        Padding="10,6"
+                                        MinHeight="30"
+                                        FontSize="13"
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource GhostButtonStyle}"
+                                        Visibility="{Binding SelectedCatalogMod.ShowModFeedback, Converter={StaticResource BoolToVis}}" />
                                 <Button Command="{Binding ReportCatalogModCommand}"
                                         MinWidth="72"
                                         Padding="10,6"
@@ -2009,6 +2018,15 @@
                                         <StackPanel DockPanel.Dock="Right"
                                                     VerticalAlignment="Top"
                                                     Margin="8,0,0,0">
+                                            <Button Content="{Binding Ui.Feedback}"
+                                                    Command="{Binding SendLibraryModFeedbackCommand}"
+                                                    MinWidth="72"
+                                                    Padding="10,6"
+                                                    MinHeight="30"
+                                                    FontSize="13"
+                                                    Margin="0,0,0,6"
+                                                    Style="{StaticResource GhostButtonStyle}"
+                                                    Visibility="{Binding SelectedLibraryMod.ShowModFeedback, Converter={StaticResource BoolToVis}}" />
                                             <Button Command="{Binding ReportLibraryModCommand}"
                                                     MinWidth="72"
                                                     Padding="10,6"
