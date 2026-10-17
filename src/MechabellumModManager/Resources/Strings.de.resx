@@ -350,6 +350,12 @@
   <data name="FeedbackCopied" xml:space="preserve">
     <value>Die Rückmeldung des Autors wurde kopiert</value>
   </data>
+  <data name="FeedbackChoiceTitle" xml:space="preserve">
+    <value>Rückmeldung auswählen</value>
+  </data>
+  <data name="FeedbackChoiceHint" xml:space="preserve">
+    <value>Wählen Sie, welche Rückmeldung geöffnet werden soll.</value>
+  </data>
   <data name="FeedbackOpenFailed" xml:space="preserve">
     <value>Rückmeldung konnte nicht geöffnet werden.</value>
   </data>

@@ -3,11 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using MechabellumModManager.Dialogs;
+using MechabellumModManager.Helpers;
 using MechabellumModManager.ViewModels;
 
 namespace MechabellumModManager;
@@ -33,6 +35,29 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(MainViewModel.ActiveContentPage))
             PlaySubtleFade(ContentPagesHost);
+        if (e.PropertyName == nameof(MainViewModel.SortRevision) && sender is MainViewModel vm)
+            SyncSortArrows(vm);
+    }
+
+    void SyncSortArrows(MainViewModel vm)
+    {
+        ApplyHeaderArrow(CatalogModsGrid, vm.ActiveCatalogSortPath, vm.ActiveCatalogSortDirection);
+        ApplyHeaderArrow(LibraryModsGrid, vm.ActiveLibrarySortPath, vm.ActiveLibrarySortDirection);
+    }
+
+    static void ApplyHeaderArrow(DataGrid? grid, string path, ListSortDirection direction)
+    {
+        if (grid is null)
+            return;
+        foreach (var column in grid.Columns)
+        {
+            var columnPath = column.SortMemberPath;
+            if (string.IsNullOrWhiteSpace(columnPath) && column is DataGridBoundColumn { Binding: Binding binding })
+                columnPath = binding.Path?.Path;
+            column.SortDirection = string.Equals(columnPath, path, StringComparison.Ordinal)
+                ? direction
+                : null;
+        }
     }
 
     static void PlaySubtleFade(UIElement? target)
@@ -67,19 +92,62 @@ public partial class MainWindow : Window
         if (grid.ActualWidth <= 0 || grid.Columns.Count == 0)
             return;
 
-        var minimum = 0d;
+        double fixedWidth = 0;
+        double flexMin = 0;
+        double weightSum = 0;
         foreach (var column in grid.Columns)
-            minimum += column.MinWidth > 0 ? column.MinWidth : 0;
-        if (minimum <= 0)
+        {
+            var min = column.MinWidth > 0 ? column.MinWidth : 0;
+            var weight = GridColumnShare.GetWeight(column);
+            if (weight > 0)
+            {
+                flexMin += min;
+                weightSum += weight;
+            }
+            else
+                fixedWidth += column.Width.IsAbsolute ? column.Width.Value : min;
+        }
+
+        var viewport = Math.Max(0, grid.ActualWidth - 18);
+        var needsScroll = viewport < fixedWidth + flexMin;
+        var next = needsScroll ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
+        if (ScrollViewer.GetHorizontalScrollBarVisibility(grid) != next)
+            ScrollViewer.SetHorizontalScrollBarVisibility(grid, next);
+
+        if (weightSum <= 0)
             return;
 
-        var current = ScrollViewer.GetHorizontalScrollBarVisibility(grid);
-        var fits = current == ScrollBarVisibility.Disabled
-            ? grid.ActualWidth + 18 >= minimum
-            : grid.ActualWidth >= minimum + 18;
-        var next = fits ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
-        if (current != next)
-            ScrollViewer.SetHorizontalScrollBarVisibility(grid, next);
+        var room = needsScroll ? flexMin : Math.Max(flexMin, viewport - fixedWidth);
+        var leftover = Math.Max(0, room - flexMin);
+        foreach (var column in grid.Columns)
+        {
+            var weight = GridColumnShare.GetWeight(column);
+            if (weight <= 0)
+                continue;
+            var min = column.MinWidth > 0 ? column.MinWidth : 0;
+            column.Width = new DataGridLength(min + leftover * (weight / weightSum));
+        }
+    }
+
+    void ModsGrid_Sorting(object sender, DataGridSortingEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is not DataGrid grid || DataContext is not MainViewModel vm || !e.Column.CanUserSort)
+            return;
+
+        var path = e.Column.SortMemberPath;
+        if (string.IsNullOrWhiteSpace(path) && e.Column is DataGridBoundColumn { Binding: Binding binding })
+            path = binding.Path?.Path;
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+
+        var next = e.Column.SortDirection == ListSortDirection.Ascending
+            ? ListSortDirection.Descending
+            : ListSortDirection.Ascending;
+        foreach (var column in grid.Columns)
+            column.SortDirection = null;
+        e.Column.SortDirection = next;
+        vm.SortByColumn(ReferenceEquals(grid, CatalogModsGrid), path, next);
     }
 
     void CatalogModsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)

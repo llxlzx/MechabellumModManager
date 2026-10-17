@@ -1,6 +1,6 @@
 {
   "version": "2.0.2",
-  "notes": "v2.0.2\n- 已装 Mod 和 Mod 工坊每一行都有「反馈」。\n- 大部分作者的详细联系方式还没有收集完，之后会逐渐补上。之后投稿的作者请留下自己接收反馈的联系方式。\n- 新上架：信用点助手、隐藏操作提示、升级助手、网格标尺。",
+  "notes": "v2.0.2\n- 已装 Mod 和 Mod 工坊每一行都有「反馈」。大部分作者的详细联系方式还没有收集完，之后会逐渐补上。之后投稿的作者请留下自己接收反馈的联系方式。\n- 新上架：信用点助手、隐藏操作提示、升级助手、网格标尺。\n- 钢铁战局助手更新到 1.2.1。\n- 全部在架模组暂时归在「未分类 Mod」。\n- 巴巴的模组：国内版点「反馈」直接打开 QQ 频道，国际版直接打开 Discord。",
   "setupUrl": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_Global.exe",
   "setupUrlCn": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_CN.exe",
   "setupUrlGlobal": "https://github.com/llxlzx/MechabellumModManager/releases/download/v2.0.2/MechabellumModManager_Setup_v2.0.2_Global.exe",

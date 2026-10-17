@@ -70,6 +70,7 @@ public sealed partial class CatalogModItemViewModel : ObservableObject
     public string? Type => Mod.Type;
 
     public bool ShowModFeedback =>
+        FeedbackChoices.Acceptable(Mod.FeedbackChoices).Count > 0 ||
         FeedbackChannel.Classify(Mod.Feedback).Kind != FeedbackKind.Hidden;
 
     public ModCategory EffectiveCategory =>

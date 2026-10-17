@@ -1,0 +1,34 @@
+<Window x:Class="MechabellumModManager.Dialogs.FeedbackChoiceDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        SizeToContent="WidthAndHeight"
+        MinWidth="360"
+        MaxWidth="720"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{StaticResource BgPanelBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource AppFontFamily}">
+    <Border Padding="20"
+            BorderBrush="{StaticResource SteelEdgeBrush}"
+            BorderThickness="1">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0,18,0,0">
+                <StackPanel x:Name="ChoiceButtons" Orientation="Horizontal" />
+                <Button x:Name="CancelButton"
+                        MinWidth="96"
+                        MinHeight="36"
+                        IsCancel="True"
+                        Click="Cancel_Click" />
+            </StackPanel>
+            <TextBlock x:Name="HintText"
+                       TextWrapping="Wrap"
+                       FontSize="14"
+                       Foreground="{StaticResource TextPrimaryBrush}" />
+        </DockPanel>
+    </Border>
+</Window>

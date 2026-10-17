@@ -60,6 +60,7 @@ public sealed partial class MainViewModel : ObservableObject
     readonly Action? _unselectCatalog;
     readonly Func<DiagnosticsRedactionMode?>? _promptExportDiagnostics;
     readonly Func<MailProvider?>? _promptMailProvider;
+    readonly Func<IReadOnlyList<FeedbackChoice>, FeedbackChoice?>? _promptFeedbackChoice;
     readonly Func<DiagnosticsFollowUp>? _promptDiagnosticsMail;
     readonly Func<string, bool>? _tryOpenExternal;
     readonly Func<string, string?, (bool ok, bool option)?>? _promptConfirmOption;
@@ -134,6 +135,10 @@ public sealed partial class MainViewModel : ObservableObject
     bool _reporting;
     bool _exportingDiagnostics;
     bool _suppressFilterRefresh;
+    ColumnSort? _catalogColumnSort;
+    ColumnSort? _libraryColumnSort;
+
+    readonly record struct ColumnSort(string Path, ListSortDirection Direction);
     CancellationTokenSource? _busyWorkCts;
     CancellationTokenSource? _wizardDownloadPollCts;
     int _wizardDownloadPollGeneration;
@@ -204,7 +209,8 @@ public sealed partial class MainViewModel : ObservableObject
         ManagerSetupDownloader? setupDownloader = null,
         Func<ManagerUpdatePrompt, CancellationToken, Task<ManagerUpdateUiResult>>? promptManagerUpdate = null,
         Func<DiagnosticsFollowUp>? promptDiagnosticsMail = null,
-        Func<string, bool>? tryOpenExternal = null)
+        Func<string, bool>? tryOpenExternal = null,
+        Func<IReadOnlyList<FeedbackChoice>, FeedbackChoice?>? promptFeedbackChoice = null)
     {
         _paths = paths;
         _store = store;
@@ -252,6 +258,7 @@ public sealed partial class MainViewModel : ObservableObject
         _unselectCatalog = unselectCatalog;
         _promptExportDiagnostics = promptExportDiagnostics;
         _promptMailProvider = promptMailProvider;
+        _promptFeedbackChoice = promptFeedbackChoice;
         _promptDiagnosticsMail = promptDiagnosticsMail;
         _tryOpenExternal = tryOpenExternal;
         _promptConfirmOption = promptConfirmOption;
@@ -1360,7 +1367,10 @@ public sealed partial class MainViewModel : ObservableObject
     }
     partial void OnSelectedCatalogSortModeChanged(SortModeOption? value)
     {
-        if (!_suppressFilterRefresh) RefreshCatalogView();
+        if (_suppressFilterRefresh) return;
+        if (value is not null)
+            _catalogColumnSort = null;
+        RefreshCatalogView();
     }
     partial void OnLibrarySearchTextChanged(string value)
     {
@@ -1381,7 +1391,10 @@ public sealed partial class MainViewModel : ObservableObject
     }
     partial void OnSelectedLibrarySortModeChanged(SortModeOption? value)
     {
-        if (!_suppressFilterRefresh) RefreshLibraryView();
+        if (_suppressFilterRefresh) return;
+        if (value is not null)
+            _libraryColumnSort = null;
+        RefreshLibraryView();
     }
 
     partial void OnSelectedUiLanguageCodeChanged(string? oldValue, string newValue)
@@ -3277,6 +3290,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (mod is null) return;
         SendModFeedback(
             FeedbackChannel.Classify(mod.Mod.Feedback),
+            mod.Mod.FeedbackChoices,
             mod.Name,
             mod.Version);
     }
@@ -3288,12 +3302,30 @@ public sealed partial class MainViewModel : ObservableObject
         if (mod is null || mod.IsMissing) return;
         SendModFeedback(
             mod.ModFeedbackDecision,
+            mod.FeedbackChoices,
             mod.DisplayName,
             mod.Version);
     }
 
-    void SendModFeedback(FeedbackDecision decision, string visibleName, string? version)
+    void SendModFeedback(
+        FeedbackDecision decision,
+        IReadOnlyList<FeedbackChoice>? choices,
+        string visibleName,
+        string? version)
     {
+        var acceptable = FeedbackChoices.Acceptable(choices);
+        if (acceptable.Count == 0 && decision.Kind == FeedbackKind.Copy)
+            acceptable = FeedbackChoices.FromText(decision.Original);
+        if (acceptable.Count > 0)
+        {
+            var url = FeedbackChoices.Pick(acceptable, _edition);
+            if (string.IsNullOrWhiteSpace(url) || !TryOpenUrl(url))
+                _notify(Ui.FeedbackOpenFailed);
+            else
+                AppendLog("已打开模组反馈");
+            return;
+        }
+
         if (decision.Kind == FeedbackKind.Hidden)
         {
             _notify(Ui.FeedbackMissing);
@@ -5696,7 +5728,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             RebuildCatalogTagOptions();
-            ApplySort(CatalogModsView, SelectedCatalogSortMode?.Mode ?? ModSortMode.NameAsc, catalog: true);
+            ApplyActiveSort(CatalogModsView, catalog: true);
         }
         finally
         {
@@ -5714,6 +5746,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             RebuildLibraryTagOptions();
+            ApplyActiveSort(LibraryModsView, catalog: false);
         }
         finally
         {
@@ -5722,10 +5755,6 @@ public sealed partial class MainViewModel : ObservableObject
         LibraryModsView.Refresh();
     }
 
-    /// <summary>
-    /// Groups sort themselves by the ModUsage value, so group order does not depend on
-    /// CustomSort or on which column header the player clicked.
-    /// </summary>
     static void AddUsageGrouping(ICollectionView view)
     {
         var byUsage = new PropertyGroupDescription(nameof(ModItemViewModel.EffectiveUsage));
@@ -5733,48 +5762,110 @@ public sealed partial class MainViewModel : ObservableObject
         view.GroupDescriptions.Add(byUsage);
     }
 
-    static void ApplySort(ICollectionView view, ModSortMode mode, bool catalog)
+    /// <summary>
+    /// Header click sorts inside the usage groups. Name ascending and updated-date descending
+    /// stay selected in the workshop sort dropdown. Any other column clears that dropdown
+    /// so it does not keep claiming the list is sorted by name.
+    /// </summary>
+    public void SortByColumn(bool catalog, string path, ListSortDirection direction)
+    {
+        var chosen = new ColumnSort(path, direction);
+        if (catalog)
+            _catalogColumnSort = chosen;
+        else
+            _libraryColumnSort = chosen;
+
+        SortModeOption? dropdown = null;
+        if (catalog && path == nameof(CatalogModItemViewModel.Name) && direction == ListSortDirection.Ascending)
+            dropdown = SortModeOptions.FirstOrDefault(o => o.Mode == ModSortMode.NameAsc);
+        else if (catalog && path == nameof(CatalogModItemViewModel.UpdatedAt) && direction == ListSortDirection.Descending)
+            dropdown = SortModeOptions.FirstOrDefault(o => o.Mode == ModSortMode.UpdatedAtDesc);
+        else if (!catalog && path == nameof(ModItemViewModel.DisplayName) && direction == ListSortDirection.Ascending)
+            dropdown = SortModeOptions.FirstOrDefault(o => o.Mode == ModSortMode.NameAsc);
+        else if (!catalog && path == nameof(ModItemViewModel.CatalogUpdatedAt) && direction == ListSortDirection.Descending)
+            dropdown = SortModeOptions.FirstOrDefault(o => o.Mode == ModSortMode.UpdatedAtDesc);
+
+        _suppressFilterRefresh = true;
+        try
+        {
+            if (catalog)
+                SelectedCatalogSortMode = dropdown;
+            else
+                SelectedLibrarySortMode = dropdown;
+        }
+        finally
+        {
+            _suppressFilterRefresh = false;
+        }
+
+        var view = catalog ? CatalogModsView : LibraryModsView;
+        ApplyActiveSort(view, catalog);
+        view.Refresh();
+    }
+
+    void ApplyActiveSort(ICollectionView view, bool catalog)
     {
         if (view is not ListCollectionView lcv) return;
-        // Catalog download resumes on the thread pool. CustomSort must run on the view's
-        // dispatcher; skipping here avoids failing the import after the files are already in place.
         if (!lcv.Dispatcher.CheckAccess())
             return;
-        lcv.CustomSort = mode switch
-        {
-            ModSortMode.UpdatedAtDesc when catalog =>
-                Comparer<object>.Create((a, b) =>
-                {
-                    var ca = (CatalogModItemViewModel)a!;
-                    var cb = (CatalogModItemViewModel)b!;
-                    var cmp = ModListFilter.CompareUpdatedAtDesc(ca.UpdatedAt, cb.UpdatedAt);
-                    return cmp != 0
-                        ? cmp
-                        : string.Compare(ca.Name, cb.Name, StringComparison.CurrentCultureIgnoreCase);
-                }),
-            ModSortMode.UpdatedAtDesc =>
-                Comparer<object>.Create((a, b) =>
-                {
-                    var ca = (ModItemViewModel)a!;
-                    var cb = (ModItemViewModel)b!;
-                    var cmp = ModListFilter.CompareUpdatedAtDesc(ca.CatalogUpdatedAt, cb.CatalogUpdatedAt);
-                    return cmp != 0
-                        ? cmp
-                        : string.Compare(ca.DisplayName, cb.DisplayName, StringComparison.CurrentCultureIgnoreCase);
-                }),
-            _ when catalog =>
-                Comparer<object>.Create((a, b) =>
-                    string.Compare(
-                        ((CatalogModItemViewModel)a!).Name,
-                        ((CatalogModItemViewModel)b!).Name,
-                        StringComparison.CurrentCultureIgnoreCase)),
-            _ =>
-                Comparer<object>.Create((a, b) =>
-                    string.Compare(
-                        ((ModItemViewModel)a!).DisplayName,
-                        ((ModItemViewModel)b!).DisplayName,
-                        StringComparison.CurrentCultureIgnoreCase))
-        };
+
+        lcv.CustomSort = null;
+        var column = catalog ? _catalogColumnSort : _libraryColumnSort;
+        var mode = catalog
+            ? SelectedCatalogSortMode?.Mode ?? ModSortMode.NameAsc
+            : SelectedLibrarySortMode?.Mode ?? ModSortMode.NameAsc;
+        lcv.SortDescriptions.Clear();
+        if (column is { } chosen)
+            lcv.SortDescriptions.Add(new SortDescription(chosen.Path, chosen.Direction));
+        else if (mode == ModSortMode.UpdatedAtDesc)
+            lcv.SortDescriptions.Add(new SortDescription(
+                catalog ? nameof(CatalogModItemViewModel.UpdatedAt) : nameof(ModItemViewModel.CatalogUpdatedAt),
+                ListSortDirection.Descending));
+        else
+            lcv.SortDescriptions.Add(new SortDescription(
+                catalog ? nameof(CatalogModItemViewModel.Name) : nameof(ModItemViewModel.DisplayName),
+                ListSortDirection.Ascending));
+        NotifySortRevision();
+    }
+
+    int _sortRevision;
+
+    /// <summary>Bumps after every sort apply so the grids can put the arrow back on the same column.</summary>
+    public int SortRevision => _sortRevision;
+
+    public string ActiveCatalogSortPath => DescribeSort(catalog: true).Path;
+
+    public ListSortDirection ActiveCatalogSortDirection => DescribeSort(catalog: true).Direction;
+
+    public string ActiveLibrarySortPath => DescribeSort(catalog: false).Path;
+
+    public ListSortDirection ActiveLibrarySortDirection => DescribeSort(catalog: false).Direction;
+
+    void NotifySortRevision()
+    {
+        _sortRevision++;
+        OnPropertyChanged(nameof(SortRevision));
+        OnPropertyChanged(nameof(ActiveCatalogSortPath));
+        OnPropertyChanged(nameof(ActiveCatalogSortDirection));
+        OnPropertyChanged(nameof(ActiveLibrarySortPath));
+        OnPropertyChanged(nameof(ActiveLibrarySortDirection));
+    }
+
+    (string Path, ListSortDirection Direction) DescribeSort(bool catalog)
+    {
+        var column = catalog ? _catalogColumnSort : _libraryColumnSort;
+        if (column is { } chosen)
+            return (chosen.Path, chosen.Direction);
+        var mode = catalog
+            ? SelectedCatalogSortMode?.Mode ?? ModSortMode.NameAsc
+            : SelectedLibrarySortMode?.Mode ?? ModSortMode.NameAsc;
+        if (mode == ModSortMode.UpdatedAtDesc)
+            return (
+                catalog ? nameof(CatalogModItemViewModel.UpdatedAt) : nameof(ModItemViewModel.CatalogUpdatedAt),
+                ListSortDirection.Descending);
+        return (
+            catalog ? nameof(CatalogModItemViewModel.Name) : nameof(ModItemViewModel.DisplayName),
+            ListSortDirection.Ascending);
     }
 
     bool FilterCatalogItem(object obj)

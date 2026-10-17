@@ -36,3 +36,7 @@ team-beacon
 leaderboard-fix
 axis-lock
 skin-selector
+credit-helper
+hide-control-tips
+upgrade-helper
+grid-ruler

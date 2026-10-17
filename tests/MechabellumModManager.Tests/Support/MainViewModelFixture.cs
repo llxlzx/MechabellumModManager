@@ -248,7 +248,8 @@ public sealed class MainViewModelFixture : IDisposable
         Func<DiagnosticsFollowUp>? promptDiagnosticsMail = null,
         Func<string, bool>? tryOpenExternal = null,
         Func<ModPackage, (string? Override, IReadOnlyList<string> ExtraTags, string? UsageOverride)?>? promptEditTaxonomy = null,
-        string? removalPublicKey = null)
+        string? removalPublicKey = null,
+        Func<IReadOnlyList<FeedbackChoice>, FeedbackChoice?>? promptFeedbackChoice = null)
     {
         var processStarter = starter ?? new RecordingProcessStarter();
         var launcher = new GameLauncher(processStarter, () => false);
@@ -302,7 +303,8 @@ public sealed class MainViewModelFixture : IDisposable
             steamAppMarkedRunning: steamAppMarkedRunning ?? (() => false),
             promptDiagnosticsMail: promptDiagnosticsMail,
             tryOpenExternal: tryOpenExternal,
-            promptEditTaxonomy: promptEditTaxonomy);
+            promptEditTaxonomy: promptEditTaxonomy,
+            promptFeedbackChoice: promptFeedbackChoice);
         vm.LaunchFollowUpPolls = 0;
         if (removalPublicKey is not null)
             vm.RemovalPublicKey = removalPublicKey;

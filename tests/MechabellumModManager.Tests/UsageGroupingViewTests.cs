@@ -78,12 +78,48 @@ public class UsageGroupingViewTests
 
         var lcv = (ListCollectionView)vm.CatalogModsView;
         lcv.CustomSort = null;
+        lcv.SortDescriptions.Clear();
         lcv.SortDescriptions.Add(new SortDescription(nameof(CatalogModItemViewModel.Name), ListSortDirection.Descending));
 
         Groups(vm.CatalogModsView).Should().Equal(
             "Tournament: B tournament",
             "Casual: A casual",
             "Unrated: C unrated, 0 bogus");
+    }
+
+    [Fact]
+    public void Column_sort_reorders_inside_the_group_and_clears_the_name_dropdown()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm();
+        vm.ApplyCatalogRoot(SampleCatalog());
+
+        vm.SortByColumn(catalog: true, nameof(CatalogModItemViewModel.Name), ListSortDirection.Descending);
+
+        Groups(vm.CatalogModsView).Should().Equal(
+            "Tournament: B tournament",
+            "Casual: A casual",
+            "Unrated: C unrated, 0 bogus");
+        vm.SelectedCatalogSortMode.Should().BeNull();
+    }
+
+    [Fact]
+    public void Updated_column_sort_survives_reloading_the_catalog()
+    {
+        using var fx = Fixture.CreateReady();
+        var vm = fx.CreateVm();
+        vm.ApplyCatalogRoot(SampleCatalog());
+
+        vm.SortByColumn(catalog: true, nameof(CatalogModItemViewModel.UpdatedAt), ListSortDirection.Descending);
+        vm.ApplyCatalogRoot(SampleCatalog());
+
+        Groups(vm.CatalogModsView).Should().Equal(
+            "Tournament: B tournament",
+            "Casual: A casual",
+            "Unrated: C unrated, 0 bogus");
+        vm.SelectedCatalogSortMode!.Mode.Should().Be(ModSortMode.UpdatedAtDesc);
+        vm.ActiveCatalogSortPath.Should().Be(nameof(CatalogModItemViewModel.UpdatedAt));
+        vm.ActiveCatalogSortDirection.Should().Be(ListSortDirection.Descending);
     }
 
     [Fact]

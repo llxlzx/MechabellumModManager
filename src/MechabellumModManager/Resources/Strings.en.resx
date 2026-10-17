@@ -350,6 +350,12 @@
   <data name="FeedbackCopied" xml:space="preserve">
     <value>Copied the author's feedback channel</value>
   </data>
+  <data name="FeedbackChoiceTitle" xml:space="preserve">
+    <value>Choose a feedback method</value>
+  </data>
+  <data name="FeedbackChoiceHint" xml:space="preserve">
+    <value>Choose which feedback method to open.</value>
+  </data>
   <data name="FeedbackOpenFailed" xml:space="preserve">
     <value>Could not open feedback.</value>
   </data>

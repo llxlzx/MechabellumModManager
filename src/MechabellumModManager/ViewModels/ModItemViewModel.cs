@@ -13,6 +13,7 @@ public sealed partial class ModItemViewModel : ObservableObject
     string? _previewLoadUrl;
     CatalogMod? _boundCatalog;
     FeedbackDecision? _modFeedbackDecision;
+    IReadOnlyList<FeedbackChoice> _feedbackChoices = Array.Empty<FeedbackChoice>();
 
     public ModPackage Package { get; }
     public bool IsMissing { get; }
@@ -117,11 +118,16 @@ public sealed partial class ModItemViewModel : ObservableObject
     public FeedbackDecision ModFeedbackDecision =>
         _modFeedbackDecision ?? new FeedbackDecision(FeedbackKind.Hidden, null, "");
 
-    public bool ShowModFeedback => ModFeedbackDecision.Kind != FeedbackKind.Hidden;
+    public IReadOnlyList<FeedbackChoice> FeedbackChoices => _feedbackChoices;
 
-    public void SetCatalogFeedback(string? raw)
+    public bool ShowModFeedback =>
+        _feedbackChoices.Count > 0 || ModFeedbackDecision.Kind != FeedbackKind.Hidden;
+
+    public void SetCatalogFeedback(string? raw, IReadOnlyList<FeedbackChoice>? choices = null)
     {
+        _feedbackChoices = Services.FeedbackChoices.Acceptable(choices);
         _modFeedbackDecision = FeedbackChannel.Classify(raw);
+        OnPropertyChanged(nameof(FeedbackChoices));
         OnPropertyChanged(nameof(ModFeedbackDecision));
         OnPropertyChanged(nameof(ShowModFeedback));
     }
@@ -129,6 +135,8 @@ public sealed partial class ModItemViewModel : ObservableObject
     public void ClearCatalogFeedback()
     {
         _modFeedbackDecision = null;
+        _feedbackChoices = Array.Empty<FeedbackChoice>();
+        OnPropertyChanged(nameof(FeedbackChoices));
         OnPropertyChanged(nameof(ModFeedbackDecision));
         OnPropertyChanged(nameof(ShowModFeedback));
     }
@@ -270,7 +278,7 @@ public sealed partial class ModItemViewModel : ObservableObject
                 : string.Format(LocalizationService.T("ManagerFloorBlocked"), floor.Required, floor.Local)
             : "";
         CatalogMatched = true;
-        SetCatalogFeedback(catalog.Feedback);
+        SetCatalogFeedback(catalog.Feedback, catalog.FeedbackChoices);
         RefreshCatalogFieldsFromPackage();
     }
 

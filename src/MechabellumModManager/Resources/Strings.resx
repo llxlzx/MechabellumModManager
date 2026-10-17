@@ -350,6 +350,12 @@
   <data name="FeedbackCopied" xml:space="preserve">
     <value>已复制作者留下的反馈方式</value>
   </data>
+  <data name="FeedbackChoiceTitle" xml:space="preserve">
+    <value>选择反馈方式</value>
+  </data>
+  <data name="FeedbackChoiceHint" xml:space="preserve">
+    <value>请选择要打开的反馈方式。</value>
+  </data>
   <data name="FeedbackOpenFailed" xml:space="preserve">
     <value>无法打开反馈。</value>
   </data>

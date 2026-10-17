@@ -350,6 +350,12 @@
   <data name="FeedbackCopied" xml:space="preserve">
     <value>作者の連絡先をコピーしました</value>
   </data>
+  <data name="FeedbackChoiceTitle" xml:space="preserve">
+    <value>フィードバック方法を選ぶ</value>
+  </data>
+  <data name="FeedbackChoiceHint" xml:space="preserve">
+    <value>開くフィードバック方法を選んでください。</value>
+  </data>
   <data name="FeedbackOpenFailed" xml:space="preserve">
     <value>フィードバックを開けませんでした。</value>
   </data>

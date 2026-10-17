@@ -180,6 +180,13 @@ public sealed class CatalogMod
 
     [JsonPropertyName("feedback")]
     public string? Feedback { get; set; }
+
+    /// <summary>
+    /// Labeled https destinations. When two or more survive <see cref="FeedbackChoices.Acceptable"/>,
+    /// the manager asks which one to open. Older managers ignore the array.
+    /// </summary>
+    [JsonPropertyName("feedbackChoices")]
+    public List<FeedbackChoice>? FeedbackChoices { get; set; }
 }
 
 /// <summary>

@@ -291,6 +291,7 @@ public partial class App : Application
             processStarter: starter,
             promptExportDiagnostics: () => PromptExportDiagnostics(window),
             promptMailProvider: () => MailProviderDialog.Prompt(window, EditionOf(window)),
+            promptFeedbackChoice: choices => FeedbackChoiceDialog.Prompt(window, choices),
             promptDiagnosticsMail: () =>
             {
                 var edition = EditionOf(window);
